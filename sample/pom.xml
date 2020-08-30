@@ -31,7 +31,9 @@
 <!--                    </annotationProcessors>-->
                     <compilerArgs>
                         <arg>-Xplugin:GReact</arg>
+<!--                        <arg>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005</arg>-->
                     </compilerArgs>
+<!--                    <fork>true</fork>-->
                 </configuration>
             </plugin>
         </plugins>

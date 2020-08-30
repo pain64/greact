@@ -5,15 +5,18 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.util.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
+import javax.tools.StandardLocation;
 
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,6 +56,19 @@ public class GReactPlugin implements Plugin {
                     return;
 
                 System.out.println("before generate for: " + e);
+
+                try {
+                    var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
+                        e.getCompilationUnit().getPackageName().toString(),
+                        e.getTypeElement().getSimpleName() + ".js");
+                    
+                    var writer = jsFile.openWriter();
+                    writer.write("super puper js code");
+                    writer.close();
+
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
 
             @Override
