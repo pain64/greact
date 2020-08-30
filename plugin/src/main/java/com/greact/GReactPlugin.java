@@ -1,31 +1,23 @@
 package com.greact;
 
-import com.greact.model.Component;
-import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.ImportTree;
+import com.greact.generate.JSGen;
 import com.sun.source.util.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.tools.Diagnostic;
 import javax.tools.StandardLocation;
 
-import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.util.JCDiagnostic;
-import com.sun.tools.javac.util.Log;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.Objects;
-import java.util.Optional;
 
 
 public class GReactPlugin implements Plugin {
+
+    public static final String NAME = "GReact";
+
     @Override
     public String getName() {
-        return "GReact";
+        return NAME;
     }
 
 //    ProcessingEnvironment getEnv(JavacTask task) {
@@ -55,15 +47,19 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() != TaskEvent.Kind.GENERATE)
                     return;
 
-                System.out.println("before generate for: " + e);
+                var cu = e.getCompilationUnit();
+                if(!cu.getPackage().getPackageName().toString().equals("js"))
+                    return;
+
+                System.out.println("before generate for: " + e + "cu: " + cu);
 
                 try {
                     var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
-                        e.getCompilationUnit().getPackageName().toString(),
+                        cu.getPackageName().toString(),
                         e.getTypeElement().getSimpleName() + ".js");
                     
                     var writer = jsFile.openWriter();
-                    writer.write("super puper js code");
+                    new JSGen(writer, cu).genType(e.getTypeElement());
                     writer.close();
 
                 } catch (IOException ex) {
@@ -76,10 +72,10 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() != TaskEvent.Kind.ANALYZE)
                     return;
 
-                System.out.println("after analyze for: " + e);
-                e.getCompilationUnit().getImports().forEach(i -> {
-                    //ImportTree
-                });
+//                System.out.println("after analyze for: " + e);
+//                e.getCompilationUnit().getImports().forEach(i -> {
+//                    //ImportTree
+//                });
 
                 // System.out.println("finish analyze for: " + e);
 
