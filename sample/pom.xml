@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>greact-sample</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <java.version.release>14</java.version.release>
+        <java.version>1.${java.version.release}</java.version>
+        <cpfile>cp.txt</cpfile>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <release>${java.version.release}</release>
+                    <compilerVersion>${java.version}</compilerVersion>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+<!--                    <annotationProcessors>-->
+<!--                        <annotationProcessor>-->
+<!--                            com.greact.ComponentAnnotationProcessor-->
+<!--                        </annotationProcessor>-->
+<!--                    </annotationProcessors>-->
+                    <compilerArgs>
+                        <arg>-Xplugin:GReact</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.greact</groupId>
+            <artifactId>greact-plugin</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+    </dependencies>
+</project>
