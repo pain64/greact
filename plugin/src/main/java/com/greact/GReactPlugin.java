@@ -59,7 +59,7 @@ public class GReactPlugin implements Plugin {
                         e.getTypeElement().getSimpleName() + ".js");
                     
                     var writer = jsFile.openWriter();
-                    new JSGen(writer, cu).genType(e.getTypeElement());
+                    new JSGen(writer, cu).genType(0, e.getTypeElement());
                     writer.close();
 
                 } catch (IOException ex) {
@@ -71,6 +71,8 @@ public class GReactPlugin implements Plugin {
             public void finished(TaskEvent e) {
                 if (e.getKind() != TaskEvent.Kind.ANALYZE)
                     return;
+
+                
 
 //                System.out.println("after analyze for: " + e);
 //                e.getCompilationUnit().getImports().forEach(i -> {

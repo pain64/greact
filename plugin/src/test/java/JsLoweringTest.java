@@ -21,4 +21,39 @@ public class JsLoweringTest {
                 class js$Test {
                 }""");
     }
+
+    @Test
+    void methodDeclare() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  static void bar() {}
+                  void foo(int x, String y) {}
+                }""",
+            """
+                class js$Test {
+                  static bar() {
+                  }
+                  
+                  foo(x, y) {
+                  }
+                }""");
+    }
+
+    @Test
+    void methodWithReturn() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  int baz() { return 42; }
+                }""",
+            """
+                class js$Test {
+                  baz() {
+                    return 42;
+                  }
+                }""");
+    }
 }
