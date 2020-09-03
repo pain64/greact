@@ -23,24 +23,13 @@ public class GReactPlugin implements Plugin {
         return NAME;
     }
 
-//    ProcessingEnvironment getEnv(JavacTask task) {
-//        JavacProcessingEnvironment.instance(((BasicJavacTask) task).getContext());
-//        try {
-//            Class taskClass = Class.forName("com.sun.tools.javac.api.BasicJavacTask");
-//
-//            Field contextField = taskClass.getDeclaredField("context");
-//            contextField.setAccessible(true);
-//            Object context = contextField.get(task);
-//
-//            Class envClass = JavacProcessingEnvironment.class;
-//            return (ProcessingEnvironment) envClass.getDeclaredMethod("instance").invoke(null, context);
-//        } catch (Exception ex) {
-//            throw new RuntimeException(ex);
-//        }
-//
-//    }
-
+    final String jsCodePackage = "js";
+    ShimLibrary shim = new ShimLibrary("com.greact.shim.java.lang", "java.lang");
     List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
+
+    void foobar() {
+
+    }
 
     @Override
     public void init(JavacTask task, String... strings) {
@@ -49,12 +38,12 @@ public class GReactPlugin implements Plugin {
         task.addTaskListener(new TaskListener() {
             @Override
             public void finished(TaskEvent e) {
-                if (e.getKind() != TaskEvent.Kind.ANALYZE)
-                    return;
+                if (e.getKind() != TaskEvent.Kind.ANALYZE) return;
 
                 var cu = e.getCompilationUnit();
-                if(!cu.getPackage().getPackageName().toString().equals("js"))
-                    return;
+                var pkg = cu.getPackage().getPackageName().toString();
+                if (!pkg.startsWith(jsCodePackage)) return;
+
 
                 System.out.println("after analyze for: " + e + "cu: " + cu);
                 events.add(Pair.of((BasicJavacTask) task, e));
@@ -63,7 +52,7 @@ public class GReactPlugin implements Plugin {
                     var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
                         cu.getPackageName().toString(),
                         e.getTypeElement().getSimpleName() + ".js");
-                    
+
                     var writer = jsFile.openWriter();
                     new JSGen(writer, cu, env, (BasicJavacTask) task).genType(0, e.getTypeElement());
                     writer.close();
@@ -85,7 +74,7 @@ public class GReactPlugin implements Plugin {
 //                    //ImportTree
 //                });
 
-                // System.out.println("finish analyze for: " + e);
+            // System.out.println("finish analyze for: " + e);
 
 //                Element el = null;
 //                var jctree = env.getElementUtils().getTree(el);

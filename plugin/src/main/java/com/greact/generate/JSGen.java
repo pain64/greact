@@ -130,15 +130,16 @@ public class JSGen {
 
         // ARRAY_ACCESS
         // MEMBER_SELECT
-        // MEMBER_REFERENCE
-        // INSTANCE_OF
-        // METHOD_INVOCATION
+        // TYPE_CAST
         // NEW_ARRAY
-        // NEW_CLASS
         // LAMBDA_EXPRESSION
         // PARENTHESIZED
+        // INSTANCE_OF
         // SWITCH_EXPRESSION
-        // TYPE_CAST
+        // ...
+        // METHOD_INVOCATION
+        // MEMBER_REFERENCE
+        // NEW_CLASS
     }
 
     void genStmt(int deep, StatementTree stmt) {
