@@ -7,8 +7,11 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import javax.tools.StandardLocation;
 
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.util.Pair;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class GReactPlugin implements Plugin {
@@ -37,21 +40,24 @@ public class GReactPlugin implements Plugin {
 //
 //    }
 
+    List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
+
     @Override
     public void init(JavacTask task, String... strings) {
         var env = JavacProcessingEnvironment.instance(((BasicJavacTask) task).getContext());
 
         task.addTaskListener(new TaskListener() {
             @Override
-            public void started(TaskEvent e) {
-                if (e.getKind() != TaskEvent.Kind.GENERATE)
+            public void finished(TaskEvent e) {
+                if (e.getKind() != TaskEvent.Kind.ANALYZE)
                     return;
 
                 var cu = e.getCompilationUnit();
                 if(!cu.getPackage().getPackageName().toString().equals("js"))
                     return;
 
-                System.out.println("before generate for: " + e + "cu: " + cu);
+                System.out.println("after analyze for: " + e + "cu: " + cu);
+                events.add(Pair.of((BasicJavacTask) task, e));
 
                 try {
                     var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
@@ -59,7 +65,7 @@ public class GReactPlugin implements Plugin {
                         e.getTypeElement().getSimpleName() + ".js");
                     
                     var writer = jsFile.openWriter();
-                    new JSGen(writer, cu).genType(0, e.getTypeElement());
+                    new JSGen(writer, cu, env, (BasicJavacTask) task).genType(0, e.getTypeElement());
                     writer.close();
 
                 } catch (IOException ex) {
@@ -67,12 +73,12 @@ public class GReactPlugin implements Plugin {
                 }
             }
 
-            @Override
-            public void finished(TaskEvent e) {
-                if (e.getKind() != TaskEvent.Kind.ANALYZE)
-                    return;
-
-                
+//            @Override
+//            public void finished(TaskEvent e) {
+//                if (e.getKind() != TaskEvent.Kind.ANALYZE)
+//                    return;
+//
+//
 
 //                System.out.println("after analyze for: " + e);
 //                e.getCompilationUnit().getImports().forEach(i -> {
@@ -121,7 +127,7 @@ public class GReactPlugin implements Plugin {
 //                        return aVoid; // super.visitClass(classNode, aVoid);
 //                    }
 //                }, null);
-            }
+//            }
         });
     }
 }
