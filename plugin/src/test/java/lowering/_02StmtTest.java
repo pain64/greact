@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
 
-public class StmtTest {
+public class _02StmtTest {
     @Test
     void stmtReturn() throws IOException {
         assertCompiled(

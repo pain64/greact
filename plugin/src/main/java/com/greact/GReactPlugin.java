@@ -1,14 +1,15 @@
 package com.greact;
 
 import com.greact.generate.JSGen;
-import com.sun.source.util.*;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-
-import javax.tools.StandardLocation;
-
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Pair;
 
+import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,6 @@ public class GReactPlugin implements Plugin {
     List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
 
     void foobar() {
-
     }
 
     @Override

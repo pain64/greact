@@ -12,6 +12,9 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.function.Consumer;
 
 public class JSGen {
     final Writer out;
@@ -34,6 +37,24 @@ public class JSGen {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    <T> void mkString(Iterator<T> iter, Consumer<T> fn, String prefix, String delim, String suffix) {
+        var isFirst = true;
+
+        write(0, prefix);
+        while (iter.hasNext()) {
+            fn.accept(iter.next());
+            if (isFirst && iter.hasNext()) {
+                isFirst = false;
+                write(0, delim);
+            }
+        }
+        write(0, suffix);
+    }
+
+    <T> void mkString(Iterable<T> iterable, Consumer<T> fn, String prefix, String delim, String suffix) {
+        mkString(iterable.iterator(), fn, prefix, delim, suffix);
     }
 
     void genExpr(int deep, ExpressionTree expr) {
@@ -126,19 +147,22 @@ public class JSGen {
             write(0, op);
             write(0, "= ");
             genExpr(deep + 2, compoundAssign.getExpression());
+        } else if (expr instanceof NewArrayTree newArray) {
+            var init = newArray.getInitializers();
+            if (init == null) init = Collections.emptyList();
+            mkString(init, e -> genExpr(deep + 2, e), "[", ", ", "]");
         }
 
         // ARRAY_ACCESS
         // MEMBER_SELECT
         // TYPE_CAST
-        // NEW_ARRAY
         // LAMBDA_EXPRESSION
         // PARENTHESIZED
         // INSTANCE_OF
         // SWITCH_EXPRESSION
         // ...
-        // METHOD_INVOCATION
-        // MEMBER_REFERENCE
+        // METHOD_INVOCATION :deal with overload
+        // MEMBER_REFERENCE  :deal with overload
         // NEW_CLASS
     }
 
@@ -178,31 +202,19 @@ public class JSGen {
     // WHILE_LOOP
 
     void genMethod(int deep, ExecutableElement methodEl) {
-        write(deep, methodEl.getModifiers().contains(Modifier.STATIC) ?
-            "static " : "");
+        write(deep, methodEl.getModifiers()
+            .contains(Modifier.STATIC) ? "static " : "");
+        write(0, methodEl.getSimpleName().toString());
 
-        write(0, methodEl.getSimpleName() + "(");
+        mkString(methodEl.getParameters(),
+            (param) -> write(0, param.getSimpleName().toString()), "(", ", ", ")");
 
-        var isFirst = true;
-        for (var param : methodEl.getParameters()) {
-            write(0, param.getSimpleName().toString());
-
-            if (isFirst) {
-                write(0, ", ");
-                isFirst = false;
-            }
-
-        }
-        write(0, ") {\n");
-
-        Trees.instance(env).getTree(methodEl).getBody().getStatements()
-            .forEach(stmt -> {
-                write(deep + 2, "");
-                genStmt(deep + 2, stmt);
-                write(0, "\n");
-            });
-
-        write(deep, "}\n");
+        var statements = Trees.instance(env).getTree(methodEl).getBody().getStatements();
+        mkString(statements, stmt -> {
+            write(deep + 2, "");
+            genStmt(deep + 2, stmt);
+            write(0, "\n");
+        }, " {\n", "", "  }\n");
     }
 
     public void genType(int deep, TypeElement typeEl) {
@@ -215,22 +227,11 @@ public class JSGen {
         write(0, "$");
         write(0, typeEl.getSimpleName().toString());
 
-        write(deep, " {\n");
+        var decls = typeEl.getEnclosedElements().stream()
+            .filter(el -> el.getKind() == ElementKind.METHOD).iterator();
 
-        var decls = typeEl.getEnclosedElements();
-        var firstMethod = true;
-        for (var i = 0; i < decls.size(); i++) {
-            if (decls.get(i).getKind() != ElementKind.METHOD) continue;
-
-            genMethod(deep + 2, (ExecutableElement) decls.get(i));
-
-            if (firstMethod && i + 1 < decls.size()) {
-                write(deep, "\n");
-                firstMethod = false;
-            }
-        }
-
-        write(deep, "}");
+        mkString(decls, (methodDecl) ->
+            genMethod(deep + 2, (ExecutableElement) methodDecl), " {\n", "\n", "}");
     }
     // ENUM
 }

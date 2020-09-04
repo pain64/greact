@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import static util.CompileAssert.*;
 
-public class DeclarationsTest {
+public class _00DeclarationsTest {
 
     @Test
     void klass() throws IOException {
@@ -37,10 +37,6 @@ public class DeclarationsTest {
                   }
                 }""");
     }
-
-    // 1. add local vars
-    // 2. make joiner
-    // 3. compilation ordering???
 
     @Test
     void localVar() throws IOException {

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
 
-public class ExprTest {
+public class _01ExprTest {
 
     @Test
     void literal() throws IOException {
@@ -43,7 +43,8 @@ public class ExprTest {
     }
 
 
-    @Test void assignment() throws IOException {
+    @Test
+    void assignment() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -82,7 +83,8 @@ public class ExprTest {
                 }""");
     }
 
-    @Test void ternary() throws IOException {
+    @Test
+    void ternary() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -99,7 +101,8 @@ public class ExprTest {
                 }""");
     }
 
-    @Test void unaryOp() throws IOException {
+    @Test
+    void unaryOp() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -134,7 +137,8 @@ public class ExprTest {
                 }""");
     }
 
-    @Test void binaryOp() throws IOException {
+    @Test
+    void binaryOp() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -187,7 +191,8 @@ public class ExprTest {
                 }""");
     }
 
-    @Test void compoundAssignment() throws IOException {
+    @Test
+    void compoundAssignment() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -222,6 +227,33 @@ public class ExprTest {
                     x &= 1
                     x ^= 1
                     x |= 1
+                  }
+                }""");
+    }
+
+    @Test
+    void newArray() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz() {
+                    var x = new int[42];
+                    var y = new String[] {"hello", "world"};
+                    var x1 = new int[42][42];
+                    var y2 = new String[][] {
+                      new String[]{"1", "2"},
+                      new String[]{"3", "4"}
+                    };
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz() {
+                    let x = []
+                    let y = ['hello', 'world']
+                    let x1 = []
+                    let y2 = [['1', '2'], ['3', '4']]
                   }
                 }""");
     }
