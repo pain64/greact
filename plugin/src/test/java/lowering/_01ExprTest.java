@@ -257,4 +257,112 @@ public class _01ExprTest {
                   }
                 }""");
     }
+
+    @Test
+    void arrayAccess() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int[][] x) {
+                    int[] y0 = x[0];
+                    int y1 = x[0][0];
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x) {
+                    let y0 = x[0]
+                    let y1 = x[0][0]
+                  }
+                }""");
+    }
+
+    @Test
+    void memberSelect() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  static class A {
+                    int field;
+                    A next;
+                  }
+                  void baz(A a) {
+                    int x = a.field;
+                    A b = a.next;
+                    int y = a.next.field;
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(a) {
+                    let x = a.field
+                    let b = a.next
+                    let y = a.next.field
+                  }
+                }""");
+    }
+
+    @Test
+    void typeCast() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int x) {
+                    var y = (long) x;
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x) {
+                    let y = x
+                  }
+                }""");
+    }
+
+    @Test
+    void parens() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int x) {
+                    var y = ((x));
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x) {
+                    let y = ((x))
+                  }
+                }""");
+    }
+
+    @Test
+    void lambda() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  @FunctionalInterface
+                  interface My {
+                    int apply(int i);
+                  }
+                  void baz() {
+                    My lambda = (i) -> {
+                      return i; 
+                    };
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz() {
+                    let lambda = (i) => {
+                      return i
+                    }
+                  }
+                }""");
+    }
 }

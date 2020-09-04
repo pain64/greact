@@ -22,4 +22,32 @@ public class _02StmtTest {
                   }
                 }""");
     }
+
+    @Test
+    void stmtIf() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  int baz() {
+                    if(false) return 41;
+                    
+                    if(true) return 42;
+                    else return 41; 
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz() {
+                    if(false) {
+                      return 41
+                    }
+                    if(true) {
+                      return 42
+                    } else {
+                      return 41
+                    }
+                  }
+                }""");
+    }
 }
