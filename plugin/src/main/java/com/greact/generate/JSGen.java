@@ -171,7 +171,6 @@ public class JSGen {
                 write(0, arg.getName().toString()), "(", ", ", ")");
             write(0, " => {\n");
             genStmt(deep + 2, (BlockTree) lambda.getBody());
-            write(0, "\n");
             write(deep, "}");
         }
 
@@ -210,8 +209,10 @@ public class JSGen {
             write(deep, "");
             genExpr(deep, exprStmt.getExpression());
         } else if (stmt instanceof BlockTree block) {
-            mkString(block.getStatements(), (bStmt) ->
-                genStmt(deep, bStmt), "", "\n", "");
+            block.getStatements().forEach((bStmt) -> {
+                genStmt(deep, bStmt);
+                write(0, "\n");
+            });
         } else if(stmt instanceof IfTree ifStmt) {
             write(deep, "if");
             genExpr(deep, ifStmt.getCondition());
@@ -227,10 +228,19 @@ public class JSGen {
                 write(0, "\n");
                 write(deep, "}");
             }
+        } else if(stmt instanceof WhileLoopTree whileStmt) {
+            write(deep, "while");
+            genExpr(deep, whileStmt.getCondition());
+            write(0, " {\n");
+            genStmt(deep + 2, whileStmt.getStatement());
+            write(deep, "}");
+        } else if(stmt instanceof DoWhileLoopTree doWhile) {
+            write(deep, "do {\n");
+            genStmt(deep + 2, doWhile.getStatement());
+            write(deep, "} while");
+            genExpr(deep, doWhile.getCondition());
         }
     }
-    // WHILE_LOOP
-    // DO_WHILE_LOOP
     // FOR_LOOP
     // ENHANCED_FOR_LOOP
     // LABELED_STATEMENT

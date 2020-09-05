@@ -50,4 +50,60 @@ public class _02StmtTest {
                   }
                 }""");
     }
+
+    @Test
+    void stmtWhile() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int x, int y) {
+                    while(true) {
+                      x++;
+                      if(x > 10)
+                        continue;
+                      if(x > 100)
+                        break;
+                      y++;
+                    } 
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x, y) {
+                    while(true) {
+                      x++
+                      if(x > 10) {
+                        continue
+                      }
+                      if(x > 100) {
+                        break
+                      }
+                      y++
+                    }
+                  }
+                }""");
+    }
+
+    @Test
+    void stmtDoWhile() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int x) {
+                    do {
+                      x++;
+                    } while(x < 100); 
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x) {
+                    do {
+                      x++
+                    } while(x < 100)
+                  }
+                }""");
+    }
 }
