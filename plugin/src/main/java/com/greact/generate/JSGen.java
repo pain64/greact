@@ -168,10 +168,8 @@ public class JSGen {
             write(0, ")");
         } else if (expr instanceof LambdaExpressionTree lambda) {
             mkString(lambda.getParameters(), (arg) ->
-                write(0, arg.getName().toString()), "(", ", ", ")");
-            write(0, " => {\n");
-            genStmt(deep + 2, (BlockTree) lambda.getBody());
-            write(deep, "}");
+                write(0, arg.getName().toString()), "(", ", ", ") =>");
+            genStmt(deep, (BlockTree) lambda.getBody());
         }
 
         // deal with blocks
@@ -209,11 +207,13 @@ public class JSGen {
             write(deep, "");
             genExpr(deep, exprStmt.getExpression());
         } else if (stmt instanceof BlockTree block) {
+            write(0, " {\n");
             block.getStatements().forEach((bStmt) -> {
-                genStmt(deep, bStmt);
+                genStmt(deep + 2, bStmt);
                 write(0, "\n");
             });
-        } else if(stmt instanceof IfTree ifStmt) {
+            write(deep, "}");
+        } else if (stmt instanceof IfTree ifStmt) {
             write(deep, "if");
             genExpr(deep, ifStmt.getCondition());
             write(0, " {\n");
@@ -222,27 +222,58 @@ public class JSGen {
             write(deep, "}");
 
             var elseStmt = ifStmt.getElseStatement();
-            if(elseStmt != null) {
+            if (elseStmt != null) {
                 write(0, " else {\n");
                 genStmt(deep + 2, elseStmt);
                 write(0, "\n");
                 write(deep, "}");
             }
-        } else if(stmt instanceof WhileLoopTree whileStmt) {
+        } else if (stmt instanceof WhileLoopTree whileStmt) {
             write(deep, "while");
             genExpr(deep, whileStmt.getCondition());
-            write(0, " {\n");
-            genStmt(deep + 2, whileStmt.getStatement());
-            write(deep, "}");
-        } else if(stmt instanceof DoWhileLoopTree doWhile) {
-            write(deep, "do {\n");
-            genStmt(deep + 2, doWhile.getStatement());
-            write(deep, "} while");
+            genStmt(deep, whileStmt.getStatement());
+        } else if (stmt instanceof DoWhileLoopTree doWhile) {
+            write(deep, "do");
+            genStmt(deep, doWhile.getStatement());
+            write(0, " while");
             genExpr(deep, doWhile.getCondition());
+        } else if (stmt instanceof ForLoopTree forStmt) {
+            write(deep, "for");
+
+            if (forStmt.getInitializer().isEmpty())
+                write(0, "(;");
+            else
+                mkString(forStmt.getInitializer(), init -> {
+                    var varDecl = (VariableTree) init;
+                    write(0, varDecl.getName().toString());
+                    write(0, " = ");
+                    genExpr(deep, varDecl.getInitializer());
+                }, "(let ", ", ", "; ");
+
+
+            genExpr(deep, forStmt.getCondition());
+            if (forStmt.getInitializer().isEmpty())
+                write(0, ";)");
+            else
+                mkString(forStmt.getUpdate(), init ->
+                    genStmt(0, init), "; ", ", ", ")");
+
+            genStmt(deep, forStmt.getStatement());
+        } else if (stmt instanceof EnhancedForLoopTree forEach) {
+            write(deep, "for(");
+            var varDecl = forEach.getVariable();
+            write(0, "let ");
+            write(0, varDecl.getName().toString());
+            write(0, " in ");
+            genExpr(deep, forEach.getExpression());
+            write(0, ")");
+            genStmt(deep, forEach.getStatement());
+        } else if (stmt instanceof LabeledStatementTree label) {
+            write(deep, label.getLabel().toString());
+            write(0, ":\n");
+            genStmt(deep, label.getStatement());
         }
     }
-    // FOR_LOOP
-    // ENHANCED_FOR_LOOP
     // LABELED_STATEMENT
     // SWITCH
     // ASSERT
