@@ -164,4 +164,38 @@ public class _02StmtTest {
                   }
                 }""");
     }
+
+    @Test
+    void stmtSwitch() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(int x, int y) {
+                    switch(x) {
+                      case 0:
+                        y = 42;
+                      case 1:
+                      case 2:
+                        y = 41;
+                      default:
+                        y = 40;
+                    }
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x, y) {
+                    switch(x) {
+                      case 0:
+                        y = 42
+                      case 1:
+                      case 2:
+                        y = 41
+                      default:
+                        y = 40
+                    }
+                  }
+                }""");
+    }
 }

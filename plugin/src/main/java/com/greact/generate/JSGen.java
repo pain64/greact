@@ -170,11 +170,40 @@ public class JSGen {
             mkString(lambda.getParameters(), (arg) ->
                 write(0, arg.getName().toString()), "(", ", ", ") =>");
             genBlock(deep, lambda.getBody());
-        }
+        } else if (expr instanceof SwitchExpressionTree switchExpr) {
+            write(0, "(() {");
+            write(deep, "switch");
+            genExpr(deep, switchExpr.getExpression());
+            write(0, " {\n");
+            var cases = switchExpr.getCases();
+            cases.forEach((caseStmt) -> {
+                if (caseStmt.getExpressions().isEmpty()) {
+                    write(deep + 2, "default:\n");
+                } else {
+                    write(deep + 2, "case");
+                    mkString(caseStmt.getExpressions(), (caseExpr) ->
+                        genExpr(deep + 2, caseExpr), " ", ", ", " ->");
+                }
 
-        // deal with blocks
-        // INSTANCE_OF
+                write(0, "\n");
+                var body = caseStmt.getBody();
+                if(body instanceof ExpressionTree bodyExpr) {
+                    write(deep + 2, "");
+                    genExpr(deep + 2, bodyExpr);
+                } else if(body instanceof StatementTree) {
+
+                }
+                caseStmt.getStatements().forEach((blockStmt) -> {
+                    genStmt(deep + 4, blockStmt);
+                    write(0, "\n");
+                });
+
+            });
+            write(deep, "}\n");
+            write(deep, "})()");
+        }
         // SWITCH_EXPRESSION
+        // INSTANCE_OF
         // ...
         // METHOD_INVOCATION :deal with overload
         // MEMBER_REFERENCE  :deal with overload
@@ -276,9 +305,30 @@ public class JSGen {
             write(deep, label.getLabel().toString());
             write(0, ":\n");
             genStmt(deep, label.getStatement());
+        } else if (stmt instanceof SwitchTree switchStmt) {
+            write(deep, "switch");
+            genExpr(deep, switchStmt.getExpression());
+            write(0, " {\n");
+            var cases = switchStmt.getCases();
+            cases.forEach((caseStmt) -> {
+                if (caseStmt.getExpressions().isEmpty()) {
+                    write(deep + 2, "default:");
+                } else {
+                    write(deep + 2, "case");
+                    mkString(caseStmt.getExpressions(), (caseExpr) ->
+                        genExpr(deep + 2, caseExpr), " ", ", ", ":");
+                }
+
+                write(0, "\n");
+                caseStmt.getStatements().forEach((blockStmt) -> {
+                    genStmt(deep + 4, blockStmt);
+                    write(0, "\n");
+                });
+
+            });
+            write(deep, "}");
         }
     }
-    // SWITCH
     // ASSERT
     // TRY
     // THROW

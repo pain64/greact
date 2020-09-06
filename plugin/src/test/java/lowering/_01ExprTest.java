@@ -365,4 +365,31 @@ public class _01ExprTest {
                   }
                 }""");
     }
+
+    @Test
+    void switchExpr() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  int baz(int x) {
+                    return switch(x) {
+                      case 1, 2 -> 41;
+                      case 3 -> 42;
+                      default -> {
+                        var x = 52;
+                        System.out.println("hello");
+                      }
+                    };
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz() {
+                    let lambda = (i) => {
+                      return i
+                    }
+                  }
+                }""");
+    }
 }
