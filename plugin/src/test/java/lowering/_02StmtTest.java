@@ -39,14 +39,12 @@ public class _02StmtTest {
             """
                 class js$Test {
                   baz() {
-                    if(false) {
+                    if(false)
                       return 41
-                    }
-                    if(true) {
+                    if(true)
                       return 42
-                    } else {
+                    else
                       return 41
-                    }
                   }
                 }""");
     }
@@ -73,12 +71,10 @@ public class _02StmtTest {
                   baz(x, y) {
                     while(true) {
                       x++
-                      if(x > 10) {
+                      if(x > 10)
                         continue
-                      }
-                      if(x > 100) {
+                      if(x > 100)
                         break
-                      }
                       y++
                     }
                   }
@@ -91,22 +87,20 @@ public class _02StmtTest {
             """
                 package js;
                 public class Test {
-                  void baz(int x, int y) {
+                  void baz() {
                     outer:
                     for (;;)
                       for (;;)
-                        break outer;
+                        continue outer;
                   }
                 }""",
             """
                 class js$Test {
-                  baz(x, y) {
-                    x++
-                    l1:
-                    y++
-                    while(true) {
-                      break l1
-                    }
+                  baz() {
+                    outer:
+                    for(;;)
+                      for(;;)
+                        continue outer
                   }
                 }""");
     }
