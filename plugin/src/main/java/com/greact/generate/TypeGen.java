@@ -7,19 +7,46 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class TypeGen {
+    public static record MethodInfo(boolean isStatic, List<String> argTypes) {
+    }
+    public static record OverloadInfo(int n, boolean isOverloaded, MethodInfo mi) {
+    }
     public static record TContext(
         CompilationUnitTree cu,
         Trees trees,
         HashMap<String, List<MethodInfo>> overloadMap
-    ) { }
-    public static record MethodInfo(List<String> argTypes) { }
+    ) {
+        boolean overloadMatches(MethodInfo method, List<? extends TypeMirror> args) {
+            if (method.argTypes().size() != args.size()) return false;
+
+            for (var i = 0; i < args.size(); i++)
+                if (!args.get(i).toString()
+                    .equals(method.argTypes().get(i))) return false;
+
+            return true;
+        }
+
+        public OverloadInfo findMethod(String name, List<? extends TypeMirror> args) {
+            var group = overloadMap.get(name);
+            if (group.size() == 1)
+                return new OverloadInfo(0, false, group.get(0));
+            else
+                for (var i = 0; i < group.size(); i++)
+                    if (overloadMatches(group.get(i), args))
+                        return new OverloadInfo(i, true, group.get(i));
+
+            throw new RuntimeException("Unreachable");
+        }
+    }
 
     final JSOut out;
     final CompilationUnitTree cu;
@@ -55,7 +82,7 @@ public class TypeGen {
                 .map(p -> trees.getTypeMirror(trees.getPath(p)).toString())
                 .collect(Collectors.toList());
 
-            overloads.add(new MethodInfo(argTypes));
+            overloads.add(new MethodInfo(m.getModifiers().contains(Modifier.STATIC), argTypes));
             overloadMap.put(methodName, overloads);
         });
 

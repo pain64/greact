@@ -4,8 +4,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 public class MethodGen {
     final TContext ctx;
@@ -19,27 +18,18 @@ public class MethodGen {
     }
 
     void method(ExecutableElement method) {
+        var name = method.getSimpleName().toString();
         var params = method.getParameters();
-        var group = ctx.overloadMap().get(method.getSimpleName().toString());
 
-        var overloadSuffix = "";
-        if (group.size() != 1) // has overloads
-            overloadSuffix = "$" + IntStream.range(0, group.size()).filter(i -> {
-                var mi = group.get(i);
-                if (mi.argTypes().size() != params.size()) return false;
+        var info = ctx.findMethod(name,
+            params.stream()
+                .map(p -> ctx.trees().getTypeMirror(ctx.trees().getPath(p)))
+                .collect(Collectors.toList()));
 
-                for (var j = 0; j < params.size(); j++) {
-                    var myArgType = ctx.trees().getTypeMirror(ctx.trees().getPath(params.get(j))).toString();
-                    if (!myArgType.equals(mi.argTypes().get(j))) return false;
-                }
-
-                return true;
-            }).findFirst().getAsInt();
-
-        out.write(2, method.getModifiers()
-            .contains(Modifier.STATIC) ? "static " : "");
+        out.write(2, info.mi().isStatic() ? "static " : "");
         out.write(0, method.getSimpleName().toString());
-        out.write(0, overloadSuffix);
+        if (info.isOverloaded())
+            out.write(0, "$" + info.n());
 
         out.mkString(method.getParameters(), param ->
             out.write(0, param.getSimpleName().toString()), "(", ", ", ")");

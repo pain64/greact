@@ -5,7 +5,9 @@ import com.greact.generate.util.JSOut;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.util.Pair;
 
+import javax.lang.model.type.ExecutableType;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 public class ExpressionGen {
     final JSOut out;
@@ -166,12 +168,28 @@ public class ExpressionGen {
             out.write(deep + 2, "}\n");
             out.write(deep, "})()");
         } else if (expr instanceof MethodInvocationTree call) {
+            var select = call.getMethodSelect();
+            var mType = (ExecutableType) ctx.trees().getTypeMirror(ctx.trees().getPath(ctx.cu(), select));
 
+            var mInfo = ((Supplier<TypeGen.OverloadInfo>) () -> {
+                // FIXME: on-demand static import, foreign module call
+                if (select instanceof IdentifierTree ident) { // call local
+                    var name = ident.getName().toString();
+                    var info = ctx.findMethod(name, mType.getParameterTypes());
+                    out.write(0, "this.");
+                    if (info.mi().isStatic()) out.write(0, "constructor.");
+                    out.write(0, name);
+                    return info;
+                } else if (select instanceof MemberSelectTree prop) {
+                    expr(deep, prop);
+                    return ctx.findMethod(prop.getIdentifier().toString(), mType.getParameterTypes());
+                } else
+                    throw new RuntimeException("unknown kind: " + select.getKind());
+            }).get();
 
-            ctx.trees().getTypeMirror(ctx.trees()
-                .getPath(ctx.cu(), call.getArguments().get(0))).toString();
-
-            var x = 1;
+            if (mInfo.isOverloaded()) out.write(0, "$" + mInfo.n());
+            out.mkString(call.getArguments(), (arg) ->
+                expr(deep, arg), "(", ", ", ")");
         }
         // INSTANCE_OF
         // ...
