@@ -1,6 +1,7 @@
 package com.greact;
 
-import com.greact.generate.JSGen;
+import com.greact.generate.TypeGen;
+import com.greact.generate.util.JSOut;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -54,7 +55,7 @@ public class GReactPlugin implements Plugin {
                         e.getTypeElement().getSimpleName() + ".js");
 
                     var writer = jsFile.openWriter();
-                    new JSGen(writer, cu, env, (BasicJavacTask) task).genType(0, e.getTypeElement());
+                    new TypeGen(new JSOut(writer), cu, env).type(0, e.getTypeElement());
                     writer.close();
 
                 } catch (IOException ex) {

@@ -16,6 +16,7 @@ public class _00DeclarationsTest {
                 public class Test {}""",
             """
                 class js$Test {
+                                
                 }""");
     }
 
@@ -36,6 +37,38 @@ public class _00DeclarationsTest {
                   foo(x, y) {
                   }
                 }""");
+    }
+
+    @Test
+    void overloadedMethod() throws IOException {
+        assertCompiled(
+            """
+               package js;
+               public class Test {
+                 void baz() {}
+                 void foo() {}
+                 void bar() {}
+                 void bar(int x) {}
+                 void bar(long x) {}
+               }""",
+            """
+                class js$Test {
+                  baz() {
+                  }
+                  
+                  foo() {
+                  }
+                  
+                  bar$0() {
+                  }
+                  
+                  bar$1(x) {
+                  }
+                  
+                  bar$2(x) {
+                  }
+                }""");
+
     }
 
     @Test
