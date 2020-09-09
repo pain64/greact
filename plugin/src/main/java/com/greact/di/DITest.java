@@ -1,5 +1,6 @@
 package com.greact.di;
 
+import com.greact.di.DI.Data;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -32,8 +33,9 @@ public class DITest {
                                HttpServletResponse resp) throws IOException {
 
                 var auth = new Auth(req.getSession(true));
-                new DI.Data(commonDb, smsDb, auth).bound(() ->
-                    rpc.handle(path, req.getInputStream(), resp.getOutputStream()));
+                DI.bound(new Data(commonDb, smsDb, auth), () -> {
+                    rpc.handle(path, req.getInputStream(), resp.getOutputStream());
+                });
 
             }
         });

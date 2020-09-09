@@ -1,8 +1,6 @@
 package com.greact.di.service;
 
-import com.greact.di.DI;
-
-public class UserService extends DI {
+public class UserService {
     public static void greet() {
 
     }

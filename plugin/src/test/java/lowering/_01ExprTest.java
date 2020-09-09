@@ -377,18 +377,27 @@ public class _01ExprTest {
                       case 1, 2 -> 41;
                       case 3 -> 42;
                       default -> {
-                        var x = 52;
-                        System.out.println("hello");
+                        var y = 52;
+                        yield y;
                       }
                     };
                   }
                 }""",
             """
                 class js$Test {
-                  baz() {
-                    let lambda = (i) => {
-                      return i
-                    }
+                  baz(x) {
+                    return (() => {
+                      switch(x) {
+                        case 1:
+                        case 2:
+                          return 41
+                        case 3:
+                          return 42
+                        default:
+                          let y = 52
+                          return y
+                      }
+                    })()
                   }
                 }""");
     }

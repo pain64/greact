@@ -171,38 +171,40 @@ public class JSGen {
                 write(0, arg.getName().toString()), "(", ", ", ") =>");
             genBlock(deep, lambda.getBody());
         } else if (expr instanceof SwitchExpressionTree switchExpr) {
-            write(0, "(() {");
-            write(deep, "switch");
-            genExpr(deep, switchExpr.getExpression());
+            write(0, "(() => {\n");
+            write(deep + 2, "switch");
+            genExpr(deep + 2, switchExpr.getExpression());
             write(0, " {\n");
             var cases = switchExpr.getCases();
             cases.forEach((caseStmt) -> {
-                if (caseStmt.getExpressions().isEmpty()) {
-                    write(deep + 2, "default:\n");
-                } else {
-                    write(deep + 2, "case");
-                    mkString(caseStmt.getExpressions(), (caseExpr) ->
-                        genExpr(deep + 2, caseExpr), " ", ", ", " ->");
-                }
+                if (caseStmt.getExpressions().isEmpty())
+                    write(deep + 4, "default:\n");
+                else
+                    caseStmt.getExpressions().forEach((caseExpr) -> {
+                        write(deep + 4, "case ");
+                        genExpr(deep + 4, caseExpr);
+                        write(0, ":\n");
+                    });
 
-                write(0, "\n");
                 var body = caseStmt.getBody();
-                if(body instanceof ExpressionTree bodyExpr) {
-                    write(deep + 2, "");
-                    genExpr(deep + 2, bodyExpr);
-                } else if(body instanceof StatementTree) {
 
-                }
-                caseStmt.getStatements().forEach((blockStmt) -> {
-                    genStmt(deep + 4, blockStmt);
+                if (body instanceof BlockTree block) {
+                    block.getStatements().forEach((bStmt) -> {
+                        genStmt(deep + 6, bStmt);
+                        write(0, "\n");
+                    });
+                } else if (body instanceof StatementTree stmt) {
+                    genStmt(deep + 6, stmt);
+                } else if (body instanceof ExpressionTree caseResult) {
+                    write(deep + 6, "return ");
+                    genExpr(deep + 6, caseResult);
                     write(0, "\n");
-                });
-
+                } else
+                    throw new RuntimeException("unknown kind: " + body.getKind());
             });
-            write(deep, "}\n");
+            write(deep + 2, "}\n");
             write(deep, "})()");
         }
-        // SWITCH_EXPRESSION
         // INSTANCE_OF
         // ...
         // METHOD_INVOCATION :deal with overload
@@ -221,6 +223,9 @@ public class JSGen {
         } else if (tree instanceof StatementTree stmt) {
             write(0, "\n");
             genStmt(deep + 2, stmt);
+        } else if (tree instanceof ExpressionTree expr) {
+            //write(deep + 2, "\n");
+            genExpr(deep, expr);
         } else
             throw new RuntimeException("unknown kind: " + tree.getKind());
     }
@@ -327,6 +332,9 @@ public class JSGen {
 
             });
             write(deep, "}");
+        } else if (stmt instanceof YieldTree yieldExpr) {
+            write(deep, "return ");
+            genExpr(deep, yieldExpr.getValue());
         }
     }
     // ASSERT

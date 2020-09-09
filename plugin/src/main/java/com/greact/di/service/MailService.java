@@ -1,8 +1,8 @@
 package com.greact.di.service;
 
-import com.greact.di.DI;
+import static com.greact.di.DI.di;
 
-public class MailService extends DI {
+public class MailService {
 
     static void send() {
         var x = di().commonDb();
