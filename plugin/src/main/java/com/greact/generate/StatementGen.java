@@ -118,9 +118,9 @@ public class StatementGen {
             out.write(0, " {\n");
             var cases = switchStmt.getCases();
             cases.forEach((caseStmt) -> {
-                if (caseStmt.getExpressions().isEmpty()) {
+                if (caseStmt.getExpressions().isEmpty())
                     out.write(deep + 2, "default:");
-                } else {
+                else {
                     // FIXME: bug
                     out.write(deep + 2, "case");
                     out.mkString(caseStmt.getExpressions(), caseExpr ->

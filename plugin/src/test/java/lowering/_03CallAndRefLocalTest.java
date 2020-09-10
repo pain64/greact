@@ -6,21 +6,15 @@ import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
 
-public class _03CallTest {
+public class _03CallAndRefLocalTest {
 
     @Test
-    void callLocal() throws IOException {
+    void call() throws IOException {
         assertCompiled(
             """
                 package js;
                 public class Test {
-                  static class B {
-                    void foo() {}
-                  }
-                  static class A {
-                    B b;
-                  }
-                  void bar(int x, int y) {} 
+                  void bar(int x, int y) {}  
                   void baz() {
                     bar(42, 42);
                     this.bar(42, 42); 
@@ -39,7 +33,7 @@ public class _03CallTest {
     }
 
     @Test
-    void callLocalStatic() throws IOException {
+    void callStatic() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -83,6 +77,49 @@ public class _03CallTest {
                   baz() {
                     this.bar$0(42)
                     this.bar$1(42)
+                  }
+                }""");
+    }
+
+    @Test
+    void methodRefLocal() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  @FunctionalInterface
+                  interface HInt {
+                    void handle(int x);
+                  }
+                  @FunctionalInterface
+                  interface HLong {
+                    void handle(long x);
+                  }
+                  static void foo(int x) {}
+                  void bar(int x) {}
+                  void bar(long x) {}
+                  
+                  void baz() {
+                    HInt m1 = Test::foo;
+                    HLong m2 = this::bar;
+                    HInt m3 = this::bar;
+                  }
+                }""",
+            """
+                class js$Test {
+                  static foo(x) {
+                  }
+                  
+                  bar$0(x) {
+                  }
+                  
+                  bar$1(x) {
+                  }
+                  
+                  baz() {
+                    let m1 = js$Test.foo
+                    let m2 = this.bar$1.bind(this)
+                    let m3 = this.bar$0.bind(this)
                   }
                 }""");
     }

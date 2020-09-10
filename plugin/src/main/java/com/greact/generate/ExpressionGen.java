@@ -3,11 +3,17 @@ package com.greact.generate;
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.sun.source.tree.*;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.type.ExecutableType;
 import java.util.Collections;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ExpressionGen {
     final JSOut out;
@@ -190,11 +196,33 @@ public class ExpressionGen {
             if (mInfo.isOverloaded()) out.write(0, "$" + mInfo.n());
             out.mkString(call.getArguments(), (arg) ->
                 expr(deep, arg), "(", ", ", ")");
+        } else if (expr instanceof MemberReferenceTree memberRef) {
+            var paramTypes = ((MethodSymbol) TreeInfo.symbol((JCTree) memberRef)).getParameters()
+                .stream()
+                .map(p -> ctx.trees().getTypeMirror(ctx.trees().getPath(p)))
+                .collect(Collectors.toList());
+            var overloadInfo = ctx.findMethod(memberRef.getName().toString(), paramTypes);
+            var sym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
+
+            if (sym instanceof ClassSymbol classSym) {
+                out.write(0, classSym.packge().toString().replace(".", "$"));
+                out.write(0, "$");
+                expr(deep, memberRef.getQualifierExpression());
+                out.write(0, ".");
+                out.write(0, memberRef.getName().toString());
+                if (overloadInfo.isOverloaded())
+                    out.write(0, "$" + overloadInfo.n());
+            } else if (sym instanceof VarSymbol) {
+                expr(deep, memberRef.getQualifierExpression());
+                out.write(0, ".");
+                out.write(0, memberRef.getName().toString());
+                if (overloadInfo.isOverloaded())
+                    out.write(0, "$" + overloadInfo.n());
+                out.write(0, ".bind(this)");
+            } else
+                throw new RuntimeException("unknown kind: " + sym.getKind());
         }
         // INSTANCE_OF
-        // ...
-        // METHOD_INVOCATION :deal with overload
-        // MEMBER_REFERENCE  :deal with overload
         // NEW_CLASS
     }
 }

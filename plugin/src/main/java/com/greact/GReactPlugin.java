@@ -14,6 +14,8 @@ import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 public class GReactPlugin implements Plugin {
@@ -30,6 +32,7 @@ public class GReactPlugin implements Plugin {
     List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
 
     void foobar() {
+
     }
 
     @Override

@@ -29,6 +29,7 @@
                         <compilerArg>--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</compilerArg>
                         <compilerArg>--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</compilerArg>
                         <compilerArg>--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</compilerArg>
+                        <compilerArg>--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</compilerArg>
                         <compilerArg>--enable-preview</compilerArg>
                         <compilerArg>-J--enable-preview</compilerArg>
 <!--                        <compilerArg>-J&#45;&#45;enable-preview</compilerArg>-->
