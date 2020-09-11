@@ -221,6 +221,24 @@ public class ExpressionGen {
                 out.write(0, ".bind(this)");
             } else
                 throw new RuntimeException("unknown kind: " + sym.getKind());
+        } else if (expr instanceof InstanceOfTree instanceOf) {
+            var pattern = instanceOf.getPattern();
+            if (pattern == null) {
+                expr(deep, instanceOf.getExpression());
+                out.write(0, " instanceof ");
+                out.write(0, instanceOf.getType().toString());
+            } else {
+                var name = ((BindingPatternTree) pattern).getBinding().toString();
+                out.write(0, "(");
+                out.write(0, name);
+                out.write(0, " = ");
+                expr(deep, instanceOf.getExpression());
+                out.write(0, ", ");
+                out.write(0, name);
+                out.write(0, " instanceof ");
+                out.write(0, instanceOf.getType().toString());
+                out.write(0, ")");
+            }
         }
         // INSTANCE_OF
         // NEW_CLASS

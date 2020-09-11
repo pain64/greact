@@ -401,4 +401,25 @@ public class _01ExprTest {
                   }
                 }""");
     }
+
+    @Test
+    void instanceOfExpr() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz(Object x) {
+                    boolean y1 = x instanceof String;
+                    boolean y2 = x instanceof Integer;
+                    boolean y3 = x instanceof Long;
+                    boolean y4 = x instanceof String s;
+                  }
+                }""",
+            """
+                class js$Test {
+                  baz(x) {
+                    
+                  }
+                }""");
+    }
 }

@@ -20,7 +20,8 @@ public class TestCompiler {
         var compilationUnits
             = singletonList(new StringSourceFile(qualifiedClassName, testSource));
 
-        var arguments = asList("-classpath", System.getProperty("java.class.path"),
+        var arguments = asList("--enable-preview", "--source", "14",
+            "-classpath", System.getProperty("java.class.path"),
             "-Xplugin:" + GReactPlugin.NAME);
 
         var task = (BasicJavacTask) compiler.getTask(output, fileManager,
