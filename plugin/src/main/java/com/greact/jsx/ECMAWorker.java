@@ -1,7 +1,8 @@
-package main;
+package com.greact.jsx;
 
-import antlr4.js.ECMAScriptParser;
-import antlr4.js.ECMAScriptBaseListener;
+
+import com.greact.jsx.lib.antlr4.js.ECMAScriptBaseListener;
+import com.greact.jsx.lib.antlr4.js.ECMAScriptParser;
 
 public class ECMAWorker extends ECMAScriptBaseListener {
     public void enterProgram(ECMAScriptParser.ProgramContext ctx) {

@@ -1,4 +1,4 @@
-package antlr4.js;// Generated from main/gramma/js/ECMAScript.g4 by ANTLR 4.8
+package com.greact.jsx.lib.antlr4.js;// Generated from main/gramma/js/ECMAScript.g4 by ANTLR 4.8
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**

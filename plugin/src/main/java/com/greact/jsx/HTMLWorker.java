@@ -1,7 +1,8 @@
-package main;
+package com.greact.jsx;
 
-import antlr4.html.HTMLParser;
-import antlr4.html.HTMLParserBaseListener;
+
+import com.greact.jsx.lib.antlr4.html.HTMLParser;
+import com.greact.jsx.lib.antlr4.html.HTMLParserBaseListener;
 
 public class HTMLWorker extends HTMLParserBaseListener {
     public void enterHtmlDocument(HTMLParser.HtmlDocumentContext ctx) {

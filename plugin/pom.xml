@@ -65,5 +65,10 @@
             <artifactId>jetty-servlet</artifactId>
             <version>9.4.3.v20170317</version>
         </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.8-1</version>
+        </dependency>
     </dependencies>
 </project>
