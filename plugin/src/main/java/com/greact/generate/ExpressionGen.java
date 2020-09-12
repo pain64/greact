@@ -12,6 +12,7 @@ import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.type.ExecutableType;
 import java.util.Collections;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -222,25 +223,52 @@ public class ExpressionGen {
             } else
                 throw new RuntimeException("unknown kind: " + sym.getKind());
         } else if (expr instanceof InstanceOfTree instanceOf) {
+            var ofType = TreeInfo.symbol((JCTree) instanceOf.getType())
+                .getQualifiedName().toString();
+
+            // FIXME: disable for arrays (aka x instanceof String[])
+            Consumer<Runnable> checkGen = switch (ofType) {
+                case "java.lang.String" -> eGen -> {
+                    out.write(0, "(($x) => {return typeof $x === 'string' || $x instanceof String})(");
+                    eGen.run();
+                    out.write(0, ")");
+                };
+                case "java.lang.Integer", "java.lang.Long", "java.lang.Float" -> eGen -> {
+                    out.write(0, "typeof ");
+                    eGen.run();
+                    out.write(0, " == 'number'");
+                };
+                default -> eGen -> {
+                    eGen.run();
+                    out.write(0, " instanceof ");
+                    out.write(0, ofType);
+                };
+            };
+
             var pattern = instanceOf.getPattern();
-            if (pattern == null) {
-                expr(deep, instanceOf.getExpression());
-                out.write(0, " instanceof ");
-                out.write(0, instanceOf.getType().toString());
-            } else {
+            if (pattern == null)
+                checkGen.accept(() -> expr(deep, instanceOf.getExpression()));
+            else {
+                // FIXME:
+                //  1. before method body gen
+                //    - find all insanceof
+                //    - write all pattern vars at function begin
                 var name = ((BindingPatternTree) pattern).getBinding().toString();
                 out.write(0, "(");
                 out.write(0, name);
                 out.write(0, " = ");
                 expr(deep, instanceOf.getExpression());
                 out.write(0, ", ");
-                out.write(0, name);
-                out.write(0, " instanceof ");
-                out.write(0, instanceOf.getType().toString());
+                checkGen.accept(() -> out.write(0, name));
                 out.write(0, ")");
             }
+        } else if (expr instanceof NewClassTree newClass) {
+            // FIXME:
+            //  - deal with overload
+            //  - anon inner classes?
+            out.write(0, "new ");
+            expr(deep, newClass.getIdentifier());
+            out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "(", ", ", ")");
         }
-        // INSTANCE_OF
-        // NEW_CLASS
     }
 }

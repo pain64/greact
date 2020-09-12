@@ -418,7 +418,37 @@ public class _01ExprTest {
             """
                 class js$Test {
                   baz(x) {
-                    
+                    let y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x)
+                    let y2 = typeof x == 'number'
+                    let y3 = typeof x == 'number'
+                    let y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s))
+                  }
+                }""");
+        // FIXME(generated for instanceof pattern) => let s;
+    }
+
+    @Test
+    void newClassExpr() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  class A {
+                    final int x;
+                    final int y;
+                    public A(int x, int y) {
+                      this.x = x;
+                      this.y = y;
+                    }
+                  }
+                  A newA() {
+                    return new A(1, 2);
+                  }
+                }""",
+            """
+                class js$Test {
+                  newA() {
+                    return new A(1, 2)
                   }
                 }""");
     }
