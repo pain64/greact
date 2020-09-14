@@ -1,10 +1,12 @@
 package lowering;
 
 import org.junit.jupiter.api.Test;
+import util.CompileAssert;
 
 import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
+import static util.CompileAssert.assertCompiledMany;
 
 public class _03CallAndRefLocalTest {
 
@@ -95,6 +97,7 @@ public class _03CallAndRefLocalTest {
                   interface HLong {
                     void handle(long x);
                   }
+                  @Deprecated
                   static void foo(int x) {}
                   void bar(int x) {}
                   void bar(long x) {}
@@ -122,5 +125,59 @@ public class _03CallAndRefLocalTest {
                     let m3 = this.bar$0.bind(this)
                   }
                 }""");
+    }
+
+    @Test
+    void callOverloadedMany() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    public class A {
+                      void mA(int x) {}
+                      void mA(long x) {}
+                      void callB(B b) {
+                        b.mB(1L);
+                        b.mB(1);
+                      }
+                    }""",
+                """
+                    class js$A {
+                      mA$0(x) {
+                      }
+                      
+                      mA$1(x) {
+                      }
+                      
+                      callB(b) {
+                        b.mB$1(1)
+                        b.mB$0(1)
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.B",
+                """
+                    package js;
+                    public class B {
+                      void mB(int x) {}
+                      void mB(long x) {}
+                      void callA(A a) {
+                        a.mA(1L);
+                        a.mA(1);
+                      }
+                    }""",
+                """
+                    class js$B {
+                      mB$0(x) {
+                      }
+                      
+                      mB$1(x) {
+                      }
+                      
+                      callA(a) {
+                        a.mA$1(1)
+                        a.mA$0(1)
+                      }
+                    }""")
+        );
     }
 }

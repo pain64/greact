@@ -3,11 +3,15 @@ package util;
 import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CompileAssert {
     public static void assertCompiled(String javaSrc, String jsDest) throws IOException {
         Assertions.assertEquals(jsDest,
-            TestCompiler.compile("js.Test", javaSrc).values().iterator().next().getCharContent(true));
+            TestCompiler.compile(List.of(new StringSourceFile("js.Test", javaSrc)))
+                .values().iterator().next().getCharContent(true));
     }
 
     public static class CompileCase {
@@ -23,10 +27,16 @@ public class CompileAssert {
     }
 
     public static void assertCompiledMany(CompileCase... tests) throws IOException {
-        for (var test : tests) {
-            Assertions.assertEquals(test.jsDest,
-                TestCompiler.compile(test.fullQualified, test.javaSrc)
-                    .get(test.fullQualified).getCharContent(true));
+        var compilationUnits = Arrays.stream(tests)
+            .map(t -> new StringSourceFile(t.fullQualified, t.javaSrc))
+            .collect(Collectors.toList());
+
+
+        var res = TestCompiler.compile(compilationUnits);
+
+        for (var t : tests) {
+            var jsOut = res.get(t.fullQualified + ".js");
+            Assertions.assertEquals(t.jsDest, jsOut.getCharContent(true));
         }
     }
 }

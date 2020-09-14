@@ -45,6 +45,7 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() != TaskEvent.Kind.ANALYZE) return;
 
                 var cu = e.getCompilationUnit();
+                // FIXME: NPE
                 var pkg = cu.getPackage().getPackageName().toString();
                 if (!pkg.startsWith(jsCodePackage)) return;
 

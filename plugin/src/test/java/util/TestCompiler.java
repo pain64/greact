@@ -5,20 +5,19 @@ import com.sun.tools.javac.api.BasicJavacTask;
 
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 public class TestCompiler {
-    public static Map<String, StringJsFile> compile(String qualifiedClassName, String testSource) {
+    public static Map<String, StringJsFile> compile(List<StringSourceFile> compilationUnits) {
         var output = new StringWriter();
 
         var compiler = ToolProvider.getSystemJavaCompiler();
         var fileManager = new SimpleFileManager(
             compiler.getStandardFileManager(null, null, null));
-        var compilationUnits
-            = singletonList(new StringSourceFile(qualifiedClassName, testSource));
 
         var arguments = asList("--enable-preview", "--source", "14",
             "-classpath", System.getProperty("java.class.path"),

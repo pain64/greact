@@ -4,12 +4,12 @@ import com.greact.generate.util.JSOut;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.JCTree;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,31 +22,11 @@ public class TypeGen {
     }
     public static record TContext(
         CompilationUnitTree cu,
+        JCTree.JCClassDecl typeTree,
         Trees trees,
+        TypeElement typeEl,
         HashMap<String, List<MethodInfo>> overloadMap
-    ) {
-        boolean overloadMatches(MethodInfo method, List<? extends TypeMirror> args) {
-            if (method.argTypes().size() != args.size()) return false;
-
-            for (var i = 0; i < args.size(); i++)
-                if (!args.get(i).toString()
-                    .equals(method.argTypes().get(i))) return false;
-
-            return true;
-        }
-
-        public OverloadInfo findMethod(String name, List<? extends TypeMirror> args) {
-            var group = overloadMap.get(name);
-            if (group.size() == 1)
-                return new OverloadInfo(0, false, group.get(0));
-            else
-                for (var i = 0; i < group.size(); i++)
-                    if (overloadMatches(group.get(i), args))
-                        return new OverloadInfo(i, true, group.get(i));
-
-            throw new RuntimeException("Unreachable");
-        }
-    }
+    ) { }
 
     final JSOut out;
     final CompilationUnitTree cu;
@@ -86,7 +66,8 @@ public class TypeGen {
             overloadMap.put(methodName, overloads);
         });
 
-        var ctx = new TContext(cu, trees, overloadMap);
+        var thisType = (JCTree.JCClassDecl) trees.getTree(typeEl);
+        var ctx = new TContext(cu, thisType, trees, typeEl, overloadMap);
         var mGen = new MethodGen(ctx, out);
         out.mkString(methods, mGen::method, " {\n", "\n\n", "\n}");
     }

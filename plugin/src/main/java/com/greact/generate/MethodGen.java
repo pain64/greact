@@ -2,9 +2,9 @@ package com.greact.generate;
 
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
+import com.greact.generate.util.Overloads;
 
 import javax.lang.model.element.ExecutableElement;
-import java.util.stream.Collectors;
 
 public class MethodGen {
     final TContext ctx;
@@ -18,15 +18,9 @@ public class MethodGen {
     }
 
     void method(ExecutableElement method) {
-        var name = method.getSimpleName().toString();
-        var params = method.getParameters();
+        var info = Overloads.findMethod(ctx.typeEl(), method);
 
-        var info = ctx.findMethod(name,
-            params.stream()
-                .map(p -> ctx.trees().getTypeMirror(ctx.trees().getPath(p)))
-                .collect(Collectors.toList()));
-
-        out.write(2, info.mi().isStatic() ? "static " : "");
+        out.write(2, info.isStatic() ? "static " : "");
         out.write(0, method.getSimpleName().toString());
         if (info.isOverloaded())
             out.write(0, "$" + info.n());
