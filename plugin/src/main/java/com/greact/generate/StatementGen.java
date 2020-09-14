@@ -3,6 +3,10 @@ package com.greact.generate;
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.sun.source.tree.*;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCTypeUnion;
+
+import java.util.List;
 
 public class StatementGen {
     final JSOut out;
@@ -138,9 +142,69 @@ public class StatementGen {
         } else if (stmt instanceof YieldTree yieldExpr) {
             out.write(deep, "return ");
             exprGen.expr(deep, yieldExpr.getValue());
+        } else if (stmt instanceof ThrowTree throwStmt) {
+            out.write(deep, "throw ");
+            exprGen.expr(deep, throwStmt.getExpression());
+        } else if (stmt instanceof TryTree tryStmt) {
+            out.write(deep, "try");
+            block(deep, tryStmt.getBlock());
+
+            var catchList = tryStmt.getCatches();
+            if (!catchList.isEmpty()) {
+                out.write(0, " catch(");
+                var firstCatchVar = tryStmt.getCatches().get(0)
+                    .getParameter().getName().toString();
+                out.write(0, firstCatchVar);
+                out.write(0, ") {\n");
+
+                for (var i = 0; i < catchList.size(); i++) {
+                    var ct = catchList.get(i);
+                    var catchVar = ct.getParameter().getName().toString();
+                    var catchType = ct.getParameter().getType();
+                    var alternatives = catchType instanceof JCTypeUnion
+                        ? ((JCTypeUnion) catchType).alternatives
+                        : List.of((JCTree) catchType);
+
+                    if (i == 0) out.write(deep + 2, "if(");
+                    else out.write(0, " else if(");
+
+                    out.mkString(alternatives, alt -> {
+                        out.write(0, firstCatchVar);
+                        out.write(0, " instanceof ");
+                        out.write(0, alt.type.tsym.getQualifiedName().toString()
+                            .replace(".", "$"));
+                    }, "", " || ", "");
+
+                    out.write(0, ") {\n");
+                    for (var blockStm : ct.getBlock().getStatements()) {
+                        if (i != 0) {
+                            out.write(deep + 4, "let ");
+                            out.write(0, catchVar);
+                            out.write(0, " = ");
+                            out.write(0, firstCatchVar);
+                            out.write(0, "\n");
+                        }
+                        stmt(deep + 4, blockStm);
+                        out.write(0, "\n");
+                    }
+                    out.write(deep + 2, "}");
+                }
+
+                out.write(0, " else {\n");
+                out.write(deep + 4, "throw ");
+                out.write(0, firstCatchVar);
+                out.write(0, "\n");
+                out.write(deep + 2, "}\n");
+                out.write(deep, "}");
+            }
+
+            var finallyBlock = tryStmt.getFinallyBlock();
+            if (finallyBlock != null) {
+                out.write(0, " finally");
+                block(deep, finallyBlock);
+            }
         }
     }
     // ASSERT
-    // TRY
-    // THROW
 }
+

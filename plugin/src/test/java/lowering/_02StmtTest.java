@@ -198,4 +198,72 @@ public class _02StmtTest {
                   }
                 }""");
     }
+
+    @Test
+    void stmtThrow() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void foo() throws Exception {
+                    throw new Exception("xxx");
+                  }
+                }""",
+            """
+                class js$Test {
+                  foo() {
+                    throw new Exception('xxx')
+                  }
+                }""");
+    }
+
+    @Test
+    void stmtTry() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  static class E1 extends Exception {}
+                  static class E2 extends Exception {}
+                  static class E3 extends Exception {}
+                  static class E4 extends Exception {}
+                  
+                  void foo() throws E1, E2, E3, E4 {
+                  }
+                  
+                  void baz() throws E4 {
+                    try {
+                      foo();
+                    } catch(E1 | E2 e) {
+                      var x = e;
+                    } catch(E3 ee) {
+                      var y = ee;
+                    } finally {
+                      var z = 1;
+                    }
+                  }
+                }""",
+            """
+                class js$Test {
+                  foo() {
+                  }
+                  
+                  baz() {
+                    try {
+                      this.foo()
+                    } catch(e) {
+                      if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
+                        let x = e
+                      } else if(e instanceof js$Test$E3) {
+                        let ee = e
+                        let y = ee
+                      } else {
+                        throw e
+                      }
+                    } finally {
+                      let z = 1
+                    }
+                  }
+                }""");
+    }
 }
