@@ -4,6 +4,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
 import com.sun.source.tree.*;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Pair;
@@ -174,12 +175,14 @@ public class ExpressionGen {
             out.write(deep, "})()");
         } else if (expr instanceof MethodInvocationTree call) {
             var select = call.getMethodSelect();
+            var types = Types.instance(ctx.context());
 
             var mInfo = ((Supplier<Overloads.Info>) () -> {
                 // FIXME: on-demand static import, foreign module call
                 if (select instanceof IdentifierTree ident) { // call local
                     var name = ident.getName().toString();
-                    var info = Overloads.findMethod(ctx.typeEl(),
+
+                    var info = Overloads.methodInfo(types, ctx.typeEl(),
                         (ExecutableElement) TreeInfo.symbol((JCTree.JCIdent) ident));
 
                     out.write(0, "this.");
@@ -189,36 +192,40 @@ public class ExpressionGen {
                 } else if (select instanceof MemberSelectTree prop) {
                     expr(deep, prop);
                     var sym = TreeInfo.symbol((JCTree) prop.getExpression());
-                    return Overloads.findMethod((TypeElement) sym.type.asElement(),
+                    return Overloads.methodInfo(types, (TypeElement) sym.type.asElement(),
                         (ExecutableElement) TreeInfo.symbol((JCTree) prop));
                 } else
                     throw new RuntimeException("unknown kind: " + select.getKind());
             }).get();
 
-            if (mInfo.isOverloaded()) out.write(0, "$" + mInfo.n());
-            String s = "";
+            var prefix = mInfo.isOverloaded() ? "(" + mInfo.n() + ", " : "(";
             out.mkString(call.getArguments(), (arg) ->
-                expr(deep, arg), "(", ", ", ")");
+                expr(deep, arg), prefix, ", ", ")");
         } else if (expr instanceof MemberReferenceTree memberRef) {
+            var types = Types.instance(ctx.context()); // FIXME: move types to ctx, remove context from ctx
 
             var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
             var mSym = TreeInfo.symbol((JCTree) memberRef);
-            var info = Overloads.findMethod((TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
+            var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
 
             if (info.isStatic()) {
-                out.write(0, tSym.packge().toString().replace(".", "$"));
-                out.write(0, "$");
-                expr(deep, memberRef.getQualifierExpression());
+                var fullClassName = tSym.packge().toString().replace(".", "$") +
+                    "$" + memberRef.getQualifierExpression();
+                out.write(0, fullClassName);
                 out.write(0, ".");
                 out.write(0, memberRef.getName().toString());
-                if (info.isOverloaded()) out.write(0, "$" + info.n());
+                out.write(0, ".bind(");
+                out.write(0, fullClassName);
             } else {
                 expr(deep, memberRef.getQualifierExpression());
                 out.write(0, ".");
                 out.write(0, memberRef.getName().toString());
-                if (info.isOverloaded()) out.write(0, "$" + info.n());
-                out.write(0, ".bind(this)");
+                out.write(0, ".bind(this");
             }
+
+            if (info.isOverloaded()) out.write(0, ", " + info.n() + ")");
+            else out.write(0, ")");
+
         } else if (expr instanceof InstanceOfTree instanceOf) {
             var ofType = TreeInfo.symbol((JCTree) instanceOf.getType())
                 .getQualifiedName().toString();

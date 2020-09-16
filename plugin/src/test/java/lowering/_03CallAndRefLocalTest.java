@@ -70,15 +70,18 @@ public class _03CallAndRefLocalTest {
                 }""",
             """
                 class js$Test {
-                  bar$0(x) {
-                  }
-                  
-                  bar$1(x) {
+                  bar($over, x) {
+                    switch($over) {
+                      case 0:
+                        break
+                      case 1:
+                        break
+                    }
                   }
                   
                   baz() {
-                    this.bar$0(42)
-                    this.bar$1(42)
+                    this.bar(0, 42)
+                    this.bar(1, 42)
                   }
                 }""");
     }
@@ -113,16 +116,19 @@ public class _03CallAndRefLocalTest {
                   static foo(x) {
                   }
                   
-                  bar$0(x) {
-                  }
-                  
-                  bar$1(x) {
+                  bar($over, x) {
+                    switch($over) {
+                      case 0:
+                        break
+                      case 1:
+                        break
+                    }
                   }
                   
                   baz() {
-                    let m1 = js$Test.foo
-                    let m2 = this.bar$1.bind(this)
-                    let m3 = this.bar$0.bind(this)
+                    let m1 = js$Test.foo.bind(js$Test)
+                    let m2 = this.bar.bind(this, 1)
+                    let m3 = this.bar.bind(this, 0)
                   }
                 }""");
     }
@@ -143,15 +149,18 @@ public class _03CallAndRefLocalTest {
                     }""",
                 """
                     class js$A {
-                      mA$0(x) {
-                      }
-                      
-                      mA$1(x) {
+                      mA($over, x) {
+                        switch($over) {
+                          case 0:
+                            break
+                          case 1:
+                            break
+                        }
                       }
                       
                       callB(b) {
-                        b.mB$1(1)
-                        b.mB$0(1)
+                        b.mB(1, 1)
+                        b.mB(0, 1)
                       }
                     }"""),
             new CompileAssert.CompileCase("js.B",
@@ -167,15 +176,18 @@ public class _03CallAndRefLocalTest {
                     }""",
                 """
                     class js$B {
-                      mB$0(x) {
-                      }
-                      
-                      mB$1(x) {
+                      mB($over, x) {
+                        switch($over) {
+                          case 0:
+                            break
+                          case 1:
+                            break
+                        }
                       }
                       
                       callA(a) {
-                        a.mA$1(1)
-                        a.mA$0(1)
+                        a.mA(1, 1)
+                        a.mA(0, 1)
                       }
                     }""")
         );

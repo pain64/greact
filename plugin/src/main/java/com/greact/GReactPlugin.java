@@ -37,7 +37,8 @@ public class GReactPlugin implements Plugin {
 
     @Override
     public void init(JavacTask task, String... strings) {
-        var env = JavacProcessingEnvironment.instance(((BasicJavacTask) task).getContext());
+        var context = ((BasicJavacTask) task).getContext();
+        var env = JavacProcessingEnvironment.instance(context);
 
         task.addTaskListener(new TaskListener() {
             @Override
@@ -59,7 +60,7 @@ public class GReactPlugin implements Plugin {
                         e.getTypeElement().getSimpleName() + ".js");
 
                     var writer = jsFile.openWriter();
-                    new TypeGen(new JSOut(writer), cu, env).type(0, e.getTypeElement());
+                    new TypeGen(new JSOut(writer), cu, env, context).type(0, e.getTypeElement());
                     writer.close();
 
                 } catch (IOException ex) {

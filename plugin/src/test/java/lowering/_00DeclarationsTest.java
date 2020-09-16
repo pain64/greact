@@ -59,13 +59,15 @@ public class _00DeclarationsTest {
                   foo() {
                   }
                   
-                  bar$0() {
-                  }
-                  
-                  bar$1(x) {
-                  }
-                  
-                  bar$2(x) {
+                  bar($over, x) {
+                    switch($over) {
+                      case 0:
+                        break
+                      case 1:
+                        break
+                      case 2:
+                        break
+                    }
                   }
                 }""");
 
