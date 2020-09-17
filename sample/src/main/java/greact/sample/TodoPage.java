@@ -1,14 +1,27 @@
-package greact.sample;
+package todoapp;
 
-import com.greact.model.Component;
+import quickstart.Component;
 
-@Component(require = {TodoApp.class})
-public class TodoPage {
-    /**
-     * <body>
-     *     <h1>Hello, world</h1>
-     *     <h1>it works!</h1>
-     * </body>
-     */
-    String view;
+/**
+ * <!DOCTYPE html>
+ * <html>
+ *   <head>
+ *     <title>TodoMVC</title>
+ *     <link
+ *       rel="stylesheet"
+ *       type="text/css"
+ *       href="https://unpkg.com/todomvc-app-css@2.2.0/index.css"
+ *     />
+ *   </head>
+ *   <body>
+ *     <TodoApp />
+ *     <footer class="info">
+ *       <p>Double-click to edit a todo</p>
+ *       <p>Written by <a href="http://evanyou.me">Evan You</a></p>
+ *       <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+ *     </footer>
+ *   </body>
+ * </html>
+ */
+@Component(require = {TodoApp.class}) class TodoPage {
 }
