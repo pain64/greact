@@ -114,7 +114,8 @@ public class Overloads {
         var found = sections.get(0).entries.stream()
             .filter(entry -> entry.method == method)
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("unreachable"));
+            .orElseThrow(() ->
+                new IllegalStateException("unreachable"));
 
         return new Info(found.n, isOverloaded, method.getModifiers().contains(Modifier.STATIC));
     }

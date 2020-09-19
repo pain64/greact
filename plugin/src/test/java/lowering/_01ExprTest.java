@@ -27,7 +27,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x0 = true
                     let x1 = false
@@ -55,7 +59,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = null
                     x = 42
@@ -75,7 +83,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = true
                     let y = x
@@ -94,7 +106,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   boolToInt() {
                     let x = true ? 1 : 0
                   }
@@ -121,7 +137,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = 0
                     let x1 = x++
@@ -166,7 +186,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x0 = 1 * 1
                     let x1 = 1 / 1
@@ -213,7 +237,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = 0
                     x *= 1
@@ -248,7 +276,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = []
                     let y = ['hello', 'world']
@@ -270,7 +302,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     let y0 = x[0]
                     let y1 = x[0][0]
@@ -295,7 +331,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(a) {
                     let x = a.field
                     let b = a.next
@@ -315,7 +355,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     let y = x
                   }
@@ -333,7 +377,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     let y = ((x))
                   }
@@ -357,7 +405,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let lambda = (i) => {
                       return i
@@ -384,7 +436,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     return (() => {
                       switch(x) {
@@ -416,7 +472,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     let y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x)
                     let y2 = typeof x == 'number'
@@ -446,7 +506,11 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   newA() {
                     return new A(1, 2)
                   }

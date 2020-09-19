@@ -4,6 +4,9 @@ import com.greact.model.ErasedMethod;
 import com.greact.model.JSCode;
 import com.greact.model.NativeMethod;
 
+import java.util.Date;
+import java.util.stream.Stream;
+
 public abstract class String {
 
     @NativeMethod("includes({another})")

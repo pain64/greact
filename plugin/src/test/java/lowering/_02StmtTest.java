@@ -16,7 +16,11 @@ public class _02StmtTest {
                   int baz() { return 42; }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     return 42
                   }
@@ -37,7 +41,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     if(false)
                       return 41
@@ -67,7 +75,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x, y) {
                     while(true) {
                       x++
@@ -95,7 +107,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     outer:
                     for(;;)
@@ -118,7 +134,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(x) {
                     do {
                       x++
@@ -138,7 +158,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     for(let x = 0, y = 0; true; x++, y++) {
                     }
@@ -157,7 +181,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz(array) {
                     for(let x in array) {
                     }
@@ -184,7 +212,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                
                   baz(x, y) {
                     switch(x) {
                       case 0:
@@ -210,7 +242,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   foo() {
                     throw new Exception('xxx')
                   }
@@ -244,7 +280,11 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   foo() {
                   }
                   

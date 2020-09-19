@@ -23,7 +23,11 @@ public class _03CallAndRefLocalTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   bar(x, y) {
                   }
                   
@@ -44,7 +48,11 @@ public class _03CallAndRefLocalTest {
                   void baz() { bar(42, 42); }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   static bar(x, y) {
                   }
                   
@@ -69,7 +77,11 @@ public class _03CallAndRefLocalTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   bar($over, x) {
                     switch($over) {
                       case 0:
@@ -112,7 +124,11 @@ public class _03CallAndRefLocalTest {
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   static foo(x) {
                   }
                   
@@ -148,7 +164,11 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$A {
+                    class js$A extends Object {
+                      constructor() {
+                        super()
+                      }
+                      
                       mA($over, x) {
                         switch($over) {
                           case 0:
@@ -175,7 +195,11 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$B {
+                    class js$B extends Object {
+                      constructor() {
+                        super()
+                      }
+                      
                       mB($over, x) {
                         switch($over) {
                           case 0:

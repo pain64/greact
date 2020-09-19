@@ -15,8 +15,10 @@ public class _00DeclarationsTest {
                 package js;
                 public class Test {}""",
             """
-                class js$Test {
-                                
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }              
                 }""");
     }
 
@@ -30,7 +32,11 @@ public class _00DeclarationsTest {
                   void foo(int x, String y) {}
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                    
                   static bar() {
                   }
                   
@@ -52,7 +58,11 @@ public class _00DeclarationsTest {
                  void bar(long x) {}
                }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                   }
                   
@@ -78,13 +88,17 @@ public class _00DeclarationsTest {
         assertCompiled(
             """
                 package js;
-                public class Test {
+                public class Test {                  
                   void baz() {
                     String x;
                   }
                 }""",
             """
-                class js$Test {
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
                   baz() {
                     let x = null
                   }

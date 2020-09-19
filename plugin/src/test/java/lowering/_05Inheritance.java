@@ -2,6 +2,7 @@ package lowering;
 
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
+import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
 
@@ -11,16 +12,20 @@ public class _05Inheritance {
     @Test
     void callOverloadedMany() throws IOException {
         assertCompiledMany(
-            new CompileAssert.CompileCase("js.A",
+            new CompileCase("js.A",
                 """
                     package js;
                     public class A {
                       void foo(boolean x) { /* NOP */ };
-                      int  foo(long x)    { return 1; };
-                      int  foo(int x)     { return 2; };
+                      int  foo(long x)    { return 1;    };
+                      int  foo(int x)     { return 2;    };
                     }""",
                 """
-                    class js$A {
+                    class js$A extends Object {
+                      constructor() {
+                        super()
+                      }
+                      
                       foo($over, x) {
                         switch($over) {
                           case 0:
@@ -32,7 +37,7 @@ public class _05Inheritance {
                         }
                       }
                     }"""),
-            new CompileAssert.CompileCase("js.B",
+            new CompileCase("js.B",
                 """
                     package js;
                     public class B extends A {
@@ -42,6 +47,10 @@ public class _05Inheritance {
                     }""",
                 """
                     class js$B extends js$A {
+                      constructor() {
+                        super()
+                      }
+                      
                       foo($over, x) {
                         switch($over) {
                           case 1:
@@ -53,7 +62,7 @@ public class _05Inheritance {
                         }
                       }
                     }"""),
-            new CompileAssert.CompileCase("js.C",
+            new CompileCase("js.C",
                 """
                     package js;
                     public class C extends B {
@@ -63,6 +72,10 @@ public class _05Inheritance {
                     }""",
                 """
                     class js$C extends js$B {
+                      constructor() {
+                        super()
+                      }
+                      
                       foo($over, x, y) {
                         switch($over) {
                           case 2:

@@ -4,6 +4,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
 import com.sun.source.tree.*;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
@@ -145,7 +146,7 @@ public class ExpressionGen {
             expr(deep + 2, switchExpr.getExpression());
             out.write(0, " {\n");
             var cases = switchExpr.getCases();
-            cases.forEach((caseStmt) -> {
+            cases.forEach(caseStmt -> {
                 if (caseStmt.getExpressions().isEmpty())
                     out.write(deep + 4, "default:\n");
                 else
@@ -181,13 +182,15 @@ public class ExpressionGen {
                 // FIXME: on-demand static import, foreign module call
                 if (select instanceof IdentifierTree ident) { // call local
                     var name = ident.getName().toString();
+                    var identSymbol = (ExecutableElement) TreeInfo.symbol((JCTree.JCIdent) ident);
 
-                    var info = Overloads.methodInfo(types, ctx.typeEl(),
-                        (ExecutableElement) TreeInfo.symbol((JCTree.JCIdent) ident));
+                    var info = Overloads.methodInfo(types, (TypeElement) ((Symbol) identSymbol).owner.type.asElement(),
+                        identSymbol);
 
-                    out.write(0, "this.");
+                    if (!name.equals("super")) out.write(0, "this.");
                     if (info.isStatic()) out.write(0, "constructor.");
                     out.write(0, name);
+
                     return info;
                 } else if (select instanceof MemberSelectTree prop) {
                     expr(deep, prop);
