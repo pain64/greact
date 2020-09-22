@@ -3,6 +3,7 @@ package com.greact.generate;
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.shim.java.lang.model.Integral;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
@@ -14,6 +15,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.VariableElement;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class MethodGen {
@@ -27,7 +29,7 @@ public class MethodGen {
         stmtGen = new StatementGen(out, ctx);
     }
 
-    void NOP() {}
+    void NOP(int deep) {}
 
     void group(boolean isOverloaded, boolean hasInSuper, boolean isStatic,
                List<Pair<Integer, ExecutableElement>> group) {
@@ -48,23 +50,24 @@ public class MethodGen {
         out.mkString(params, param ->
             out.write(0, param.getSimpleName().toString()), prefix, ", ", ") {\n");
 
-        final Runnable defaultConstructLocals;
+        final Consumer<Integer> defaultConstructLocals;
         if (isConstructor) {
             var fields = ctx.typeEl().getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
                 .collect(Collectors.toList());
 
-            defaultConstructLocals = () ->
+            defaultConstructLocals = (deep) ->
                 fields.forEach(field -> {
                     var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
 
-                    out.write(8, "this.");
+                    out.write(deep, "this.");
                     out.write(0, varDecl.getName().toString());
                     out.write(0, " = ");
 
                     if (varDecl.getInitializer() != null)
                         stmtGen.exprGen.expr(4, varDecl.getInitializer());
+                        //else if (varDecl.getType().type.tsym.getAnnotation(Integral.class) != null)
                     else if (varDecl.getType().type.isIntegral())
                         out.write(0, "0");
                     else
@@ -87,7 +90,7 @@ public class MethodGen {
                     out.write(0, "\n");
                 }
 
-                defaultConstructLocals.run();
+                defaultConstructLocals.accept(8);
 
                 statements.stream().skip(1).forEach(stmt -> {
                     stmtGen.stmt(8, stmt);
@@ -108,8 +111,16 @@ public class MethodGen {
             out.write(4, "}\n");
         } else {
             var method = group.get(0).snd;
+            // FIXME: deduplicate code
             var statements = ctx.trees().getTree(method).getBody().getStatements();
-            statements.forEach(stmt -> {
+
+            if (!statements.isEmpty()) {
+                stmtGen.stmt(4, statements.get(0));
+                out.write(0, "\n");
+            }
+
+            defaultConstructLocals.accept(4);
+            statements.stream().skip(1).forEach(stmt -> {
                 stmtGen.stmt(4, stmt);
                 out.write(0, "\n"); // FIXME: может быть пусть stmtGen сам ставит \n после каждого stmt
             });

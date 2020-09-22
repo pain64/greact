@@ -2,20 +2,23 @@ package com.greact;
 
 import com.greact.generate.TypeGen;
 import com.greact.generate.util.JSOut;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.Plugin;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import com.greact.generate.util.JavaStdShim;
+import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.*;
+import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 
 public class GReactPlugin implements Plugin {
@@ -31,8 +34,17 @@ public class GReactPlugin implements Plugin {
     ShimLibrary shim = new ShimLibrary("com.greact.shim.java.lang", "java.lang");
     List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
 
-    void foobar() {
 
+    JCTree.JCFieldAccess rec(TreeMaker maker, Names names, String[] nodes, int i) {
+        var prev = i == 1
+            ? maker.Ident(names.fromString(nodes[i - 1]))
+            : rec(maker, names, nodes, i - 1);
+
+        return maker.Select(prev, names.fromString(nodes[i]));
+    }
+
+    JCTree.JCImport buildImport(TreeMaker maker, Names names, String[] paths) {
+        return maker.Import(rec(maker, names, paths, paths.length - 1), false);
     }
 
     @Override
@@ -43,28 +55,108 @@ public class GReactPlugin implements Plugin {
         task.addTaskListener(new TaskListener() {
             @Override
             public void finished(TaskEvent e) {
-                if (e.getKind() != TaskEvent.Kind.ANALYZE) return;
+                if (e.getKind() == TaskEvent.Kind.PARSE) {
+                    var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
+                    var maker = TreeMaker.instance(context);
+                    var names = Names.instance(context);
 
-                var cu = e.getCompilationUnit();
-                // FIXME: NPE
-                var pkg = cu.getPackage().getPackageName().toString();
-                if (!pkg.startsWith(jsCodePackage)) return;
+                    final com.sun.tools.javac.util.List<JCTree> head;
+                    final com.sun.tools.javac.util.List<JCTree> tail;
+
+                    if (cu.defs.head.getTag() == JCTree.Tag.PACKAGEDEF) {
+                        head = com.sun.tools.javac.util.List.of(cu.defs.head);
+                        tail = cu.defs.tail;
+                    } else {
+                        head = com.sun.tools.javac.util.List.nil();
+                        tail = cu.defs;
+                    }
+
+                    var xx = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "lang", "ShimTypeConversion"});
+//                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "lang", "Integer"});
+//                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "lang", "String"});
 
 
-                System.out.println("after analyze for: " + e + "cu: " + cu);
-                events.add(Pair.of((BasicJavacTask) task, e));
+                    cu.defs = tail.prepend(xx)/*.prepend(xx2).prepend(xx3)*/.prependList(head);
+//
+//                    cu.accept(new TreeTranslator(){
+//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitiveTypeTree) {
+//                            var x = 1;
+////                            new Type(Symbol.TypeSymbol)
+////                            maker.Type()
+////
+//                            this.result = maker.Ident(names.fromString("Integer"));
+//                        }
+//                        @Override public void visitLiteral(JCTree.JCLiteral tree) {
+//                            this.result = maker.Apply(
+//                                com.sun.tools.javac.util.List.nil(),
+//                                maker.Select(
+//                                    maker.Ident(names.fromString("Fake")),
+//                                    names.fromString("wrap")),
+//                                com.sun.tools.javac.util.List.of(tree));
+//                        }
+//                    });
 
-                try {
-                    var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
-                        cu.getPackageName().toString(),
-                        e.getTypeElement().getSimpleName() + ".js");
+//                    cu.accept(new TreeScanner() {
+//                        Stack<JCTree> stack = new Stack<>();
+//
+//                        @Override public void scan(JCTree tree) {
+//                            stack.push(tree);
+//                            super.scan(tree);
+//                            stack.pop();
+//                        }
+//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitive) {
+//                            stack.
+//                            var y = 1;
+//                        }
+//                        @Override public void visitLiteral(JCTree.JCLiteral ident) {
+//                            var x = 1;
+//                            //             varDecl.init = maker.Literal(42);
+//                        }
+//                    });
+                }
 
-                    var writer = jsFile.openWriter();
-                    new TypeGen(new JSOut(writer), cu, env, context).type(0, e.getTypeElement());
-                    writer.close();
+                if (e.getKind() == TaskEvent.Kind.ANALYZE) {
 
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
+                    var trees = Trees.instance(env);
+                    var types = Types.instance(context);
+                    // FIXME: NPE
+                    var pkg = cu.getPackage().getPackageName().toString();
+                    if (!pkg.startsWith(jsCodePackage)) return;
+
+
+                    var shimConversionsClass = cu.defs.stream()
+                        .filter(def -> def.getTag() == JCTree.Tag.IMPORT)
+                        .findFirst()
+                        .map(def -> ((JCTree.JCImport) def).qualid)
+                        .orElseThrow(() -> new RuntimeException("internal compiler error"));
+
+                    var shimConversions =
+                        shimConversionsClass.type.tsym.getEnclosedElements().stream()
+                            .filter(el -> el instanceof ExecutableElement && el.getKind() != ElementKind.CONSTRUCTOR)
+                            .map(el -> (Symbol.MethodSymbol) el)
+                            .collect(Collectors.toMap(
+                                m -> ((Symbol.ClassSymbol) m.getParameters().get(0).type.tsym).fullname,
+                                Symbol.MethodSymbol::getReturnType));
+
+                    // Types.instance(context).isSameType(intType.tsym.getEnclosedElements().get(1).type, ((Symbol.MethodSymbol) sym).type)
+
+
+                    System.out.println("after analyze for: " + e + "cu: " + cu);
+                    events.add(Pair.of((BasicJavacTask) task, e));
+
+                    try {
+                        var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
+                            cu.getPackageName().toString(),
+                            e.getTypeElement().getSimpleName() + ".js");
+
+                        var writer = jsFile.openWriter();
+                        new TypeGen(new JSOut(writer), cu, env, context, new JavaStdShim(types, shimConversions)).type(0, e.getTypeElement());
+                        writer.close();
+
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
 

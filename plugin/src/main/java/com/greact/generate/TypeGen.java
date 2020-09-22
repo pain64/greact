@@ -1,38 +1,44 @@
 package com.greact.generate;
 
 import com.greact.generate.util.JSOut;
-import com.sun.source.tree.CompilationUnitTree;
+import com.greact.generate.util.JavaStdShim;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.*;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.stream.Collectors;
 
 public class TypeGen {
     public static record TContext(
-        CompilationUnitTree cu,
+        JCTree.JCCompilationUnit cu,
         Trees trees,
+        Types types,
         Context context,
-        TypeElement typeEl
+        TypeElement typeEl,
+        JavaStdShim stdShim
     ) {
     }
 
     final JSOut out;
-    final CompilationUnitTree cu;
+    final JCTree.JCCompilationUnit cu;
     final Trees trees;
     final Context context;
+    final JavaStdShim stdShim;
 
-    public TypeGen(JSOut out, CompilationUnitTree cu, JavacProcessingEnvironment env, Context context) {
+    public TypeGen(JSOut out, JCTree.JCCompilationUnit cu, JavacProcessingEnvironment env, Context context, JavaStdShim stdShim) {
         this.out = out;
         this.cu = cu;
         this.trees = Trees.instance(env);
         this.context = context;
+        this.stdShim = stdShim;
     }
 
     public void type(int deep, TypeElement typeEl) {
@@ -52,7 +58,7 @@ public class TypeGen {
         out.write(0, " extends ");
         out.write(0, superClass);
 
-        var ctx = new TContext(cu, trees, context, typeEl);
+        var ctx = new TContext(cu, trees, Types.instance(context), context, typeEl, stdShim);
         var mGen = new MethodGen(ctx, out);
 
         out.write(0, " {\n");

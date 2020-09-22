@@ -176,32 +176,39 @@ public class ExpressionGen {
             out.write(deep, "})()");
         } else if (expr instanceof MethodInvocationTree call) {
             var select = call.getMethodSelect();
-            var types = Types.instance(ctx.context());
+            var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
+            var methodOwnerSym = methodSym.owner;
 
-            var mInfo = ((Supplier<Overloads.Info>) () -> {
-                // FIXME: on-demand static import, foreign module call
-                if (select instanceof IdentifierTree ident) { // call local
-                    var name = ident.getName().toString();
-                    var identSymbol = (ExecutableElement) TreeInfo.symbol((JCTree.JCIdent) ident);
+            var shimmedType = ctx.stdShim().findShimmedType(methodOwnerSym.type);
+            final Overloads.Info info;
+            if (shimmedType != null) {
+                info = Overloads.methodInfo(ctx.types(),
+                    (TypeElement) shimmedType.tsym, ctx.stdShim().findShimmedMethod(shimmedType, methodSym));
+            } else
+                info = Overloads.methodInfo(ctx.types(),
+                    (TypeElement) methodOwnerSym.type.tsym, methodSym);
 
-                    var info = Overloads.methodInfo(types, (TypeElement) ((Symbol) identSymbol).owner.type.asElement(),
-                        identSymbol);
 
-                    if (!name.equals("super")) out.write(0, "this.");
-                    if (info.isStatic()) out.write(0, "constructor.");
-                    out.write(0, name);
+            // FIXME: on-demand static import, foreign module call
+            if (select instanceof IdentifierTree ident) { // call local
+                var name = ident.getName().toString();
 
-                    return info;
-                } else if (select instanceof MemberSelectTree prop) {
-                    expr(deep, prop);
-                    var sym = TreeInfo.symbol((JCTree) prop.getExpression());
-                    return Overloads.methodInfo(types, (TypeElement) sym.type.asElement(),
-                        (ExecutableElement) TreeInfo.symbol((JCTree) prop));
+                if (!name.equals("super")) out.write(0, "this.");
+                if (info.isStatic()) out.write(0, "constructor.");
+                out.write(0, name);
+            } else if (select instanceof MemberSelectTree prop) {
+                if (info.isStatic()) {
+                    var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
+                    out.write(0, onType.toString().replace(".", "$"));
+                    out.write(0, ".");
+                    out.write(0, prop.getIdentifier().toString());
                 } else
-                    throw new RuntimeException("unknown kind: " + select.getKind());
-            }).get();
+                    expr(deep, prop);
+            } else
+                throw new RuntimeException("unknown kind: " + select.getKind());
 
-            var prefix = mInfo.isOverloaded() ? "(" + mInfo.n() + ", " : "(";
+
+            var prefix = info.isOverloaded() ? "(" + info.n() + ", " : "(";
             out.mkString(call.getArguments(), (arg) ->
                 expr(deep, arg), prefix, ", ", ")");
         } else if (expr instanceof MemberReferenceTree memberRef) {

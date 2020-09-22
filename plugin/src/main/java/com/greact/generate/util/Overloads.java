@@ -3,7 +3,6 @@ package com.greact.generate.util;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
-import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.ExecutableElement;
@@ -11,7 +10,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,6 +104,7 @@ public class Overloads {
     }
 
     public static Info methodInfo(Types types, TypeElement klass, ExecutableElement method) {
+
         var sections = buildSections(types, klass, method.getSimpleName());
 
         var isOverloaded = sections.stream()
