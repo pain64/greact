@@ -8,10 +8,7 @@ import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,6 +30,8 @@ public class MethodGen {
     void group(boolean isOverloaded, boolean hasInSuper, boolean isStatic,
                List<Pair<Integer, ExecutableElement>> group) {
         if (group.isEmpty()) return;
+        if(group.stream().allMatch(m -> m.snd.getModifiers().contains(Modifier.NATIVE))) return;
+
         var name = group.get(0).snd.getSimpleName().toString();
         var isConstructor = name.equals("<init>");
 

@@ -8,30 +8,31 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.tree.*;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.cli.*;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
 public class TranspilerPlugin implements Plugin {
 
-    public static final String NAME = "GReact";
+    public static final String NAME = "jScripter";
+    static final String[] DEFAULT_STD_CONVERSION_CLASS =
+        {"org", "over64", "jscripter", "std", "StdTypeConversion"};
+
+    String jsCodePackage = null;
+    String[] stdConversionClass = null;
 
     @Override
     public String getName() {
         return NAME;
     }
-
-    final String jsCodePackage = "js";
-    List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
 
 
     JCTree.JCFieldAccess rec(TreeMaker maker, Names names, String[] nodes, int i) {
@@ -46,8 +47,27 @@ public class TranspilerPlugin implements Plugin {
         return maker.Import(rec(maker, names, paths, paths.length - 1), false);
     }
 
+
     @Override
-    public void init(JavacTask task, String... strings) {
+    public void init(JavacTask task, String... args) {
+
+        var options = new Options()
+            .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
+                setRequired(true);
+            }})
+            .addOption(new Option(null, "std-conv-class", true, "java standard library type conversion"));
+
+        try {
+            var cmd = new DefaultParser().parse(options, args);
+            jsCodePackage = cmd.getOptionValue("js-src-package");
+            stdConversionClass = cmd.getOptionValue("std-conv-class").split("\\.");
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            new HelpFormatter().printHelp("jScripter plugin", options);
+
+            System.exit(1);
+        }
+
         var context = ((BasicJavacTask) task).getContext();
         var env = JavacProcessingEnvironment.instance(context);
 
@@ -70,7 +90,8 @@ public class TranspilerPlugin implements Plugin {
                         tail = cu.defs;
                     }
 
-                    var xx = buildImport(maker, names, new String[]{"std", "StdTypeConversion"});
+                    var xx = buildImport(maker, names,
+                        stdConversionClass != null ? stdConversionClass : DEFAULT_STD_CONVERSION_CLASS);
 //                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "Integer"});
 //                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "String"});
 
@@ -141,10 +162,9 @@ public class TranspilerPlugin implements Plugin {
 
 
                     System.out.println("after analyze for: " + e + "cu: " + cu);
-                    events.add(Pair.of((BasicJavacTask) task, e));
 
                     try {
-                        var jsFile = env.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
+                        var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js");
 

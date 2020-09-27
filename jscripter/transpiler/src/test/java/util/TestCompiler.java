@@ -2,6 +2,7 @@ package util;
 
 import com.greact.TranspilerPlugin;
 import com.sun.tools.javac.api.BasicJavacTask;
+import std.StdTypeConversion;
 
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
@@ -20,7 +21,9 @@ public class TestCompiler {
 
         var arguments = asList("--enable-preview", "--source", "14",
             "-classpath", System.getProperty("java.class.path"),
-            "-Xplugin:" + TranspilerPlugin.NAME);
+            "-Xplugin:" + TranspilerPlugin.NAME +
+                " --js-src-package=js" +
+                " --std-conv-class=" + StdTypeConversion.class.getName());
 
         var task = (BasicJavacTask) compiler.getTask(output, fileManager,
             diagnostic -> System.out.println(diagnostic.toString()),
