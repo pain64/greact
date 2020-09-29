@@ -17,6 +17,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -60,7 +61,9 @@ public class TranspilerPlugin implements Plugin {
         try {
             var cmd = new DefaultParser().parse(options, args);
             jsCodePackage = cmd.getOptionValue("js-src-package");
-            stdConversionClass = cmd.getOptionValue("std-conv-class").split("\\.");
+            stdConversionClass = Optional.ofNullable(cmd.getOptionValue("std-conv-class"))
+                .map(opt -> opt.split("\\."))
+                .orElse(DEFAULT_STD_CONVERSION_CLASS);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             new HelpFormatter().printHelp("jScripter plugin", options);
@@ -90,8 +93,7 @@ public class TranspilerPlugin implements Plugin {
                         tail = cu.defs;
                     }
 
-                    var xx = buildImport(maker, names,
-                        stdConversionClass != null ? stdConversionClass : DEFAULT_STD_CONVERSION_CLASS);
+                    var xx = buildImport(maker, names, stdConversionClass);
 //                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "Integer"});
 //                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "String"});
 
