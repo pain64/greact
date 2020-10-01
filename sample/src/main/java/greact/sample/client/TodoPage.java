@@ -1,6 +1,6 @@
 package greact.sample.client;
 
-import quickstart.Component;
+import greact.sample.Component;
 
 import static greact.sample.Utils.render;
 

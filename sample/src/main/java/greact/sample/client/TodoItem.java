@@ -1,6 +1,8 @@
 package greact.sample.client;
 
-import quickstart.Component;
+
+
+import greact.sample.Component;
 
 import java.util.Optional;
 
@@ -8,7 +10,8 @@ import static greact.sample.Utils.effect;
 import static greact.sample.Utils.render;
 import static greact.sample.server.TodoService.Todo;
 
-@Component class TodoItem {
+@Component
+class TodoItem {
     final Todo td;
     final Optional<Consumer<TodoItem>> onEdited;
     final Optional<Consumer<TodoItem>> onRemoved;
