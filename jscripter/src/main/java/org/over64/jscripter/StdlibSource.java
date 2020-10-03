@@ -1,4 +1,4 @@
-package org.over64.jscripter.std;
+package org.over64.jscripter;
 
 import com.greact.model.JSSource;
 

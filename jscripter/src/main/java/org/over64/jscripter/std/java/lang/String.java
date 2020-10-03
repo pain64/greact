@@ -17,12 +17,13 @@ public class String {
         return JSExpression.of("this === anObject");
     }
 
+    // FIXME: overloaded args renaming
     public static java.lang.String valueOf(Object obj) { return "" + obj; }
-    public static java.lang.String valueOf(boolean b) { return "" + b; }
-    public static java.lang.String valueOf(int i) { return "" + i; }
-    public static java.lang.String valueOf(long l) { return "" + l; }
-    public static java.lang.String valueOf(float f) { return "" + f; }
-    public static java.lang.String valueOf(double d) { return "" + d; }
+    public static java.lang.String valueOf(boolean obj) { return "" + obj; }
+    public static java.lang.String valueOf(int obj) { return "" + obj; }
+    public static java.lang.String valueOf(long obj) { return "" + obj; }
+    public static java.lang.String valueOf(float obj) { return "" + obj; }
+    public static java.lang.String valueOf(double obj) { return "" + obj; }
 
 //    @Replace("{this}.matches(new RegExp({regex})) != null")
 //    public native boolean matches(java.lang.String regex);

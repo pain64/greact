@@ -22,8 +22,8 @@ tasks.withType<JavaCompile> {
 
     classpath += files("src/main/resources")
     options.compilerArgs.add("-Xplugin:jScripter " +
-        " --js-src-package=org.over64.jscripter.std.java.lang" +
-        " --std-conv-class=org.over64.jscripter.std.NoStdTypeConversion")
+        " --js-src-package=org.over64.jscripter.std" +
+        " --std-conv-class=org.over64.jscripter.NoStdTypeConversion")
     options.compilerArgs.add("--enable-preview")
     options.fork()
     options.forkOptions.jvmArgs = listOf("--enable-preview")

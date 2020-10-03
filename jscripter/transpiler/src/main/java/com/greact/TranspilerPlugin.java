@@ -25,7 +25,7 @@ public class TranspilerPlugin implements Plugin {
 
     public static final String NAME = "jScripter";
     static final String[] DEFAULT_STD_CONVERSION_CLASS =
-        {"org", "over64", "jscripter", "std", "StdTypeConversion"};
+        {"org", "over64", "jscripter", "StdTypeConversion"};
 
     String jsCodePackage = null;
     String[] stdConversionClass = null;
@@ -78,6 +78,7 @@ public class TranspilerPlugin implements Plugin {
             @Override
             public void finished(TaskEvent e) {
                 if (e.getKind() == TaskEvent.Kind.PARSE) {
+                    // FIXME: filter before insert imports
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
                     var maker = TreeMaker.instance(context);
                     var names = Names.instance(context);

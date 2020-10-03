@@ -2,6 +2,7 @@ package com.greact.generate;
 
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
+import com.greact.model.JSNativeAPI;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -9,13 +10,11 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class TypeGen {
     public static record TContext(
@@ -43,9 +42,8 @@ public class TypeGen {
     }
 
     public void type(int deep, TypeElement typeEl) {
-
-        if (typeEl.getKind() == ElementKind.INTERFACE)
-            return;
+        if (typeEl.getKind() == ElementKind.INTERFACE) return;
+        if (typeEl.getAnnotation(JSNativeAPI.class) != null) return;
 
         out.write(deep, "class ");
         out.write(deep, cu.getPackage().getPackageName().toString().replace(".", "$"));
@@ -64,8 +62,32 @@ public class TypeGen {
 
         out.write(0, " {\n");
 
-        var methods = new ArrayList<Pair<Name, List<ExecutableElement>>>();
+        var staticFields = typeEl.getEnclosedElements().stream()
+            .filter(el -> el.getKind() == ElementKind.FIELD)
+            .map(el -> (VariableElement) el)
+            .filter(el -> el.getModifiers().contains(Modifier.STATIC)).iterator();
 
+        var hasStaticFields = staticFields.hasNext();
+
+        out.mkString(staticFields, field -> {
+            var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
+
+            out.write(2, "static ");
+            out.write(0, varDecl.getName().toString());
+            out.write(0, " = ");
+
+            // FIXME: use new StmtGen
+            if (varDecl.getInitializer() != null)
+                mGen.stmtGen.exprGen.expr(4, varDecl.getInitializer());
+            else if (varDecl.getType().type.isIntegral())
+                out.write(0, "0");
+            else
+                out.write(0, "null");
+        }, "", "\n", "");
+
+        if(hasStaticFields) out.write(0, "\n\n");
+
+        var methods = new ArrayList<Pair<Name, List<ExecutableElement>>>();
         typeEl.getEnclosedElements().forEach(el -> {
             if (el instanceof ExecutableElement method) {
                 var name = method.getSimpleName();

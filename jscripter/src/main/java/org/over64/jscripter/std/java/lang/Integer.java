@@ -1,6 +1,14 @@
 package org.over64.jscripter.std.java.lang;
 
+import com.greact.model.JSExpression;
+
 public class Integer {
+    public static java.lang.Integer valueOf(java.lang.String str) throws NumberFormatException {
+        return JSExpression.of("parseInt(str)");
+    }
+    public static int parseInt(java.lang.String str) throws NumberFormatException {
+        return JSExpression.of("parseInt(str)");
+    }
 //    public static final int MIN_VALUE = -2147483648;
 //    public static final int MAX_VALUE = 2147483647;
 //

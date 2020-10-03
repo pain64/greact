@@ -53,10 +53,12 @@ public class MethodGen {
             var fields = ctx.typeEl().getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
+                .filter(el -> !el.getModifiers().contains(Modifier.STATIC))
                 .collect(Collectors.toList());
 
             defaultConstructLocals = (deep) ->
                 fields.forEach(field -> {
+                    // FIXME: deduplicate with TypeGen
                     var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
 
                     out.write(deep, "this.");
@@ -81,6 +83,8 @@ public class MethodGen {
                 out.write(6, "case ");
                 out.write(0, String.valueOf(m.fst));
                 out.write(0, ":\n");
+
+                // FIXME: args renaming required
 
                 var statements = ctx.trees().getTree(m.snd).getBody().getStatements();
                 if (!statements.isEmpty()) {

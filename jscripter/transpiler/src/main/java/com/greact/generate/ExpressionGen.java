@@ -12,6 +12,7 @@ import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.util.Collections;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class ExpressionGen {
             switch (expr.getKind()) {
                 case CHAR_LITERAL, STRING_LITERAL -> {
                     out.write(0, "'");
-                    out.write(0, value.toString());
+                    out.write(0, value.toString().replace("\n", "\\\n"));
                     out.write(0, "'");
                 }
                 case NULL_LITERAL -> out.write(0, "null");
@@ -49,6 +50,14 @@ public class ExpressionGen {
             out.write(0, " = ");
             expr(deep, assign.getExpression());
         } else if (expr instanceof IdentifierTree id) {
+            var jcIdent = ((JCTree.JCIdent) id);
+            if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
+                var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;
+                var fullName = owner.fullname.toString().replace(".", "$");
+                out.write(0, fullName);
+                out.write(0, ".");
+            }
+
             out.write(0, id.getName().toString());
         } else if (expr instanceof ConditionalExpressionTree ternary) {
             expr(deep, ternary.getCondition());
