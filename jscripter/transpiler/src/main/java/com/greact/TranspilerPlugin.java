@@ -6,6 +6,7 @@ import com.greact.generate.util.JavaStdShim;
 import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -13,6 +14,7 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Names;
 import org.apache.commons.cli.*;
 
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
@@ -72,7 +74,12 @@ public class TranspilerPlugin implements Plugin {
         }
 
         var context = ((BasicJavacTask) task).getContext();
+        var symTab = Symtab.instance(context);
         var env = JavacProcessingEnvironment.instance(context);
+        AnnotationValue
+        symTab.get
+
+
 
         task.addTaskListener(new TaskListener() {
             @Override
@@ -142,6 +149,9 @@ public class TranspilerPlugin implements Plugin {
 
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
                     var trees = Trees.instance(env);
+
+
+
                     var types = Types.instance(context);
                     // FIXME: NPE
                     var pkg = cu.getPackage().getPackageName().toString();

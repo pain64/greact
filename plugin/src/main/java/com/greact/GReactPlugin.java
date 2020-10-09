@@ -31,7 +31,6 @@ public class GReactPlugin implements Plugin {
     }
 
     final String jsCodePackage = "js";
-    ShimLibrary shim = new ShimLibrary("com.greact.shim.java.lang", "java.lang");
     List<Pair<BasicJavacTask, TaskEvent>> events = new ArrayList<>();
 
 

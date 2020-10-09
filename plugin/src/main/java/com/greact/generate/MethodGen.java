@@ -3,7 +3,6 @@ package com.greact.generate;
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
-import com.greact.shim.java.lang.model.Integral;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;

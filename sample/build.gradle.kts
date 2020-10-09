@@ -11,6 +11,7 @@ dependencies {
     implementation("com.sparkjava:spark-core:2.9.2")
     implementation("com.over64:jscripter:0.0.1")
     implementation("com.over64:jscripter-transpiler:0.0.1")
+    implementation("com.over64:greact:0.0.1")
 }
 
 java {
