@@ -76,9 +76,6 @@ public class TranspilerPlugin implements Plugin {
         var context = ((BasicJavacTask) task).getContext();
         var symTab = Symtab.instance(context);
         var env = JavacProcessingEnvironment.instance(context);
-        AnnotationValue
-        symTab.get
-
 
 
         task.addTaskListener(new TaskListener() {

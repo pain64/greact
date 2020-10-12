@@ -17,6 +17,6 @@ public class HW {
         var elIncrement = document.getElementById("increment");
 
         elIncrement.onclick = e ->
-            elUsers.value = String.valueOf(Integer.parseInt(elUsers.value) + 1);
+            elUsers.value = "" + (Integer.parseInt(elUsers.value) + 1);
     }
 }

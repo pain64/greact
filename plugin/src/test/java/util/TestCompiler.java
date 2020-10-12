@@ -1,6 +1,6 @@
 package util;
 
-import com.greact.GReactPlugin;
+import com.over64.greact.GReactPlugin;
 import com.sun.tools.javac.api.BasicJavacTask;
 
 import javax.tools.ToolProvider;
@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 public class TestCompiler {
     public static Map<String, StringJsFile> compile(List<StringSourceFile> compilationUnits) {
