@@ -11,10 +11,10 @@ public class Simple {
             new CompileAssert.CompileCase("js.Demo",
                 """
                     package js;
-                    import static com.over64.greact.GReact.render;
+                    //import static com.over64.greact.GReact.render;
                     class Demo {
                       Demo() {
-                        render("<H1 text=\\"hello, GReact\\" />", H1.class);
+                        com.over64.greact.GReact.render("<H1 text=\\"hello, GReact\\" />", H1.class);
                       }
                     }""",
                 """

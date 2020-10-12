@@ -4,7 +4,8 @@ import org.over64.jscripter.std.js.DocumentFragment;
 
 import static com.over64.greact.GReact.render;
 
-public class Demo {
+
+public class DemoSimple {
     /*
     class H1 {
 	constructor(dom, text) {
@@ -54,7 +55,8 @@ render("""
     </item>
   </list>""", Table.class)
      */
-    public Demo(DocumentFragment dom) {
+
+    public DemoSimple(DocumentFragment dom) {
         render(dom, """
             <H1 text="hello, GReact" />""", H1.class);
     }

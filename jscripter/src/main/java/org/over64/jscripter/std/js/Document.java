@@ -5,4 +5,5 @@ import com.greact.model.JSNativeAPI;
 @JSNativeAPI public class Document {
     public native HTMLElement getElementById(String id);
     public native HTMLElement createElement(String name);
+    public native DocumentFragment createDocumentFragment();
 }
