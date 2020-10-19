@@ -12,9 +12,10 @@ public class Simple {
                 """
                     package js;
                     //import static com.over64.greact.GReact.render;
+                    import org.over64.jscripter.std.js.DocumentFragment;
                     class Demo {
-                      Demo() {
-                        com.over64.greact.GReact.render("<H1 text=\\"hello, GReact\\" />", H1.class);
+                      Demo(DocumentFragment dom) {
+                        com.over64.greact.GReact.render(dom, "<H1 text=\\"hello, GReact\\" />", H1.class);
                       }
                     }""",
                 """
@@ -22,8 +23,9 @@ public class Simple {
             new CompileAssert.CompileCase("js.H1",
                 """
                     package js;
+                    import org.over64.jscripter.std.js.DocumentFragment;
                     class H1 {
-                      H1(String text) {
+                      H1(DocumentFragment dom, String text) {
                       }
                     }""",
                 """

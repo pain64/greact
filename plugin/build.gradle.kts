@@ -18,6 +18,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
     options.fork()
     options.forkOptions.jvmArgs = listOf("--enable-preview")
