@@ -5,106 +5,96 @@ import com.over64.greact.model.components.Component;
 import com.over64.greact.model.components.HTMLNativeElements.button;
 import com.over64.greact.model.components.HTMLNativeElements.div;
 import com.over64.greact.model.components.HTMLNativeElements.h1;
-import com.over64.greact.model.components.If;
-import com.over64.greact.model.components.Seq;
-import com.over64.greact.model.components.Switch;
-import com.over64.greact.model.components.Switch.Case;
-import org.over64.jscripter.std.js.DocumentFragment;
+import org.over64.jscripter.std.js.HTMLElement;
 
 import static com.over64.greact.GReact.effect;
 
 public class DemoAdvanced implements Component {
     /*
-
     class Demo {
-    constructor() {
-      console.log("new Demo")
-      this.mode = "M1";
-      this.users = ["John", "Doe", "Ivan", "Igor"];
-      this.showUsers = true;
-
-      this.c1 = null;
-      this.e1 = null;
-    }
-
-    mount(dest) {
-      console.log("call mount")
-      this._mount(dest, 0);
-    }
-
-	_mount(dest, effect) { // dest is div
-    var before = null;
-
-    switch(effect) {
-      case 1:
-        for(var i = 0; i < this.c1; i++) {
-          before = this.e1.previousSibling;
-          dest.removeChild(this.e1);
-          this.e1 = before;
+        constructor() {
+          this.mode = "M1";
+          this.showUsers = true;
         }
-    }
 
-	  var frag = document.createDocumentFragment();
+        mount(dest) {
+          var users = ["John", "Doe", "Ivan", "Igor"];
 
-	  if(effect == 0) {
-      switch(this.mode) {
-        case "M1":
-          console.log("render M1");
-          var el1 = document.createElement('h1'); {
-            el1.innerText = 'selected M1 mode';
+          // Greact.mount
+          this._mount0$1 = (dest, frag) => {
+            this.p0$1 = dest;
+            this.s0$1 = dest.childElementCount + frag.childElementCount;
+
+            if(this.showUsers) {
+              for(let user of users) {
+                var el4 = document.createElement('h1'); {
+                  el4.innerText = "name " + user;
+                }
+                frag.appendChild(el4);
+              }
+            } else {
+              var el5 = document.createElement('h1'); {
+                el5.innerText = "user show disabled";
+              }
+              frag.appendChild(el5);
+            }
+
+            this.c0$1 = dest.childElementCount + frag.childElementCount - this.s0$1;
           }
-          frag.appendChild(el1)
-          break;
-        case "M2":
-          var el2 = document.createElement('h1'); {
-            el2.innerText = 'selected M1 mode';
+
+          this._effect$showUsers = () => {
+            // drop old
+            var from = this.p0$1.childNodes[this.s0$1];
+            for(var i = 0; i < this.c0$1; i++) {
+              var next = from.nextSibling;
+              this.p0$1.removeChild(from);
+              from = next;
+            }
+
+            // render new
+            var frag = document.createDocumentFragment();
+            this._mount0$1(this.p0$1, frag);
+
+            // insert new
+            if(from) this.p0$1.insertBefore(frag, from);
+            else this.p0$1.appendChild(frag);
           }
-          frag.appendChild(el2)
-          break;
-      }
 
+          ((dest) => {
+            var frag = document.createDocumentFragment();
 
-      var el3 = document.createElement('button'); {
-        el3.innerText = 'toggle show users ' + this.users.length;
-        el3.onclick = () => {
-          this.showUsers = !this.showUsers;
-          this._mount(dest, 1);
+            switch(this.mode) {
+              case "M1":
+                var el1 = document.createElement('h1'); {
+                  el1.innerText = 'selected M1 mode';
+                }
+                frag.appendChild(el1)
+                break;
+              case "M2":
+                var el2 = document.createElement('h1'); {
+                  el2.innerText = 'selected M1 mode';
+                }
+                frag.appendChild(el2)
+                break;
+            }
+
+            var el3 = document.createElement('button'); {
+              el3.innerText = 'toggle show users ' + users.length;
+              el3.onclick = () => {
+                this.showUsers = !this.showUsers;
+                this._effect$showUsers();
+              }
+            }
+
+            frag.appendChild(el3);
+            this._mount0$1(dest, frag);
+            dest.appendChild(frag);
+          })(dest);
+          // end Greact.mount
         }
-      }
-      frag.appendChild(el3);
     }
 
-	  if(effect == 0 || effect == 1) {
-      var s1 = frag.childElementCount
-
-      if(this.showUsers) {
-        for(let user of this.users) {
-          var el4 = document.createElement('h1'); {
-            el4.innerText = "name " + user;
-          }
-          frag.appendChild(el4);
-        }
-      } else {
-        var el5 = document.createElement('h1'); {
-          el5.innerText = "user show disabled";
-        }
-        frag.appendChild(el5);
-      }
-
-      this.c1 = frag.childElementCount - s1
-      this.e1 = frag.lastChild
-    }
-
-
-    if(before != null)
-      dest.insertBefore(frag, before.nextSibling);
-    else
-      dest.appendChild(frag);
-
-	}
-}
-
-new Demo().mount(document.getElementById('view'))
+    new Demo().mount(document.getElementById('view'))
 
 <html>
 <body>
@@ -119,42 +109,24 @@ new Demo().mount(document.getElementById('view'))
     boolean showUsers = true;
 
     @Override
-    public void mount(DocumentFragment dom) {
+    public void mount(HTMLElement dom) {
         var users = new String[]{"Ivan", "John", "Iborg"};
 
-        GReact.mount(dom, new div() {{
-            new Switch<>(mode,
-                new Case<>(Mode.M1, () -> new h1("selected M1 mode")),
-                new Case<>(Mode.M2, () -> new h1("selected M2 mode")));
+        GReact.mount(dom, new div() {{                          // view 0
+            switch (mode) {                                       // view 0$0
+                case M1 -> new h1("selected M1 mode");            // view 0$0
+                case M2 -> new h1("selected M2 mode");            // view 0$0
+            }                                                     // view 0$0
 
-            new button("toggle show users " + users.length) {{
-                onclick = () -> effect(showUsers = !showUsers);
-            }};
+            new button("toggle show users " + users.length) {{    // view 0$0
+                onclick = () -> effect(showUsers = !showUsers);   // view 0$0
+            }};                                                   // view 0$0
 
-            new If(showUsers) {{
-                doThen = () ->
-                    new Seq<>(users) {{
-                        item = user -> new h1("name" + user);
-                    }};
-                doElse = () -> new h1("user show disabled");
-            }};
-        }});
-
-        GReact.mount(dom, new div() {{
-            switch (mode) {
-                case M1 -> new h1("selected M1 mode");
-                case M2 -> new h1("selected M2 mode");
-            }
-
-            new button("toggle show users " + users.length) {{
-                onclick = () -> effect(showUsers = !showUsers);
-            }};
-
-            if (showUsers)
-                for (var user : users)
-                    new h1("name" + user);
-            else
-                new h1("user show disabled");
+            if (showUsers)                                        // view 0$1
+                for (var user : users)                            // view 0$1
+                    new h1("name" + user);                        // view 0$1
+            else                                                  // view 0$1
+                new h1("user show disabled");                     // view 0$1
         }});
     }
 }
