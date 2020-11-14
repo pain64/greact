@@ -173,28 +173,34 @@ public class GReactPlugin implements Plugin {
                 var symTab = Symtab.instance(context);
                 var names = Names.instance(context);
 
-                if (e.getKind() == TaskEvent.Kind.ENTER) {
+                if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
+                    var x = 1;
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         typeDecl.accept(new TreeScanner() {
-                            @Override
-                            public void visitApply(JCTree.JCMethodInvocation that) {
-                                var y = 1;
-                                if (isRenderCall(cu, (JCTree.JCClassDecl) typeDecl, that)) {
-                                    var args = getRenderCallArgs(cu, symTab, names, that);
-
-
-                                    var x = 1;
-                                }
-
-//                                symTab.getAllClasses().forEach(c -> {
+//                            @Override
+//                            public void visitApply(JCTree.JCMethodInvocation that) {
+//                                var y = 1;
+//                                if (isRenderCall(cu, (JCTree.JCClassDecl) typeDecl, that)) {
+//                                    var args = getRenderCallArgs(cu, symTab, names, that);
+//
+//
 //                                    var x = 1;
-//                                });
+//                                }
+//
+////                                symTab.getAllClasses().forEach(c -> {
+////                                    var x = 1;
+////                                });
+//
+//                                // Trees.instance(env).getTree(symTab.enterClass(symTab.unnamedModule, Names.instance(context).fromString("js.H1"))).defs
+//                                // var x = 1;
+//                                super.visitApply(that);
+//                            }
 
-                                // Trees.instance(env).getTree(symTab.enterClass(symTab.unnamedModule, Names.instance(context).fromString("js.H1"))).defs
-                                // var x = 1;
-                                super.visitApply(that);
+                            @Override public void visitIdent(JCTree.JCIdent tree) {
+
+                                super.visitIdent(tree);
                             }
                         });
 

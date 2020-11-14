@@ -16,7 +16,13 @@ public class Element implements Mountable {
     public interface MouseEventHandler {
         void handle();
     }
-
     public MouseEventHandler onclick;
     public MouseEventHandler ondblclick;
+    public MouseEventHandler onblur;
+
+    public enum Key {UP, ENTER, ESC}
+    public interface KeyHandler {
+        void handle(Key key);
+    }
+    public KeyHandler onkeyup;
 }

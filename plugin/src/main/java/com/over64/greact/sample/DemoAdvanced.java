@@ -2,9 +2,7 @@ package com.over64.greact.sample;
 
 import com.over64.greact.GReact;
 import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.HTMLNativeElements.button;
-import com.over64.greact.model.components.HTMLNativeElements.div;
-import com.over64.greact.model.components.HTMLNativeElements.h1;
+import com.over64.greact.model.components.HTMLNativeElements.*;
 import org.over64.jscripter.std.js.HTMLElement;
 
 import static com.over64.greact.GReact.effect;
@@ -111,8 +109,10 @@ public class DemoAdvanced implements Component {
     @Override
     public void mount(HTMLElement dom) {
         var users = new String[]{"Ivan", "John", "Iborg"};
+        var xxx = "123";
 
         GReact.mount(dom, new div() {{                          // view 0
+            xxx = "34";
             switch (mode) {                                       // view 0$0
                 case M1 -> new h1("selected M1 mode");            // view 0$0
                 case M2 -> new h1("selected M2 mode");            // view 0$0

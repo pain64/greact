@@ -34,24 +34,16 @@ public class Simple {
                 """
                     package js;
                     import com.over64.greact.GReact;
-                    import static com.over64.greact.GReact.render;
-                    import org.over64.jscripter.std.js.DocumentFragment;
+                    import com.over64.greact.model.components.HTMLNativeElements.*;
+                    import com.over64.greact.model.components.Component;
+                    import org.over64.jscripter.std.js.HTMLElement;
                     
-                    class Demo {
-                      Demo(DocumentFragment dom) {
-                        render(dom, "<H1 text=\\"hello, GReact\\" />", H1.class);
-                        GReact.render(dom, "<H1 text=\\"hello, GReact\\" />", H1.class);
-                        com.over64.greact.GReact.render(dom, "<H1 text=\\"hello, GReact\\" />", H1.class);
-                      }
-                    }""",
-                """
-                    """),
-            new CompileAssert.CompileCase("js.H1",
-                """
-                    package js;
-                    import org.over64.jscripter.std.js.DocumentFragment;
-                    class H1 {
-                      H1(DocumentFragment dom, String text) {
+                    class Demo implements Component {
+                      @Override void mount(HTMLElement dom) {
+                        GReact.mount(dom, new div() {{
+                          className = "my-div";
+                          new h1("hello, GReact");
+                        }});
                       }
                     }""",
                 """
