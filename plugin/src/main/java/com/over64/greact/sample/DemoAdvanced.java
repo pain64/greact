@@ -5,6 +5,9 @@ import com.over64.greact.model.components.Component;
 import com.over64.greact.model.components.HTMLNativeElements.*;
 import org.over64.jscripter.std.js.HTMLElement;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import static com.over64.greact.GReact.effect;
 
 public class DemoAdvanced implements Component {
@@ -106,27 +109,34 @@ public class DemoAdvanced implements Component {
     Mode mode = Mode.M1;
     boolean showUsers = true;
 
-    @Override
-    public void mount(HTMLElement dom) {
-        var users = new String[]{"Ivan", "John", "Iborg"};
-        var xxx = "123";
 
-        GReact.mount(dom, new div() {{                          // view 0
-            xxx = "34";
-            switch (mode) {                                       // view 0$0
-                case M1 -> new h1("selected M1 mode");            // view 0$0
-                case M2 -> new h1("selected M2 mode");            // view 0$0
-            }                                                     // view 0$0
+    @Override public void mount(HTMLElement dom) {
+        RPC.server(
+            () -> new String[]{"Ivan", "John", "Iborg"},
+            (users) -> GReact.mount(dom, new div() {{
+                new uikit.pagination<>(users) {{
+                    by = 5;
+                    item((user) -> new h1("user with name " + user));
+                }};
+                new div() {{
+                    className = "my-super-div";
+                    style.color = "#eee";
+                }};
+                // view 0
+                switch (mode) {                                       // view 0$0
+                    case M1 -> new h1("selected M1 mode");            // view 0$0
+                    case M2 -> new h1("selected M2 mode");            // view 0$0
+                }                                                     // view 0$0
 
-            new button("toggle show users " + users.length) {{    // view 0$0
-                onclick = () -> effect(showUsers = !showUsers);   // view 0$0
-            }};                                                   // view 0$0
+                new button("toggle show users " + users.length) {{    // view 0$0
+                    onclick = () -> effect(showUsers = !showUsers);   // view 0$0
+                }};                                                   // view 0$0
 
-            if (showUsers)                                        // view 0$1
-                for (var user : users)                            // view 0$1
-                    new h1("name" + user);                        // view 0$1
-            else                                                  // view 0$1
-                new h1("user show disabled");                     // view 0$1
-        }});
+                if (showUsers)                                        // view 0$1
+                    for (var user : users)                            // view 0$1
+                        new h1("name" + user);                        // view 0$1
+                else                                                  // view 0$1
+                    new h1("user show disabled");                     // view 0$1
+            }}));
     }
 }
