@@ -39,7 +39,7 @@ public class Simple {
                     import org.over64.jscripter.std.js.HTMLElement;
                     
                     class Demo implements Component {
-                      @Override void mount(HTMLElement dom) {
+                      @Override public void mount(HTMLElement dom) {                        
                         GReact.mount(dom, new div() {{
                           className = "my-div";
                           new h1("hello, GReact");
@@ -47,7 +47,33 @@ public class Simple {
                       }
                     }""",
                 """
-                    """));
+                    package js;
+                                        
+                    import com.over64.greact.GReact;
+                    import com.over64.greact.model.components.HTMLNativeElements.*;
+                    import com.over64.greact.model.components.Component;
+                    import org.over64.jscripter.std.js.HTMLElement;
+                                        
+                    class Demo implements Component {
+                       \s
+                        Demo() {
+                            super();
+                        }
+                       \s
+                        @Override
+                        public void mount(HTMLElement dom) {
+                            GReact.mount(dom, new div(){
+                               \s
+                                () {
+                                    super();
+                                }
+                                {
+                                    className = "my-div";
+                                    new h1("hello, GReact");
+                                }
+                            });
+                        }
+                    }"""));
 
     }
 }

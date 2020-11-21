@@ -1,21 +1,26 @@
 package com.over64.greact;
 
+import com.greact.generate.TypeGen;
+import com.greact.generate.util.JSOut;
+import com.greact.generate.util.JavaStdShim;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Kinds;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.parser.ParserFactory;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeScanner;
+import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
-import java.util.List;
+import javax.tools.StandardLocation;
+import java.io.IOException;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 
@@ -50,34 +55,6 @@ public class GReactPlugin implements Plugin {
                 isPathEquals(imp.getQualifiedIdentifier(), path, 0));
     }
 
-    boolean isRenderCall(JCTree.JCCompilationUnit cu,
-                         JCTree.JCClassDecl classDecl,
-                         JCTree.JCMethodInvocation invocation) {
-
-        if (invocation.meth instanceof JCTree.JCIdent ident)
-            return ident.getName().toString().equals("render") &&
-                hasImport(cu, true, new String[]{"com", "over64", "greact", "GReact", "render"}) &&
-                classDecl.getMembers().stream().noneMatch(member ->
-                    member instanceof JCTree.JCMethodDecl m &&
-                        m.getName().toString().equals("render"));
-
-        else if (invocation.meth instanceof JCTree.JCFieldAccess field) {
-            if (isPathEquals(field, new String[]{"GReact", "render"}, 0))
-                return hasImport(cu, false, new String[]{"com", "over64", "greact", "GReact"});
-
-            return isPathEquals(field, new String[]{"com", "over64", "greact", "GReact", "render"}, 0);
-        }
-
-        throw new RuntimeException("unreachable");
-    }
-
-    RuntimeException failShowUsage() {
-        return new RuntimeException("""
-            expected to call GReact render function as:
-              render(dom, template, component_class...);
-            for example:
-              render(dom, "<H1>hello</H1>", H1.class);""");
-    }
 
     Name importPathEntryName(JCTree entry) {
         if (entry instanceof JCTree.JCFieldAccess field) return field.name;
@@ -85,48 +62,28 @@ public class GReactPlugin implements Plugin {
         throw new RuntimeException("unreachable");
     }
 
-    Pair<String, List<Symbol.ClassSymbol>> getRenderCallArgs(
-        JCTree.JCCompilationUnit cu, Symtab symtab, Names names,
-        JCTree.JCMethodInvocation invocation) {
 
-        if (invocation.getArguments().length() < 2) throw failShowUsage();
-        var templateArg = invocation.getArguments().get(1);
+    String joinSubarray(String[] array, int to) {
+        var joiner = new StringJoiner(".");
+        for (var i = 0; i <= to; i++)
+            joiner.add(array[i]);
 
-        final String template;
-        if (templateArg instanceof JCTree.JCLiteral lit)
-            if (lit.getKind() == Tree.Kind.STRING_LITERAL)
-                template = (String) lit.value;
-            else throw failShowUsage();
-        else throw failShowUsage();
-
-        var componentClasses =
-            invocation.getArguments().stream().skip(2).map(expr -> {
-                if (expr instanceof JCTree.JCFieldAccess field)
-                    if (field.name.toString().equals("class"))
-                        if (field.selected instanceof JCTree.JCIdent ident) {
-                            var className = cu.getImports().stream()
-                                .filter(imp -> importPathEntryName(imp.qualid)
-                                    .equals(ident.name))
-                                .map(imp -> names.fromString(imp.qualid.toString()))
-                                .findAny()
-                                .orElseGet(() -> names.fromString(cu.getPackageName().toString() + "." + ident.name));
-
-                            return symtab.enterClass(symtab.unnamedModule, className);
-
-                            // FIXME: must I check?
-//                            if (entered.type.tsym.kind == Kinds.Kind.ERR)
-//                                throw new RuntimeException("Cannot find class for name: " + className);
-//                            return entered;
-                        }
-
-                throw failShowUsage();
-            }).collect(Collectors.toList());
-
-        return new Pair<>(template, componentClasses);
+        return joiner.toString();
     }
 
-    void jsxToJava(Pair<String, List<Symbol.ClassSymbol>> args) {
+    JCTree.JCExpression recMakeSelect(TreeMaker maker, Symtab symtab, Names names, String[] idents, int i) {
+        return i == 0
+            ? maker.Ident(symtab.enterPackage(symtab.noModule, names.fromString(idents[i])))
+            : maker.Select(recMakeSelect(maker, symtab, names, idents, i - 1),
+            symtab.enterPackage(symtab.noModule,
+                names.fromString(joinSubarray(idents, i))));
+    }
 
+    JCTree.JCExpression makeSelect(TreeMaker maker, Symtab symtab, Names names, String[] idents) {
+//        maker.Select(null, new Symbol.VarSymbol(Flags.))
+        return maker.Select(
+            recMakeSelect(maker, symtab, names, idents, idents.length - 2),
+            symtab.enterPackage(symtab.noModule, names.fromString(joinSubarray(idents, idents.length - 1))));
     }
 
     @Override
@@ -137,75 +94,136 @@ public class GReactPlugin implements Plugin {
 
             @Override
             public void finished(TaskEvent e) {
-                // THE PLAN
-                //   1. Ищем точку входа для модификации
-                //     1.1 render
-                //       1.1.1 ищем import static over64.greact.GReact.render
-                //       1.1.2 проверяем, что нет локального метода render
-                //     1.2 Greact.render
-                //     1.2.2 ищем import over64.greact.GReact
-                //     1.3 com.over64.greact.GReact.render (profit)
-                //   2. Достаем параметры вызова render
-                //     2.1 строковый литерал с шаблоном (param1)
-                //     2.2 varargs список классов, делаем enterClass
-                //   3. JSX
-                //     3.1 получаем ast
-                //     3.2 jsx ast -> java ast
-                //       3.2.1. парсим Template используя java parser
-                //       3.2.2. сопоставляем аттрибуты тегов аргументам конструктора
-                //       3.2.3. генерируем new, учитывая позиции аттрибутов
-                //     3.3 полученный код складываем в локальную лямбду
-                //     3.4 подменяем render на вызов лямбды
-                //   5. делаем debug out модифицированного CU в файл
-                //     5.1 в тесте проверяем, что модифицированный файл верен
-                //   5. Подключаем плагин в sample проект
-                //   6. Тестируем Demo
-
-                var input = "(e) -> e";
-                var parser = ParserFactory.instance(context)
-                    .newParser(input, false, true, true);
-                var expr = parser.parseExpression();
-                var consumed = parser.getEndPos(expr);
-                if (consumed != input.length())
-                    throw new RuntimeException("jsx template parse error: " + input + " at " + consumed);
-
                 var env = JavacProcessingEnvironment.instance(context);
-                var symTab = Symtab.instance(context);
+                var symtab = Symtab.instance(context);
                 var names = Names.instance(context);
+                var types = Types.instance(context);
+                var maker = TreeMaker.instance(context);
+
+                var z = 1;
+
+
 
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
+                    var greactClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("com.over64.greact.GReact"));
+                    var fragmentClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("org.over64.jscripter.std.js.DocumentFragment"));
+
+                    var globalsClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("org.over64.jscripter.std.js.Globals"));
+                    var documentFieldSymbol = globalsClassSymbol.getEnclosedElements().stream()
+                        .filter(el -> el.name.equals(names.fromString("document")))
+                        .findFirst().orElseThrow();
+
+                    var documentClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("org.over64.jscripter.std.js.Document"));
+                    var createDocumentFragmentMethodSymbol = documentClassSymbol.getEnclosedElements().stream()
+                        .filter(el -> el.name.equals(names.fromString("createDocumentFragment")))
+                        .findFirst().orElseThrow();
+
+                    var nodeClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("org.over64.jscripter.std.js.Node"));
+                    var appendChildMethodSymbol = nodeClassSymbol.getEnclosedElements().stream()
+                        .filter(el -> el.name.equals(names.fromString("appendChild")))
+                        .findFirst().orElseThrow();
+
+                    var htmlNativeElementsClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("package com.over64.greact.model.components.HTMLNativeElements"));
+
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
                     var x = 1;
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         typeDecl.accept(new TreeScanner() {
-//                            @Override
-//                            public void visitApply(JCTree.JCMethodInvocation that) {
-//                                var y = 1;
-//                                if (isRenderCall(cu, (JCTree.JCClassDecl) typeDecl, that)) {
-//                                    var args = getRenderCallArgs(cu, symTab, names, that);
-//
-//
-//                                    var x = 1;
-//                                }
-//
-////                                symTab.getAllClasses().forEach(c -> {
-////                                    var x = 1;
-////                                });
-//
-//                                // Trees.instance(env).getTree(symTab.enterClass(symTab.unnamedModule, Names.instance(context).fromString("js.H1"))).defs
-//                                // var x = 1;
-//                                super.visitApply(that);
-//                            }
+                            @Override public void visitMethodDef(JCTree.JCMethodDecl methodTree) {
 
-                            @Override public void visitIdent(JCTree.JCIdent tree) {
+                                methodTree.accept(new TreeTranslator() {
+                                    @Override public void visitExec(JCTree.JCExpressionStatement exec) {
+                                        this.result = exec;
+                                        if (exec.expr instanceof JCTree.JCMethodInvocation that) {
+                                            final Symbol methodSym;
+                                            if (that.meth instanceof JCTree.JCIdent ident)
+                                                methodSym = ident.sym;
+                                            else if (that.meth instanceof JCTree.JCFieldAccess field)
+                                                methodSym = field.sym;
+                                            else return;
 
-                                super.visitIdent(tree);
+
+                                            if (!methodSym.name.equals(names.fromString("mount")) ||
+                                                !methodSym.owner.name.equals(greactClassSymbol.name)) return;
+
+                                            var template = that.args.get(1);
+                                            if (!(template instanceof JCTree.JCNewClass newClassTemplate))
+                                                throw new RuntimeException("expected new class expression as template");
+
+                                            // prologue
+                                            var pkgSelect = makeSelect(maker, symtab, names, new String[]{"org", "over64", "jscripter", "std", "js"});
+                                            var globalsClassSelect = maker.Select(pkgSelect, globalsClassSymbol);
+                                            var documentSelect = maker.Select(globalsClassSelect, documentFieldSymbol);
+                                            var createDocumentFragmentSelect = maker.Select(documentSelect, createDocumentFragmentMethodSymbol);
+
+
+                                            var fragVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                                                names.fromString("$frag"), fragmentClassSymbol.type, methodTree.sym);
+
+                                            var fragDecl = maker.VarDef(
+                                                fragVarSymbol,
+                                                maker.App(
+                                                    createDocumentFragmentSelect,
+                                                    com.sun.tools.javac.util.List.nil()));
+
+                                            // transform
+
+                                            // if native element
+                                            // if not native element
+
+                                            newClassTemplate.def = null;
+                                            newClassTemplate.type = ((Type.ClassType) newClassTemplate.type).supertype_field;
+                                            var el1VarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                                                names.fromString("$el1"), newClassTemplate.type, methodTree.sym);
+                                            var el1Decl = maker.VarDef(el1VarSymbol, newClassTemplate);
+                                            //$frag.appencChild($el1)
+
+                                            var appendEl1Call = maker.App(
+                                                maker.Select(maker.Ident(fragVarSymbol), appendChildMethodSymbol),
+                                                com.sun.tools.javac.util.List.of(maker.Ident(el1VarSymbol)));
+                                            appendEl1Call.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+
+                                            // epilogue
+                                            var fragVarIdent = maker.Ident(fragVarSymbol);
+                                            var appendChildSelect = maker.Select(that.args.get(0), appendChildMethodSymbol);
+                                            var appendCall = maker.App(appendChildSelect, com.sun.tools.javac.util.List.of(fragVarIdent));
+                                            appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+
+                                            this.result = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                                                fragDecl, el1Decl, maker.Exec(appendEl1Call), maker.Exec(appendCall)));
+
+                                        }
+                                    }
+                                });
+
+                                super.visitMethodDef(methodTree);
                             }
                         });
-
                     }
-                    var maker = TreeMaker.instance(context);
+
+                    try {
+                        var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
+                            cu.getPackageName().toString(),
+                            e.getTypeElement().getSimpleName() + ".java.patch");
+
+                        var writer = jsFile.openWriter();
+                        writer.write(cu.toString());
+                        writer.close();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    // ((JCTree.JCMethodDecl) ((JCTree.JCClassDecl) cu.defs.get(5)).defs.get(1)).body.stats
+                    var zz = 1;
+                    // new class file
                 }
             }
         });

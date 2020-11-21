@@ -2,11 +2,10 @@ package com.over64.greact.sample;
 
 import com.over64.greact.GReact;
 import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.HTMLNativeElements.*;
+import com.over64.greact.model.components.HTMLNativeElements.button;
+import com.over64.greact.model.components.HTMLNativeElements.div;
+import com.over64.greact.model.components.HTMLNativeElements.h1;
 import org.over64.jscripter.std.js.HTMLElement;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static com.over64.greact.GReact.effect;
 
@@ -113,11 +112,12 @@ public class DemoAdvanced implements Component {
     @Override public void mount(HTMLElement dom) {
         RPC.server(
             () -> new String[]{"Ivan", "John", "Iborg"},
-            (users) -> GReact.mount(dom, new div() {{
+            users -> GReact.mount(dom, new div() {{
                 new uikit.pagination<>(users) {{
                     by = 5;
                     item((user) -> new h1("user with name " + user));
                 }};
+
                 new div() {{
                     className = "my-super-div";
                     style.color = "#eee";

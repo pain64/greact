@@ -1,6 +1,8 @@
 package com.over64.greact.model.components;
 
-public class Element implements Mountable {
+import org.over64.jscripter.std.js.Node;
+
+public class Element extends Node implements Mountable {
     public static class Style {
         public String color;
     }
