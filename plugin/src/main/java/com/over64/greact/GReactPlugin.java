@@ -103,7 +103,6 @@ public class GReactPlugin implements Plugin {
                 var z = 1;
 
 
-
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     var greactClassSymbol = symtab.enterClass(symtab.unnamedModule,
                         names.fromString("com.over64.greact.GReact"));
@@ -129,17 +128,22 @@ public class GReactPlugin implements Plugin {
                         .findFirst().orElseThrow();
 
                     var htmlNativeElementsClassSymbol = symtab.enterClass(symtab.unnamedModule,
-                        names.fromString("package com.over64.greact.model.components.HTMLNativeElements"));
+                        names.fromString("com.over64.greact.model.components.HTMLNativeElements"));
+
+                    var htmlElementClassSymbol = symtab.enterClass(symtab.unnamedModule,
+                        names.fromString("com.over64.greact.model.components.Element"));
 
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
                     var x = 1;
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         typeDecl.accept(new TreeScanner() {
-                            @Override public void visitMethodDef(JCTree.JCMethodDecl methodTree) {
+                            @Override
+                            public void visitMethodDef(JCTree.JCMethodDecl methodTree) {
 
                                 methodTree.accept(new TreeTranslator() {
-                                    @Override public void visitExec(JCTree.JCExpressionStatement exec) {
+                                    @Override
+                                    public void visitExec(JCTree.JCExpressionStatement exec) {
                                         this.result = exec;
                                         if (exec.expr instanceof JCTree.JCMethodInvocation that) {
                                             final Symbol methodSym;
@@ -174,21 +178,29 @@ public class GReactPlugin implements Plugin {
                                                     com.sun.tools.javac.util.List.nil()));
 
                                             // transform
+                                            final List<JCTree.JCStatement> body;
+                                            if (types.isSubtype(newClassTemplate.type, htmlElementClassSymbol.type)) {
+                                                // if native element
+                                                // var $el1 =  document.createElement(%tag_name%)
+                                                //
+                                                body = List.nil();
+                                            } else {
+                                                // if not native element
+                                                newClassTemplate.type = ((Type.ClassType) newClassTemplate.type).supertype_field;
+                                                newClassTemplate.def = null;
+                                                var el1VarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                                                    names.fromString("$el1"), newClassTemplate.type, methodTree.sym);
+                                                var el1Decl = maker.VarDef(el1VarSymbol, newClassTemplate);
+                                                //$frag.appencChild($el1)
 
-                                            // if native element
-                                            // if not native element
+                                                var appendEl1Call = maker.App(
+                                                    maker.Select(maker.Ident(fragVarSymbol), appendChildMethodSymbol),
+                                                    com.sun.tools.javac.util.List.of(maker.Ident(el1VarSymbol)));
+                                                appendEl1Call.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-                                            newClassTemplate.def = null;
-                                            newClassTemplate.type = ((Type.ClassType) newClassTemplate.type).supertype_field;
-                                            var el1VarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                                                names.fromString("$el1"), newClassTemplate.type, methodTree.sym);
-                                            var el1Decl = maker.VarDef(el1VarSymbol, newClassTemplate);
-                                            //$frag.appencChild($el1)
+                                                body = List.of(el1Decl, maker.Exec(appendEl1Call));
+                                            }
 
-                                            var appendEl1Call = maker.App(
-                                                maker.Select(maker.Ident(fragVarSymbol), appendChildMethodSymbol),
-                                                com.sun.tools.javac.util.List.of(maker.Ident(el1VarSymbol)));
-                                            appendEl1Call.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
 
                                             // epilogue
@@ -198,8 +210,7 @@ public class GReactPlugin implements Plugin {
                                             appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
 
-                                            this.result = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
-                                                fragDecl, el1Decl, maker.Exec(appendEl1Call), maker.Exec(appendCall)));
+                                            this.result = maker.Block(Flags.BLOCK, body.prepend(fragDecl).append(maker.Exec(appendCall)));
 
                                         }
                                     }
