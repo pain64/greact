@@ -248,7 +248,7 @@ public class _02StmtTest {
                   }
                   
                   foo() {
-                    throw new Exception('xxx')
+                    throw new java$lang$Exception('xxx')
                   }
                 }""");
     }

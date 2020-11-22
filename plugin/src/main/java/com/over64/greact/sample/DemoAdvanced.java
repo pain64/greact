@@ -1,11 +1,11 @@
 package com.over64.greact.sample;
 
 import com.over64.greact.GReact;
+import com.over64.greact.dom.HTMLNativeElements.button;
+import com.over64.greact.dom.HTMLNativeElements.div;
+import com.over64.greact.dom.HTMLNativeElements.h1;
+import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.HTMLNativeElements.button;
-import com.over64.greact.model.components.HTMLNativeElements.div;
-import com.over64.greact.model.components.HTMLNativeElements.h1;
-import org.over64.jscripter.std.js.HTMLElement;
 
 import static com.over64.greact.GReact.effect;
 
@@ -109,7 +109,7 @@ public class DemoAdvanced implements Component {
     boolean showUsers = true;
 
 
-    @Override public void mount(HTMLElement dom) {
+    @Override public void mount(HtmlElement dom) {
         RPC.server(
             () -> new String[]{"Ivan", "John", "Iborg"},
             users -> GReact.mount(dom, new div() {{

@@ -34,15 +34,17 @@ public class Simple {
                 """
                     package js;
                     import com.over64.greact.GReact;
-                    import com.over64.greact.model.components.HTMLNativeElements.*;
+                    import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
-                    import org.over64.jscripter.std.js.HTMLElement;
+                    import com.over64.greact.dom.HtmlElement;
                     
                     class Demo implements Component {
-                      @Override public void mount(HTMLElement dom) {                        
+                      @Override public void mount(HtmlElement dom) {                        
                         GReact.mount(dom, new div() {{
                           className = "my-div";
-                          new h1("hello, GReact");
+                          new h1() {{
+                            innerText = "hello, GReact";
+                          }};
                         }});
                       }
                     }""",
@@ -50,9 +52,9 @@ public class Simple {
                     package js;
                                         
                     import com.over64.greact.GReact;
-                    import com.over64.greact.model.components.HTMLNativeElements.*;
+                    import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
-                    import org.over64.jscripter.std.js.HTMLElement;
+                    import com.over64.greact.dom.HtmlElement;
                                         
                     class Demo implements Component {
                        \s
@@ -61,7 +63,7 @@ public class Simple {
                         }
                        \s
                         @Override
-                        public void mount(HTMLElement dom) {
+                        public void mount(HtmlElement dom) {
                             GReact.mount(dom, new div(){
                                \s
                                 () {

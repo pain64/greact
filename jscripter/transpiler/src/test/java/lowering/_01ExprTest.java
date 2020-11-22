@@ -489,6 +489,7 @@ public class _01ExprTest {
 
     @Test
     void newClassExpr() throws IOException {
+        // очень плохой тест:
         assertCompiled(
             """
                 package js;
@@ -512,7 +513,7 @@ public class _01ExprTest {
                   }
                   
                   newA() {
-                    return new A(1, 2)
+                    return new js$Test$A(1, 2)
                   }
                 }""");
     }

@@ -39,4 +39,51 @@ public class _07StaticImport {
                       }
                     }"""));
     }
+
+    @Test void callFullQualifiedStatic() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    public class A {
+                      String foo() { return "xxx"; }
+                    }""",
+                """
+                    class js$A extends Object {                      
+                      constructor() {
+                        super()
+                      }
+                      
+                      foo() {
+                        return 'xxx'
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.C",
+                """
+                    package js;
+                    class C {
+                      String ss = js.B.a.foo();
+                    }""",
+                """
+                    class js$C extends Object {
+                      constructor() {
+                        super()
+                        this.ss = js$B.a.foo()
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.B",
+                """
+                    package js;
+                    class B {
+                      static A a = new A();
+                    }""",
+                """
+                    class js$B extends Object {
+                      static a = new js$A()
+                      
+                      constructor() {
+                        super()
+                      }
+                    }"""));
+    }
 }

@@ -1,4 +1,4 @@
-package org.over64.jscripter.std.js;
+package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
 

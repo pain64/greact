@@ -1,9 +1,9 @@
 package com.over64.greact.sample.todoapp;
 
 import com.over64.greact.GReact;
+import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.HTMLNativeElements.*;
-import org.over64.jscripter.std.js.HTMLElement;
 
 import static com.over64.greact.GReact.classIf;
 import static com.over64.greact.GReact.effect;
@@ -41,7 +41,7 @@ public class TodoItem implements Component {
         effect(editing = false);
     }
 
-    @Override public void mount(HTMLElement dom) {
+    @Override public void mount(HtmlElement dom) {
         GReact.mount(dom, new li() {{
             className = "todo " +
                 classIf(item.completed, "completed") +

@@ -203,7 +203,11 @@ public class StatementGen {
                 out.write(0, " finally");
                 block(deep, finallyBlock);
             }
-        }
+        } else if(stmt instanceof BlockTree blockTree) {
+            out.write(deep - 1, "");
+            block(deep, blockTree);
+        } else
+            throw new RuntimeException("unknown statement kind: " + stmt.getKind());
     }
     // ASSERT
 }

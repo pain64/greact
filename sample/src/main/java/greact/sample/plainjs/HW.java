@@ -1,22 +1,19 @@
 package greact.sample.plainjs;
 
-import org.over64.jscripter.std.js.HTMLInputElement;
+import com.over64.greact.GReact;
+import com.over64.greact.dom.HTMLNativeElements.div;
+import com.over64.greact.dom.HTMLNativeElements.h1;
+import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.model.components.Component;
 
-import static org.over64.jscripter.std.js.Globals.document;
+public class HW implements Component {
 
-public class HW {
-    public HW() {
-        var view = document.getElementById("view");
-        view.innerHTML = """
-            <h1>hello, jScripter!</h1>
-            <input id="n-users" value="0" />
-            <button id="increment">increment</button>
-            """;
-
-        var elUsers = (HTMLInputElement) document.getElementById("n-users");
-        var elIncrement = document.getElementById("increment");
-
-        elIncrement.onclick = e ->
-            elUsers.value = "" + (Integer.parseInt(elUsers.value) + 1);
+    @Override
+    public void mount(HtmlElement dom) {
+        GReact.mount(dom, new div() {{
+            new h1() {{
+                innerText = "Hello, Kitty!";
+            }};
+        }});
     }
 }

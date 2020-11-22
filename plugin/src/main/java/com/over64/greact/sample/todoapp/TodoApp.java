@@ -1,9 +1,9 @@
 package com.over64.greact.sample.todoapp;
 
 import com.over64.greact.GReact;
+import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.HTMLNativeElements.section;
-import org.over64.jscripter.std.js.HTMLElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +11,15 @@ import java.util.stream.Collectors;
 
 import static com.over64.greact.GReact.classIf;
 import static com.over64.greact.GReact.effect;
-import static com.over64.greact.model.components.HTMLNativeElements.*;
 
 public class TodoApp implements Component {
     public static class Todo {
         public String title;
         public boolean completed = false;
-        public Todo(String title) { this.title = title; }
+
+        public Todo(String title) {
+            this.title = title;
+        }
     }
 
     enum Mode {ALL, ACTIVE, COMPLETED}
@@ -26,8 +28,13 @@ public class TodoApp implements Component {
     String newTodo = "";
     Mode mode = Mode.ALL;
 
-    void add(String title) { effect(list.add(new Todo(title))); }
-    boolean allDone() { return list.stream().allMatch(td -> td.completed); }
+    void add(String title) {
+        effect(list.add(new Todo(title)));
+    }
+
+    boolean allDone() {
+        return list.stream().allMatch(td -> td.completed);
+    }
 
     List<Todo> forRender() {
         return list.stream().filter(item -> switch (mode) {
@@ -50,7 +57,8 @@ public class TodoApp implements Component {
     }
 
 
-    @Override public void mount(HTMLElement dom) {
+    @Override
+    public void mount(HtmlElement dom) {
         list = new ArrayList<>();
 
 //        window.addEventListener("onhashchange", event ->

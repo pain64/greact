@@ -29,6 +29,7 @@ public class Main {
                    <script src="/script/app"></script>
                    <script type="text/javascript">
                         new greact$sample$plainjs$HW()
+                          .mount(document.getElementById("view"))
                         new WebSocket("ws://localhost:4567/livereload")
                             .onmessage = () => location.reload()
                    </script>

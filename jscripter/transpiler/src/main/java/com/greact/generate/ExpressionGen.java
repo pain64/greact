@@ -5,6 +5,7 @@ import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
@@ -51,14 +52,19 @@ public class ExpressionGen {
             expr(deep, assign.getExpression());
         } else if (expr instanceof IdentifierTree id) {
             var jcIdent = ((JCTree.JCIdent) id);
-            if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
-                var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;
-                var fullName = owner.fullname.toString().replace(".", "$");
+            if(jcIdent.sym instanceof Symbol.ClassSymbol cl) {
+                var fullName = cl.fullname.toString().replace(".", "$");
                 out.write(0, fullName);
-                out.write(0, ".");
-            }
+            } else {
+                if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
+                    var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;
+                    var fullName = owner.fullname.toString().replace(".", "$");
+                    out.write(0, fullName);
+                    out.write(0, ".");
+                }
 
-            out.write(0, id.getName().toString());
+                out.write(0, id.getName().toString());
+            }
         } else if (expr instanceof ConditionalExpressionTree ternary) {
             expr(deep, ternary.getCondition());
             out.write(0, " ? ");
@@ -141,7 +147,10 @@ public class ExpressionGen {
             out.write(0, "]");
         } else if (expr instanceof MemberSelectTree memberSelect) {
             expr(deep, memberSelect.getExpression());
-            out.write(0, ".");
+            if(((JCTree.JCExpression) memberSelect.getExpression()).type instanceof Type.PackageType)
+                out.write(0, "$");
+            else
+                out.write(0, ".");
             out.write(0, memberSelect.getIdentifier().toString());
         } else if (expr instanceof TypeCastTree cast) {
             expr(deep, cast.getExpression()); // erased

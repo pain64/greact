@@ -20,6 +20,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
+    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
     options.fork()
     options.forkOptions.jvmArgs = listOf("--enable-preview")
 }
@@ -53,7 +54,7 @@ publishing {
 //            }
             pom {
                 name.set("GReact")
-                description.set("Java to Javascript compiler plugin")
+                description.set("Java WEB UI library")
 //                url.set("http://www.example.com/library")
 //                properties.set(mapOf(
 //                        "myProp" to "value",

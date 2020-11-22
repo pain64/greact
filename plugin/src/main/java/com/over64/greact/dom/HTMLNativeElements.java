@@ -1,27 +1,29 @@
-package com.over64.greact.model.components;
+package com.over64.greact.dom;
+
+import com.greact.model.JSNativeAPI;
 
 public class HTMLNativeElements {
 
-    public static class h1 extends Element{
+    @JSNativeAPI public static class h1 extends HtmlElement {
         public h1() {};
         public h1(String innerText) {
         }
     }
 
-    public static  class button extends Element{
+    @JSNativeAPI public static  class button extends HtmlElement {
         public button() {};
         public button(String innerText) { }
     }
 
-    public static class div extends Element { }
-    public static class section extends Element { }
-    public static class header extends Element { }
+    @JSNativeAPI public static class div extends HtmlElement { }
+    @JSNativeAPI public static class section extends HtmlElement { }
+    @JSNativeAPI public static class header extends HtmlElement { }
 
     @FunctionalInterface
     public interface ChangeHandler {
         void handle(String value);
     }
-    public static class input extends Element {
+    @JSNativeAPI public static class input extends HtmlElement {
         public boolean autofocus = false;
         public enum Autocomplete {OFF, ON}
         public Autocomplete autocomplete;
@@ -32,23 +34,23 @@ public class HTMLNativeElements {
         public ChangeHandler onchange;
     }
 
-    public static class ul extends Element {}
-    public static class li extends Element {}
-    public static class footer extends Element {}
-    public static class span extends Element {
+    @JSNativeAPI public static class ul extends HtmlElement {}
+    @JSNativeAPI public static class li extends HtmlElement {}
+    @JSNativeAPI public static class footer extends HtmlElement {}
+    @JSNativeAPI public static class span extends HtmlElement {
         public span() {}
         public span(String innerText) {}
     }
-    public static class strong extends Element {
+    @JSNativeAPI public static class strong extends HtmlElement {
         public strong() {}
         public strong(String innerText) {}
     }
-    public static class label extends Element {
+    @JSNativeAPI public static class label extends HtmlElement {
         public label() { }
         public label(String innerText) {}
         public String _for;
     }
-    public static class a extends Element {
+    @JSNativeAPI public static class a extends HtmlElement {
         public String href;
         public a() {}
         public a(String innerText) {};
