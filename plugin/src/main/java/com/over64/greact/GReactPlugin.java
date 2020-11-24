@@ -1,8 +1,7 @@
 package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
-import com.greact.generate.util.Overloads;
-import com.sun.source.tree.*;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -10,25 +9,20 @@ import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.tree.*;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.tree.TreeScanner;
+import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.StringJoiner;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -114,176 +108,6 @@ public class GReactPlugin implements Plugin {
             ctx.symtab.enterPackage(ctx.symtab.noModule, ctx.names.fromString(joinSubarray(idents, idents.length - 1))));
     }
 
-    void _classFieldNames(HashSet<Name> dest, Symbol.ClassSymbol symbol) {
-        var superClass = symbol.getSuperclass();
-        if (superClass.tsym != null)
-            _classFieldNames(dest, (Symbol.ClassSymbol) superClass.tsym);
-
-        for (var el : symbol.getEnclosedElements())
-            if (el instanceof Symbol.VarSymbol)
-                dest.add(el.name);
-    }
-
-    HashSet<Name> classFieldNames(Symbol.ClassSymbol symbol) {
-        HashSet<Name> dest = new HashSet<>();
-        _classFieldNames(dest, symbol);
-        return dest;
-    }
-
-    JCTree.JCExpression mapExpression(Ctx ctx, Symbol.MethodSymbol owner,
-                                      Symbol.VarSymbol dest, Symbol.VarSymbol element,
-                                      int n, JCTree.JCExpression expr) {
-
-        Function<JCTree.JCExpression, JCTree.JCExpression> exprF =
-            (e) -> mapExpression(ctx, owner, dest, element, n, e);
-
-        if (expr instanceof JCTree.JCLiteral) {
-
-        } else if (expr instanceof JCTree.JCAssign assign) {
-            assign.lhs = exprF.apply(assign.lhs);
-            assign.rhs = exprF.apply(assign.rhs);
-        } else if (expr instanceof JCTree.JCIdent id) {
-            var fieldNames = classFieldNames((Symbol.ClassSymbol) element.type.tsym);
-            if (fieldNames.contains(id.name))
-                return ctx.maker.Select(ctx.maker.Ident(element), id.sym);
-        } else if (expr instanceof JCTree.JCConditional ternary) {
-            ternary.cond = exprF.apply(ternary.cond);
-            ternary.cond = exprF.apply(ternary.truepart);
-            ternary.cond = exprF.apply(ternary.falsepart);
-        } else if (expr instanceof JCTree.JCUnary unary) {
-            unary.arg = exprF.apply(unary.arg);
-        } else if (expr instanceof JCTree.JCBinary binary) {
-            binary.lhs = exprF.apply(binary.lhs);
-            binary.rhs = exprF.apply(binary.rhs);
-        } else if (expr instanceof JCTree.JCAssignOp compoundAssign) {
-            compoundAssign.lhs = exprF.apply(compoundAssign.lhs);
-            compoundAssign.rhs = exprF.apply(compoundAssign.rhs);
-        } else if (expr instanceof JCTree.JCNewArray newArray) {
-            if (newArray.elems != null)
-                newArray.elems = newArray.elems.map(exprF);
-        } else if (expr instanceof JCTree.JCArrayAccess access) {
-            access.indexed = exprF.apply(access.indexed);
-            access.index = exprF.apply(access.index);
-        } else if (expr instanceof JCTree.JCFieldAccess field) {
-            // FIXME: field.name
-            field.selected = exprF.apply(field.selected);
-        } else if (expr instanceof JCTree.JCTypeCast cast) {
-            cast.expr = exprF.apply(cast.expr);
-        } else if (expr instanceof JCTree.JCParens parens) {
-            parens.expr = exprF.apply(parens.expr);
-        } else if (expr instanceof JCTree.JCLambda lambda) {
-            //FIXME
-            //lambda.body = mapBlock(lambda.body);
-        } else if (expr instanceof JCTree.JCSwitchExpression switchExpr) {
-            switchExpr.selector = exprF.apply(switchExpr.selector);
-
-            var cases = switchExpr.getCases();
-            cases.forEach(caseStmt -> {
-                caseStmt.pats = caseStmt.pats.map(exprF);
-                caseStmt.stats = caseStmt.stats.map(s -> mapBlock(ctx, owner, dest, element, n, s));
-                //caseStmt.body
-            });
-
-        } else if (expr instanceof JCTree.JCMethodInvocation call) {
-            call.meth = exprF.apply(call.meth);
-            call.args = call.args.map(exprF);
-        } else if (expr instanceof JCTree.JCMemberReference memberRef) {
-            memberRef.expr = exprF.apply(memberRef.expr);
-        } else if (expr instanceof JCTree.JCInstanceOf instanceOf) {
-            instanceOf.expr = exprF.apply(instanceOf.expr);
-        } else if (expr instanceof JCTree.JCNewClass) {
-            throw new RuntimeException("forbidden");
-        }
-
-        return expr;
-    }
-
-    JCTree.JCStatement mapBlock(Ctx ctx, Symbol.MethodSymbol owner,
-                                Symbol.VarSymbol dest, Symbol.VarSymbol element,
-                                int n, JCTree.JCStatement tree) {
-
-        var list = mapStatement(ctx, owner, dest, element, n, tree);
-        if (list.length() == 1) return list.head;
-        else return ctx.maker.Block(Flags.BLOCK, list);
-    }
-
-
-    List<JCTree.JCStatement> mapStatement(Ctx ctx, Symbol.MethodSymbol owner,
-                                          Symbol.VarSymbol dest, Symbol.VarSymbol element,
-                                          int n, JCTree.JCStatement stmt) {
-
-        Function<JCTree.JCExpression, JCTree.JCExpression> expr =
-            (e) -> mapExpression(ctx, owner, dest, element, n, e);
-
-        if (stmt instanceof JCTree.JCExpressionStatement exprStmt)
-            if (exprStmt.expr instanceof JCTree.JCNewClass newClass)
-                return mapNewClass(ctx, owner, dest, n, newClass);
-            else {
-                exprStmt.expr = expr.apply(exprStmt.expr);
-                return List.of(exprStmt);
-            }
-
-        Function<JCTree.JCStatement, JCTree.JCStatement> block =
-            (tree) -> mapBlock(ctx, owner, dest, element, n, tree);
-
-
-        if (stmt instanceof JCTree.JCBreak ||
-            stmt instanceof JCTree.JCContinue) {
-            /* nop */
-        } else if (stmt instanceof JCTree.JCReturn ret) {
-            ret.expr = expr.apply(ret.getExpression());
-        } else if (stmt instanceof JCTree.JCVariableDecl varDecl) {
-            if (varDecl.init != null)
-                varDecl.init = expr.apply(varDecl.getInitializer());
-        } else if (stmt instanceof JCTree.JCIf ifStmt) {
-            ifStmt.cond = expr.apply(ifStmt.cond);
-            ifStmt.thenpart = block.apply(ifStmt.thenpart);
-            if (ifStmt.elsepart != null)
-                ifStmt.elsepart = block.apply(ifStmt.elsepart);
-        } else if (stmt instanceof JCTree.JCWhileLoop whileStmt) {
-            whileStmt.cond = expr.apply(whileStmt.cond);
-            whileStmt.body = block.apply(whileStmt.body);
-        } else if (stmt instanceof JCTree.JCDoWhileLoop doWhile) {
-            doWhile.cond = expr.apply(doWhile.cond);
-            doWhile.body = block.apply(doWhile.body);
-        } else if (stmt instanceof JCTree.JCForLoop forStmt) {
-            forStmt.init = forStmt.init.map(block);
-            forStmt.step = forStmt.step.map(s -> (JCTree.JCExpressionStatement) block.apply(s));
-            forStmt.cond = expr.apply(forStmt.cond);
-            forStmt.body = block.apply(forStmt.body);
-        } else if (stmt instanceof JCTree.JCEnhancedForLoop forEach) {
-            forEach.var = (JCTree.JCVariableDecl) block.apply(forEach.var);
-            forEach.expr = expr.apply(forEach.expr);
-            forEach.body = block.apply(forEach.body);
-        } else if (stmt instanceof JCTree.JCLabeledStatement label) {
-            label.body = block.apply(label.body);
-        } else if (stmt instanceof JCTree.JCSwitch switchStmt) {
-            switchStmt.selector = expr.apply(switchStmt.selector);
-            switchStmt.cases.forEach(caseStmt -> {
-                caseStmt.pats = caseStmt.pats.map(expr);
-                caseStmt.stats = caseStmt.stats.map(block);
-                // FIXME: caseStmt.body
-            });
-        } else if (stmt instanceof JCTree.JCYield yieldExpr) {
-            yieldExpr.value = expr.apply(yieldExpr.value);
-        } else if (stmt instanceof JCTree.JCThrow throwStmt) {
-            throwStmt.expr = expr.apply(throwStmt.expr);
-        } else if (stmt instanceof JCTree.JCTry tryStmt) {
-            tryStmt.catchers.forEach(catchStmt -> {
-                catchStmt.param = (JCTree.JCVariableDecl) block.apply(catchStmt.param);
-                catchStmt.body = (JCTree.JCBlock) block.apply(catchStmt.body);
-            });
-            tryStmt.body = (JCTree.JCBlock) block.apply(tryStmt.body);
-            tryStmt.finalizer = (JCTree.JCBlock) block.apply(tryStmt.finalizer);
-        } else if (stmt instanceof JCTree.JCBlock blockStmt) {
-            blockStmt.stats = blockStmt.stats.stream()
-                .map(bstmt -> mapStatement(ctx, owner, dest, element, n, bstmt))
-                .reduce(List::appendList).orElseThrow();
-        } else throw new RuntimeException("unexpected statement of kind: " + stmt.getKind());
-
-        return List.of(stmt);
-    }
-
     // expression
     // запретить var x = new div() {{ }}; ???
     List<JCTree.JCStatement> mapNewClass(Ctx ctx, Symbol.MethodSymbol owner,
@@ -309,9 +133,28 @@ public class GReactPlugin implements Plugin {
 
         var mappedBody = newClass.def != null ?
             newClass.def.defs.stream().map(tree -> {
-                if (tree instanceof JCTree.JCStatement stmt)
-                    return mapStatement(ctx, owner, dest, el1VarSymbol, n + 1, stmt);
-                else if (tree instanceof MethodTree method && method.getName().toString().equals("<init>"))
+                if (tree instanceof JCTree.JCStatement stmt) {
+                    stmt.accept(new TreeTranslator() {
+                        @Override public <T extends JCTree> T translate(T tree) {
+                            if (tree == null) return null;
+
+                            if (tree instanceof JCTree.JCExpressionStatement estmt)
+                                if (estmt.expr instanceof JCTree.JCNewClass _newClass)
+                                    return (T) ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, owner, dest, n + 1, _newClass));
+
+                            return super.translate(tree);
+                        }
+
+                        @Override public void visitIdent(JCTree.JCIdent id) {
+                            if (ctx.types.isSubtype(el1VarSymbol.type, id.sym.owner.type))
+                                this.result =  ctx.maker.Select(ctx.maker.Ident(el1VarSymbol), id.sym);
+                            else
+                                super.visitIdent(id);
+                        }
+                    });
+
+                    return List.of(stmt);
+                } else if (tree instanceof MethodTree method && method.getName().toString().equals("<init>"))
                     return List.<JCTree.JCStatement>nil();
                 else throw new RuntimeException("oops, only statements allowed, but has: " + tree);
             }).reduce(List::appendList).orElseThrow()

@@ -15,7 +15,13 @@ public class HTMLNativeElements {
         public button(String innerText) { }
     }
 
-    @JSNativeAPI public static class div extends HtmlElement { }
+    @JSNativeAPI public static class div extends HtmlElement {
+        public static class Fake {
+            public String className;
+        }
+        public Fake fake = new Fake();
+        public String foobar;
+    }
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }
 
