@@ -12,7 +12,7 @@ public class HW implements Component {
     public void mount(HtmlElement dom) {
         GReact.mount(dom, new div() {{
             new h1() {{
-                innerText = "Hello, Kitty!";
+                innerText = "Hello, Kitty";
             }};
         }});
     }

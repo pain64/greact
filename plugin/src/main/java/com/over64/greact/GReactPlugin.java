@@ -17,12 +17,9 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
-import javax.lang.model.element.Name;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.StringJoiner;
-import java.util.function.Function;
 
 import static com.sun.tools.javac.util.List.nil;
 
