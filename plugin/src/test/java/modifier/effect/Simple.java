@@ -1,4 +1,4 @@
-package modifier.mount;
+package modifier.effect;
 
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
@@ -6,7 +6,7 @@ import util.CompileAssert;
 import java.io.IOException;
 
 public class Simple {
-    @Test void foo() throws IOException {
+    @Test void simplestEffect() throws IOException {
         CompileAssert.assertCompiledMany(
             new CompileAssert.CompileCase("js.Demo",
                 """
@@ -17,12 +17,19 @@ public class Simple {
                     import com.over64.greact.dom.HtmlElement;
                                         
                     class Demo implements Component {
+                      int nUsers = 1;
+                      
                       @Override public void mount(HtmlElement dom) {                        
                         GReact.mount(dom, new div() {{
-                          className = "my-div";
-                          fake.className = "123";
-                          new h1() {{
-                            innerText = "hello, GReact";
+                          if(true) nUsers += 1;
+                        
+                          new h1() {{ innerText = "GReact users: " + nUsers; }};
+                          new button() {{
+                            innerText = "increment";
+                            onclick = () -> {
+                              nUsers += 1;
+                              GReact.effect(nUsers);
+                            };
                           }};
                         }});
                       }

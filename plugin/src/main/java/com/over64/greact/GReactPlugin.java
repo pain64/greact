@@ -19,6 +19,7 @@ import com.sun.tools.javac.util.Names;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -67,6 +68,8 @@ public class GReactPlugin implements Plugin {
 
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
 
+            Symbol.MethodSymbol mountMethod = lookupMember(clGreact, "mount");
+            Symbol.MethodSymbol effectMethod = lookupMember(clGreact, "effect");
             Symbol.MethodSymbol createDocumentFragmentMethod = lookupMember(clDocument, "createDocumentFragment");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
@@ -167,6 +170,30 @@ public class GReactPlugin implements Plugin {
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
 
                     for (var typeDecl : cu.getTypeDecls()) {
+                        // Find all GReact.effect calls
+                        var effectedSymbols = new ArrayList<Symbol.VarSymbol>();
+
+                        typeDecl.accept(new TreeScanner() {
+                            @Override
+                            public void visitApply(JCTree.JCMethodInvocation tree) {
+                                final Symbol methodSym;
+                                if (tree.meth instanceof JCTree.JCIdent ident)
+                                    methodSym = ident.sym;
+                                else if (tree.meth instanceof JCTree.JCFieldAccess field)
+                                    methodSym = field.sym;
+                                else return;
+
+                                if (methodSym == ctx.symbols.effectMethod)
+                                    effectedSymbols.add((Symbol.VarSymbol) ((JCTree.JCIdent) tree.args.get(0)).sym);
+                                // assert that is class field ???
+
+                                super.visitApply(tree);
+                            }
+                        });
+
+                        var z = 1;
+
+
                         typeDecl.accept(new TreeScanner() {
                             @Override
                             public void visitMethodDef(JCTree.JCMethodDecl methodTree) {
@@ -184,6 +211,7 @@ public class GReactPlugin implements Plugin {
                                             else return;
 
 
+                                            // FIXME: so bad
                                             if (!methodSym.name.equals(ctx.names.fromString("mount")) ||
                                                 !methodSym.owner.name.equals(ctx.symbols.clGreact.name)) return;
 
@@ -199,12 +227,26 @@ public class GReactPlugin implements Plugin {
                                                 fragVarSymbol,
                                                 makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
+
+                                            newClassTemplate.accept(new TreeScanner() {
+                                                @Override
+                                                public void scan(JCTree tree) {
+                                                    if (tree != null) {
+                                                        if (tree instanceof JCTree.JCStatement stmt) {
+                                                            System.out.println("print stmt(" + stmt.getKind() + "):" + stmt);
+                                                            stmt.accept(this);
+                                                        } else
+                                                            super.scan(tree);
+                                                    }
+                                                }
+                                            });
+
                                             var statements = mapNewClass(ctx, methodTree.sym, fragVarSymbol, 0, newClassTemplate);
 
 
                                             // epilogue
                                             var appendCall = makeCall(
-                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym,
+                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym, // FIXME
                                                 ctx.symbols.appendChildMethod,
                                                 List.of(ctx.maker.Ident(fragVarSymbol)));
 

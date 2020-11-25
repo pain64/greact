@@ -128,7 +128,8 @@ public class DemoAdvanced implements Component {
                     case M2 -> new h1("selected M2 mode");            // view 0$0
                 }                                                     // view 0$0
 
-                new button("toggle show users " + users.length) {{    // view 0$0
+                new button() {{    // view 0$0
+                    innerText = "toggle show users " + users.length;
                     onclick = () -> effect(showUsers = !showUsers);   // view 0$0
                 }};                                                   // view 0$0
 
