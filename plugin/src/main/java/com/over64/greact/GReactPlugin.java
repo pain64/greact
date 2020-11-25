@@ -19,7 +19,6 @@ import com.sun.tools.javac.util.Names;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.util.StringJoiner;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -58,19 +57,19 @@ public class GReactPlugin implements Plugin {
         TreeMaker maker = TreeMaker.instance(context);
 
         class Symbols {
-            Symbol.ClassSymbol stringClass = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
-            Symbol.ClassSymbol greactClass = lookupClass("com.over64.greact.GReact");
-            Symbol.ClassSymbol fragmentClass = lookupClass("com.over64.greact.dom.DocumentFragment");
-            Symbol.ClassSymbol globalsClass = lookupClass("com.over64.greact.dom.Globals");
-            Symbol.ClassSymbol documentClass = lookupClass("com.over64.greact.dom.Document");
-            Symbol.ClassSymbol nodeClass = lookupClass("com.over64.greact.dom.Node");
-            Symbol.ClassSymbol htmlElementClass = lookupClass("com.over64.greact.dom.HtmlElement");
+            Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
+            Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
+            Symbol.ClassSymbol clFragment = lookupClass("com.over64.greact.dom.DocumentFragment");
+            Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
+            Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
+            Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
+            Symbol.ClassSymbol clHtmlElement = lookupClass("com.over64.greact.dom.HtmlElement");
 
-            Symbol.VarSymbol documentField = lookupMember(globalsClass, "document");
+            Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
 
-            Symbol.MethodSymbol createDocumentFragmentMethod = lookupMember(documentClass, "createDocumentFragment");
-            Symbol.MethodSymbol createElement = lookupMember(documentClass, "createElement");
-            Symbol.MethodSymbol appendChildMethod = lookupMember(nodeClass, "appendChild");
+            Symbol.MethodSymbol createDocumentFragmentMethod = lookupMember(clDocument, "createDocumentFragment");
+            Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
+            Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
         }
 
         Symbols symbols = new Symbols();
@@ -82,27 +81,18 @@ public class GReactPlugin implements Plugin {
         return ctx;
     }
 
-
-    String joinSubarray(String[] array, int to) {
-        var joiner = new StringJoiner(".");
-        for (var i = 0; i <= to; i++)
-            joiner.add(array[i]);
-
-        return joiner.toString();
+    JCTree.JCExpression buildStatic(Ctx ctx, Symbol sym) {
+        return sym.owner instanceof Symbol.RootPackageSymbol
+            ? ctx.maker.Ident(sym)
+            : ctx.maker.Select(buildStatic(ctx, sym.owner), sym);
     }
 
-    JCTree.JCExpression recMakeSelect(Ctx ctx, String[] idents, int i) {
-        return i == 0
-            ? ctx.maker.Ident(ctx.symtab.enterPackage(ctx.symtab.noModule, ctx.names.fromString(idents[i])))
-            : ctx.maker.Select(recMakeSelect(ctx, idents, i - 1),
-            ctx.symtab.enterPackage(ctx.symtab.noModule,
-                ctx.names.fromString(joinSubarray(idents, i))));
-    }
+    JCTree.JCMethodInvocation makeCall(Symbol.VarSymbol self, Symbol.MethodSymbol method, List<JCTree.JCExpression> args) {
+        var select = self.isStatic()
+            ? ctx.maker.Select(buildStatic(ctx, self), method)
+            : ctx.maker.Select(ctx.maker.Ident(self), method);
 
-    JCTree.JCExpression makeSelect(Ctx ctx, String[] idents) {
-        return ctx.maker.Select(
-            recMakeSelect(ctx, idents, idents.length - 2),
-            ctx.symtab.enterPackage(ctx.symtab.noModule, ctx.names.fromString(joinSubarray(idents, idents.length - 1))));
+        return ctx.maker.App(select, args);
     }
 
     // expression
@@ -111,28 +101,24 @@ public class GReactPlugin implements Plugin {
                                          Symbol.VarSymbol dest, int n, JCTree.JCNewClass newClass) {
 
         newClass.type = ((Type.ClassType) newClass.type).supertype_field;
-        var el1VarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+
+        var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
             ctx.names.fromString("$el" + n), newClass.type, owner);
 
-        final JCTree.JCVariableDecl elDecl;
+        var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
+            ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
+            List.of(
+                ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
+            : newClass;
 
-        if (ctx.types.isSubtype(newClass.type, ctx.symbols.htmlElementClass.type)) {
-            var pkgSelect2 = makeSelect(ctx, new String[]{"com", "over64", "greact", "dom"});
-            var globalsClassSelect2 = ctx.maker.Select(pkgSelect2, ctx.symbols.globalsClass);
-            var documentSelect2 = ctx.maker.Select(globalsClassSelect2, ctx.symbols.documentField);
-            var createElementSelect = ctx.maker.Select(documentSelect2, ctx.symbols.createElement);
-
-            var createElementCall = ctx.maker.App(createElementSelect,
-                List.of(ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.stringClass.type)));
-            elDecl = ctx.maker.VarDef(el1VarSymbol, createElementCall);
-        } else
-            elDecl = ctx.maker.VarDef(el1VarSymbol, newClass);
+        var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
         var mappedBody = newClass.def != null ?
             newClass.def.defs.stream().map(tree -> {
                 if (tree instanceof JCTree.JCStatement stmt) {
                     stmt.accept(new TreeTranslator() {
-                        @Override public <T extends JCTree> T translate(T tree) {
+                        @Override
+                        public <T extends JCTree> T translate(T tree) {
                             if (tree == null) return null;
 
                             if (tree instanceof JCTree.JCExpressionStatement estmt)
@@ -142,9 +128,10 @@ public class GReactPlugin implements Plugin {
                             return super.translate(tree);
                         }
 
-                        @Override public void visitIdent(JCTree.JCIdent id) {
-                            if (ctx.types.isSubtype(el1VarSymbol.type, id.sym.owner.type))
-                                this.result =  ctx.maker.Select(ctx.maker.Ident(el1VarSymbol), id.sym);
+                        @Override
+                        public void visitIdent(JCTree.JCIdent id) {
+                            if (ctx.types.isSubtype(elVarSymbol.type, id.sym.owner.type))
+                                this.result = ctx.maker.Select(ctx.maker.Ident(elVarSymbol), id.sym);
                             else
                                 super.visitIdent(id);
                         }
@@ -160,12 +147,11 @@ public class GReactPlugin implements Plugin {
 
         newClass.def = null;
 
-        var appendEl1Call = ctx.maker.App(
-            ctx.maker.Select(ctx.maker.Ident(dest), ctx.symbols.appendChildMethod),
-            com.sun.tools.javac.util.List.of(ctx.maker.Ident(el1VarSymbol)));
-        appendEl1Call.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+        var appendElCall = makeCall(dest, ctx.symbols.appendChildMethod,
+            List.of(ctx.maker.Ident(elVarSymbol)));
+        appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-        return mappedBody.prepend(elDecl).append(ctx.maker.Exec(appendEl1Call));
+        return mappedBody.prepend(elDecl).append(ctx.maker.Exec(appendElCall));
     }
 
     @Override
@@ -199,41 +185,34 @@ public class GReactPlugin implements Plugin {
 
 
                                             if (!methodSym.name.equals(ctx.names.fromString("mount")) ||
-                                                !methodSym.owner.name.equals(ctx.symbols.greactClass.name)) return;
+                                                !methodSym.owner.name.equals(ctx.symbols.clGreact.name)) return;
 
                                             var template = that.args.get(1);
                                             if (!(template instanceof JCTree.JCNewClass newClassTemplate))
                                                 throw new RuntimeException("expected new class expression as template");
 
                                             // prologue
-                                            var pkgSelect = makeSelect(ctx, new String[]{"com", "over64", "greact", "dom"});
-                                            var globalsClassSelect = ctx.maker.Select(pkgSelect, ctx.symbols.globalsClass);
-                                            var documentSelect = ctx.maker.Select(globalsClassSelect, ctx.symbols.documentField);
-                                            var createDocumentFragmentSelect = ctx.maker.Select(documentSelect, ctx.symbols.createDocumentFragmentMethod);
-
-
                                             var fragVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                                                ctx.names.fromString("$frag"), ctx.symbols.fragmentClass.type, methodTree.sym);
+                                                ctx.names.fromString("$frag"), ctx.symbols.clFragment.type, methodTree.sym);
 
                                             var fragDecl = ctx.maker.VarDef(
                                                 fragVarSymbol,
-                                                ctx.maker.App(
-                                                    createDocumentFragmentSelect,
-                                                    nil()));
+                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
                                             var statements = mapNewClass(ctx, methodTree.sym, fragVarSymbol, 0, newClassTemplate);
 
 
                                             // epilogue
-                                            var fragVarIdent = ctx.maker.Ident(fragVarSymbol);
-                                            var appendChildSelect = ctx.maker.Select(that.args.get(0), ctx.symbols.appendChildMethod);
-                                            var appendCall = ctx.maker.App(appendChildSelect, com.sun.tools.javac.util.List.of(fragVarIdent));
+                                            var appendCall = makeCall(
+                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym,
+                                                ctx.symbols.appendChildMethod,
+                                                List.of(ctx.maker.Ident(fragVarSymbol)));
+
                                             appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
 
                                             this.result = ctx.maker.Block(Flags.BLOCK,
                                                 statements.prepend(fragDecl).append(ctx.maker.Exec(appendCall)));
-
                                         }
                                     }
                                 });
