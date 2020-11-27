@@ -1,6 +1,7 @@
 package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
+import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
@@ -20,6 +21,7 @@ import com.sun.tools.javac.util.Names;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Function;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -98,6 +100,99 @@ public class GReactPlugin implements Plugin {
         return ctx.maker.App(select, args);
     }
 
+    static class IdentTranslator extends TreeTranslator {
+        final Ctx ctx;
+        final Symbol.VarSymbol scope;
+
+        IdentTranslator(Ctx ctx, Symbol.VarSymbol scope) {
+            this.ctx = ctx;
+            this.scope = scope;
+        }
+
+        @Override
+        public void visitIdent(JCTree.JCIdent id) {
+            if (ctx.types.isSubtype(scope.type, id.sym.owner.type))
+                this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
+            else
+                super.visitIdent(id);
+        }
+    }
+
+    JCTree.JCStatement mapStmt(Ctx ctx, Symbol.MethodSymbol owner,
+                               Symbol.VarSymbol dest, Symbol.VarSymbol scope,
+                               int n, JCTree.JCStatement stmt) {
+        System.out.println("map stmt:\n" + stmt);
+
+        Function<JCTree.JCStatement, RuntimeException> unexpectedStmt = st ->
+            new RuntimeException("unexpected statement " + st + "\nof kind " + st.getKind());
+
+        if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
+            var expr = exprStmt.expr;
+
+            if (expr instanceof JCTree.JCNewClass newClassExpr)
+                return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, owner, dest, n + 1, newClassExpr));
+            else if (expr instanceof JCTree.JCAssign assignExpr)
+                assignExpr.accept(new IdentTranslator(ctx, scope));
+            else
+                throw unexpectedStmt.apply(stmt);
+
+        } else if (stmt instanceof JCTree.JCIf ifStmt)
+            ifStmt.accept(new IdentTranslator(ctx, scope) {
+                @Override
+                public void visitIf(JCTree.JCIf tree) {
+                    tree.cond = this.translate(tree.cond);
+                    this.result = tree;
+                }
+            });
+        else if (stmt instanceof JCTree.JCSwitch switchStmt)
+            switchStmt.accept(new IdentTranslator(ctx, scope) {
+                @Override
+                public void visitCase(JCTree.JCCase tree) {
+                    tree.pats = this.translate(tree.pats);
+                    if (tree.stats != null)
+                        tree.stats = tree.stats.map(st -> mapStmt(ctx, owner, dest, scope, n, st));
+                    this.result = tree;
+                }
+            });
+        else if (stmt instanceof JCTree.JCWhileLoop whileStmt)
+            whileStmt.accept(new IdentTranslator(ctx, scope) {
+                @Override
+                public void visitWhileLoop(JCTree.JCWhileLoop tree) {
+                    tree.cond = this.translate(tree.cond);
+                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    this.result = tree;
+                }
+            });
+        else if (stmt instanceof JCTree.JCForLoop forStmt)
+            forStmt.accept(new IdentTranslator(ctx, scope) {
+                @Override
+                public void visitForLoop(JCTree.JCForLoop tree) {
+                    tree.init = this.translate(tree.init);
+                    tree.cond = (JCTree.JCExpression) this.translate((JCTree) tree.cond);
+                    tree.step = this.translate(tree.step);
+                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    this.result = tree;
+                }
+            });
+        else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
+            foreachStmt.accept(new IdentTranslator(ctx, scope) {
+                @Override
+                public void visitForeachLoop(JCTree.JCEnhancedForLoop tree) {
+                    tree.var = this.translate(tree.var);
+                    tree.expr = this.translate(tree.expr);
+                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    this.result = tree;
+                }
+            });
+        else if (stmt instanceof JCTree.JCBlock blockStmt)
+            blockStmt.stats = blockStmt.stats
+                .map(st -> mapStmt(ctx, owner, dest, scope, n, st));
+        else
+            throw unexpectedStmt.apply(stmt);
+
+        return stmt;
+    }
+
     // expression
     // запретить var x = new div() {{ }}; ???
     List<JCTree.JCStatement> mapNewClass(Ctx ctx, Symbol.MethodSymbol owner,
@@ -117,34 +212,15 @@ public class GReactPlugin implements Plugin {
         var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
         var mappedBody = newClass.def != null ?
-            newClass.def.defs.stream().map(tree -> {
-                if (tree instanceof JCTree.JCStatement stmt) {
-                    stmt.accept(new TreeTranslator() {
-                        @Override
-                        public <T extends JCTree> T translate(T tree) {
-                            if (tree == null) return null;
+            newClass.def.defs.stream()
+                .filter(tree ->
+                    !(tree instanceof JCTree.JCMethodDecl md && md.getName().toString().equals("<init>")))
+                .map(tree -> {
+                    if (tree instanceof JCTree.JCStatement stmt)
+                        return mapStmt(ctx, owner, dest, elVarSymbol, n, stmt);
 
-                            if (tree instanceof JCTree.JCExpressionStatement estmt)
-                                if (estmt.expr instanceof JCTree.JCNewClass _newClass)
-                                    return (T) ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, owner, dest, n + 1, _newClass));
-
-                            return super.translate(tree);
-                        }
-
-                        @Override
-                        public void visitIdent(JCTree.JCIdent id) {
-                            if (ctx.types.isSubtype(elVarSymbol.type, id.sym.owner.type))
-                                this.result = ctx.maker.Select(ctx.maker.Ident(elVarSymbol), id.sym);
-                            else
-                                super.visitIdent(id);
-                        }
-                    });
-
-                    return List.of(stmt);
-                } else if (tree instanceof MethodTree method && method.getName().toString().equals("<init>"))
-                    return List.<JCTree.JCStatement>nil();
-                else throw new RuntimeException("oops, only statements allowed, but has: " + tree);
-            }).reduce(List::appendList).orElseThrow()
+                    throw new RuntimeException("unexpected tree " + tree);
+                }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
             : List.<JCTree.JCStatement>nil();
 
 
@@ -228,18 +304,18 @@ public class GReactPlugin implements Plugin {
                                                 makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
 
-                                            newClassTemplate.accept(new TreeScanner() {
-                                                @Override
-                                                public void scan(JCTree tree) {
-                                                    if (tree != null) {
-                                                        if (tree instanceof JCTree.JCStatement stmt) {
-                                                            System.out.println("print stmt(" + stmt.getKind() + "):" + stmt);
-                                                            stmt.accept(this);
-                                                        } else
-                                                            super.scan(tree);
-                                                    }
-                                                }
-                                            });
+//                                            newClassTemplate.accept(new TreeScanner() {
+//                                                @Override
+//                                                public void scan(JCTree tree) {
+//                                                    if (tree != null) {
+//                                                        if (tree instanceof JCTree.JCStatement stmt) {
+//                                                            System.out.println("print stmt(" + stmt.getKind() + "):" + stmt);
+//                                                            stmt.accept(this);
+//                                                        } else
+//                                                            super.scan(tree);
+//                                                    }
+//                                                }
+//                                            });
 
                                             var statements = mapNewClass(ctx, methodTree.sym, fragVarSymbol, 0, newClassTemplate);
 
