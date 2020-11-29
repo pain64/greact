@@ -419,6 +419,46 @@ public class _01ExprTest {
     }
 
     @Test
+    void lambdaWithParentMethodCall() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  @FunctionalInterface
+                  interface My {
+                    void apply();
+                  }
+                  void foo() { }
+                  
+                  int xx = 1;
+                  
+                  void baz() {
+                    My lambda = () -> {
+                      int yy = xx;
+                      foo();
+                    };
+                  }
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                    this.xx = 1
+                  }
+                  
+                  foo() {
+                  }
+                  
+                  baz() {
+                    let lambda = () => {
+                      let yy = this.xx
+                      this.foo()
+                    }
+                  }
+                }""");
+    }
+
+    @Test
     void switchExpr() throws IOException {
         assertCompiled(
             """

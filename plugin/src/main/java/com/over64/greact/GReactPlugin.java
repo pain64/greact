@@ -1,8 +1,6 @@
 package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
-import com.sun.source.tree.BlockTree;
-import com.sun.source.tree.MethodTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -21,6 +19,8 @@ import com.sun.tools.javac.util.Names;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.function.Function;
 
 import static com.sun.tools.javac.util.List.nil;
@@ -59,6 +59,7 @@ public class GReactPlugin implements Plugin {
         Types types = Types.instance(context);
         TreeMaker maker = TreeMaker.instance(context);
 
+
         class Symbols {
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
             Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
@@ -67,6 +68,7 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
             Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
             Symbol.ClassSymbol clHtmlElement = lookupClass("com.over64.greact.dom.HtmlElement");
+            Symbol.ClassSymbol clViewFragment = lookupClass("com.over64.greact.dom.ViewFragment");
 
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
 
@@ -75,6 +77,7 @@ public class GReactPlugin implements Plugin {
             Symbol.MethodSymbol createDocumentFragmentMethod = lookupMember(clDocument, "createDocumentFragment");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
+            Symbol.MethodSymbol applyViewFragMethod = lookupMember(clViewFragment, "apply");
         }
 
         Symbols symbols = new Symbols();
@@ -103,100 +106,163 @@ public class GReactPlugin implements Plugin {
     static class IdentTranslator extends TreeTranslator {
         final Ctx ctx;
         final Symbol.VarSymbol scope;
+        final HashSet<Symbol.VarSymbol> forEffect;
 
-        IdentTranslator(Ctx ctx, Symbol.VarSymbol scope) {
+        final HashSet<Symbol.VarSymbol> effected = new HashSet<>();
+
+        TreeTranslator identPatcher = new TreeTranslator() {
+            @Override
+            public void visitIdent(JCTree.JCIdent id) {
+                if (ctx.types.isSubtype(scope.type, id.sym.owner.type))
+                    this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
+                else
+                    super.visitIdent(id);
+            }
+        };
+
+        TreeScanner effectedAnalyzer = new TreeScanner() {
+            @Override
+            public void visitIdent(JCTree.JCIdent id) {
+                if (id.sym instanceof Symbol.VarSymbol sym)
+                    if (forEffect.contains(sym))
+                        effected.add(sym);
+            }
+
+            @Override
+            public void visitLambda(JCTree.JCLambda tree) {
+            }
+        };
+
+        IdentTranslator(Ctx ctx, Symbol.VarSymbol scope, HashSet<Symbol.VarSymbol> forEffect) {
             this.ctx = ctx;
             this.scope = scope;
+            this.forEffect = forEffect;
+        }
+
+        HashSet<Symbol.VarSymbol> unhandledEffects() {
+            var diff = new HashSet<>(forEffect);
+            diff.removeAll(effected);
+            return diff;
         }
 
         @Override
-        public void visitIdent(JCTree.JCIdent id) {
-            if (ctx.types.isSubtype(scope.type, id.sym.owner.type))
-                this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
-            else
-                super.visitIdent(id);
+        public <T extends JCTree> T translate(T tree) {
+            tree.accept(effectedAnalyzer);
+            return identPatcher.translate(tree);
+        }
+
+        HashSet<Symbol.VarSymbol> apply(JCTree tree) {
+            tree.accept(this);
+            return effected;
         }
     }
 
     JCTree.JCStatement mapStmt(Ctx ctx, Symbol.MethodSymbol owner,
-                               Symbol.VarSymbol dest, Symbol.VarSymbol scope,
+                               HashSet<Symbol.VarSymbol> forEffect, Symbol.VarSymbol dest, Symbol.VarSymbol scope,
                                int n, JCTree.JCStatement stmt) {
-        System.out.println("map stmt:\n" + stmt);
+        System.out.println("forEffect: " + forEffect + " map stmt:\n" + stmt);
 
         Function<JCTree.JCStatement, RuntimeException> unexpectedStmt = st ->
             new RuntimeException("unexpected statement " + st + "\nof kind " + st.getKind());
+
+        final HashSet<Symbol.VarSymbol> effected;
 
         if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
             var expr = exprStmt.expr;
 
             if (expr instanceof JCTree.JCNewClass newClassExpr)
-                return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, owner, dest, n + 1, newClassExpr));
+                return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, owner, forEffect, dest, n + 1, newClassExpr));
             else if (expr instanceof JCTree.JCAssign assignExpr)
-                assignExpr.accept(new IdentTranslator(ctx, scope));
+                effected = new IdentTranslator(ctx, scope, forEffect).apply(assignExpr);
             else
                 throw unexpectedStmt.apply(stmt);
 
         } else if (stmt instanceof JCTree.JCIf ifStmt)
-            ifStmt.accept(new IdentTranslator(ctx, scope) {
+            effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
                 public void visitIf(JCTree.JCIf tree) {
                     tree.cond = this.translate(tree.cond);
+                    tree.thenpart = mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, tree.thenpart);
+                    if (tree.elsepart != null)
+                        tree.elsepart = mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, tree.elsepart);
                     this.result = tree;
                 }
-            });
+            }.apply(ifStmt);
         else if (stmt instanceof JCTree.JCSwitch switchStmt)
-            switchStmt.accept(new IdentTranslator(ctx, scope) {
+            effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
                 public void visitCase(JCTree.JCCase tree) {
                     tree.pats = this.translate(tree.pats);
                     if (tree.stats != null)
-                        tree.stats = tree.stats.map(st -> mapStmt(ctx, owner, dest, scope, n, st));
+                        tree.stats = tree.stats.map(st -> mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, st));
                     this.result = tree;
                 }
-            });
+            }.apply(switchStmt);
         else if (stmt instanceof JCTree.JCWhileLoop whileStmt)
-            whileStmt.accept(new IdentTranslator(ctx, scope) {
+            effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
                 public void visitWhileLoop(JCTree.JCWhileLoop tree) {
                     tree.cond = this.translate(tree.cond);
-                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    tree.body = mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, tree.body);
                     this.result = tree;
                 }
-            });
+            }.apply(whileStmt);
         else if (stmt instanceof JCTree.JCForLoop forStmt)
-            forStmt.accept(new IdentTranslator(ctx, scope) {
+            effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
                 public void visitForLoop(JCTree.JCForLoop tree) {
                     tree.init = this.translate(tree.init);
                     tree.cond = (JCTree.JCExpression) this.translate((JCTree) tree.cond);
                     tree.step = this.translate(tree.step);
-                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    tree.body = mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, tree.body);
                     this.result = tree;
                 }
-            });
+            }.apply(forStmt);
         else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
-            foreachStmt.accept(new IdentTranslator(ctx, scope) {
+            effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
                 public void visitForeachLoop(JCTree.JCEnhancedForLoop tree) {
                     tree.var = this.translate(tree.var);
                     tree.expr = this.translate(tree.expr);
-                    tree.body = mapStmt(ctx, owner, dest, scope, n, tree.body);
+                    tree.body = mapStmt(ctx, owner, unhandledEffects(), dest, scope, n, tree.body);
                     this.result = tree;
                 }
-            });
-        else if (stmt instanceof JCTree.JCBlock blockStmt)
+            }.apply(foreachStmt);
+        else if (stmt instanceof JCTree.JCBlock blockStmt) {
+            effected = new HashSet<>();
             blockStmt.stats = blockStmt.stats
-                .map(st -> mapStmt(ctx, owner, dest, scope, n, st));
-        else
+                .map(st -> mapStmt(ctx, owner, forEffect, dest, scope, n, st));
+        } else
             throw unexpectedStmt.apply(stmt);
 
-        return stmt;
+        if (effected.isEmpty()) return stmt;
+        else {
+            var lmb = ctx.maker.Lambda(
+                nil(),
+                ctx.maker.Block(Flags.BLOCK, List.of(stmt)))
+                .setType(ctx.symbols.clViewFragment.type);
+            lmb.target = ctx.symbols.clViewFragment.type;
+            lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+            lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+            return
+                ctx.maker.Exec(
+                    ctx.maker.App(
+                        ctx.maker.Select(
+                            ctx.maker.Parens(
+                                ctx.maker.TypeCast(
+                                    ctx.symbols.clViewFragment.type,
+                                    lmb))
+                                .setType(ctx.symbols.clViewFragment.type),
+                            ctx.symbols.applyViewFragMethod)));
+        }
     }
 
     // expression
     // запретить var x = new div() {{ }}; ???
     List<JCTree.JCStatement> mapNewClass(Ctx ctx, Symbol.MethodSymbol owner,
-                                         Symbol.VarSymbol dest, int n, JCTree.JCNewClass newClass) {
+                                         HashSet<Symbol.VarSymbol> forEffect, Symbol.VarSymbol dest,
+                                         int n, JCTree.JCNewClass newClass) {
 
         newClass.type = ((Type.ClassType) newClass.type).supertype_field;
 
@@ -217,7 +283,7 @@ public class GReactPlugin implements Plugin {
                     !(tree instanceof JCTree.JCMethodDecl md && md.getName().toString().equals("<init>")))
                 .map(tree -> {
                     if (tree instanceof JCTree.JCStatement stmt)
-                        return mapStmt(ctx, owner, dest, elVarSymbol, n, stmt);
+                        return mapStmt(ctx, owner, forEffect, dest, elVarSymbol, n, stmt);
 
                     throw new RuntimeException("unexpected tree " + tree);
                 }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
@@ -247,7 +313,7 @@ public class GReactPlugin implements Plugin {
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         // Find all GReact.effect calls
-                        var effectedSymbols = new ArrayList<Symbol.VarSymbol>();
+                        var effectCalls = new HashMap<Symbol.VarSymbol, java.util.List<JCTree.JCMethodInvocation>>();
 
                         typeDecl.accept(new TreeScanner() {
                             @Override
@@ -259,8 +325,13 @@ public class GReactPlugin implements Plugin {
                                     methodSym = field.sym;
                                 else return;
 
-                                if (methodSym == ctx.symbols.effectMethod)
-                                    effectedSymbols.add((Symbol.VarSymbol) ((JCTree.JCIdent) tree.args.get(0)).sym);
+                                var zz = 1;
+
+                                if (methodSym == ctx.symbols.effectMethod) {
+                                    var varSym = (Symbol.VarSymbol) ((JCTree.JCIdent) tree.args.get(0)).sym;
+                                    var list = effectCalls.computeIfAbsent(varSym, k -> new ArrayList<>());
+                                    list.add(tree);
+                                }
                                 // assert that is class field ???
 
                                 super.visitApply(tree);
@@ -317,7 +388,8 @@ public class GReactPlugin implements Plugin {
 //                                                }
 //                                            });
 
-                                            var statements = mapNewClass(ctx, methodTree.sym, fragVarSymbol, 0, newClassTemplate);
+                                            var statements = mapNewClass(ctx, methodTree.sym,
+                                                new HashSet<>(effectCalls.keySet()), fragVarSymbol, 0, newClassTemplate);
 
 
                                             // epilogue
@@ -337,6 +409,28 @@ public class GReactPlugin implements Plugin {
 
                                 super.visitMethodDef(methodTree);
                             }
+                        });
+
+                        var classDecl = (JCTree.JCClassDecl) typeDecl;
+                        effectCalls.forEach((eVar, eCalls) -> {
+                            var methodSym = new Symbol.MethodSymbol(
+                                Flags.MethodFlags,
+                                ctx.names.fromString("effect$" + eVar.name.toString()),
+                                new Type.MethodType(List.nil(), new Type.JCVoidType(), List.nil(), classDecl.sym),
+                                classDecl.sym);
+
+                            classDecl.sym.members_field.enterIfAbsent(methodSym);
+
+                            var method = ctx.maker.MethodDef(methodSym,
+                                ctx.maker.Block(Flags.BLOCK, List.nil()));
+                            method.mods = ctx.maker.Modifiers(Flags.PRIVATE);
+
+                            classDecl.defs = classDecl.defs.append(method);
+
+                            eCalls.forEach(eCall -> {
+                                eCall.args = List.nil();
+                                eCall.meth = ctx.maker.Ident(methodSym);
+                            });
                         });
                     }
 

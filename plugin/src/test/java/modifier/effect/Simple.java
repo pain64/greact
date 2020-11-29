@@ -15,15 +15,19 @@ public class Simple {
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
                     import com.over64.greact.dom.HtmlElement;
+                    import com.over64.greact.dom.ViewFragment;
                                         
                     class Demo implements Component {
                       int nUsers = 1;
                       
-                      @Override public void mount(HtmlElement dom) {                        
+                      @Override public void mount(HtmlElement dom) {                               
                         GReact.mount(dom, new div() {{
-                          if(true) nUsers += 1;
-                        
+                                    
                           new h1() {{ innerText = "GReact users: " + nUsers; }};
+                          
+                          if(nUsers > 100)
+                            new h1() {{ innerText = "too much users: " + nUsers; }};
+                            
                           new button() {{
                             innerText = "increment";
                             onclick = () -> {
