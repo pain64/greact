@@ -7,11 +7,16 @@ public class GReact {
     public static String classIf(boolean cond, String className) {
         return cond ? className : "";
     }
+
     public static void mount(HtmlElement dom, Mountable component) {
 
     }
 
     public static void effect(Object expr) {
 
+    }
+
+    public static boolean optimizeRerender(Object effectVar) {
+        return true;
     }
 }
