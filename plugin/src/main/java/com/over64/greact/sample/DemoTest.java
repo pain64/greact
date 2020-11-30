@@ -18,9 +18,7 @@ public class DemoTest implements Component {
         new ul() {{
             dependsForRemount = list;
             for (var x : list)
-                new li() {{
-                    new a("text:" + x);
-                }};
+                new li() {{ new a("text:" + x); }};
         }};
 
         GReact.mount(dom, new div() {{
