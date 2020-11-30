@@ -150,6 +150,36 @@ public class _03CallAndRefLocalTest {
     }
 
     @Test
+    void callFunctionalInterface() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  @FunctionalInterface
+                  interface HInt {
+                    void handle(int x);
+                  }
+                  
+                  void baz() {
+                    HInt m1 = (x) -> {};
+                    m1.handle(42);
+                  }
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super()
+                  }
+                  
+                  baz() {
+                    let m1 = (x) => {
+                    }
+                    m1(42)
+                  }
+                }""");
+    }
+
+    @Test
     void callOverloadedMany() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.A",

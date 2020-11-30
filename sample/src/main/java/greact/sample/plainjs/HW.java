@@ -14,6 +14,20 @@ public class HW implements Component {
 
     @Override
     public void mount(HtmlElement dom) {
+//        GReact.mount(dom, new div() {{
+//            new h1() {{ innerText = "GReact users: " + nUsers; }};
+//
+//            if(nUsers > 10)
+//                new h1() {{ innerText = "too much users: " + nUsers; }};
+//
+//            new button() {{
+//                innerText = "increment";
+//                onclick = () -> {
+//                    nUsers += 1;
+//                    GReact.effect(nUsers);
+//                };
+//            }};
+//        }});
 
         GReact.mount(dom, new div() {{
             new h1() {{

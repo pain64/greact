@@ -53,20 +53,24 @@ public class _01ExprTest {
             """
                 package js;
                 public class Test {
+                  int z;
                   void baz() {
                     int x;
                     x = 42;
+                    z = 42;
                   }
                 }""",
             """
                 class js$Test extends Object {
                   constructor() {
                     super()
+                    this.z = 0
                   }
                   
                   baz() {
                     let x = null
                     x = 42
+                    this.z = 42
                   }
                 }""");
     }
@@ -221,6 +225,7 @@ public class _01ExprTest {
             """
                 package js;
                 public class Test {
+                  int z;
                   void baz() {
                     int x = 0;
                     x *= 1;
@@ -234,12 +239,14 @@ public class _01ExprTest {
                     x &= 1;
                     x ^= 1;
                     x |= 1;
+                    z += 1;
                   }
                 }""",
             """
                 class js$Test extends Object {
                   constructor() {
                     super()
+                    this.z = 0
                   }
                   
                   baz() {
@@ -255,6 +262,7 @@ public class _01ExprTest {
                     x &= 1
                     x ^= 1
                     x |= 1
+                    this.z += 1
                   }
                 }""");
     }

@@ -47,12 +47,30 @@ public class ExpressionGen {
 
             }
         } else if (expr instanceof AssignmentTree assign) {
-            out.write(0, assign.getVariable().toString());
+            expr(deep, assign.getVariable());
             out.write(0, " = ");
             expr(deep, assign.getExpression());
         } else if (expr instanceof IdentifierTree id) {
             var jcIdent = ((JCTree.JCIdent) id);
-            if(jcIdent.sym instanceof Symbol.ClassSymbol cl) {
+            if (jcIdent.sym instanceof Symbol.VarSymbol varSym) {
+                if (varSym.owner instanceof Symbol.MethodSymbol)
+                    out.write(0, id.getName().toString());
+                else {
+                    if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
+                        var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;
+                        var fullName = owner.fullname.toString().replace(".", "$");
+                        out.write(0, fullName);
+                        out.write(0, ".");
+                    } else {
+                        if (!id.getName().toString().equals("this"))
+                            out.write(0, "this.");
+                    }
+
+                    out.write(0, id.getName().toString());
+
+                }
+
+            } else if (jcIdent.sym instanceof Symbol.ClassSymbol cl) {
                 var fullName = cl.fullname.toString().replace(".", "$");
                 out.write(0, fullName);
             } else {
@@ -117,7 +135,7 @@ public class ExpressionGen {
             out.write(0, " ");
             expr(deep, binary.getRightOperand());
         } else if (expr instanceof CompoundAssignmentTree compoundAssign) {
-            out.write(0, compoundAssign.getVariable().toString());
+            expr(deep, compoundAssign.getVariable());
             var op = switch (expr.getKind()) {
                 case MULTIPLY_ASSIGNMENT -> "*";
                 case DIVIDE_ASSIGNMENT -> "/";
@@ -147,7 +165,7 @@ public class ExpressionGen {
             out.write(0, "]");
         } else if (expr instanceof MemberSelectTree memberSelect) {
             expr(deep, memberSelect.getExpression());
-            if(((JCTree.JCExpression) memberSelect.getExpression()).type instanceof Type.PackageType)
+            if (((JCTree.JCExpression) memberSelect.getExpression()).type instanceof Type.PackageType)
                 out.write(0, "$");
             else
                 out.write(0, ".");
@@ -229,7 +247,10 @@ public class ExpressionGen {
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
                     if (info.mode() == Overloads.Mode.INSTANCE) {
-                        expr(deep, prop);
+                        if (ctx.types().isFunctionalInterface(methodOwnerSym.type))
+                            expr(deep, prop.getExpression());
+                        else
+                            expr(deep, prop);
                         out.write(0, "(");
                     } else {
                         var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;

@@ -30,6 +30,7 @@ public class _00DeclarationsTest {
                 public class Test {
                   static void bar() {}
                   void foo(int x, String y) {}
+                  private void foobar() {}
                 }""",
             """
                 class js$Test extends Object {
@@ -41,6 +42,9 @@ public class _00DeclarationsTest {
                   }
                   
                   foo(x, y) {
+                  }
+                  
+                  foobar() {
                   }
                 }""");
     }
