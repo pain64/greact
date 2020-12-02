@@ -7,17 +7,27 @@ import com.over64.greact.dom.HTMLNativeElements.h1;
 import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
 
-public class HW implements Component {
+import static com.over64.greact.GReact.effect;
 
-    int nUsers = 1;
+public class HW implements Component {
+    boolean showUsers = true;
 
     @Override
     public void mount(HtmlElement dom) {
+
+        var users = new String[]{"Ivan", "John", "Iborg"};
+
         GReact.mount(dom, new div() {{
-            new h1("GReact users: " + nUsers);
-            new button("increment!!!!!ыыыыыыы!") {{
-                onclick = () -> GReact.effect(nUsers += 1);
+            new button() {{
+                innerText = "toggle show users " + users.length;
+                onclick = () -> effect(showUsers = !showUsers);
             }};
+
+            if (showUsers)
+                for (var user : users)
+                    new h1("name" + user);
+            else
+                new h1("user show disabled");
         }});
     }
 }

@@ -141,10 +141,13 @@ public class GReactPlugin implements Plugin {
         TreeTranslator identPatcher = new TreeTranslator() {
             @Override
             public void visitIdent(JCTree.JCIdent id) {
-                if (ctx.types.isSubtype(scope.type, id.sym.owner.type))
-                    this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
-                else
-                    super.visitIdent(id);
+                if (id.sym.owner.type != null)  // foreach loop var
+                    if (ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
+                        this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
+                        return;
+                    }
+
+                super.visitIdent(id);
             }
         };
 
@@ -226,26 +229,6 @@ public class GReactPlugin implements Plugin {
                     this.result = tree;
                 }
             }.apply(switchStmt);
-        else if (stmt instanceof JCTree.JCWhileLoop whileStmt)
-            effected = new IdentTranslator(ctx, scope, forEffect) {
-                @Override
-                public void visitWhileLoop(JCTree.JCWhileLoop tree) {
-                    tree.cond = this.translate(tree.cond);
-                    tree.body = mapStmt(ctx, mctx, unhandledEffects(), scope, tree.body);
-                    this.result = tree;
-                }
-            }.apply(whileStmt);
-        else if (stmt instanceof JCTree.JCForLoop forStmt)
-            effected = new IdentTranslator(ctx, scope, forEffect) {
-                @Override
-                public void visitForLoop(JCTree.JCForLoop tree) {
-                    tree.init = this.translate(tree.init);
-                    tree.cond = (JCTree.JCExpression) this.translate((JCTree) tree.cond);
-                    tree.step = this.translate(tree.step);
-                    tree.body = mapStmt(ctx, mctx, unhandledEffects(), scope, tree.body);
-                    this.result = tree;
-                }
-            }.apply(forStmt);
         else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
             effected = new IdentTranslator(ctx, scope, forEffect) {
                 @Override
@@ -408,10 +391,10 @@ public class GReactPlugin implements Plugin {
                                                 return (Symbol.VarSymbol) id.sym;
 
                                         throw new RuntimeException("""
-                                            for ∀ x is class field expected:
-                                              Greact.effect(x)
-                                              Greact.effect(x = expression)
-                                              Greact.effect(x op= expression)""");
+                                            for ∀ x is class field expected any of:
+                                              GReact.effect(x)
+                                              GReact.effect(x = expression)
+                                              GReact.effect(x op= expression)""");
                                     };
 
                                     var varSym = fetchVarSymbol.apply(tree.args.get(0));
@@ -461,20 +444,6 @@ public class GReactPlugin implements Plugin {
                                             var fragDecl = ctx.maker.VarDef(
                                                 fragVarSymbol,
                                                 makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
-
-
-//                                            newClassTemplate.accept(new TreeScanner() {
-//                                                @Override
-//                                                public void scan(JCTree tree) {
-//                                                    if (tree != null) {
-//                                                        if (tree instanceof JCTree.JCStatement stmt) {
-//                                                            System.out.println("print stmt(" + stmt.getKind() + "):" + stmt);
-//                                                            stmt.accept(this);
-//                                                        } else
-//                                                            super.scan(tree);
-//                                                    }
-//                                                }
-//                                            });
 
                                             var statements = mapNewClass(ctx, new MountCtx(viewFragments, methodTree.sym, fragVarSymbol),
                                                 new HashSet<>(effectCalls.keySet()), newClassTemplate);
