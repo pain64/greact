@@ -470,7 +470,6 @@ public class GReactPlugin implements Plugin {
 
                         var classDecl = (JCTree.JCClassDecl) typeDecl;
 
-                        // FIXME: enter symbol???
                         for (var list : viewFragments.values())
                             for (var viewFragVar : list) {
                                 classDecl.sym.members_field.enterIfAbsent(viewFragVar);
