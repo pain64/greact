@@ -22,8 +22,7 @@ public class DemoTest implements Component {
         }};
 
         GReact.mount(dom, new div() {{
-            var z = nUsers;
-            new h1("GReact users: " + z);
+            new h1("GReact users: " + nUsers);
             new button("increment") {{
                 onclick = () -> GReact.effect(nUsers += 1);
             }};

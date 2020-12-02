@@ -62,6 +62,7 @@ public class GReactPlugin implements Plugin {
 
 
         class Symbols {
+            Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
             Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
             Symbol.ClassSymbol clFragment = lookupClass("com.over64.greact.dom.DocumentFragment");
@@ -361,7 +362,24 @@ public class GReactPlugin implements Plugin {
                                 var zz = 1;
 
                                 if (methodSym == ctx.symbols.effectMethod) {
-                                    var varSym = (Symbol.VarSymbol) ((JCTree.JCIdent) tree.args.get(0)).sym;
+                                    Function<JCTree.JCExpression, Symbol.VarSymbol> fetchVarSymbol = expr -> {
+                                        if (expr instanceof JCTree.JCIdent id)
+                                            return (Symbol.VarSymbol) id.sym;
+                                        else if (expr instanceof JCTree.JCAssign assign) {
+                                            if (assign.lhs instanceof JCTree.JCIdent id)
+                                                return (Symbol.VarSymbol) id.sym;
+                                        } else if (expr instanceof JCTree.JCAssignOp op)
+                                            if (op.lhs instanceof JCTree.JCIdent id)
+                                                return (Symbol.VarSymbol) id.sym;
+
+                                        throw new RuntimeException("""
+                                            for ∀ x is class field expected:
+                                              Greact.effect(x)
+                                              Greact.effect(x = expression)
+                                              Greact.effect(x op= expression)""");
+                                    };
+
+                                    var varSym = fetchVarSymbol.apply(tree.args.get(0));
                                     var list = effectCalls.computeIfAbsent(varSym, k -> new ArrayList<>());
                                     list.add(tree);
                                 }
@@ -461,7 +479,9 @@ public class GReactPlugin implements Plugin {
                             var methodSym = new Symbol.MethodSymbol(
                                 Flags.PRIVATE,
                                 ctx.names.fromString("effect$" + eVar.name.toString()),
-                                new Type.MethodType(List.nil(), new Type.JCVoidType(), List.nil(), classDecl.sym),
+                                new Type.MethodType(
+                                    List.of(ctx.symbols.clObject.type),
+                                    new Type.JCVoidType(), List.nil(), classDecl.sym),
                                 classDecl.sym);
 
                             classDecl.sym.members_field.enterIfAbsent(methodSym);
@@ -482,7 +502,6 @@ public class GReactPlugin implements Plugin {
                             classDecl.defs = classDecl.defs.append(method);
 
                             eCalls.forEach(eCall -> {
-                                eCall.args = List.nil();
                                 eCall.meth = ctx.maker.Ident(methodSym);
                             });
                         });

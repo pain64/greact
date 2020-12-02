@@ -29,8 +29,7 @@ public class Simple {
                           new button() {{
                             innerText = "increment";
                             onclick = () -> {
-                              nUsers += 1;
-                              GReact.effect(nUsers);
+                              GReact.effect(nUsers += 1);
                             };
                           }};
                         }});
