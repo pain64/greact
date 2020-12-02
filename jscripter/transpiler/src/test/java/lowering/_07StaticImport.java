@@ -21,7 +21,7 @@ public class _07StaticImport {
                       static s = ''
                       
                       constructor() {
-                        super()
+                        super();
                       }
                     }"""),
             new CompileAssert.CompileCase("js.B",
@@ -34,7 +34,7 @@ public class _07StaticImport {
                 """
                     class js$B extends Object {
                       constructor() {
-                        super()
+                        super();
                         this.ss = js$A.s + js$A.s
                       }
                     }"""));
@@ -51,7 +51,7 @@ public class _07StaticImport {
                 """
                     class js$A extends Object {                      
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       foo() {
@@ -67,7 +67,7 @@ public class _07StaticImport {
                 """
                     class js$C extends Object {
                       constructor() {
-                        super()
+                        super();
                         this.ss = js$B.a.foo()
                       }
                     }"""),
@@ -82,7 +82,7 @@ public class _07StaticImport {
                       static a = new js$A()
                       
                       constructor() {
-                        super()
+                        super();
                       }
                     }"""));
     }

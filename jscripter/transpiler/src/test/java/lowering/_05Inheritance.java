@@ -23,7 +23,7 @@ public class _05Inheritance {
                 """
                     class js$A extends Object {
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       foo($over, x) {
@@ -48,7 +48,7 @@ public class _05Inheritance {
                 """
                     class js$B extends js$A {
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       foo($over, x) {
@@ -73,7 +73,7 @@ public class _05Inheritance {
                 """
                     class js$C extends js$B {
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       foo($over, x, y) {

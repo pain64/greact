@@ -34,22 +34,22 @@ public class _04Constructor {
                   constructor($over, x, y) {
                     switch($over) {
                       case 1:
-                        super()
+                        super();
                         this.x = null
                         this.y = null
                         this.z = 42
                         this.f = 0
-                        this.x = x
-                        this.y = y
+                        this.x = x;
+                        this.y = y;
                         break
                       case 2:
-                        super()
+                        super();
                         this.x = null
                         this.y = null
                         this.z = 42
                         this.f = 0
-                        this.x = x
-                        this.y = 'hello'
+                        this.x = x;
+                        this.y = 'hello';
                         break
                     }
                   }

@@ -17,13 +17,14 @@ public class Simple {
                     import com.over64.greact.dom.HtmlElement;
                                         
                     class Demo implements Component {
+                      int nUsers = 1;
+                      
                       @Override public void mount(HtmlElement dom) {                        
                         GReact.mount(dom, new div() {{
-                          className = "my-div";
-                          fake.className = "123";
-                          new h1() {{
-                            innerText = "hello, GReact";
-                          }};
+                           new h1("GReact users: " + nUsers);
+                           new button("increment") {{
+                             onclick = () -> GReact.effect(nUsers += 1);
+                           }};
                         }});
                       }
                     }""",

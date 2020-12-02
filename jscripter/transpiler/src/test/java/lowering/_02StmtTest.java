@@ -18,7 +18,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
@@ -43,7 +43,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
@@ -77,17 +77,17 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz(x, y) {
                     while(true) {
-                      x++
+                      x++;
                       if(x > 10)
                         continue
                       if(x > 100)
                         break
-                      y++
+                      y++;
                     }
                   }
                 }""");
@@ -109,7 +109,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
@@ -136,12 +136,12 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz(x) {
                     do {
-                      x++
+                      x++;
                     } while(x < 100)
                   }
                 }""");
@@ -160,7 +160,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
@@ -183,7 +183,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz(array) {
@@ -214,18 +214,18 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                 
                   baz(x, y) {
                     switch(x) {
                       case 0:
-                        y = 42
+                        y = 42;
                       case 1:
                       case 2:
-                        y = 41
+                        y = 41;
                       default:
-                        y = 40
+                        y = 40;
                     }
                   }
                 }""");
@@ -244,7 +244,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   foo() {
@@ -282,7 +282,7 @@ public class _02StmtTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   foo() {
@@ -290,18 +290,18 @@ public class _02StmtTest {
                   
                   baz() {
                     try {
-                      this.foo()
+                      this.foo();
                     } catch(e) {
                       if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
-                        let x = e
+                        let x = e;
                       } else if(e instanceof js$Test$E3) {
                         let ee = e
-                        let y = ee
+                        let y = ee;
                       } else {
                         throw e
                       }
                     } finally {
-                      let z = 1
+                      let z = 1;
                     }
                   }
                 }""");

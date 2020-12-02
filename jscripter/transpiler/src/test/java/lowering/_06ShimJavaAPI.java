@@ -18,7 +18,7 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                     this.x = std$java$lang$Integer.valueOf('42')
                   }
                 }""");
@@ -34,7 +34,7 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                     this.x = std$java$lang$String.compareTo.call('x', 'y')
                   }
                 }""");
@@ -51,7 +51,7 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                     this.x = 1 + 1
                   }
                 }""");

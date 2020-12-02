@@ -1,6 +1,7 @@
 package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
+import com.over64.greact.model.components.DomProperty;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -50,7 +52,8 @@ public class GReactPlugin implements Plugin {
             @SuppressWarnings("unchecked")
             var res = (T) from.getEnclosedElements().stream()
                 .filter(el -> el.name.equals(names.fromString(name)))
-                .findFirst().orElseThrow();
+                .findFirst().orElseThrow(() ->
+                    new RuntimeException("oops"));
             return res;
         }
 
@@ -298,30 +301,62 @@ public class GReactPlugin implements Plugin {
     List<JCTree.JCStatement> mapNewClass(Ctx ctx, MountCtx mctx,
                                          HashSet<Symbol.VarSymbol> forEffect, JCTree.JCNewClass newClass) {
 
-        newClass.type = ((Type.ClassType) newClass.type).supertype_field;
+        if (newClass.def != null) { // anon inner class
+            newClass.type = ((Type.ClassType) newClass.type).supertype_field;
+        }
+
+        var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
+            ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
+            List.of( // FIXME: bug?
+                ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
+            : newClass;
 
         var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
             ctx.names.fromString("$el" + mctx.nextN()), newClass.type, mctx.owner);
 
-        var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
-            ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
-            List.of(
-                ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
-            : newClass;
 
         var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
-        var mappedBody = newClass.def != null ?
-            newClass.def.defs.stream()
-                .filter(tree ->
-                    !(tree instanceof JCTree.JCMethodDecl md && md.getName().toString().equals("<init>")))
-                .map(tree -> {
-                    if (tree instanceof JCTree.JCStatement stmt)
-                        return mapStmt(ctx, mctx, forEffect, elVarSymbol, stmt);
+        var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
+            .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
+            .findFirst().orElseThrow();
 
+        var mappedArgs = IntStream.range(0, newClass.args.length())
+            .mapToObj(i -> {
+                var arg = newClass.args.get(i);
+                var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
+                    .params.get(i)
+                    .getAnnotation(DomProperty.class);
+                var argSymbol = ctx.lookupMember(
+                    (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
+                    argAnnotation.value());
+
+                return ctx.maker.Exec(
+                    ctx.maker.Assign(
+                        ctx.maker.Select(
+                            ctx.maker.Ident(elVarSymbol),
+                            argSymbol),
+                        arg));
+            }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
+
+        var filteredBody = newClass.def != null ?
+            newClass.def.defs.stream()
+                .filter(tree -> !(tree instanceof JCTree.JCMethodDecl md && md.getName().toString().equals("<init>")))
+                .map(tree -> {
+                    if (tree instanceof JCTree.JCStatement stmt) return stmt;
                     throw new RuntimeException("unexpected tree " + tree);
-                }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
+                })
+                .reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
             : List.<JCTree.JCStatement>nil();
+
+        var mapped = mappedArgs.appendList(filteredBody)
+            .map(tree -> {
+                // FIXME: отображение Block -> Block создает лишнюю вложенность
+                if (tree instanceof JCTree.JCStatement stmt)
+                    return mapStmt(ctx, mctx, forEffect, elVarSymbol, stmt);
+
+                throw new RuntimeException("unexpected tree " + tree);
+            });
 
 
         newClass.def = null;
@@ -330,7 +365,7 @@ public class GReactPlugin implements Plugin {
             List.of(ctx.maker.Ident(elVarSymbol)));
         appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-        return mappedBody.prepend(elDecl).append(ctx.maker.Exec(appendElCall));
+        return mapped.prepend(elDecl).append(ctx.maker.Exec(appendElCall));
     }
 
     @Override

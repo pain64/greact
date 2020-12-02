@@ -17,7 +17,7 @@ public class _00DeclarationsTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }              
                 }""");
     }
@@ -35,7 +35,7 @@ public class _00DeclarationsTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                     
                   static bar() {
@@ -64,7 +64,7 @@ public class _00DeclarationsTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
@@ -100,11 +100,11 @@ public class _00DeclarationsTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
-                    let x = null
+                    let x = null;
                   }
                 }""");
     }

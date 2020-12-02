@@ -25,15 +25,15 @@ public class _03CallAndRefLocalTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   bar(x, y) {
                   }
                   
                   baz() {
-                    this.bar(42, 42)
-                    this.bar(42, 42)
+                    this.bar(42, 42);
+                    this.bar(42, 42);
                   }
                 }""");
     }
@@ -50,14 +50,14 @@ public class _03CallAndRefLocalTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   static bar(x, y) {
                   }
                   
                   baz() {
-                    this.constructor.bar(42, 42)
+                    this.constructor.bar(42, 42);
                   }
                 }""");
     }
@@ -79,7 +79,7 @@ public class _03CallAndRefLocalTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   bar($over, x) {
@@ -92,8 +92,8 @@ public class _03CallAndRefLocalTest {
                   }
                   
                   baz() {
-                    this.bar(0, 42)
-                    this.bar(1, 42)
+                    this.bar(0, 42);
+                    this.bar(1, 42);
                   }
                 }""");
     }
@@ -126,7 +126,7 @@ public class _03CallAndRefLocalTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   static foo(x) {
@@ -142,9 +142,9 @@ public class _03CallAndRefLocalTest {
                   }
                   
                   baz() {
-                    let m1 = js$Test.foo.bind(js$Test)
-                    let m2 = this.bar.bind(this, 1)
-                    let m3 = this.bar.bind(this, 0)
+                    let m1 = js$Test.foo.bind(js$Test);
+                    let m2 = this.bar.bind(this, 1);
+                    let m3 = this.bar.bind(this, 0);
                   }
                 }""");
     }
@@ -168,13 +168,13 @@ public class _03CallAndRefLocalTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    super()
+                    super();
                   }
                   
                   baz() {
                     let m1 = (x) => {
-                    }
-                    m1(42)
+                    };
+                    m1(42);
                   }
                 }""");
     }
@@ -196,7 +196,7 @@ public class _03CallAndRefLocalTest {
                 """
                     class js$A extends Object {
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       mA($over, x) {
@@ -209,8 +209,8 @@ public class _03CallAndRefLocalTest {
                       }
                       
                       callB(b) {
-                        b.mB(1, 1)
-                        b.mB(0, 1)
+                        b.mB(1, 1);
+                        b.mB(0, 1);
                       }
                     }"""),
             new CompileAssert.CompileCase("js.B",
@@ -227,7 +227,7 @@ public class _03CallAndRefLocalTest {
                 """
                     class js$B extends Object {
                       constructor() {
-                        super()
+                        super();
                       }
                       
                       mB($over, x) {
@@ -240,8 +240,8 @@ public class _03CallAndRefLocalTest {
                       }
                       
                       callA(a) {
-                        a.mA(1, 1)
-                        a.mA(0, 1)
+                        a.mA(1, 1);
+                        a.mA(0, 1);
                       }
                     }""")
         );

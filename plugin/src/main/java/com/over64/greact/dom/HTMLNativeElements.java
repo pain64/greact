@@ -1,18 +1,19 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
+import com.over64.greact.model.components.DomProperty;
 
 public class HTMLNativeElements {
 
     @JSNativeAPI public static class h1 extends HtmlElement {
         public h1() {};
-        public h1(String innerText) {
+        public h1(@DomProperty("innerText") String innerText) {
         }
     }
 
     @JSNativeAPI public static  class button extends HtmlElement {
         public button() {};
-        public button(String innerText) { }
+        public button(@DomProperty("innerText") String innerText) { }
     }
 
     @JSNativeAPI public static class div extends HtmlElement {
@@ -45,20 +46,20 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class footer extends HtmlElement {}
     @JSNativeAPI public static class span extends HtmlElement {
         public span() {}
-        public span(String innerText) {}
+        public span(@DomProperty("innerText") String innerText) {}
     }
     @JSNativeAPI public static class strong extends HtmlElement {
         public strong() {}
-        public strong(String innerText) {}
+        public strong(@DomProperty("innerText") String innerText) {}
     }
     @JSNativeAPI public static class label extends HtmlElement {
         public label() { }
-        public label(String innerText) {}
+        public label(@DomProperty("innerText") String innerText) {}
         public String _for;
     }
     @JSNativeAPI public static class a extends HtmlElement {
         public String href;
         public a() {}
-        public a(String innerText) {};
+        public a(@DomProperty("innerText") String innerText) {};
     }
 }

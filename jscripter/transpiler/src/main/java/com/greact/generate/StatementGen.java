@@ -59,9 +59,11 @@ public class StatementGen {
                 exprGen.expr(deep, varDecl.getInitializer());
             else
                 out.write(0, "null");
+            out.write(0, ";");
         } else if (stmt instanceof ExpressionStatementTree exprStmt) {
             out.write(deep, "");
             exprGen.expr(deep, exprStmt.getExpression());
+            out.write(0, ";");
         } else if (stmt instanceof IfTree ifStmt) {
             out.write(deep, "if");
             exprGen.expr(deep, ifStmt.getCondition());
@@ -101,7 +103,7 @@ public class StatementGen {
                 out.write(0, ";)");
             else
                 out.mkString(forStmt.getUpdate(), init ->
-                    stmt(0, init), "; ", ", ", ")");
+                    exprGen.expr(deep, init.getExpression()), "; ", ", ", ")");
 
             block(deep, forStmt.getStatement());
         } else if (stmt instanceof EnhancedForLoopTree forEach) {
