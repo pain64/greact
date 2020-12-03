@@ -115,6 +115,14 @@ public class GReactPlugin implements Plugin {
         int nextViewFragN() {
             return viewFragN++;
         }
+
+        MountCtx deeper(Symbol.VarSymbol dest) {
+            var deeper = new MountCtx(this.viewFragments, this.owner, dest);
+            deeper.n = this.n;
+            deeper.viewFragN = this.viewFragN;
+
+            return deeper;
+        }
     }
 
     JCTree.JCExpression buildStatic(Ctx ctx, Symbol sym) {
@@ -332,11 +340,13 @@ public class GReactPlugin implements Plugin {
                 .reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
             : List.<JCTree.JCStatement>nil();
 
+        var deeperMctx = mctx.deeper(elVarSymbol);
+
         var mapped = mappedArgs.appendList(filteredBody)
             .map(tree -> {
                 // FIXME: отображение Block -> Block создает лишнюю вложенность
                 if (tree instanceof JCTree.JCStatement stmt)
-                    return mapStmt(ctx, mctx, forEffect, elVarSymbol, stmt);
+                    return mapStmt(ctx, deeperMctx, forEffect, elVarSymbol, stmt);
 
                 throw new RuntimeException("unexpected tree " + tree);
             });
@@ -438,28 +448,28 @@ public class GReactPlugin implements Plugin {
                                                 throw new RuntimeException("expected new class expression as template");
 
                                             // prologue
-                                            var fragVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                                                ctx.names.fromString("$frag"), ctx.symbols.clFragment.type, methodTree.sym);
+//                                            var fragVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+//                                                ctx.names.fromString("$frag"), ctx.symbols.clFragment.type, methodTree.sym);
+//
+//                                            var fragDecl = ctx.maker.VarDef(
+//                                                fragVarSymbol,
+//                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
-                                            var fragDecl = ctx.maker.VarDef(
-                                                fragVarSymbol,
-                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
-
-                                            var statements = mapNewClass(ctx, new MountCtx(viewFragments, methodTree.sym, fragVarSymbol),
+                                            var statements = mapNewClass(ctx, new MountCtx(viewFragments, methodTree.sym,
+                                                    (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym),
                                                 new HashSet<>(effectCalls.keySet()), newClassTemplate);
 
 
                                             // epilogue
-                                            var appendCall = makeCall(
-                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym, // FIXME
-                                                ctx.symbols.appendChildMethod,
-                                                List.of(ctx.maker.Ident(fragVarSymbol)));
+//                                            var appendCall = makeCall(
+//                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym, // FIXME
+//                                                ctx.symbols.appendChildMethod,
+//                                                List.of(ctx.maker.Ident(fragVarSymbol)));
+//
+//                                            appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-                                            appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-
-                                            this.result = ctx.maker.Block(Flags.BLOCK,
-                                                statements.prepend(fragDecl).append(ctx.maker.Exec(appendCall)));
+                                            this.result = ctx.maker.Block(Flags.BLOCK, statements);
                                         }
                                     }
                                 });
