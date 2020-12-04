@@ -79,7 +79,6 @@ public class GReactPlugin implements Plugin {
 
             Symbol.MethodSymbol mountMethod = lookupMember(clGreact, "mount");
             Symbol.MethodSymbol effectMethod = lookupMember(clGreact, "effect");
-            Symbol.MethodSymbol createDocumentFragmentMethod = lookupMember(clDocument, "createDocumentFragment");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
             Symbol.MethodSymbol applyViewFragMethod = lookupMember(clViewFragment, "apply");

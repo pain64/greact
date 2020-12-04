@@ -2,6 +2,7 @@ package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
 import com.over64.greact.model.components.DomProperty;
+import com.over64.greact.model.components.Slot;
 
 public class HTMLNativeElements {
 
@@ -61,5 +62,10 @@ public class HTMLNativeElements {
         public String href;
         public a() {}
         public a(@DomProperty("innerText") String innerText) {};
+    }
+
+    @JSNativeAPI public static class slot extends HtmlElement {
+        public slot(Slot.SlotF0 f) {}
+        public <T> slot(Slot.SlotF1<T> f, T el) {}
     }
 }

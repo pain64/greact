@@ -109,13 +109,14 @@ public class DemoAdvanced implements Component {
     boolean showUsers = true;
 
 
-    @Override public void mount(HtmlElement dom) {
+    @Override
+    public void mount(HtmlElement dom) {
         RPC.server(
             () -> new String[]{"Ivan", "John", "Iborg"},
             users -> GReact.mount(dom, new div() {{
                 new uikit.pagination<>(users) {{
                     by = 5;
-                    item((user) -> new h1("user with name " + user));
+                    item = user -> new h1("user with name " + user);
                 }};
 
                 new div() {{
