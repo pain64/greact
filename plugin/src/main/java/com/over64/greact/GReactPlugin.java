@@ -19,10 +19,7 @@ import com.sun.tools.javac.util.Names;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -99,12 +96,10 @@ public class GReactPlugin implements Plugin {
 
         final Map<Symbol.VarSymbol, List<Symbol.VarSymbol>> viewFragments;
         final Symbol.MethodSymbol owner;
-        final Symbol.VarSymbol dest;
 
-        MountCtx(Map<Symbol.VarSymbol, List<Symbol.VarSymbol>> viewFragments, Symbol.MethodSymbol owner, Symbol.VarSymbol dest) {
+        MountCtx(Map<Symbol.VarSymbol, List<Symbol.VarSymbol>> viewFragments, Symbol.MethodSymbol owner) {
             this.viewFragments = viewFragments;
             this.owner = owner;
-            this.dest = dest;
         }
 
         int nextN() {
@@ -113,14 +108,6 @@ public class GReactPlugin implements Plugin {
 
         int nextViewFragN() {
             return viewFragN++;
-        }
-
-        MountCtx deeper(Symbol.VarSymbol dest) {
-            var deeper = new MountCtx(this.viewFragments, this.owner, dest);
-            deeper.n = this.n;
-            deeper.viewFragN = this.viewFragN;
-
-            return deeper;
         }
     }
 
@@ -136,6 +123,55 @@ public class GReactPlugin implements Plugin {
             : ctx.maker.Select(ctx.maker.Ident(self), method);
 
         return ctx.maker.App(select, args);
+    }
+
+    static class IdentPatcher extends TreeTranslator {
+        final Ctx ctx;
+        final Symbol.VarSymbol scope;
+
+        IdentPatcher(Ctx ctx, Symbol.VarSymbol scope) {
+            this.ctx = ctx;
+            this.scope = scope;
+        }
+
+        @Override
+        public void visitIdent(JCTree.JCIdent id) {
+            if (id.sym.owner.type != null)  // foreach loop var
+                if (ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
+                    this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
+                    return;
+                }
+
+            super.visitIdent(id);
+        }
+    }
+    static class EffectAnalyzer extends TreeScanner {
+        final HashSet<Symbol.VarSymbol> forEffect;
+        final HashSet<Symbol.VarSymbol> effected = new HashSet<>();
+
+        EffectAnalyzer(HashSet<Symbol.VarSymbol> forEffect) {this.forEffect = forEffect;}
+
+        @Override
+        public void visitIdent(JCTree.JCIdent id) {
+            if (id.sym instanceof Symbol.VarSymbol sym)
+                if (forEffect.contains(sym))
+                    effected.add(sym);
+        }
+
+        @Override
+        public void visitLambda(JCTree.JCLambda tree) {
+        }
+
+        HashSet<Symbol.VarSymbol> unhandledEffects() {
+            var diff = new HashSet<>(forEffect);
+            diff.removeAll(effected);
+            return diff;
+        }
+
+        HashSet<Symbol.VarSymbol> apply(JCTree tree) {
+            tree.accept(this);
+            return effected;
+        }
     }
 
     static class IdentTranslator extends TreeTranslator {
@@ -195,66 +231,135 @@ public class GReactPlugin implements Plugin {
         }
     }
 
+    HashSet<Symbol.VarSymbol> findEffectedVars(HashSet<Symbol.VarSymbol> forEffect,
+                                               JCTree.JCStatement stmt) {
+        Function<JCTree.JCStatement, RuntimeException> unexpectedStmt = st ->
+            new RuntimeException("unexpected statement " + st + "\nof kind " + st.getKind());
+
+        if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
+            var expr = exprStmt.expr;
+
+            if (expr instanceof JCTree.JCNewClass)
+                return new HashSet<>();
+            else if (expr instanceof JCTree.JCAssign assignExpr)
+                return new EffectAnalyzer(forEffect).apply(assignExpr);
+            else
+                throw unexpectedStmt.apply(stmt);
+
+        } else if (stmt instanceof JCTree.JCIf ifStmt)
+            return new EffectAnalyzer(forEffect) {
+                @Override public void visitIf(JCTree.JCIf tree) {
+                    scan(tree.cond);
+                }
+            }.apply(ifStmt);
+        else if (stmt instanceof JCTree.JCSwitch switchStmt)
+            return new EffectAnalyzer(forEffect) {
+                @Override public void visitCase(JCTree.JCCase tree) {
+                    scan(tree.pats);
+                }
+            }.apply(switchStmt);
+        else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
+            return new EffectAnalyzer(forEffect) {
+                @Override public void visitForeachLoop(JCTree.JCEnhancedForLoop tree) {
+                    scan(tree.var);
+                    scan(tree.expr);
+                }
+            }.apply(foreachStmt);
+        else if (stmt instanceof JCTree.JCBlock) {
+            return new HashSet<>();
+        } else
+            throw unexpectedStmt.apply(stmt);
+    }
+
+    void patchIdentifiers(Ctx ctx, Symbol.VarSymbol dest, JCTree.JCStatement stmt) {
+        Function<JCTree.JCStatement, RuntimeException> unexpectedStmt = st ->
+            new RuntimeException("unexpected statement " + st + "\nof kind " + st.getKind());
+
+        if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
+            var expr = exprStmt.expr;
+
+            if (expr instanceof JCTree.JCNewClass) {
+                /* NOP */
+            } else if (expr instanceof JCTree.JCAssign assignExpr)
+                new IdentPatcher(ctx, dest).translate(assignExpr);
+            else throw unexpectedStmt.apply(stmt);
+
+        } else if (stmt instanceof JCTree.JCIf ifStmt)
+            new IdentPatcher(ctx, dest) {
+                @Override
+                public void visitIf(JCTree.JCIf tree) {
+                    tree.cond = translate(tree.cond);
+                    this.result = tree;
+                }
+            }.translate(ifStmt);
+        else if (stmt instanceof JCTree.JCSwitch switchStmt)
+            new IdentPatcher(ctx, dest) {
+                @Override
+                public void visitCase(JCTree.JCCase tree) {
+                    tree.pats = translate(tree.pats);
+                    this.result = tree;
+                }
+            }.translate(switchStmt);
+        else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
+            new IdentPatcher(ctx, dest) {
+                @Override
+                public void visitForeachLoop(JCTree.JCEnhancedForLoop tree) {
+                    tree.var = translate(tree.var);
+                    tree.expr = translate(tree.expr);
+                    this.result = tree;
+                }
+            }.translate(foreachStmt);
+        else if (stmt instanceof JCTree.JCBlock) {
+            /* nop */
+        } else
+            throw unexpectedStmt.apply(stmt);
+    }
+
     JCTree.JCStatement mapStmt(Ctx ctx, MountCtx mctx,
-                               HashSet<Symbol.VarSymbol> forEffect, Symbol.VarSymbol scope,
+                               HashSet<Symbol.VarSymbol> forEffect,
+                               Symbol.VarSymbol dest, Optional<Symbol.VarSymbol> before,
                                JCTree.JCStatement stmt) {
-        System.out.println("forEffect: " + forEffect + " map stmt:\n" + stmt);
 
         Function<JCTree.JCStatement, RuntimeException> unexpectedStmt = st ->
             new RuntimeException("unexpected statement " + st + "\nof kind " + st.getKind());
 
-        final HashSet<Symbol.VarSymbol> effected;
+        var effected = findEffectedVars(forEffect, stmt);
+        var unhandledEffects = new HashSet<>(forEffect);
+        unhandledEffects.removeAll(effected);
+        patchIdentifiers(ctx, dest, stmt);
+
+        Optional<Symbol.VarSymbol> nextBefore = Optional.empty(); // if(effected.isEmpty()) else {}
 
         if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
             var expr = exprStmt.expr;
 
             if (expr instanceof JCTree.JCNewClass newClassExpr)
-                return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, mctx, forEffect, newClassExpr));
-            else if (expr instanceof JCTree.JCAssign assignExpr)
-                effected = new IdentTranslator(ctx, scope, forEffect).apply(assignExpr);
-            else
+                stmt = ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, mctx, forEffect, dest, before, newClassExpr));
+            else if (expr instanceof JCTree.JCAssign assignExpr) {
+                /* nop */
+            } else
                 throw unexpectedStmt.apply(stmt);
 
-        } else if (stmt instanceof JCTree.JCIf ifStmt)
-            effected = new IdentTranslator(ctx, scope, forEffect) {
-                @Override
-                public void visitIf(JCTree.JCIf tree) {
-                    tree.cond = this.translate(tree.cond);
-                    tree.thenpart = mapStmt(ctx, mctx, unhandledEffects(), scope, tree.thenpart);
-                    if (tree.elsepart != null)
-                        tree.elsepart = mapStmt(ctx, mctx, unhandledEffects(), scope, tree.elsepart);
-                    this.result = tree;
-                }
-            }.apply(ifStmt);
-        else if (stmt instanceof JCTree.JCSwitch switchStmt)
-            effected = new IdentTranslator(ctx, scope, forEffect) {
-                @Override
-                public void visitCase(JCTree.JCCase tree) {
-                    tree.pats = this.translate(tree.pats);
-                    if (tree.stats != null)
-                        tree.stats = tree.stats.map(st -> mapStmt(ctx, mctx, unhandledEffects(), scope, st));
-                    this.result = tree;
-                }
-            }.apply(switchStmt);
+        } else if (stmt instanceof JCTree.JCIf ifStmt) {
+            ifStmt.thenpart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.thenpart);
+            if (ifStmt.elsepart != null)
+                ifStmt.elsepart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.elsepart);
+        } else if (stmt instanceof JCTree.JCSwitch switchStmt)
+            switchStmt.cases.forEach(tree -> {
+                if (tree.stats != null)
+                    tree.stats = tree.stats.map(st -> mapStmt(ctx, mctx, unhandledEffects, dest, Optional.empty(), st));
+            });
         else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
-            effected = new IdentTranslator(ctx, scope, forEffect) {
-                @Override
-                public void visitForeachLoop(JCTree.JCEnhancedForLoop tree) {
-                    tree.var = this.translate(tree.var);
-                    tree.expr = this.translate(tree.expr);
-                    tree.body = mapStmt(ctx, mctx, unhandledEffects(), scope, tree.body);
-                    this.result = tree;
-                }
-            }.apply(foreachStmt);
+            foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, foreachStmt.body);
         else if (stmt instanceof JCTree.JCBlock blockStmt) {
-            effected = new HashSet<>();
             blockStmt.stats = blockStmt.stats
-                .map(st -> mapStmt(ctx, mctx, forEffect, scope, st));
+                .map(st -> mapStmt(ctx, mctx, forEffect, dest, nextBefore, st));
         } else
             throw unexpectedStmt.apply(stmt);
 
-        if (effected.isEmpty()) return stmt;
-        else {
+        if (effected.isEmpty()) {
+            return stmt;
+        } else {
             var viewRendererVar = new Symbol.VarSymbol(Flags.PRIVATE,
                 ctx.names.fromString("$viewFrag" + mctx.nextViewFragN()),
                 ctx.symbols.clViewFragment.type,
@@ -288,8 +393,9 @@ public class GReactPlugin implements Plugin {
 
     // expression
     // запретить var x = new div() {{ }}; ???
-    List<JCTree.JCStatement> mapNewClass(Ctx ctx, MountCtx mctx,
-                                         HashSet<Symbol.VarSymbol> forEffect, JCTree.JCNewClass newClass) {
+    List<JCTree.JCStatement> mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
+                                         Symbol.VarSymbol dest, Optional<Symbol.VarSymbol> before,
+                                         JCTree.JCNewClass newClass) {
 
         if (newClass.def != null) { // anon inner class
             newClass.type = ((Type.ClassType) newClass.type).supertype_field;
@@ -339,13 +445,11 @@ public class GReactPlugin implements Plugin {
                 .reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
             : List.<JCTree.JCStatement>nil();
 
-        var deeperMctx = mctx.deeper(elVarSymbol);
-
         var mapped = mappedArgs.appendList(filteredBody)
             .map(tree -> {
                 // FIXME: отображение Block -> Block создает лишнюю вложенность
                 if (tree instanceof JCTree.JCStatement stmt)
-                    return mapStmt(ctx, deeperMctx, forEffect, elVarSymbol, stmt);
+                    return mapStmt(ctx, mctx, forEffect, elVarSymbol, Optional.empty(), stmt);
 
                 throw new RuntimeException("unexpected tree " + tree);
             });
@@ -353,7 +457,7 @@ public class GReactPlugin implements Plugin {
 
         newClass.def = null;
 
-        var appendElCall = makeCall(mctx.dest, ctx.symbols.appendChildMethod,
+        var appendElCall = makeCall(dest, ctx.symbols.appendChildMethod,
             List.of(ctx.maker.Ident(elVarSymbol)));
         appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
@@ -454,9 +558,11 @@ public class GReactPlugin implements Plugin {
 //                                                fragVarSymbol,
 //                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
-                                            var statements = mapNewClass(ctx, new MountCtx(viewFragments, methodTree.sym,
-                                                    (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym),
-                                                new HashSet<>(effectCalls.keySet()), newClassTemplate);
+                                            var statements = mapNewClass(
+                                                ctx, new MountCtx(viewFragments, methodTree.sym),
+                                                new HashSet<>(effectCalls.keySet()),
+                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym,
+                                                Optional.empty(), newClassTemplate);
 
 
                                             // epilogue
