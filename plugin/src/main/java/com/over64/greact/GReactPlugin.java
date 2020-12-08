@@ -20,6 +20,7 @@ import com.sun.tools.javac.util.Names;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -64,8 +65,8 @@ public class GReactPlugin implements Plugin {
         class Symbols {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
+            Symbol.ClassSymbol clInteger = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Integer"));
             Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
-            Symbol.ClassSymbol clFragment = lookupClass("com.over64.greact.dom.DocumentFragment");
             Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
             Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
             Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
@@ -73,9 +74,11 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clViewFragment = lookupClass("com.over64.greact.dom.ViewFragment");
 
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
+            Symbol.VarSymbol childElementCountField = lookupMember(clNode, "childElementCount");
 
             Symbol.MethodSymbol mountMethod = lookupMember(clGreact, "mount");
             Symbol.MethodSymbol effectMethod = lookupMember(clGreact, "effect");
+            Symbol.MethodSymbol cleanupMethod = lookupMember(clGlobals, "greactCleanup");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
             Symbol.MethodSymbol applyViewFragMethod = lookupMember(clViewFragment, "apply");
@@ -90,14 +93,17 @@ public class GReactPlugin implements Plugin {
         return ctx;
     }
 
+    static record ViewFragment(Symbol.VarSymbol lambda, Symbol.VarSymbol start, Symbol.VarSymbol end) {
+    }
+
     static class MountCtx {
         private int n = 0;
         private int viewFragN = 0;
 
-        final Map<Symbol.VarSymbol, List<Symbol.VarSymbol>> viewFragments;
+        final Map<Symbol.VarSymbol, List<ViewFragment>> viewFragments;
         final Symbol.MethodSymbol owner;
 
-        MountCtx(Map<Symbol.VarSymbol, List<Symbol.VarSymbol>> viewFragments, Symbol.MethodSymbol owner) {
+        MountCtx(Map<Symbol.VarSymbol, List<ViewFragment>> viewFragments, Symbol.MethodSymbol owner) {
             this.viewFragments = viewFragments;
             this.owner = owner;
         }
@@ -117,7 +123,7 @@ public class GReactPlugin implements Plugin {
             : ctx.maker.Select(buildStatic(ctx, sym.owner), sym);
     }
 
-    JCTree.JCMethodInvocation makeCall(Symbol.VarSymbol self, Symbol.MethodSymbol method, List<JCTree.JCExpression> args) {
+    JCTree.JCMethodInvocation makeCall(Symbol self, Symbol.MethodSymbol method, List<JCTree.JCExpression> args) {
         var select = self.isStatic()
             ? ctx.maker.Select(buildStatic(ctx, self), method)
             : ctx.maker.Select(ctx.maker.Ident(self), method);
@@ -160,12 +166,6 @@ public class GReactPlugin implements Plugin {
 
         @Override
         public void visitLambda(JCTree.JCLambda tree) {
-        }
-
-        HashSet<Symbol.VarSymbol> unhandledEffects() {
-            var diff = new HashSet<>(forEffect);
-            diff.removeAll(effected);
-            return diff;
         }
 
         HashSet<Symbol.VarSymbol> apply(JCTree tree) {
@@ -211,12 +211,6 @@ public class GReactPlugin implements Plugin {
             this.ctx = ctx;
             this.scope = scope;
             this.forEffect = forEffect;
-        }
-
-        HashSet<Symbol.VarSymbol> unhandledEffects() {
-            var diff = new HashSet<>(forEffect);
-            diff.removeAll(effected);
-            return diff;
         }
 
         @Override
@@ -328,55 +322,97 @@ public class GReactPlugin implements Plugin {
         unhandledEffects.removeAll(effected);
         patchIdentifiers(ctx, dest, stmt);
 
-        Optional<Symbol.VarSymbol> nextBefore = Optional.empty(); // if(effected.isEmpty()) else {}
 
-        if (stmt instanceof JCTree.JCExpressionStatement exprStmt) {
-            var expr = exprStmt.expr;
+        BiFunction<JCTree.JCStatement, Optional<Symbol.VarSymbol>, JCTree.JCStatement>
+            patchStatements = (st, nextBefore) -> {
+            if (st instanceof JCTree.JCExpressionStatement exprStmt) {
+                var expr = exprStmt.expr;
 
-            if (expr instanceof JCTree.JCNewClass newClassExpr)
-                stmt = ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, mctx, forEffect, dest, before, newClassExpr));
-            else if (expr instanceof JCTree.JCAssign assignExpr) {
-                /* nop */
+                if (expr instanceof JCTree.JCNewClass newClassExpr)
+                    return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, mctx, forEffect, dest, before, newClassExpr));
+                else if (expr instanceof JCTree.JCAssign assignExpr) {
+                    /* nop */
+                } else
+                    throw unexpectedStmt.apply(st);
+
+            } else if (st instanceof JCTree.JCIf ifStmt) {
+                ifStmt.thenpart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.thenpart);
+                if (ifStmt.elsepart != null)
+                    ifStmt.elsepart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.elsepart);
+            } else if (st instanceof JCTree.JCSwitch switchStmt)
+                switchStmt.cases.forEach(tree -> {
+                    if (tree.stats != null)
+                        tree.stats = tree.stats.map(s -> mapStmt(ctx, mctx, unhandledEffects, dest, Optional.empty(), s));
+                });
+            else if (st instanceof JCTree.JCEnhancedForLoop foreachStmt)
+                foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, foreachStmt.body);
+            else if (st instanceof JCTree.JCBlock blockStmt) {
+                blockStmt.stats = blockStmt.stats
+                    .map(s -> mapStmt(ctx, mctx, forEffect, dest, nextBefore, s));
             } else
-                throw unexpectedStmt.apply(stmt);
+                throw unexpectedStmt.apply(st);
 
-        } else if (stmt instanceof JCTree.JCIf ifStmt) {
-            ifStmt.thenpart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.thenpart);
-            if (ifStmt.elsepart != null)
-                ifStmt.elsepart = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, ifStmt.elsepart);
-        } else if (stmt instanceof JCTree.JCSwitch switchStmt)
-            switchStmt.cases.forEach(tree -> {
-                if (tree.stats != null)
-                    tree.stats = tree.stats.map(st -> mapStmt(ctx, mctx, unhandledEffects, dest, Optional.empty(), st));
-            });
-        else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
-            foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, dest, nextBefore, foreachStmt.body);
-        else if (stmt instanceof JCTree.JCBlock blockStmt) {
-            blockStmt.stats = blockStmt.stats
-                .map(st -> mapStmt(ctx, mctx, forEffect, dest, nextBefore, st));
-        } else
-            throw unexpectedStmt.apply(stmt);
+            return st;
+        };
+
 
         if (effected.isEmpty()) {
-            return stmt;
+            return patchStatements.apply(stmt, Optional.empty());
         } else {
+            var fragN = mctx.nextViewFragN();
             var viewRendererVar = new Symbol.VarSymbol(Flags.PRIVATE,
-                ctx.names.fromString("$viewFrag" + mctx.nextViewFragN()),
+                ctx.names.fromString("$viewFrag" + fragN),
                 ctx.symbols.clViewFragment.type,
+                mctx.owner.owner);
+
+            var fragStartVar = new Symbol.VarSymbol(Flags.PRIVATE,
+                ctx.names.fromString("$start" + fragN),
+                ctx.symbols.clInteger.type,
+                mctx.owner.owner);
+
+            var fragEndVar = new Symbol.VarSymbol(Flags.PRIVATE,
+                ctx.names.fromString("$end" + fragN),
+                ctx.symbols.clInteger.type,
                 mctx.owner.owner);
 
             effected.forEach(eVar -> {
                 var old = mctx.viewFragments.computeIfAbsent(eVar, k -> List.nil());
-                mctx.viewFragments.put(eVar, old.append(viewRendererVar));
+                mctx.viewFragments.put(eVar, old.append(new ViewFragment(viewRendererVar, fragStartVar, fragEndVar)));
             });
+
+            var beforeVar = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                ctx.names.fromString("$before" + fragN),
+                ctx.symbols.clInteger.type,
+                mctx.owner.owner);
+
+            var beforeDecl = ctx.maker.VarDef(beforeVar,
+                makeCall(ctx.symbols.clGlobals, ctx.symbols.cleanupMethod, List.of(
+                    ctx.maker.Ident(dest),
+                    ctx.maker.Ident(fragStartVar),
+                    ctx.maker.Ident(fragEndVar)
+                )));
+
+            // generate this.s = dest.childElementCount
+            var setStart = ctx.maker.Assignment(fragStartVar,
+                ctx.maker.Select(ctx.maker.Ident(dest), ctx.symbols.childElementCountField));
+            var setEnd = ctx.maker.Assignment(fragEndVar,
+                ctx.maker.Select(ctx.maker.Ident(dest), ctx.symbols.childElementCountField));
+
+            var patchedStmt = patchStatements.apply(stmt, Optional.empty());
 
             var lmb = ctx.maker.Lambda(
                 nil(),
-                ctx.maker.Block(Flags.BLOCK, List.of(stmt)))
+                ctx.maker.Block(Flags.BLOCK, List.of(
+                    beforeDecl,
+                    setStart,
+                    patchedStmt,
+                    setEnd)))
                 .setType(ctx.symbols.clViewFragment.type);
             lmb.target = ctx.symbols.clViewFragment.type;
             lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
             lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+            // generate this.e = dest.childElementCount
 
             return
                 ctx.maker.Exec(
@@ -522,7 +558,7 @@ public class GReactPlugin implements Plugin {
 
                         var z = 1;
 
-                        var viewFragments = new HashMap<Symbol.VarSymbol, List<Symbol.VarSymbol>>();
+                        var viewFragments = new HashMap<Symbol.VarSymbol, List<ViewFragment>>();
 
 
                         typeDecl.accept(new TreeScanner() {
@@ -586,10 +622,15 @@ public class GReactPlugin implements Plugin {
                         var classDecl = (JCTree.JCClassDecl) typeDecl;
 
                         for (var list : viewFragments.values())
-                            for (var viewFragVar : list) {
-                                classDecl.sym.members_field.enterIfAbsent(viewFragVar);
+                            for (var viewFrag : list) {
+                                // also append s and e
+                                classDecl.sym.members_field.enterIfAbsent(viewFrag.lambda);
+                                classDecl.sym.members_field.enterIfAbsent(viewFrag.start);
+                                classDecl.sym.members_field.enterIfAbsent(viewFrag.end);
                                 classDecl.defs = classDecl.defs
-                                    .append(ctx.maker.VarDef(viewFragVar, null));
+                                    .append(ctx.maker.VarDef(viewFrag.lambda, null))
+                                    .append(ctx.maker.VarDef(viewFrag.start, null))
+                                    .append(ctx.maker.VarDef(viewFrag.end, null));
                             }
 
 
@@ -608,11 +649,11 @@ public class GReactPlugin implements Plugin {
 
                             var method = ctx.maker.MethodDef(methodSym,
                                 ctx.maker.Block(Flags.BLOCK,
-                                    fragmentsForVar.map(local ->
+                                    fragmentsForVar.map(frag ->
                                         ctx.maker.Exec(
                                             ctx.maker.App(
                                                 ctx.maker.Select(
-                                                    ctx.maker.Ident(local),
+                                                    ctx.maker.Ident(frag.lambda),
                                                     ctx.symbols.applyViewFragMethod))))));
 
                             method.mods = ctx.maker.Modifiers(Flags.PRIVATE);
