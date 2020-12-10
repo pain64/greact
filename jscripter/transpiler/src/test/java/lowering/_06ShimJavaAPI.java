@@ -56,4 +56,26 @@ public class _06ShimJavaAPI {
                   }
                 }""");
     }
+
+    @Test void jsExpressionCheckThatNoCollisionWithMethodNamed__of__() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import com.greact.model.JSExpression;
+                public class Test {
+                  static int of() { return 42; }
+                  int x = of();
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                    this.x = this.constructor.of()
+                  }
+                  
+                  static of() {
+                    return 42
+                  }
+                }""");
+    }
 }

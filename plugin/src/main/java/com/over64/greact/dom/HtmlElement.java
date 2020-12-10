@@ -16,7 +16,7 @@ public class HtmlElement extends Node implements Mountable {
     public String lang;
     public Style style = new Style();
 
-    public Object dependsForRemount;
+    public Object dependsOn;
 
     // HTML Event Attributes
     //   Mouse events

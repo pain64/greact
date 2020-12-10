@@ -221,8 +221,9 @@ public class ExpressionGen {
 
             var names = Names.instance(ctx.context());
 
-            if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) ||
+            if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) &&
                 methodSym.name.equals(names.fromString("of"))) {
+
                 var unescaped = call.getArguments().get(0).toString();
                 out.write(0, unescaped.substring(1, unescaped.length() - 1));
             } else {

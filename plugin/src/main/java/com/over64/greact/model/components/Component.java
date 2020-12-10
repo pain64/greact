@@ -3,6 +3,6 @@ package com.over64.greact.model.components;
 
 import com.over64.greact.dom.HtmlElement;
 
-public interface Component extends Mountable {
-    void mount(HtmlElement dom);
+public interface Component<T extends HtmlElement> extends Mountable {
+    void mount(T dom);
 }

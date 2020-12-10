@@ -1,98 +1,63 @@
 package com.over64.greact.sample;
 
 import com.over64.greact.GReact;
-import com.over64.greact.dom.HTMLNativeElements.button;
-import com.over64.greact.dom.HTMLNativeElements.div;
-import com.over64.greact.dom.HTMLNativeElements.h1;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.model.components.Component;
 
 import static com.over64.greact.GReact.effect;
 
-public class DemoAdvanced implements Component {
+public class DemoAdvanced implements Component<li> {
     /*
-    class Demo {
-        constructor() {
-          this.mode = "M1";
-          this.showUsers = true;
-        }
+    class greact$sample$plainjs$HW extends Object {
+  constructor() {
+    super();
+    this.list = [1, 2, 3]
+    this.$frag0 = null
+  }
 
-        mount(dest) {
-          var users = ["John", "Doe", "Ivan", "Igor"];
-
-          // Greact.mount
-          this._mount0$1 = (dest, frag) => {
-            this.p0$1 = dest;
-            this.s0$1 = dest.childElementCount + frag.childElementCount;
-
-            if(this.showUsers) {
-              for(let user of users) {
-                var el4 = document.createElement('h1'); {
-                  el4.innerText = "name " + user;
+  mount(dom) {
+    {
+      let $el0 = com$over64$greact$dom$Globals.document.createElement('div');
+      {
+        (this.$frag0 = new com$over64$greact$dom$Fragment(() => {
+          this.$frag0.cleanup();
+          {
+            let $el1 = com$over64$greact$dom$Globals.document.createElement('ul');
+            {
+              // $el1.dependsOn = this.list;
+              for(let x in this.list) {
+                let $el2 = com$over64$greact$dom$Globals.document.createElement('li');
+                {
+                  {
+                    let $el3 = com$over64$greact$dom$Globals.document.createElement('a');
+                    $el3.innerText = 'text:' + x;
+                    $el2.appendChild($el3);
+                  }
                 }
-                frag.appendChild(el4);
+                $el1.appendChild($el2);
               }
-            } else {
-              var el5 = document.createElement('h1'); {
-                el5.innerText = "user show disabled";
-              }
-              frag.appendChild(el5);
             }
-
-            this.c0$1 = dest.childElementCount + frag.childElementCount - this.s0$1;
+            this.$frag0.appendChild($el1);
           }
-
-          this._effect$showUsers = () => {
-            // drop old
-            var from = this.p0$1.childNodes[this.s0$1];
-            for(var i = 0; i < this.c0$1; i++) {
-              var next = from.nextSibling;
-              this.p0$1.removeChild(from);
-              from = next;
-            }
-
-            // render new
-            var frag = document.createDocumentFragment();
-            this._mount0$1(this.p0$1, frag);
-
-            // insert new
-            if(from) this.p0$1.insertBefore(frag, from);
-            else this.p0$1.appendChild(frag);
+        }, $el0)).render();
+        {
+          let $el4 = com$over64$greact$dom$Globals.document.createElement('button');
+          $el4.innerText = 'do effect';
+          {
+            $el4.onclick = () =>this.effect$list(this.list);
           }
-
-          ((dest) => {
-            var frag = document.createDocumentFragment();
-
-            switch(this.mode) {
-              case "M1":
-                var el1 = document.createElement('h1'); {
-                  el1.innerText = 'selected M1 mode';
-                }
-                frag.appendChild(el1)
-                break;
-              case "M2":
-                var el2 = document.createElement('h1'); {
-                  el2.innerText = 'selected M1 mode';
-                }
-                frag.appendChild(el2)
-                break;
-            }
-
-            var el3 = document.createElement('button'); {
-              el3.innerText = 'toggle show users ' + users.length;
-              el3.onclick = () => {
-                this.showUsers = !this.showUsers;
-                this._effect$showUsers();
-              }
-            }
-
-            frag.appendChild(el3);
-            this._mount0$1(dest, frag);
-            dest.appendChild(frag);
-          })(dest);
-          // end Greact.mount
+          $el0.appendChild($el4);
         }
+      }
+      dom.appendChild($el0);
     }
+  }
+
+  effect$list(arg0) {
+    this.$frag0.render();
+  }
+}
+
 
     new Demo().mount(document.getElementById('view'))
 
@@ -110,10 +75,10 @@ public class DemoAdvanced implements Component {
 
 
     @Override
-    public void mount(HtmlElement dom) {
+    public void mount(li element) {
         RPC.server(
             () -> new String[]{"Ivan", "John", "Iborg"},
-            users -> GReact.mount(dom, new div() {{
+            users -> GReact.mount(element, new div() {{
                 new uikit.pagination<>(users) {{
                     by = 5;
                     item = user -> new h1("user with name " + user);

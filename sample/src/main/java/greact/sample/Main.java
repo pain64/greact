@@ -23,13 +23,33 @@ public class Main {
                     <title>Hello, jScripter!</title>
                   </head>
                   <body>
-                    <div id="view"></div>
+                    <div id="view00"></div>
+                    <hr>
+                    <div id="view01"></div>
+                    <hr>
+                    <div id="view02"></div>
+                    <hr>
+                    <div id="view03">BROKEN DEMO</div>
+                    <hr>
+                    <div id="view04"></div>
                   </body>
                    <script src="/script/lib"></script>
                    <script src="/script/app"></script>
                    <script type="text/javascript">
-                        new greact$sample$plainjs$HW()
-                          .mount(document.getElementById("view"))
+                        new greact$sample$plainjs$_00HelloWorld()
+                          .mount(document.getElementById("view00"))
+                          
+                        new greact$sample$plainjs$_01IfStmt()
+                          .mount(document.getElementById("view01"))
+                        
+                        new greact$sample$plainjs$_02IfElseStmt()
+                          .mount(document.getElementById("view02"))
+                          
+                        
+                          
+                        new greact$sample$plainjs$_04DependsOn()
+                          .mount(document.getElementById("view04"))
+                          
                         new WebSocket("ws://localhost:4567/livereload")
                             .onmessage = () => location.reload()
                    </script>

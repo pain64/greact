@@ -10,15 +10,30 @@ public class DemoTest implements Component {
     int nUsers = 1;
     int[] list = new int[]{1, 2, 3};
 
+    static record Frag(Runnable lambda, Integer[] sc) {
+    }
+
+    Frag $frag0;
+
 
     @Override
     public void mount(HtmlElement dom) {
+        ($frag0 = new Frag(() -> {
 
+
+        }, new Integer[]{null, 0})).lambda.run();
+
+//        ($frag0 = new com$ove64$greact$dom$Frag(() => {
+//
+//
+//        })).fn();
 
         new ul() {{
-            dependsForRemount = list;
+            dependsOn = list;
             for (var x : list)
-                new li() {{ new a("text:" + x); }};
+                new li() {{
+                    new a("text:" + x);
+                }};
         }};
 
         GReact.mount(dom, new div() {{
