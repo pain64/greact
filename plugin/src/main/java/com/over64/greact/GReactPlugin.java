@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.sun.tools.javac.util.List.nil;
 
@@ -350,9 +351,35 @@ public class GReactPlugin implements Plugin {
             if (st instanceof JCTree.JCExpressionStatement exprStmt) {
                 var expr = exprStmt.expr;
 
-                if (expr instanceof JCTree.JCNewClass newClassExpr)
-                    return ctx.maker.Block(Flags.BLOCK, mapNewClass(ctx, mctx, unhandledEffects, nextDest, newClassExpr));
-                else if (expr instanceof JCTree.JCAssign assignExpr) {
+                if (expr instanceof JCTree.JCNewClass newClass) {
+                    if (newClass.def != null) { // anon inner class
+                        newClass.type = ((Type.ClassType) newClass.type).supertype_field;
+                    }
+
+                    var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
+                        ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
+                        List.of( // FIXME: bug?
+                            ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
+                        : newClass;
+
+                    var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                        ctx.names.fromString("$el" + mctx.nextN()), newClass.type, mctx.owner);
+
+                    var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
+
+                    var mapped = mapNewClass(ctx, mctx, unhandledEffects, elVarSymbol, newClass);
+
+                    var appendMethod = dest.type.tsym == ctx.symbols.clFragment ?
+                        ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
+
+                    var appendElCall = makeCall(dest, appendMethod,
+                        List.of(ctx.maker.Ident(elVarSymbol)));
+
+                    appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+                    return ctx.maker.Block(Flags.BLOCK, List.of(elDecl, mapped, ctx.maker.Exec(appendElCall)));
+
+                } else if (expr instanceof JCTree.JCAssign assignExpr) {
                     /* nop */
                 } else
                     throw unexpectedStmt.apply(st);
@@ -396,12 +423,12 @@ public class GReactPlugin implements Plugin {
                 makeCall(viewRendererVar, ctx.symbols.mtFragmentCleanup, List.nil()));
 
             var patchedStmt = patchStatements.apply(stmt, viewRendererVar);
+            var stmtBody = patchedStmt instanceof JCTree.JCBlock block ?
+                block.stats : List.of(patchedStmt);
 
             var lmb = ctx.maker.Lambda(
                 nil(),
-                ctx.maker.Block(Flags.BLOCK, List.of(
-                    cleanupCall,
-                    patchedStmt)))
+                ctx.maker.Block(Flags.BLOCK, stmtBody.prepend(cleanupCall)))
                 .setType(ctx.symbols.clRenderer.type);
             lmb.target = ctx.symbols.clRenderer.type;
             lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -423,26 +450,9 @@ public class GReactPlugin implements Plugin {
         }
     }
 
-    // expression
-    // запретить var x = new div() {{ }}; ???
-    List<JCTree.JCStatement> mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
-                                         Symbol.VarSymbol dest, JCTree.JCNewClass newClass) {
+    JCTree.JCBlock mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
+                               Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
 
-        if (newClass.def != null) { // anon inner class
-            newClass.type = ((Type.ClassType) newClass.type).supertype_field;
-        }
-
-        var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
-            ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
-            List.of( // FIXME: bug?
-                ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
-            : newClass;
-
-        var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-            ctx.names.fromString("$el" + mctx.nextN()), newClass.type, mctx.owner);
-
-
-        var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
         var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
             .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
@@ -466,36 +476,27 @@ public class GReactPlugin implements Plugin {
                         arg));
             }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
-        var filteredBody = newClass.def != null ?
+        var blockBody = newClass.def != null ?
             newClass.def.defs.stream()
-                .filter(tree -> !(tree instanceof JCTree.JCMethodDecl md && md.getName().toString().equals("<init>")))
-                .map(tree -> {
-                    if (tree instanceof JCTree.JCStatement stmt) return stmt;
-                    throw new RuntimeException("unexpected tree " + tree);
-                })
-                .reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList)
+                .filter(tree -> tree instanceof JCTree.JCBlock)
+                .map(block -> ((JCTree.JCBlock) block).stats)
+                .findFirst().orElseThrow()
             : List.<JCTree.JCStatement>nil();
 
-        var mapped = mappedArgs.appendList(filteredBody)
-            .map(tree -> {
-                // FIXME: отображение Block -> Block создает лишнюю вложенность
-                if (tree instanceof JCTree.JCStatement stmt)
-                    return mapStmt(ctx, mctx, forEffect, elVarSymbol, stmt);
+        var mapped = mappedArgs.appendList(blockBody).stream()
+            .flatMap(tree -> {
+                if (tree instanceof JCTree.JCStatement stmt) {
+                    var mappedStmt = mapStmt(ctx, mctx, forEffect, elVarSymbol, stmt);
+                    if (mappedStmt instanceof JCTree.JCBlock block)
+                        return block.stats.stream();
+                    else return Stream.of(mappedStmt);
+                }
 
                 throw new RuntimeException("unexpected tree " + tree);
-            });
-
+            }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
         newClass.def = null;
-
-        var appendMethod = dest.type.tsym == ctx.symbols.clFragment ?
-            ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
-
-        var appendElCall = makeCall(dest, appendMethod,
-            List.of(ctx.maker.Ident(elVarSymbol)));
-
-        appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
-        return mapped.prepend(elDecl).append(ctx.maker.Exec(appendElCall));
+        return ctx.maker.Block(Flags.BLOCK, mapped);
     }
 
     @Override
@@ -512,7 +513,7 @@ public class GReactPlugin implements Plugin {
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         // check that type implements Component interface
-                        if(ctx.types.interfaces(typeDecl.type).stream()
+                        if (ctx.types.interfaces(typeDecl.type).stream()
                             .noneMatch(iface -> iface.tsym == ctx.symbols.clComponent)) continue;
 
                         // Find all GReact.effect calls
@@ -595,7 +596,7 @@ public class GReactPlugin implements Plugin {
 //                                                fragVarSymbol,
 //                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
-                                            var statements = mapNewClass(
+                                            this.result = mapNewClass(
                                                 ctx, new MountCtx(viewFragments, methodTree.sym),
                                                 new HashSet<>(effectCalls.keySet()),
                                                 (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym,
@@ -609,9 +610,6 @@ public class GReactPlugin implements Plugin {
 //                                                List.of(ctx.maker.Ident(fragVarSymbol)));
 //
 //                                            appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
-
-
-                                            this.result = ctx.maker.Block(Flags.BLOCK, statements);
                                         }
                                     }
                                 });

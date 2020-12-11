@@ -23,7 +23,7 @@ public class Main {
                     <title>Hello, jScripter!</title>
                   </head>
                   <body>
-                    <div id="view00"></div>
+                    <h1 id="view00"></h1>
                     <hr>
                     <div id="view01"></div>
                     <hr>

@@ -31,7 +31,6 @@ public class Simple {
                     package js;
                        
                     import org.over64.jscripter.StdTypeConversion;
-                    import com.over64.greact.GReact;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
                     import com.over64.greact.dom.HtmlElement;
