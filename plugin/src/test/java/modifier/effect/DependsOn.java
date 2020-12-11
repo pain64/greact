@@ -11,16 +11,14 @@ public class DependsOn {
             new CompileAssert.CompileCase("js.Demo",
                 """
                     package js;
-                    import com.over64.greact.GReact;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
-                    import com.over64.greact.dom.HtmlElement;
                                         
-                    class Demo implements Component {
+                    class Demo implements Component<div> {
                       int[] list = new int[]{1, 2, 3};
                       
-                      @Override public void mount(HtmlElement dom) {              
-                        GReact.mount(dom, new div() {{
+                      @Override public void mount(div dom) {              
+                        render(dom, new div() {{
                           new ul() {{
                             dependsOn = list;
                             for (var x : list)
@@ -28,7 +26,7 @@ public class DependsOn {
                           }};
                          
                           new button("do effect") {{
-                            onclick = () -> GReact.effect(list);
+                            onclick = () -> effect(list);
                           }};
                         }});
                       }

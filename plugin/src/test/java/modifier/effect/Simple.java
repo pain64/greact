@@ -11,16 +11,14 @@ public class Simple {
             new CompileAssert.CompileCase("js.Demo",
                 """
                     package js;
-                    import com.over64.greact.GReact;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
-                    import com.over64.greact.dom.HtmlElement;
                                         
-                    class Demo implements Component {
+                    class Demo implements Component<div> {
                       int nUsers = 1;
                       
-                      @Override public void mount(HtmlElement dom) {              
-                        GReact.mount(dom, new div() {{
+                      @Override public void mount(div dom) {              
+                        render(dom, new div() {{
                           new h1() {{ innerText = "GReact users: " + nUsers; }};
                           
                           if(nUsers > 100)
@@ -29,7 +27,7 @@ public class Simple {
                           new button() {{
                             innerText = "increment";
                             onclick = () -> {
-                              GReact.effect(nUsers += 1);
+                              effect(nUsers += 1);
                             };
                           }};
                         }});

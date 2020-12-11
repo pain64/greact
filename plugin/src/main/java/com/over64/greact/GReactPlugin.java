@@ -66,6 +66,7 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
             Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
+            Symbol.ClassSymbol clComponent = lookupClass("com.over64.greact.model.components.Component");
             Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
             Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
             Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
@@ -83,8 +84,8 @@ public class GReactPlugin implements Plugin {
 
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
 
-            Symbol.MethodSymbol mountMethod = lookupMember(clGreact, "mount");
-            Symbol.MethodSymbol effectMethod = lookupMember(clGreact, "effect");
+            Symbol.MethodSymbol renderMethod = lookupMember(clComponent, "render");
+            Symbol.MethodSymbol effectMethod = lookupMember(clComponent, "effect");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
         }
@@ -510,6 +511,10 @@ public class GReactPlugin implements Plugin {
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
 
                     for (var typeDecl : cu.getTypeDecls()) {
+                        // check that type implements Component interface
+                        if(ctx.types.interfaces(typeDecl.type).stream()
+                            .noneMatch(iface -> iface.tsym == ctx.symbols.clComponent)) continue;
+
                         // Find all GReact.effect calls
                         var effectCalls = new HashMap<Symbol.VarSymbol, java.util.List<JCTree.JCMethodInvocation>>();
 
@@ -576,8 +581,7 @@ public class GReactPlugin implements Plugin {
 
 
                                             // FIXME: so bad
-                                            if (!methodSym.name.equals(ctx.names.fromString("mount")) ||
-                                                !methodSym.owner.name.equals(ctx.symbols.clGreact.name)) return;
+                                            if (methodSym != ctx.symbols.renderMethod) return;
 
                                             var template = that.args.get(1);
                                             if (!(template instanceof JCTree.JCNewClass newClassTemplate))

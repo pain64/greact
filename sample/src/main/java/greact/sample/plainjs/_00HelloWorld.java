@@ -1,13 +1,11 @@
 package greact.sample.plainjs;
 
-import com.over64.greact.GReact;
-import com.over64.greact.dom.HTMLNativeElements.h1;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.model.components.Component;
 
-public class _00HelloWorld implements Component {
+public class _00HelloWorld implements Component<div> {
     @Override
-    public void mount(HtmlElement dom) {
-        GReact.mount(dom, new h1("hello, world!"));
+    public void mount(div dom) {
+        render(dom, new h1("hello, world!"));
     }
 }

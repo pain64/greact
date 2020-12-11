@@ -13,22 +13,19 @@ public class Simple2 {
             new CompileAssert.CompileCase("js.Demo",
                 """
                     package js;
-                    import com.over64.greact.GReact;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
-                    import com.over64.greact.dom.HtmlElement;
                                         
-                    public class Demo implements Component {
+                    class Demo implements Component<div> {
                                boolean showUsers = true;
                                String[] users = new String[]{"Ivan", "John", "Iborg"};
                        
                                @Override
-                               public void mount(HtmlElement dom) {
-                       
-                                   GReact.mount(dom, new div() {{
+                               public void mount(div dom) {
+                                   render(dom, new div() {{
                                        new button() {{
                                            innerText = "toggle show users " + users.length;
-                                           onclick = () -> GReact.effect(showUsers = !showUsers);
+                                           onclick = () -> effect(showUsers = !showUsers);
                                        }};
                        
                                        if (showUsers)
