@@ -6,10 +6,10 @@ import com.over64.greact.model.components.Component;
 public class _02IfElseStmt implements Component<div> {
     boolean showUsers = true;
 
-    @Override public void mount(div dom) {
+    @Override public void mount() {
         var users = new String[]{"Ivan", "John", "Iborg"};
 
-        render(dom, new div() {{
+        render(new div() {{
             if (showUsers)
                 for (var user : users)
                     new h1("name" + user);

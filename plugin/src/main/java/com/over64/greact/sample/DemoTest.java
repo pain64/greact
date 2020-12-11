@@ -6,7 +6,7 @@ import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
 
 
-public class DemoTest implements Component {
+public class DemoTest implements Component<div> {
     int nUsers = 1;
     int[] list = new int[]{1, 2, 3};
 
@@ -17,7 +17,7 @@ public class DemoTest implements Component {
 
 
     @Override
-    public void mount(HtmlElement dom) {
+    public void mount() {
         ($frag0 = new Frag(() -> {
 
 
@@ -36,7 +36,7 @@ public class DemoTest implements Component {
                 }};
         }};
 
-        GReact.mount(dom, new div() {{
+        render(new div() {{
             new h1("GReact users: " + nUsers);
             new button("increment") {{
                 onclick = () -> GReact.effect(nUsers += 1);

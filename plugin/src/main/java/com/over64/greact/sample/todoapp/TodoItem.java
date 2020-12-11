@@ -9,7 +9,7 @@ import static com.over64.greact.GReact.classIf;
 import static com.over64.greact.GReact.effect;
 import static com.over64.greact.sample.todoapp.TodoApp.Todo;
 
-public class TodoItem implements Component {
+public class TodoItem implements Component<li> {
     @FunctionalInterface public interface Handler {
         void apply();
     }
@@ -41,8 +41,8 @@ public class TodoItem implements Component {
         effect(editing = false);
     }
 
-    @Override public void mount(HtmlElement dom) {
-        GReact.mount(dom, new li() {{
+    @Override public void mount() {
+        render(new li() {{
             className = "todo " +
                 classIf(item.completed, "completed") +
                 classIf(editing, "editing");

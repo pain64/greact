@@ -17,8 +17,8 @@ public class DependsOn {
                     class Demo implements Component<div> {
                       int[] list = new int[]{1, 2, 3};
                       
-                      @Override public void mount(div dom) {              
-                        render(dom, new div() {{
+                      @Override public void mount() {              
+                        render(new div() {{
                           new ul() {{
                             dependsOn = list;
                             for (var x : list)

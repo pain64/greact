@@ -18,8 +18,8 @@ public class Simple {
                     class Demo implements Component<div> {
                       int nUsers = 1;
                       
-                      @Override public void mount(div dom) {                        
-                        render(dom, new div() {{
+                      @Override public void mount() {                        
+                        render(new div() {{
                            new h1("GReact users: " + nUsers);
                            new button("increment") {{
                              onclick = () -> effect(nUsers += 1);

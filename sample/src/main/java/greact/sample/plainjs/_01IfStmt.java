@@ -9,8 +9,8 @@ public class _01IfStmt implements Component<div> {
     int nUsers = 1;
 
     @Override
-    public void mount(div dom) {
-        render(dom, new div() {{
+    public void mount() {
+        render(new div() {{
             new h1("number of GReact users: " + nUsers);
             if (nUsers > 10)
                 new h1("Awesome! Too much users!");

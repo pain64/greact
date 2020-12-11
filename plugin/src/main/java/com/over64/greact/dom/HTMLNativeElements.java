@@ -2,7 +2,6 @@ package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
 import com.over64.greact.model.components.DomProperty;
-import com.over64.greact.model.components.Slot;
 
 public class HTMLNativeElements {
 
@@ -65,7 +64,14 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class slot extends HtmlElement {
-        public slot(Slot.SlotF0 f) {}
-        public <T> slot(Slot.SlotF1<T> f, T el) {}
+        @FunctionalInterface
+        public interface SlotF0 {
+            void apply();
+        }
+        public interface SlotF1<T> {
+            void apply(T t);
+        }
+        public slot(SlotF0 f) {}
+        public <T> slot(SlotF1<T> f, T el) {}
     }
 }

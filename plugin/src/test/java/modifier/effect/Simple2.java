@@ -21,8 +21,8 @@ public class Simple2 {
                                String[] users = new String[]{"Ivan", "John", "Iborg"};
                        
                                @Override
-                               public void mount(div dom) {
-                                   render(dom, new div() {{
+                               public void mount() {
+                                   render(new div() {{
                                        new button() {{
                                            innerText = "toggle show users " + users.length;
                                            onclick = () -> effect(showUsers = !showUsers);

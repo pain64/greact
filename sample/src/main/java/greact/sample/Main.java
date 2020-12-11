@@ -36,22 +36,27 @@ public class Main {
                    <script src="/script/lib"></script>
                    <script src="/script/app"></script>
                    <script type="text/javascript">
-                        new greact$sample$plainjs$_00HelloWorld()
-                          .mount(document.getElementById("view00"))
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view00"),
+                       new greact$sample$plainjs$_00HelloWorld())
+                     
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view01"),     
+                       new greact$sample$plainjs$_01IfStmt())
+                     
+                     com$over64$greact$dom$Globals.gReactMount(  
+                       document.getElementById("view02"), 
+                       new greact$sample$plainjs$_02IfElseStmt())
                           
-                        new greact$sample$plainjs$_01IfStmt()
-                          .mount(document.getElementById("view01"))
+                     // demo03 here!!!
                         
-                        new greact$sample$plainjs$_02IfElseStmt()
-                          .mount(document.getElementById("view02"))
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view04"),
+                       new greact$sample$plainjs$_04DependsOn())
+                       
                           
-                        
-                          
-                        new greact$sample$plainjs$_04DependsOn()
-                          .mount(document.getElementById("view04"))
-                          
-                        new WebSocket("ws://localhost:4567/livereload")
-                            .onmessage = () => location.reload()
+                     new WebSocket("ws://localhost:4567/livereload")
+                       .onmessage = () => location.reload()
                    </script>
                    
                 </html>

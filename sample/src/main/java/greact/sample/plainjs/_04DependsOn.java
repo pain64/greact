@@ -5,10 +5,11 @@ import com.over64.greact.model.components.Component;
 
 public class _04DependsOn implements Component<div> {
 
-    @Override public void mount(div dom) {
+    @Override
+    public void mount() {
         int[] list = new int[]{1, 2, 3};
 
-        render(dom, new div() {{
+        render(new div() {{
             new ul() {{
                 dependsOn = list;
                 for (var x : list)

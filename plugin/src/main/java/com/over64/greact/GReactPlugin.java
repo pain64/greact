@@ -66,7 +66,6 @@ public class GReactPlugin implements Plugin {
         class Symbols {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
-            Symbol.ClassSymbol clGreact = lookupClass("com.over64.greact.GReact");
             Symbol.ClassSymbol clComponent = lookupClass("com.over64.greact.model.components.Component");
             Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
             Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
@@ -84,6 +83,7 @@ public class GReactPlugin implements Plugin {
 
 
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
+            Symbol.VarSymbol flGlobalsGReactElement = lookupMember(clGlobals, "gReactElement");
 
             Symbol.MethodSymbol renderMethod = lookupMember(clComponent, "render");
             Symbol.MethodSymbol effectMethod = lookupMember(clComponent, "effect");
@@ -369,10 +369,10 @@ public class GReactPlugin implements Plugin {
 
                     var mapped = mapNewClass(ctx, mctx, unhandledEffects, elVarSymbol, newClass);
 
-                    var appendMethod = dest.type.tsym == ctx.symbols.clFragment ?
+                    var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
                         ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
 
-                    var appendElCall = makeCall(dest, appendMethod,
+                    var appendElCall = makeCall(nextDest, appendMethod,
                         List.of(ctx.maker.Ident(elVarSymbol)));
 
                     appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
@@ -513,8 +513,13 @@ public class GReactPlugin implements Plugin {
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         // check that type implements Component interface
-                        if (ctx.types.interfaces(typeDecl.type).stream()
-                            .noneMatch(iface -> iface.tsym == ctx.symbols.clComponent)) continue;
+                        var componentImplOpt = ctx.types.interfaces(typeDecl.type).stream()
+                            .filter(iface -> iface.tsym == ctx.symbols.clComponent)
+                            .findFirst();
+
+                        final Type componentImpl;
+                        if (componentImplOpt.isPresent()) componentImpl = componentImplOpt.get();
+                        else continue;
 
                         // Find all GReact.effect calls
                         var effectCalls = new HashMap<Symbol.VarSymbol, java.util.List<JCTree.JCMethodInvocation>>();
@@ -563,10 +568,25 @@ public class GReactPlugin implements Plugin {
 
                         var viewFragments = new HashMap<Symbol.VarSymbol, List<Symbol.VarSymbol>>();
 
-
                         typeDecl.accept(new TreeScanner() {
                             @Override
                             public void visitMethodDef(JCTree.JCMethodDecl methodTree) {
+                                if (!methodTree.getName().toString().equals("mount")) return;
+
+                                var rootElementType = componentImpl.allparams().get(0);
+
+                                var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
+                                    ctx.names.fromString("$root"),
+                                    rootElementType,
+                                    methodTree.sym);
+                                var elementDecl = ctx.maker.VarDef(rootVar,
+                                    ctx.maker.TypeCast(rootElementType,
+                                        ctx.maker.Select(
+                                            buildStatic(ctx, ctx.symbols.clGlobals),
+                                            ctx.symbols.flGlobalsGReactElement)));
+
+                                methodTree.body.stats = methodTree.body.stats.prepend(elementDecl);
+
 
                                 methodTree.accept(new TreeTranslator() {
                                     @Override
@@ -580,36 +600,17 @@ public class GReactPlugin implements Plugin {
                                                 methodSym = field.sym;
                                             else return;
 
-
-                                            // FIXME: so bad
                                             if (methodSym != ctx.symbols.renderMethod) return;
 
-                                            var template = that.args.get(1);
+                                            var template = that.args.get(0);
                                             if (!(template instanceof JCTree.JCNewClass newClassTemplate))
                                                 throw new RuntimeException("expected new class expression as template");
-
-                                            // prologue
-//                                            var fragVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-//                                                ctx.names.fromString("$frag"), ctx.symbols.clFragment.type, methodTree.sym);
-//
-//                                            var fragDecl = ctx.maker.VarDef(
-//                                                fragVarSymbol,
-//                                                makeCall(ctx.symbols.documentField, ctx.symbols.createDocumentFragmentMethod, nil()));
 
                                             this.result = mapNewClass(
                                                 ctx, new MountCtx(viewFragments, methodTree.sym),
                                                 new HashSet<>(effectCalls.keySet()),
-                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym,
+                                                rootVar,
                                                 newClassTemplate);
-
-
-                                            // epilogue
-//                                            var appendCall = makeCall(
-//                                                (Symbol.VarSymbol) ((JCTree.JCIdent) that.args.get(0)).sym, // FIXME
-//                                                ctx.symbols.appendChildMethod,
-//                                                List.of(ctx.maker.Ident(fragVarSymbol)));
-//
-//                                            appendCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
                                         }
                                     }
                                 });

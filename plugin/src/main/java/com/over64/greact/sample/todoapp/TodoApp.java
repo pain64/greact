@@ -1,8 +1,6 @@
 package com.over64.greact.sample.todoapp;
 
-import com.over64.greact.GReact;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.model.components.Component;
 
 import java.util.ArrayList;
@@ -10,9 +8,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.over64.greact.GReact.classIf;
-import static com.over64.greact.GReact.effect;
 
-public class TodoApp implements Component {
+public class TodoApp implements Component<section> {
     public static class Todo {
         public String title;
         public boolean completed = false;
@@ -58,14 +55,14 @@ public class TodoApp implements Component {
 
 
     @Override
-    public void mount(HtmlElement dom) {
+    public void mount() {
         list = new ArrayList<>();
 
 //        window.addEventListener("onhashchange", event ->
 //            effect(this.mode = Mode.valueOf(
 //                window.location.hash.replaceAll("#/?", ""))));
 
-        GReact.mount(dom, new section() {{
+        render(new section() {{
             className = "todoapp";
             new header() {{
                 className = "header";
