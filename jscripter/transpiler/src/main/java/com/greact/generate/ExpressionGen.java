@@ -248,7 +248,7 @@ public class ExpressionGen {
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
                     if (info.mode() == Overloads.Mode.INSTANCE) {
-                        if (ctx.types().isFunctionalInterface(methodOwnerSym.type))
+                        if(methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
                             expr(deep, prop.getExpression());
                         else
                             expr(deep, prop);

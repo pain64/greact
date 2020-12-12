@@ -10,11 +10,6 @@ public class Globals {
 
     public static <T extends HtmlElement> void gReactMount(T dest, Component<T> element) {
         gReactElement = dest;
-        // FIXME:
-        //   element.mount(null);
-        // lowers to
-        //   element(null)
-        // WTF???
-        JSExpression.of("element.mount(null)");
+        element.mount();
     }
 }

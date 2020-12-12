@@ -5,8 +5,6 @@ import com.over64.greact.dom.HtmlElement;
 
 import java.util.Optional;
 
-import static com.over64.greact.dom.HTMLNativeElements.cssclass.localClass;
-
 public class HW implements Component0<div> {
     int nUsers = 1;
     div d = new div(); // compilation error
@@ -38,8 +36,7 @@ public class HW implements Component0<div> {
         return prefix + "bla bla bla";
     }
 
-    @async
-    public div mount() {
+    @async public div mount() {
         // var $root = Globals.gReactElement;
         var nameOpt = server(() -> Optional.of("Ivan"));
 
