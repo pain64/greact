@@ -74,4 +74,15 @@ public class HTMLNativeElements {
         public slot(SlotF0 f) {}
         public <T> slot(SlotF1<T> f, T el) {}
     }
+    @JSNativeAPI public static class style extends HtmlElement{
+        public style(String... parts) {}
+    }
+    @JSNativeAPI public static class cssclass extends HtmlElement{
+        public cssclass(String name, String css) {}
+        public static String localClass(String name) {return name; }
+    }
+
+    @JSNativeAPI public static class cssmedia extends HtmlElement{
+        public cssmedia(String selector, cssclass... classes) {}
+    }
 }

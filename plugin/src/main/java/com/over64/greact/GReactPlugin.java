@@ -283,9 +283,7 @@ public class GReactPlugin implements Plugin {
                     scan(tree.expr);
                 }
             }.apply(foreachStmt);
-        else if (stmt instanceof JCTree.JCBlock) {
-            return new HashSet<>();
-        } else
+        else
             throw unexpectedStmt.apply(stmt);
     }
 
@@ -327,9 +325,7 @@ public class GReactPlugin implements Plugin {
                     this.result = tree;
                 }
             }.translate(foreachStmt);
-        else if (stmt instanceof JCTree.JCBlock) {
-            /* nop */
-        } else
+        else
             throw unexpectedStmt.apply(stmt);
     }
 
@@ -352,9 +348,8 @@ public class GReactPlugin implements Plugin {
                 var expr = exprStmt.expr;
 
                 if (expr instanceof JCTree.JCNewClass newClass) {
-                    if (newClass.def != null) { // anon inner class
+                    if (newClass.def != null)  // anon inner class
                         newClass.type = ((Type.ClassType) newClass.type).supertype_field;
-                    }
 
                     var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
                         ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
@@ -371,10 +366,8 @@ public class GReactPlugin implements Plugin {
 
                     var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
                         ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
-
                     var appendElCall = makeCall(nextDest, appendMethod,
                         List.of(ctx.maker.Ident(elVarSymbol)));
-
                     appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
                     return ctx.maker.Block(Flags.BLOCK, List.of(elDecl, mapped, ctx.maker.Exec(appendElCall)));
@@ -395,10 +388,7 @@ public class GReactPlugin implements Plugin {
                 });
             else if (st instanceof JCTree.JCEnhancedForLoop foreachStmt)
                 foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, nextDest, foreachStmt.body);
-            else if (st instanceof JCTree.JCBlock blockStmt) {
-                blockStmt.stats = blockStmt.stats
-                    .map(s -> mapStmt(ctx, mctx, forEffect, nextDest, s));
-            } else
+            else
                 throw unexpectedStmt.apply(st);
 
             return st;
@@ -495,7 +485,6 @@ public class GReactPlugin implements Plugin {
                 throw new RuntimeException("unexpected tree " + tree);
             }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
-        newClass.def = null;
         return ctx.maker.Block(Flags.BLOCK, mapped);
     }
 

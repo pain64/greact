@@ -5,6 +5,8 @@ import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.dom.HTMLNativeElements.h1;
 import com.over64.greact.model.components.Component;
 
+import java.util.Optional;
+
 public class DemoAdvanced implements Component<div> {
 
     enum Mode {M1, M2}
@@ -15,9 +17,13 @@ public class DemoAdvanced implements Component<div> {
 
     @Override
     public void mount() {
+        var userOption = Optional.of("John");
         RPC.server(
             () -> new String[]{"Ivan", "John", "Iborg"},
             users -> render(new div() {{
+                if(userOption.isPresent())
+                    new h1(userOption.get());
+
                 new uikit.pagination<>(users) {{
                     by = 5;
                     item = user -> new h1("user with name " + user);

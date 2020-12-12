@@ -7,6 +7,7 @@ import com.over64.greact.model.components.Mountable;
 public class HtmlElement extends Node implements Mountable {
     public static class Style {
         public String color;
+        public String border;
     }
 
     // HTML Global Attributes
