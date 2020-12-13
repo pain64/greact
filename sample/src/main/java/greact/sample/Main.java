@@ -32,6 +32,8 @@ public class Main {
                     <div id="view03">BROKEN DEMO</div>
                     <hr>
                     <div id="view04"></div>
+                    <hr>
+                    <div id="view05"></div>
                   </body>
                    <script src="/script/lib"></script>
                    <script src="/script/app"></script>
@@ -53,6 +55,10 @@ public class Main {
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view04"),
                        new greact$sample$plainjs$_04DependsOn())
+                       
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view05"),
+                       new greact$sample$plainjs$_05CustomComponent())
                        
                           
                      new WebSocket("ws://localhost:4567/livereload")

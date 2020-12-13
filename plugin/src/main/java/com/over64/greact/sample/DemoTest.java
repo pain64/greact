@@ -18,6 +18,10 @@ public class DemoTest implements Component<div> {
 
     @Override
     public void mount() {
+        Component<h1> cmp = () -> {
+          new h1();
+        };
+
         ($frag0 = new Frag(() -> {
 
 
@@ -30,6 +34,9 @@ public class DemoTest implements Component<div> {
 
         new ul() {{
             dependsOn = list;
+            new Child() {{
+               answer = 42;
+            }};
             for (var x : list)
                 new li() {{
                     new a("text:" + x);

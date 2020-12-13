@@ -67,7 +67,6 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
             Symbol.ClassSymbol clComponent = lookupClass("com.over64.greact.model.components.Component");
-            Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
             Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
             Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
             Symbol.ClassSymbol clHtmlElement = lookupClass("com.over64.greact.dom.HtmlElement");
@@ -82,6 +81,8 @@ public class GReactPlugin implements Plugin {
             Symbol.MethodSymbol mtRendererRender = lookupMember(clRenderer, "render");
 
 
+            Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
+            Symbol.MethodSymbol mtGReactMount = lookupMember(clGlobals, "gReactMount");
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
             Symbol.VarSymbol flGlobalsGReactElement = lookupMember(clGlobals, "gReactElement");
 
@@ -329,6 +330,14 @@ public class GReactPlugin implements Plugin {
             throw unexpectedStmt.apply(stmt);
     }
 
+    Type componentImpl(Type type) {
+        var componentImplOpt = ctx.types.interfaces(type).stream()
+            .filter(iface -> iface.tsym == ctx.symbols.clComponent)
+            .findFirst();
+
+        return componentImplOpt.get();
+    }
+
     JCTree.JCStatement mapStmt(Ctx ctx, MountCtx mctx,
                                HashSet<Symbol.VarSymbol> forEffect,
                                Symbol.VarSymbol dest, JCTree.JCStatement stmt) {
@@ -351,18 +360,24 @@ public class GReactPlugin implements Plugin {
                     if (newClass.def != null)  // anon inner class
                         newClass.type = ((Type.ClassType) newClass.type).supertype_field;
 
-                    var elInit = ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type)
-                        ? makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod,
-                        List.of( // FIXME: bug?
-                            ctx.maker.Literal(newClass.type.tsym.name.toString()).setType(ctx.symbols.clString.type)))
-                        : newClass;
+                    var nextN = mctx.nextN();
+                    var isCustom = !ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type);
+                    var htmlElementType = isCustom
+                        ? componentImpl(newClass.type).allparams().get(0)
+                        : newClass.type;
 
+                    var elInit = makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod, List.of(
+                        ctx.maker.Literal(htmlElementType.tsym.name.toString()).setType(ctx.symbols.clString.type)));
                     var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                        ctx.names.fromString("$el" + mctx.nextN()), newClass.type, mctx.owner);
-
+                        ctx.names.fromString("$el" + nextN), htmlElementType, mctx.owner);
                     var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
-                    var mapped = mapNewClass(ctx, mctx, unhandledEffects, elVarSymbol, newClass);
+                    var mapToVarSymbol = isCustom
+                        ? new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                        ctx.names.fromString("$comp" + nextN), newClass.type, mctx.owner)
+                        : elVarSymbol;
+
+                    var mapped = mapNewClass(ctx, mctx, unhandledEffects, mapToVarSymbol, newClass);
 
                     var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
                         ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
@@ -370,7 +385,21 @@ public class GReactPlugin implements Plugin {
                         List.of(ctx.maker.Ident(elVarSymbol)));
                     appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-                    return ctx.maker.Block(Flags.BLOCK, List.of(elDecl, mapped, ctx.maker.Exec(appendElCall)));
+                    var prologue = isCustom
+                        ? List.<JCTree.JCStatement>of(elDecl,
+                        ctx.maker.VarDef(mapToVarSymbol,
+                            newClass))
+                        : List.<JCTree.JCStatement>of(elDecl);
+                    var epilogue = isCustom
+                        ? List.<JCTree.JCStatement>of(
+                        ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
+                            ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol)))))
+                        : List.<JCTree.JCStatement>nil();
+
+                    return ctx.maker.Block(Flags.BLOCK, prologue
+                        .append(mapped)
+                        .appendList(epilogue)
+                        .append(ctx.maker.Exec(appendElCall)));
 
                 } else if (expr instanceof JCTree.JCAssign assignExpr) {
                     /* nop */
@@ -447,6 +476,8 @@ public class GReactPlugin implements Plugin {
         var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
             .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
             .findFirst().orElseThrow();
+        newClass.constructorType = constructorSymbol.type;
+        newClass.constructor = constructorSymbol;
 
         var mappedArgs = IntStream.range(0, newClass.args.length())
             .mapToObj(i -> {
@@ -485,6 +516,7 @@ public class GReactPlugin implements Plugin {
                 throw new RuntimeException("unexpected tree " + tree);
             }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
+        newClass.def = null;
         return ctx.maker.Block(Flags.BLOCK, mapped);
     }
 
