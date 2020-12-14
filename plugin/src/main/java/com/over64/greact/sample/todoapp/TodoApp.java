@@ -55,14 +55,14 @@ public class TodoApp implements Component<section> {
 
 
     @Override
-    public void mount() {
+    public section mount() {
         list = new ArrayList<>();
 
 //        window.addEventListener("onhashchange", event ->
 //            effect(this.mode = Mode.valueOf(
 //                window.location.hash.replaceAll("#/?", ""))));
 
-        render(new section() {{
+        return new section() {{
             className = "todoapp";
             new header() {{
                 className = "header";
@@ -136,6 +136,6 @@ public class TodoApp implements Component<section> {
                     }};
                 }};
             }
-        }});
+        }};
     }
 }

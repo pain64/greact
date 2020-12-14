@@ -12,4 +12,9 @@ public class Globals {
         gReactElement = dest;
         element.mount();
     }
+
+    public static <T extends HtmlElement> T gReactReturn(Renderer renderer) {
+        renderer.render();
+        return null;
+    }
 }

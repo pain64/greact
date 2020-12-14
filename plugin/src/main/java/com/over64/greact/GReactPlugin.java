@@ -83,10 +83,10 @@ public class GReactPlugin implements Plugin {
 
             Symbol.ClassSymbol clGlobals = lookupClass("com.over64.greact.dom.Globals");
             Symbol.MethodSymbol mtGReactMount = lookupMember(clGlobals, "gReactMount");
+            Symbol.MethodSymbol mtGReactReturn = lookupMember(clGlobals, "gReactReturn");
             Symbol.VarSymbol documentField = lookupMember(clGlobals, "document");
             Symbol.VarSymbol flGlobalsGReactElement = lookupMember(clGlobals, "gReactElement");
 
-            Symbol.MethodSymbol renderMethod = lookupMember(clComponent, "render");
             Symbol.MethodSymbol effectMethod = lookupMember(clComponent, "effect");
             Symbol.MethodSymbol createElementMethod = lookupMember(clDocument, "createElement");
             Symbol.MethodSymbol appendChildMethod = lookupMember(clNode, "appendChild");
@@ -611,27 +611,19 @@ public class GReactPlugin implements Plugin {
 
                                 methodTree.accept(new TreeTranslator() {
                                     @Override
-                                    public void visitExec(JCTree.JCExpressionStatement exec) {
-                                        this.result = exec;
-                                        if (exec.expr instanceof JCTree.JCMethodInvocation that) {
-                                            final Symbol methodSym;
-                                            if (that.meth instanceof JCTree.JCIdent ident)
-                                                methodSym = ident.sym;
-                                            else if (that.meth instanceof JCTree.JCFieldAccess field)
-                                                methodSym = field.sym;
-                                            else return;
-
-                                            if (methodSym != ctx.symbols.renderMethod) return;
-
-                                            var template = that.args.get(0);
-                                            if (!(template instanceof JCTree.JCNewClass newClassTemplate))
-                                                throw new RuntimeException("expected new class expression as template");
-
-                                            this.result = mapNewClass(
+                                    public void visitReturn(JCTree.JCReturn ret) {
+                                        this.result = ret;
+                                        if (ret.expr instanceof JCTree.JCNewClass that) {
+                                            var lmb = ctx.maker.Lambda(List.nil(), mapNewClass(
                                                 ctx, new MountCtx(viewFragments, methodTree.sym),
                                                 new HashSet<>(effectCalls.keySet()),
-                                                rootVar,
-                                                newClassTemplate);
+                                                rootVar, that))
+                                                .setType(ctx.symbols.clRenderer.type);
+                                            lmb.target = ctx.symbols.clRenderer.type;
+                                            lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+                                            lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+                                            ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn, List.of(lmb));
                                         }
                                     }
                                 });

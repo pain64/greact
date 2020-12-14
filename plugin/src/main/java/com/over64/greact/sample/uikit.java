@@ -28,12 +28,12 @@ public class uikit {
         }
 
         @Override
-        public void mount() {
+        public div mount() {
             // var pages = Array.from<Int>();
             // for(var i = 0; i < data.length / by; i++) pages.push(i);
             var pages = IntStream.range(0, data.length / by).toArray();
 
-            render(new div() {{
+            return new div() {{
                 for (var el : currentData())
                     new slot(item, el);
 
@@ -46,7 +46,7 @@ public class uikit {
                         }};
                 }};
 
-            }});
+            }};
         }
     }
 }

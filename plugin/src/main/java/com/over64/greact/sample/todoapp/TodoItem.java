@@ -41,8 +41,8 @@ public class TodoItem implements Component<li> {
         effect(editing = false);
     }
 
-    @Override public void mount() {
-        render(new li() {{
+    @Override public li mount() {
+        return new li() {{
             className = "todo " +
                 classIf(item.completed, "completed") +
                 classIf(editing, "editing");
@@ -77,6 +77,6 @@ public class TodoItem implements Component<li> {
                     }};
                 }};
             }};
-        }});
+        }};
     }
 }

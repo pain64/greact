@@ -6,10 +6,10 @@ import com.over64.greact.model.components.Component;
 public class _04DependsOn implements Component<div> {
 
     @Override
-    public void mount() {
+    public div mount() {
         int[] list = new int[]{1, 2, 3};
 
-        render(new div() {{
+        return new div() {{
             new ul() {{
                 dependsOn = list;
                 for (var x : list)
@@ -21,6 +21,6 @@ public class _04DependsOn implements Component<div> {
             new button("do effect") {{
                 onclick = () -> effect(list);
             }};
-        }});
+        }};
     }
 }
