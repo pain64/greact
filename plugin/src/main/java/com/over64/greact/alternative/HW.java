@@ -64,7 +64,7 @@ public class HW implements Component0<div> {
                 boolean dead = true;
 
                 @Override
-                public HtmlElement mount(String s) {
+                public a mount(String s) {
                     new div() {{
                         new button("make alive") {{
                             onclick = () -> effect(dead = false);

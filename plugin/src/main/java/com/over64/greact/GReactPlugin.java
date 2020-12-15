@@ -148,7 +148,8 @@ public class GReactPlugin implements Plugin {
         @Override
         public void visitIdent(JCTree.JCIdent id) {
             if (id.sym.owner.type != null)  // foreach loop var
-                if (ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
+                if (scope.type.tsym == id.sym.owner.type.tsym ||
+                    ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
                     this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
                     return;
                 }
@@ -174,57 +175,6 @@ public class GReactPlugin implements Plugin {
 
         @Override
         public void visitLambda(JCTree.JCLambda tree) {
-        }
-
-        HashSet<Symbol.VarSymbol> apply(JCTree tree) {
-            tree.accept(this);
-            return effected;
-        }
-    }
-
-    static class IdentTranslator extends TreeTranslator {
-        final Ctx ctx;
-        final Symbol.VarSymbol scope;
-        final HashSet<Symbol.VarSymbol> forEffect;
-
-        final HashSet<Symbol.VarSymbol> effected = new HashSet<>();
-
-        TreeTranslator identPatcher = new TreeTranslator() {
-            @Override
-            public void visitIdent(JCTree.JCIdent id) {
-                if (id.sym.owner.type != null)  // foreach loop var
-                    if (ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
-                        this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
-                        return;
-                    }
-
-                super.visitIdent(id);
-            }
-        };
-
-        TreeScanner effectedAnalyzer = new TreeScanner() {
-            @Override
-            public void visitIdent(JCTree.JCIdent id) {
-                if (id.sym instanceof Symbol.VarSymbol sym)
-                    if (forEffect.contains(sym))
-                        effected.add(sym);
-            }
-
-            @Override
-            public void visitLambda(JCTree.JCLambda tree) {
-            }
-        };
-
-        IdentTranslator(Ctx ctx, Symbol.VarSymbol scope, HashSet<Symbol.VarSymbol> forEffect) {
-            this.ctx = ctx;
-            this.scope = scope;
-            this.forEffect = forEffect;
-        }
-
-        @Override
-        public <T extends JCTree> T translate(T tree) {
-            tree.accept(effectedAnalyzer);
-            return identPatcher.translate(tree);
         }
 
         HashSet<Symbol.VarSymbol> apply(JCTree tree) {
@@ -485,6 +435,7 @@ public class GReactPlugin implements Plugin {
                 var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
                     .params.get(i)
                     .getAnnotation(DomProperty.class);
+
                 var argSymbol = ctx.lookupMember(
                     (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
                     argAnnotation.value());
@@ -624,6 +575,16 @@ public class GReactPlugin implements Plugin {
                                             lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
                                             ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn, List.of(lmb));
+                                        }
+                                    }
+                                });
+
+                                methodTree.accept(new TreeTranslator() {
+                                    @Override
+                                    public void visitLambda(JCTree.JCLambda lmb) {
+                                        super.visitLambda(lmb);
+                                        if(lmb.type.tsym == ctx.symbols.clComponent) {
+                                            // final lastStmt
                                         }
                                     }
                                 });

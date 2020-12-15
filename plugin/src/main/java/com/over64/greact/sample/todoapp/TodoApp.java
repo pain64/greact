@@ -8,22 +8,93 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.over64.greact.GReact.classIf;
+import static com.over64.greact.dom.HTMLNativeElements.style.id;
+
 
 public class TodoApp implements Component<section> {
-    public static class Todo {
-        public String title;
-        public boolean completed = false;
+    enum Mode {All, Active, Completed}
+    static class Todo {
+        String title;
+        boolean completed = false;
 
-        public Todo(String title) {
-            this.title = title;
+        Todo(String title) { this.title = title; }
+    }
+
+    static class TodoItem implements Component<li> {
+        @FunctionalInterface public interface Handler {
+            void apply();
+        }
+
+        public Handler onChanged = () -> { };
+        public Handler onRemoved = () -> { };
+
+        final Todo item;
+        boolean editing = false;
+        String newTitle = "";
+        String oldTitle = "";
+
+        public TodoItem(Todo item) { this.item = item; }
+
+        void startEdit() {
+            newTitle = item.title;
+            oldTitle = item.title;
+            effect(editing = true);
+        }
+
+        void doneEdit() {
+            item.title = newTitle.trim();
+            effect(editing = false);
+            onChanged.apply();
+        }
+
+        void cancelEdit() {
+            item.title = oldTitle;
+            effect(editing = false);
+        }
+
+        @Override public li mount() {
+            return new li() {{
+                className = "todo " +
+                    classIf(item.completed, id("completed")) +
+                    classIf(editing, id("editing"));
+
+                new div() {{
+                    className = "view";
+                    new input() {{
+                        className = "toggle";
+                        type = InputType.CHECKBOX;
+                        value = "" + item.completed;
+                        onchange = is -> {
+                            effect(item.completed = Boolean.parseBoolean(is));
+                            onChanged.apply();
+                        };
+                        new label(item.title);
+                        new button() {{
+                            className = "destroy";
+                            onclick = () -> onRemoved.apply();
+                        }};
+                    }};
+                }};
+                new input() {{
+                    className = "edit";
+                    type = InputType.TEXT;
+                    value = item.title;
+                    onchange = s -> item.title = s;
+                    ondblclick = TodoItem.this::startEdit;
+                    onblur = TodoItem.this::doneEdit;
+                    onkeyup = key -> {
+                        if (key == Key.ENTER) doneEdit();
+                        else if (key == Key.ESC) cancelEdit();
+                    };
+                }};
+            }};
         }
     }
 
-    enum Mode {ALL, ACTIVE, COMPLETED}
 
     List<Todo> list;
     String newTodo = "";
-    Mode mode = Mode.ALL;
+    Mode mode = Mode.All;
 
     void add(String title) {
         effect(list.add(new Todo(title)));
@@ -35,9 +106,9 @@ public class TodoApp implements Component<section> {
 
     List<Todo> forRender() {
         return list.stream().filter(item -> switch (mode) {
-            case ALL -> true;
-            case ACTIVE -> !item.completed;
-            case COMPLETED -> item.completed;
+            case All -> true;
+            case Active -> !item.completed;
+            case Completed -> item.completed;
         }).collect(Collectors.toList());
     }
 
@@ -52,7 +123,6 @@ public class TodoApp implements Component<section> {
             .filter(item -> !item.completed)
             .collect(Collectors.toList()));
     }
-
 
     @Override
     public section mount() {
@@ -73,10 +143,8 @@ public class TodoApp implements Component<section> {
                     autocomplete = Autocomplete.OFF;
                     placeholder = "What needs to be done?";
                     value = newTodo;
-                    onchange = (v) -> newTodo = v;
-                    onkeyup = (k) -> {
-                        if (k == Key.ENTER) add(newTodo);
-                    };
+                    onchange = v -> newTodo = v;
+                    onkeyup = k -> { if (k == Key.ENTER) add(newTodo); };
                 }};
             }};
 
@@ -89,9 +157,7 @@ public class TodoApp implements Component<section> {
                         type = InputType.CHECKBOX;
                         value = "" + allDone();
                     }};
-                    new label() {{
-                        _for = "toggle-all";
-                    }};
+                    new label() {{ _for = "toggle-all"; }};
                     new ul() {{
                         className = "todo-list";
                         for (var item : forRender())
@@ -107,27 +173,16 @@ public class TodoApp implements Component<section> {
                         var remaining = list.stream()
                             .filter(item -> !item.completed).count();
                         new strong("" + remaining);
-                        new span((remaining == 1 ? "item" : "items") + "left");
+                        new span((remaining == 1 ? "item" : "items") + " left");
                     }};
                     new ul() {{
-                        new li() {{
-                            new a("All") {{
-                                className = classIf(mode == Mode.ALL, "selected");
-                                href = "#/all";
+                        for (var the : Mode.values())
+                            new li() {{
+                                new a(the.name()) {{
+                                    className = classIf(the == mode, "selected");
+                                    href = "#/" + the.name().toLowerCase();
+                                }};
                             }};
-                        }};
-                        new li() {{
-                            new a("Active") {{
-                                className = classIf(mode == Mode.ACTIVE, "selected");
-                                href = "#/active";
-                            }};
-                        }};
-                        new li() {{
-                            new a("Completed") {{
-                                className = classIf(mode == Mode.COMPLETED, "selected");
-                                href = "#/completed";
-                            }};
-                        }};
                     }};
                     // FIXME: if we have completed
                     new button("Clear completed") {{

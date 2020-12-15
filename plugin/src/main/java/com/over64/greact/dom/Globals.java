@@ -10,7 +10,7 @@ public class Globals {
 
     public static <T extends HtmlElement> void gReactMount(T dest, Component<T> element) {
         gReactElement = dest;
-        element.mount();
+        JSExpression.of("comp instanceof Function ? comp() : comp.mount()");
     }
 
     public static <T extends HtmlElement> T gReactReturn(Renderer renderer) {

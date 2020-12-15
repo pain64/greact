@@ -16,8 +16,8 @@ public class CustomComponent {
                                         
                     class Child implements Component<h1> {
                       public int mainAnswer;
-                      @Override public void mount() {              
-                        render(new h1("a child"));
+                      @Override public h1 mount() {              
+                        return new h1("a child");
                       }
                     }""",
                 """
@@ -49,12 +49,12 @@ public class CustomComponent {
                     import com.over64.greact.model.components.Component;
                                         
                     class Demo implements Component<div> {
-                      @Override public void mount() {              
-                        render(new div() {{
+                      @Override public div mount() {              
+                        return new div() {{
                           new Child() {{
                             mainAnswer = 42;
                           }};
-                        }});
+                        }};
                       }
                     }""",
                 """

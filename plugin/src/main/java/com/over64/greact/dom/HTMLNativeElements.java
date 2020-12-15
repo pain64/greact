@@ -75,6 +75,7 @@ public class HTMLNativeElements {
         public <T> slot(SlotF1<T> f, T el) {}
     }
     @JSNativeAPI public static class style extends HtmlElement{
+        public static String id(String prefix) { return  prefix; }
         public style(String... parts) {}
     }
     @JSNativeAPI public static class cssclass extends HtmlElement{
