@@ -2,7 +2,6 @@ package com.over64.greact.sample;
 
 import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.dom.HTMLNativeElements.slot;
-import com.over64.greact.dom.HTMLNativeElements.slot.SlotF1;
 import com.over64.greact.dom.HTMLNativeElements.span;
 import com.over64.greact.model.components.Component;
 
@@ -15,8 +14,8 @@ public class uikit {
         private int page = 0;
 
         int by = 10;
-        SlotF1<T> item = (t) -> {
-        };
+//        SlotF1<T> item = (t) -> {
+//        };
 
         public pagination(T[] data) {
             this.data = data;
@@ -34,8 +33,9 @@ public class uikit {
             var pages = IntStream.range(0, data.length / by).toArray();
 
             return new div() {{
-                for (var el : currentData())
-                    new slot(item, el);
+                for (var el : currentData()) {
+                    //new slot(item, el);
+                }
 
                 new div() {{
                     className = "pages-holder";

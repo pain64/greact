@@ -425,7 +425,8 @@ public class GReactPlugin implements Plugin {
 
         var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
             .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
-            .findFirst().orElseThrow();
+            .findFirst().orElseThrow(() ->
+                new RuntimeException("oops"));
         newClass.constructorType = constructorSymbol.type;
         newClass.constructor = constructorSymbol;
 

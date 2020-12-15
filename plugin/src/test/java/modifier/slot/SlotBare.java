@@ -2,17 +2,15 @@ package modifier.slot;
 
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
-import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
 
-import static util.CompileAssert.*;
+import static util.CompileAssert.assertCompiledMany;
 
-public class SlotLambda {
-    @Test
-    void slotLambdaDemo() throws IOException {
+public class SlotBare {
+    @Test void slotBare() throws IOException {
         assertCompiledMany(
-            new CompileCase("js.Conditional",
+            new CompileAssert.CompileCase("js.Conditional",
                 """
                     package js;
                                    
@@ -63,7 +61,7 @@ public class SlotLambda {
                             return cond ? call(doThen) : call(doElse);
                         }
                     }"""),
-            new CompileCase("js.Demo",
+            new CompileAssert.CompileCase("js.Demo",
                 """
                     package js;
                                    

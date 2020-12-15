@@ -25,7 +25,7 @@ public class DemoAdvanced implements Component<div> {
 
             new uikit.pagination<>(users) {{
                 by = 5;
-                item = user -> new h1("user with name " + user);
+       //         item = user -> new h1("user with name " + user);
             }};
 
             new div() {{
