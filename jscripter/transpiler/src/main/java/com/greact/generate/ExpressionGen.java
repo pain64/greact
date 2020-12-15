@@ -342,6 +342,8 @@ public class ExpressionGen {
                 checkGen.accept(() -> out.write(0, name));
                 out.write(0, ")");
             }
+        } else if(expr instanceof ParameterizedTypeTree pTree) {
+            expr(deep, (ExpressionTree) pTree.getType());
         } else if (expr instanceof NewClassTree newClass) {
             // FIXME:
             //  - deal with overload

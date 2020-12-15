@@ -38,7 +38,7 @@ public class HW implements Component0<div> {
 
     @async public div mount() {
         // var $root = Globals.gReactElement;
-        var nameOpt = server(() -> Optional.of("Ivan"));
+        var nameOpt = server(di -> Optional.of("Ivan"));
 
         /*
            return Globals.gReactMount(() => {
@@ -71,7 +71,7 @@ public class HW implements Component0<div> {
                         }};
                     }};
 
-                    long unixTime = server(System::currentTimeMillis);
+                    long unixTime = server(di -> System.currentTimeMillis());
                     return new a("Greet you, " + name + "at " + unixTime) {{
                         className = linkClassName;
                     }};
@@ -90,7 +90,7 @@ public class HW implements Component0<div> {
                     }};
                 }};
 
-                long unixTime = server(System::currentTimeMillis);
+                long unixTime = server(di -> System.currentTimeMillis());
                 effect(unixTime);
                 return new a("Greet you, " + name + "at " + unixTime);
             });

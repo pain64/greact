@@ -33,9 +33,9 @@ public class DITest {
                                HttpServletResponse resp) throws IOException {
 
                 var auth = new Auth(req.getSession(true));
-                DI.bound(new Data(commonDb, smsDb, auth), () -> {
-                    rpc.handle(path, req.getInputStream(), resp.getOutputStream());
-                });
+//                DI.bound(new Data(commonDb, smsDb, auth), () -> {
+//                    rpc.handle(path, req.getInputStream(), resp.getOutputStream());
+//                });
 
             }
         });

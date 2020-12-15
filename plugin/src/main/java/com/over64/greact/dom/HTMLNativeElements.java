@@ -1,6 +1,7 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
+import com.over64.greact.alternative.Component;
 import com.over64.greact.model.components.DomProperty;
 
 public class HTMLNativeElements {
@@ -22,6 +23,9 @@ public class HTMLNativeElements {
         }
         public Fake fake = new Fake();
         public String foobar;
+
+        public div(HtmlElement child) {};
+        public div(Component... components) {};
     }
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }
@@ -60,8 +64,27 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class a extends HtmlElement {
         public String href;
         public a() {}
-        public a(@DomProperty("innerText") String innerText) {};
+        public a(@DomProperty("innerText") String innerText) {}
     }
+
+    @JSNativeAPI public static class table extends HtmlElement {
+        public table() {}
+    }
+
+    @JSNativeAPI public static class td extends HtmlElement {
+        public td() {}
+        public td(@DomProperty("innerText") String innerText) {}
+    }
+
+    @JSNativeAPI public static class tr extends HtmlElement {
+        public tr() {}
+        public tr(HtmlElement child) {}
+        public tr(td... childs) {}
+    }
+    @JSNativeAPI public static class many<T extends HtmlElement> extends HtmlElement {
+        public many(T... elements){}
+    }
+
 
     @JSNativeAPI public static class slot extends HtmlElement {
         @FunctionalInterface

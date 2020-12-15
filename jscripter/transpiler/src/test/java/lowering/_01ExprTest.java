@@ -1,10 +1,13 @@
 package lowering;
 
 import org.junit.jupiter.api.Test;
+import util.CompileAssert;
+import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
+import static util.CompileAssert.assertCompiledMany;
 
 public class _01ExprTest {
 
@@ -564,5 +567,33 @@ public class _01ExprTest {
                     return new js$Test$A(1, 2)
                   }
                 }""");
+    }
+
+    @Test
+    void newClassParametrized() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    public class A<T> {}""",
+                """
+                    class js$A extends Object {
+                      constructor() {
+                        super();
+                      }
+                    }"""),
+            new CompileCase("js.Test",
+                """
+                    package js;
+                    public class Test {
+                      A a = new A<String>();
+                    }""",
+                """
+                    class js$Test extends Object {
+                      constructor() {
+                        super();
+                        this.a = new js$A()
+                      }
+                    }"""));
     }
 }

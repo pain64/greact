@@ -26,10 +26,14 @@ public class DemoTest implements Component<div> {
 
     @Override
     public div mount() {
+        var root = 1;
         return new div() {{
             new Conditional<h1>() {{
                 cond = showHint;
-                doThen = () -> new h1("This is the hint");
+                doThen = () -> {
+                    var root = 1;
+                    return new h1("This is the hint");
+                };
                 doElse = () -> new h1("The hint is hidden");
             }};
             new button("show/hide") {{

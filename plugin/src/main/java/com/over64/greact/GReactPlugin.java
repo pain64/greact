@@ -583,8 +583,41 @@ public class GReactPlugin implements Plugin {
                                     @Override
                                     public void visitLambda(JCTree.JCLambda lmb) {
                                         super.visitLambda(lmb);
-                                        if(lmb.type.tsym == ctx.symbols.clComponent) {
-                                            // final lastStmt
+                                        if (lmb.type.tsym == ctx.symbols.clComponent) {
+                                            if (lmb.body instanceof JCTree.JCExpression expr) {
+                                                lmb.body = ctx.maker.Block(Flags.BLOCK, List.of(
+                                                    ctx.maker.Return(expr)));
+                                            }
+
+                                            var body = (JCTree.JCBlock) lmb.body;
+                                            // FIXME: this code is duplicated!!!
+                                            var rootElementType = lmb.type.allparams().get(0);
+
+                                            var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
+                                                ctx.names.fromString("$root"),
+                                                rootElementType,
+                                                methodTree.sym);
+                                            var elementDecl = ctx.maker.VarDef(rootVar,
+                                                ctx.maker.TypeCast(rootElementType,
+                                                    ctx.maker.Select(
+                                                        buildStatic(ctx, ctx.symbols.clGlobals),
+                                                        ctx.symbols.flGlobalsGReactElement)));
+
+                                            body.stats = body.stats.prepend(elementDecl);
+                                            var ret = (JCTree.JCReturn) body.stats.last();
+
+                                            if (ret.expr instanceof JCTree.JCNewClass that) {
+                                                var lmb2 = ctx.maker.Lambda(List.nil(), mapNewClass(
+                                                    ctx, new MountCtx(viewFragments, methodTree.sym),
+                                                    new HashSet<>(effectCalls.keySet()),
+                                                    rootVar, that))
+                                                    .setType(ctx.symbols.clRenderer.type);
+                                                lmb2.target = ctx.symbols.clRenderer.type;
+                                                lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+                                                lmb2.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+                                                ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn, List.of(lmb2));
+                                            }
                                         }
                                     }
                                 });
