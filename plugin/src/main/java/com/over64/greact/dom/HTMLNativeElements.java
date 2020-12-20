@@ -86,8 +86,8 @@ public class HTMLNativeElements {
     }
 
 
-    @JSNativeAPI public static class slot extends HtmlElement {
-        public <T extends HtmlElement> slot(Component<T> comp) {}
+    @JSNativeAPI public static class slot<T extends HtmlElement> extends HtmlElement {
+        public slot(Component<T> comp) {}
     }
     @JSNativeAPI public static class style extends HtmlElement{
         public static String id(String prefix) { return  prefix; }

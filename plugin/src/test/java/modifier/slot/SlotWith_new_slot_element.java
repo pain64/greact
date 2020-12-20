@@ -13,7 +13,7 @@ public class SlotWith_new_slot_element {
         assertCompiledMany(
             new CompileCase("js.Decorator",
                 """
-                    package com.over64.greact.sample;
+                    package js;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.model.components.Component;
                                         
@@ -23,28 +23,82 @@ public class SlotWith_new_slot_element {
                         @Override public div mount() {
                             return new div() {{
                                 style.border = "1px red solid";
-                                new slot(forDecorate);
+                                new slot<>(forDecorate);
                             }};
                         }
                     }
                     """,
                 """
-                    """),
+                    package js;
+                                        
+                    import org.over64.jscripter.StdTypeConversion;
+                    import com.over64.greact.dom.HTMLNativeElements.*;
+                    import com.over64.greact.model.components.Component;
+                                        
+                    class Decorator implements Component<div> {
+                       \s
+                        Decorator() {
+                            super();
+                        }
+                        Component<h1> forDecorate = ()->null;
+                       \s
+                        @Override
+                        public div mount() {
+                            final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
+                            return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                $root.style.border = "1px red solid";
+                                final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
+                                com.over64.greact.dom.Globals.gReactMount($el0, forDecorate);
+                                $root.appendChild($el0);
+                            });
+                        }
+                    }"""),
             new CompileCase("js.Demo",
                 """
-                    package com.over64.greact.sample;
-                     import com.over64.greact.dom.HTMLNativeElements.*;
-                     import com.over64.greact.model.components.Component;
+                    package js;
+                    import com.over64.greact.dom.HTMLNativeElements.*;
+                    import com.over64.greact.model.components.Component;
                      
-                     public class Demo implements Component<div> {                     
-                         @Override public div mount() {
-                             return new div() {{
-                                 new Decorator() {{
-                                     forDecorate = () -> new h1("decorated text!");
-                                 }};
-                             }};
-                         }
-                     }""",
-                ""));
+                    class Demo implements Component<div> {                     
+                        @Override public div mount() {
+                            return new div() {{
+                                new Decorator() {{
+                                    forDecorate = () -> new h1("decorated text!");
+                                }};
+                            }};
+                        }
+                    }""",
+                """
+                    package js;
+                                       
+                    import org.over64.jscripter.StdTypeConversion;
+                    import com.over64.greact.dom.HTMLNativeElements.*;
+                    import com.over64.greact.model.components.Component;
+                                       
+                    class Demo implements Component<div> {
+                       \s
+                        Demo() {
+                            super();
+                        }
+                       \s
+                        @Override
+                        public div mount() {
+                            final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
+                            return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                final com.over64.greact.dom.HTMLNativeElements.div $el0 = com.over64.greact.dom.Globals.document.createElement("div");
+                                final js.Decorator $comp0 = new Decorator();
+                                {
+                                    $comp0.forDecorate = ()->{
+                                        final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
+                                        return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                            $root.innerText = "decorated text!";
+                                        });
+                                    };
+                                }
+                                com.over64.greact.dom.Globals.gReactMount($el0, $comp0);
+                                $root.appendChild($el0);
+                            });
+                        }
+                    }"""));
     }
 }

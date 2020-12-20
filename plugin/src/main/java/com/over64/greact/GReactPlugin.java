@@ -71,6 +71,7 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
             Symbol.ClassSymbol clHtmlElement = lookupClass("com.over64.greact.dom.HtmlElement");
             Symbol.ClassSymbol clViewFragment = lookupClass("com.over64.greact.dom.ViewFragment");
+            Symbol.ClassSymbol clSlot = lookupClass("com.over64.greact.dom.HTMLNativeElements$slot");
 
             Symbol.ClassSymbol clFragment = lookupClass("com.over64.greact.dom.Fragment");
             Symbol.ClassSymbol clRenderer = lookupClass("com.over64.greact.dom.Renderer");
@@ -311,45 +312,69 @@ public class GReactPlugin implements Plugin {
                         newClass.type = ((Type.ClassType) newClass.type).supertype_field;
 
                     var nextN = mctx.nextN();
-                    var isCustom = !ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type);
-                    var htmlElementType = isCustom
-                        ? componentImpl(newClass.type).allparams().get(0)
-                        : newClass.type;
 
-                    var elInit = makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod, List.of(
-                        ctx.maker.Literal(htmlElementType.tsym.name.toString()).setType(ctx.symbols.clString.type)));
-                    var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                        ctx.names.fromString("$el" + nextN), htmlElementType, mctx.owner);
-                    var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
+                    if (newClass.type.tsym == ctx.symbols.clSlot) {
+                        // FIXME: dedup code
+                        var htmlElementType = newClass.type.allparams().get(0);
+                        var elInit = makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod, List.of(
+                            ctx.maker.Literal(htmlElementType.tsym.name.toString()).setType(ctx.symbols.clString.type)));
+                        var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                            ctx.names.fromString("$el" + nextN), htmlElementType, mctx.owner);
+                        var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
-                    var mapToVarSymbol = isCustom
-                        ? new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
-                        ctx.names.fromString("$comp" + nextN), newClass.type, mctx.owner)
-                        : elVarSymbol;
+                        var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
+                            ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
+                        var appendElCall = makeCall(nextDest, appendMethod,
+                            List.of(ctx.maker.Ident(elVarSymbol)));
+                        appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-                    var mapped = mapNewClass(ctx, mctx, unhandledEffects, mapToVarSymbol, newClass);
+                        return ctx.maker.Block(Flags.BLOCK, List.of(
+                            elDecl,
+                            ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
+                                ctx.maker.Ident(elVarSymbol), newClass.args.get(0)
+                            ))),
+                            ctx.maker.Exec(appendElCall)));
+                    } else {
+                        var isCustom = !ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type);
+                        var htmlElementType = isCustom
+                            ? componentImpl(newClass.type).allparams().get(0)
+                            : newClass.type;
 
-                    var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
-                        ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
-                    var appendElCall = makeCall(nextDest, appendMethod,
-                        List.of(ctx.maker.Ident(elVarSymbol)));
-                    appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+                        var elInit = makeCall(ctx.symbols.documentField, ctx.symbols.createElementMethod, List.of(
+                            ctx.maker.Literal(htmlElementType.tsym.name.toString()).setType(ctx.symbols.clString.type)));
+                        var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                            ctx.names.fromString("$el" + nextN), htmlElementType, mctx.owner);
+                        var elDecl = ctx.maker.VarDef(elVarSymbol, elInit);
 
-                    var prologue = isCustom
-                        ? List.<JCTree.JCStatement>of(elDecl,
-                        ctx.maker.VarDef(mapToVarSymbol,
-                            newClass))
-                        : List.<JCTree.JCStatement>of(elDecl);
-                    var epilogue = isCustom
-                        ? List.<JCTree.JCStatement>of(
-                        ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
-                            ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol)))))
-                        : List.<JCTree.JCStatement>nil();
+                        var mapToVarSymbol = isCustom
+                            ? new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
+                            ctx.names.fromString("$comp" + nextN), newClass.type, mctx.owner)
+                            : elVarSymbol;
 
-                    return ctx.maker.Block(Flags.BLOCK, prologue
-                        .append(mapped)
-                        .appendList(epilogue)
-                        .append(ctx.maker.Exec(appendElCall)));
+                        var mapped = mapNewClass(ctx, mctx, unhandledEffects, mapToVarSymbol, newClass);
+
+                        var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
+                            ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
+                        var appendElCall = makeCall(nextDest, appendMethod,
+                            List.of(ctx.maker.Ident(elVarSymbol)));
+                        appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+                        var prologue = isCustom
+                            ? List.<JCTree.JCStatement>of(elDecl,
+                            ctx.maker.VarDef(mapToVarSymbol,
+                                newClass))
+                            : List.<JCTree.JCStatement>of(elDecl);
+                        var epilogue = isCustom
+                            ? List.<JCTree.JCStatement>of(
+                            ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
+                                ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol)))))
+                            : List.<JCTree.JCStatement>nil();
+
+                        return ctx.maker.Block(Flags.BLOCK, prologue
+                            .append(mapped)
+                            .appendList(epilogue)
+                            .append(ctx.maker.Exec(appendElCall)));
+                    }
 
                 } else if (expr instanceof JCTree.JCAssign assignExpr) {
                     /* nop */
