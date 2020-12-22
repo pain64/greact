@@ -38,39 +38,45 @@ public class Main {
                     <div id="view06"></div>
                     <hr>
                     <div id="view07"></div>
+                    <hr>
+                    <div id="view08"></div>
                   </body>
                    <script src="/script/lib"></script>
                    <script src="/script/app"></script>
                    <script type="text/javascript">
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view00"),
-                       new greact$sample$plainjs$_00HelloWorld())
+                       new greact$sample$plainjs$_00HelloWorld(), [])
                      
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view01"),     
-                       new greact$sample$plainjs$_01IfStmt())
+                       new greact$sample$plainjs$_01IfStmt(), [])
                      
                      com$over64$greact$dom$Globals.gReactMount(  
                        document.getElementById("view02"), 
-                       new greact$sample$plainjs$_02IfElseStmt())
+                       new greact$sample$plainjs$_02IfElseStmt(), [])
                           
                      // demo03 here!!!
                         
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view04"),
-                       new greact$sample$plainjs$_04DependsOn())
+                       new greact$sample$plainjs$_04DependsOn(), [])
                        
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view05"),
-                       new greact$sample$plainjs$_05CustomComponent())
+                       new greact$sample$plainjs$_05CustomComponent(), [])
                        
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view06"),
-                       new greact$sample$plainjs$_06SlotBareNoArgs())
+                       new greact$sample$plainjs$_06SlotBareNoArgs(), [])
                        
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view07"),
-                       new greact$sample$plainjs$_07SlotOneArg())
+                       new greact$sample$plainjs$_07SlotNoArgs(), [])
+                       
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view08"),
+                       new greact$sample$plainjs$_08SlotOneArg(), [])
                        
                           
                      new WebSocket("ws://localhost:4567/livereload")

@@ -75,7 +75,7 @@ public class CustomComponent {
                                 {
                                     $comp0.mainAnswer = 42;
                                 }
-                                com.over64.greact.dom.Globals.gReactMount($el0, $comp0);
+                                com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });
                         }

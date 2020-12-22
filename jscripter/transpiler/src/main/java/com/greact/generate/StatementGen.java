@@ -110,7 +110,7 @@ public class StatementGen {
             var varDecl = forEach.getVariable();
             out.write(deep, "for(let ");
             out.write(0, varDecl.getName().toString());
-            out.write(0, " in ");
+            out.write(0, " of ");
             exprGen.expr(deep, forEach.getExpression());
             out.write(0, ")");
             block(deep, forEach.getStatement());

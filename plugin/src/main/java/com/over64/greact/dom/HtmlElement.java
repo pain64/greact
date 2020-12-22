@@ -7,6 +7,8 @@ public class HtmlElement extends Node {
     public static class Style {
         public String color;
         public String border;
+        public String padding;
+        public String margin;
     }
 
     // HTML Global Attributes

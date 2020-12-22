@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import static util.CompileAssert.assertCompiledMany;
 
-public class SlotBare {
+public class Slot0Bare {
     @Test void slotBare() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.Conditional",
@@ -118,7 +118,7 @@ public class SlotBare {
                                             });
                                         };
                                     }
-                                    com.over64.greact.dom.Globals.gReactMount($el0, $comp0);
+                                    com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                     $viewFrag0.appendChild($el0);
                                 }, $root)).renderer.render();
                                 final com.over64.greact.dom.HTMLNativeElements.button $el1 = com.over64.greact.dom.Globals.document.createElement("button");

@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import static util.CompileAssert.*;
 
-public class SlotWith_new_slot_element {
+public class Slot0With_new_slot_element {
     @Test void testSlotWith_new_slot_element() throws IOException {
         assertCompiledMany(
             new CompileCase("js.Decorator",
@@ -46,7 +46,7 @@ public class SlotWith_new_slot_element {
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
                                 $root.style.border = "1px red solid";
                                 final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                com.over64.greact.dom.Globals.gReactMount($el0, forDecorate);
+                                com.over64.greact.dom.Globals.gReactMount($el0, forDecorate, new Object[]{});
                                 $root.appendChild($el0);
                             });
                         }
@@ -91,7 +91,7 @@ public class SlotWith_new_slot_element {
                                         });
                                     };
                                 }
-                                com.over64.greact.dom.Globals.gReactMount($el0, $comp0);
+                                com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });
                         }

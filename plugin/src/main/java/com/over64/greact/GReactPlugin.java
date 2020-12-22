@@ -66,7 +66,10 @@ public class GReactPlugin implements Plugin {
         class Symbols {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
-            Symbol.ClassSymbol clComponent = lookupClass(HTMLNativeElements.Component0.class.getName());
+            Symbol.ClassSymbol clComponent = lookupClass(HTMLNativeElements.Component.class.getName());
+            Symbol.ClassSymbol clComponent0 = lookupClass(HTMLNativeElements.Component0.class.getName());
+            Symbol.ClassSymbol clComponent1 = lookupClass(HTMLNativeElements.Component1.class.getName());
+            Symbol.ClassSymbol clComponent2 = lookupClass(HTMLNativeElements.Component2.class.getName());
             Symbol.ClassSymbol clDocument = lookupClass(Document.class.getName());
             Symbol.ClassSymbol clNode = lookupClass(Node.class.getName());
             Symbol.ClassSymbol clHtmlElement = lookupClass(HtmlElement.class.getName());
@@ -195,6 +198,7 @@ public class GReactPlugin implements Plugin {
             if (expr instanceof JCTree.JCNewClass newClass) {
                 if (newClass.def != null) {
                     var ea = new EffectAnalyzer(forEffect);
+                    newClass.args.forEach(arg -> arg.accept(ea));
                     newClass.def.defs.forEach(def -> {
                         if (def instanceof JCTree.JCBlock block)
                             block.stats.forEach(st -> {
@@ -283,7 +287,9 @@ public class GReactPlugin implements Plugin {
 
     Type componentImpl(Type type) {
         var componentImplOpt = ctx.types.interfaces(type).stream()
-            .filter(iface -> iface.tsym == ctx.symbols.clComponent)
+            .filter(iface -> iface.tsym == ctx.symbols.clComponent0 ||
+                iface.tsym == ctx.symbols.clComponent1 ||
+                iface.tsym == ctx.symbols.clComponent2)
             .findFirst();
 
         return componentImplOpt.get();
@@ -331,7 +337,10 @@ public class GReactPlugin implements Plugin {
                         return ctx.maker.Block(Flags.BLOCK, List.of(
                             elDecl,
                             ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
-                                ctx.maker.Ident(elVarSymbol), newClass.args.get(0)
+                                ctx.maker.Ident(elVarSymbol), newClass.args.get(0),
+                                ctx.maker.NewArray(ctx.maker.Ident(ctx.symbols.clObject), List.nil(),
+                                    newClass.args.tail != null ? newClass.args.tail : List.nil())
+                                    .setType(ctx.types.makeArrayType(ctx.symbols.clObject.type))
                             ))),
                             ctx.maker.Exec(appendElCall)));
                     } else {
@@ -351,7 +360,7 @@ public class GReactPlugin implements Plugin {
                             ctx.names.fromString("$comp" + nextN), newClass.type, mctx.owner)
                             : elVarSymbol;
 
-                        var mapped = mapNewClass(ctx, mctx, unhandledEffects, mapToVarSymbol, newClass);
+                        var mapped = mapNewClass(ctx, mctx, unhandledEffects, isCustom, mapToVarSymbol, newClass);
 
                         var appendMethod = nextDest.type.tsym == ctx.symbols.clFragment ?
                             ctx.symbols.mtFragmentAppendChild : ctx.symbols.appendChildMethod;
@@ -367,7 +376,11 @@ public class GReactPlugin implements Plugin {
                         var epilogue = isCustom
                             ? List.<JCTree.JCStatement>of(
                             ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
-                                ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol)))))
+                                ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol),
+                                ctx.maker.NewArray(ctx.maker.Ident(ctx.symbols.clObject), List.nil(),
+                                    newClass.args.tail != null ? newClass.args.tail : List.nil())
+                                    .setType(ctx.types.makeArrayType(ctx.symbols.clObject.type))
+                            ))))
                             : List.<JCTree.JCStatement>nil();
 
                         return ctx.maker.Block(Flags.BLOCK, prologue
@@ -445,7 +458,7 @@ public class GReactPlugin implements Plugin {
     }
 
     JCTree.JCBlock mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
-                               Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
+                               boolean isCustom, Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
 
 
         var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
@@ -455,24 +468,25 @@ public class GReactPlugin implements Plugin {
         newClass.constructorType = constructorSymbol.type;
         newClass.constructor = constructorSymbol;
 
-        var mappedArgs = IntStream.range(0, newClass.args.length())
-            .mapToObj(i -> {
-                var arg = newClass.args.get(i);
-                var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
-                    .params.get(i)
-                    .getAnnotation(HTMLNativeElements.DomProperty.class);
+        var mappedArgs = isCustom ? List.<JCTree.JCStatement>nil() :
+            IntStream.range(0, newClass.args.length())
+                .mapToObj(i -> {
+                    var arg = newClass.args.get(i);
+                    var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
+                        .params.get(i)
+                        .getAnnotation(HTMLNativeElements.DomProperty.class);
 
-                var argSymbol = ctx.lookupMember(
-                    (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
-                    argAnnotation.value());
+                    var argSymbol = ctx.lookupMember(
+                        (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
+                        argAnnotation.value());
 
-                return ctx.maker.Exec(
-                    ctx.maker.Assign(
-                        ctx.maker.Select(
-                            ctx.maker.Ident(elVarSymbol),
-                            argSymbol),
-                        arg));
-            }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
+                    return ctx.maker.Exec(
+                        ctx.maker.Assign(
+                            ctx.maker.Select(
+                                ctx.maker.Ident(elVarSymbol),
+                                argSymbol),
+                            arg));
+                }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
         var blockBody = newClass.def != null ?
             newClass.def.defs.stream()
@@ -512,7 +526,9 @@ public class GReactPlugin implements Plugin {
                     for (var typeDecl : cu.getTypeDecls()) {
                         // check that type implements Component interface
                         var componentImplOpt = ctx.types.interfaces(typeDecl.type).stream()
-                            .filter(iface -> iface.tsym == ctx.symbols.clComponent)
+                            .filter(iface -> iface.tsym == ctx.symbols.clComponent0 ||
+                                iface.tsym == ctx.symbols.clComponent1 ||
+                                iface.tsym == ctx.symbols.clComponent2)
                             .findFirst();
 
                         final Type componentImpl;
@@ -594,7 +610,7 @@ public class GReactPlugin implements Plugin {
                                             var lmb = ctx.maker.Lambda(List.nil(), mapNewClass(
                                                 ctx, new MountCtx(viewFragments, methodTree.sym),
                                                 new HashSet<>(effectCalls.keySet()),
-                                                rootVar, that))
+                                                false, rootVar, that))
                                                 .setType(ctx.symbols.clRenderer.type);
                                             lmb.target = ctx.symbols.clRenderer.type;
                                             lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -609,7 +625,10 @@ public class GReactPlugin implements Plugin {
                                     @Override
                                     public void visitLambda(JCTree.JCLambda lmb) {
                                         super.visitLambda(lmb);
-                                        if (lmb.type.tsym == ctx.symbols.clComponent) {
+                                        if (lmb.type.tsym == ctx.symbols.clComponent0 ||
+                                            lmb.type.tsym == ctx.symbols.clComponent1 ||
+                                            lmb.type.tsym == ctx.symbols.clComponent2) {
+
                                             if (lmb.body instanceof JCTree.JCExpression expr) {
                                                 lmb.body = ctx.maker.Block(Flags.BLOCK, List.of(
                                                     ctx.maker.Return(expr)));
@@ -636,7 +655,7 @@ public class GReactPlugin implements Plugin {
                                                 var lmb2 = ctx.maker.Lambda(List.nil(), mapNewClass(
                                                     ctx, new MountCtx(viewFragments, methodTree.sym),
                                                     new HashSet<>(effectCalls.keySet()),
-                                                    rootVar, that))
+                                                    false, rootVar, that))
                                                     .setType(ctx.symbols.clRenderer.type);
                                                 lmb2.target = ctx.symbols.clRenderer.type;
                                                 lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;

@@ -3,16 +3,16 @@ package com.over64.greact.dom;
 import com.greact.model.JSNativeAPI;
 
 public class HTMLNativeElements {
-    public interface Component0<T extends HtmlElement>  {
+    public interface Component {
         default void effect(Object expression) {}
+    }
+    public interface Component0<T extends HtmlElement> extends Component {
         T mount();
     }
-    public interface Component1<T extends HtmlElement, U>  {
-        default void effect(Object expression) {}
+    public interface Component1<T extends HtmlElement, U> extends Component {
         T mount(U u);
     }
-    public interface Component2<T extends HtmlElement, U, V>  {
-        default void effect(Object expression) {}
+    public interface Component2<T extends HtmlElement, U, V>  extends Component {
         T mount(U u, V v);
     }
 
@@ -23,6 +23,11 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class h1 extends HtmlElement {
         public h1() {};
         public h1(@DomProperty("innerText") String innerText) {
+        }
+    }
+    @JSNativeAPI public static class h2 extends HtmlElement {
+        public h2() {};
+        public h2(@DomProperty("innerText") String innerText) {
         }
     }
 
@@ -102,6 +107,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class slot<T extends HtmlElement> extends HtmlElement {
         public slot(Component0<T> comp) {}
+        public <U> slot(Component1<T, U> comp, U u) {}
     }
     @JSNativeAPI public static class style extends HtmlElement{
         public static String id(String prefix) { return  prefix; }

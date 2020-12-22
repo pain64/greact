@@ -187,7 +187,7 @@ public class _02StmtTest {
                   }
                   
                   baz(array) {
-                    for(let x in array) {
+                    for(let x of array) {
                     }
                   }
                 }""");

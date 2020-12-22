@@ -7,9 +7,9 @@ public class Globals {
     public static Document document = JSExpression.of("document");
     public static HtmlElement gReactElement;
 
-    public static <T extends HtmlElement> void gReactMount(T dest, HTMLNativeElements.Component0<T> element) {
+    public static <T extends HtmlElement> void gReactMount(T dest, HTMLNativeElements.Component0<T> element, Object... args) {
         gReactElement = dest;
-        JSExpression.of("element instanceof Function ? element() : element.mount()");
+        JSExpression.of("element instanceof Function ? element(...args) : element.mount(...args)");
     }
 
     public static <T extends HtmlElement> T gReactReturn(Fragment.Renderer renderer) {
