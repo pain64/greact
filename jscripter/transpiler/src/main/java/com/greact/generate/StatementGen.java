@@ -1,5 +1,6 @@
 package com.greact.generate;
 
+import com.greact.generate.MethodGen.MContext;
 import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.JSOut;
 import com.sun.source.tree.*;
@@ -10,13 +11,13 @@ import java.util.List;
 
 public class StatementGen {
     final JSOut out;
-    final TContext ctx;
+    final MContext mctx;
     final ExpressionGen exprGen;
 
-    public StatementGen(JSOut out, TContext ctx) {
+    public StatementGen(JSOut out, MContext mctx) {
         this.out = out;
-        this.ctx = ctx;
-        this.exprGen = new ExpressionGen(out, ctx, this);
+        this.mctx = mctx;
+        this.exprGen = new ExpressionGen(out, mctx, this);
     }
 
     void block(int deep, Tree tree) {

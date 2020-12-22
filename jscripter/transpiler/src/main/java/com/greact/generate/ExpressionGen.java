@@ -1,6 +1,8 @@
 package com.greact.generate;
 
+import com.greact.generate.MethodGen.MContext;
 import com.greact.generate.TypeGen.TContext;
+import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
 import com.sun.source.tree.*;
@@ -24,12 +26,12 @@ import static com.greact.generate.util.Overloads.Mode.*;
 
 public class ExpressionGen {
     final JSOut out;
-    final TContext ctx;
+    final MContext mctx;
     final StatementGen stmtGen;
 
-    public ExpressionGen(JSOut out, TContext ctx, StatementGen stmtGen) {
+    public ExpressionGen(JSOut out, MContext mctx, StatementGen stmtGen) {
         this.out = out;
-        this.ctx = ctx;
+        this.mctx = mctx;
         this.stmtGen = stmtGen;
     }
 
@@ -219,7 +221,7 @@ public class ExpressionGen {
             var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
 
-            var names = Names.instance(ctx.context());
+            var names = Names.instance(mctx.ctx().context());
 
             if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) &&
                 methodSym.name.equals(names.fromString("of"))) {
@@ -228,14 +230,21 @@ public class ExpressionGen {
                 out.write(0, unescaped.substring(1, unescaped.length() - 1));
             } else {
 
-                var shimmedType = ctx.stdShim().findShimmedType(methodOwnerSym.type);
+                var shimmedType = mctx.ctx().stdShim().findShimmedType(methodOwnerSym.type);
                 final Overloads.Info info;
                 if (shimmedType != null) {
-                    info = Overloads.methodInfo(ctx.types(),
-                        (TypeElement) shimmedType.tsym, ctx.stdShim().findShimmedMethod(shimmedType, methodSym));
+                    info = Overloads.methodInfo(mctx.ctx().types(),
+                        (TypeElement) shimmedType.tsym, mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym));
                 } else
-                    info = Overloads.methodInfo(ctx.types(),
+                    info = Overloads.methodInfo(mctx.ctx().types(),
                         (TypeElement) methodOwnerSym.type.tsym, methodSym);
+
+                if (info.isAsync() && !mctx.isAsync())
+                    throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
+                        """
+                            method which calls @async method must be defined as @async""");
+
+                if (info.isAsync()) out.write(0, "(await ");
 
 
                 // FIXME: on-demand static import, foreign module call
@@ -248,7 +257,7 @@ public class ExpressionGen {
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
                     if (info.mode() == Overloads.Mode.INSTANCE) {
-                        if(methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
+                        if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
                             expr(deep, prop.getExpression());
                         else
                             expr(deep, prop);
@@ -276,9 +285,11 @@ public class ExpressionGen {
 
                 out.mkString(call.getArguments(), (arg) ->
                     expr(deep, arg), "", ", ", ")");
+
+                if (info.isAsync()) out.write(0, ")");
             }
         } else if (expr instanceof MemberReferenceTree memberRef) {
-            var types = Types.instance(ctx.context()); // FIXME: move types to ctx, remove context from ctx
+            var types = Types.instance(mctx.ctx().context()); // FIXME: move types to ctx, remove context from ctx
 
             var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
             var mSym = TreeInfo.symbol((JCTree) memberRef);
@@ -342,7 +353,7 @@ public class ExpressionGen {
                 checkGen.accept(() -> out.write(0, name));
                 out.write(0, ")");
             }
-        } else if(expr instanceof ParameterizedTypeTree pTree) {
+        } else if (expr instanceof ParameterizedTypeTree pTree) {
             expr(deep, (ExpressionTree) pTree.getType());
         } else if (expr instanceof NewClassTree newClass) {
             // FIXME:

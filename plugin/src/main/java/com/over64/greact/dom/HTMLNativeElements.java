@@ -1,19 +1,20 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
+import com.greact.model.async;
 
 public class HTMLNativeElements {
     public interface Component {
         default void effect(Object expression) {}
     }
     public interface Component0<T extends HtmlElement> extends Component {
-        T mount();
+        @async T mount();
     }
     public interface Component1<T extends HtmlElement, U> extends Component {
-        T mount(U u);
+        @async T mount(U u);
     }
     public interface Component2<T extends HtmlElement, U, V>  extends Component {
-        T mount(U u, V v);
+        @async T mount(U u, V v);
     }
 
     public @interface DomProperty {

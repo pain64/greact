@@ -36,7 +36,7 @@ public class HW implements Component0<div> {
         return prefix + "bla bla bla";
     }
 
-    @async public div mount() {
+    public div mount() {
         // var $root = Globals.gReactElement;
         var nameOpt = server(di -> Optional.of("Ivan"));
 

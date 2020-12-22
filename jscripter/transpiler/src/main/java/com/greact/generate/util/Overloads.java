@@ -1,6 +1,7 @@
 package com.greact.generate.util;
 
 import com.greact.model.Static;
+import com.greact.model.async;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -12,7 +13,9 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Overloads {
     static class Entry {
@@ -29,7 +32,8 @@ public class Overloads {
                           List<Entry> entries) {
     }
 
-    static void pushSupertype(List<Section> sections, TypeElement klass, Name methodName) {
+    static void pushSupertype(List<Section> sections, TypeElement klass,
+                              Name methodName, boolean withInterfaces) {
         var entries = klass.getEnclosedElements().stream()
             .filter(el -> el instanceof ExecutableElement
                 && el.getSimpleName().equals(methodName))
@@ -38,9 +42,15 @@ public class Overloads {
 
         sections.add(new Section(klass, entries));
 
+        if (withInterfaces)
+            klass.getInterfaces().forEach(iface ->
+                pushSupertype(sections, (TypeElement) ((Type) iface).asElement(),
+                    methodName, withInterfaces));
+
         var superType = ((Type) klass.getSuperclass()).tsym;
         if (superType != null)
-            pushSupertype(sections, (TypeElement) superType.type.asElement(), methodName);
+            pushSupertype(sections, (TypeElement) superType.type.asElement(),
+                methodName, withInterfaces);
     }
 
     static void linkOverrides(Types types, List<Section> sections, int i) {
@@ -72,16 +82,38 @@ public class Overloads {
 
     static List<Section> buildSections(Types types, TypeElement klass, Name methodName) {
         var sections = new ArrayList<Section>();
-        pushSupertype(sections, klass, methodName);
+        // Что будем делать с интерфейсами и default методами?
+        pushSupertype(sections, klass, methodName, true /* fixme ? */);
         linkOverrides(types, sections, 0);
         enumerate(sections);
         return sections;
+    }
+
+    static boolean isOverloaded(List<Section> sections) {
+        return sections.stream()
+            .anyMatch(section -> section.entries.size() > 1);
+    }
+
+    static Pair<Boolean, Boolean> isAsync(TypeElement klass, Name methodName) {
+        var sections = new ArrayList<Section>();
+        pushSupertype(sections, klass, methodName, true);
+
+        Function<Stream<Section>, Boolean> isAsyncPartial = part ->
+            part.anyMatch(section ->
+                section.entries.stream()
+                    .anyMatch(entry -> entry.method.getAnnotation(async.class) != null));
+
+        return new Pair<>(
+            isAsyncPartial.apply(sections.stream().skip(1)), // in super
+            isAsyncPartial.apply(sections.stream().limit(1))); // local
     }
 
 
     public static record OverloadTable(
         boolean isOverloaded,
         boolean hasInSuper,
+        boolean isAsyncInSuper,
+        boolean isAsyncLocal,
         List<Pair<Integer, ExecutableElement>> staticMethods,
         List<Pair<Integer, ExecutableElement>> methods) {
     }
@@ -89,28 +121,23 @@ public class Overloads {
     public static OverloadTable table(Types types, TypeElement klass, Name methodName) {
         var sections = buildSections(types, klass, methodName);
 
-        var isOverloaded = sections.stream()
-            .anyMatch(section -> section.entries.size() > 1);
         var hasInSuper = sections.stream().skip(1).anyMatch(section -> !section.entries.isEmpty());
         var partitioned = sections.get(0).entries.stream()
             .map(entry -> new Pair<>(entry.n, entry.method))
             .collect(Collectors.partitioningBy(p -> p.snd.getModifiers().contains(Modifier.STATIC)));
+        var isAsyncTotally = isAsync(klass, methodName);
 
-        return new OverloadTable(isOverloaded, hasInSuper,
+        return new OverloadTable(isOverloaded(sections), hasInSuper, isAsyncTotally.fst, isAsyncTotally.snd,
             partitioned.get(true), partitioned.get(false));
     }
 
-
     public enum Mode {INSTANCE, STATIC, AS_STATIC}
-    public static record Info(int n, boolean isOverloaded, Mode mode) {
+    public static record Info(int n, boolean isOverloaded, Mode mode, boolean isAsync) {
     }
 
     public static Info methodInfo(Types types, TypeElement klass, ExecutableElement method) {
 
         var sections = buildSections(types, klass, method.getSimpleName());
-
-        var isOverloaded = sections.stream()
-            .anyMatch(section -> section.entries.size() > 1);
 
         var found = sections.get(0).entries.stream()
             .filter(entry -> entry.method == method)
@@ -122,6 +149,9 @@ public class Overloads {
             : found.method.getAnnotation(Static.class) != null ? Mode.AS_STATIC
             : Mode.INSTANCE;
 
-        return new Info(found.n, isOverloaded, mode);
+        var isAsyncTotally = isAsync(klass, method.getSimpleName());
+
+        return new Info(found.n, isOverloaded(sections), mode,
+            isAsyncTotally.fst || isAsyncTotally.snd);
     }
 }

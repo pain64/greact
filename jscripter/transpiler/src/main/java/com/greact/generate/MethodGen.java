@@ -1,8 +1,10 @@
 package com.greact.generate;
 
 import com.greact.generate.TypeGen.TContext;
+import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.model.async;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
@@ -14,29 +16,62 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.greact.generate.util.CompileException.ERROR.*;
+
 public class MethodGen {
+    static record MContext(TContext ctx, boolean isAsync) {
+    }
     final TContext ctx;
     final JSOut out;
-    final StatementGen stmtGen;
+    StatementGen stmtGen; // FIXME: PIZDATION BEGIN
 
     public MethodGen(TContext ctx, JSOut out) {
         this.ctx = ctx;
         this.out = out;
-        stmtGen = new StatementGen(out, ctx);
     }
 
     void NOP(int deep) {}
 
-    void group(boolean isOverloaded, boolean hasInSuper, boolean isStatic,
+    void group(boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
                List<Pair<Integer, ExecutableElement>> group) {
         if (group.isEmpty()) return;
-        if(group.stream().allMatch(m -> m.snd.getModifiers().contains(Modifier.NATIVE))) return;
+        if (group.stream().allMatch(m -> m.snd.getModifiers().contains(Modifier.NATIVE))) return;
 
         var name = group.get(0).snd.getSimpleName().toString();
         var isConstructor = name.equals("<init>");
+        out.write(2, "");
 
-        var staticPrefix = isStatic ? "static " : "";
-        out.write(2, staticPrefix);
+
+        if (hasInSuper) {
+            if (isAsyncInSuper) {
+                for (var pair : group)
+                    if (pair.snd.getAnnotation(async.class) != null)
+                        throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
+                            method already declared as @async in supertype or interface
+                            """);
+            } else {
+                if (isAsyncLocal)
+                    for (var pair : group)
+                        if (pair.snd.getAnnotation(async.class) != null)
+                            throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
+                                method cannot be declared as @async due to:
+                                  - NOT declared as @async in supertype or interface
+                                """);
+            }
+        } else {
+            if (isAsyncLocal)
+                for (var pair : group)
+                    if (pair.snd.getAnnotation(async.class) == null)
+                        throw new CompileException(MUST_BE_DECLARED_AS_ASYNC, """
+                            method must be declared as @async due to:
+                              - has overloaded siblings declared as @async
+                            """);
+        }
+
+        var isAsync = isAsyncInSuper || isAsyncLocal;
+        if (isAsync) out.write(0, "async ");
+
+        if (isStatic) out.write(0, "static ");
         out.write(0, isConstructor ? "constructor" : name);
 
         var params = group.stream()
@@ -47,6 +82,9 @@ public class MethodGen {
         var prefix = isOverloaded ? "($over, " : "(";
         out.mkString(params, param ->
             out.write(0, param.getSimpleName().toString()), prefix, ", ", ") {\n");
+
+        // FIXME: PIZDATION END
+        this.stmtGen = new StatementGen(out, new MContext(ctx, isAsync));
 
         final Consumer<Integer> defaultConstructLocals;
         if (isConstructor) {
@@ -135,7 +173,7 @@ public class MethodGen {
         var types = Types.instance(ctx.context());
         var table = Overloads.table(types, ctx.typeEl(), group.fst);
 
-        group(table.isOverloaded(), table.hasInSuper(), true, table.staticMethods());
-        group(table.isOverloaded(), table.hasInSuper(), false, table.methods());
+        group(table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true, table.staticMethods());
+        group(table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, table.methods());
     }
 }

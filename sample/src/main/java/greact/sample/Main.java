@@ -40,6 +40,8 @@ public class Main {
                     <div id="view07"></div>
                     <hr>
                     <div id="view08"></div>
+                    <hr>
+                    <ul id="view09"></div>
                   </body>
                    <script src="/script/lib"></script>
                    <script src="/script/app"></script>
@@ -77,6 +79,10 @@ public class Main {
                      com$over64$greact$dom$Globals.gReactMount(
                        document.getElementById("view08"),
                        new greact$sample$plainjs$_08SlotOneArg(), [])
+                       
+                     com$over64$greact$dom$Globals.gReactMount(
+                       document.getElementById("view09"),
+                       new greact$sample$plainjs$_09AsyncAwaitFetch(), [])
                        
                           
                      new WebSocket("ws://localhost:4567/livereload")

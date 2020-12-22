@@ -77,8 +77,9 @@ public class TypeGen {
             out.write(0, " = ");
 
             // FIXME: use new StmtGen
+            // FIXME: constructor cannot be async by Javascript design
             if (varDecl.getInitializer() != null)
-                mGen.stmtGen.exprGen.expr(4, varDecl.getInitializer());
+                new StatementGen(out, new MethodGen.MContext(ctx, false)).exprGen.expr(4, varDecl.getInitializer());
             else if (varDecl.getType().type.isIntegral())
                 out.write(0, "0");
             else
