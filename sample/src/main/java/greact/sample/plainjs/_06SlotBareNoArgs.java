@@ -1,10 +1,8 @@
 package greact.sample.plainjs;
 
-import com.over64.greact.model.components.Component;
-
 import static com.over64.greact.dom.HTMLNativeElements.*;
 
-public class _06SlotBareNoArgs implements Component<div> {
+public class _06SlotBareNoArgs implements Component0<div> {
     boolean showHint = true;
 
     @Override public div mount() {

@@ -1,9 +1,8 @@
 package greact.sample.plainjs;
 
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.model.components.Component;
 
-public class _04DependsOn implements Component<div> {
+public class _04DependsOn implements Component0<div> {
 
     @Override
     public div mount() {
@@ -18,7 +17,7 @@ public class _04DependsOn implements Component<div> {
                     }};
             }};
 
-            new button("do effect") {{
+            new button("no effects expected") {{
                 onclick = () -> effect(list);
             }};
         }};

@@ -1,9 +1,8 @@
 package greact.sample.plainjs;
 
-import com.over64.greact.model.components.Component;
-import static com.over64.greact.dom.HTMLNativeElements.h1;
+import static com.over64.greact.dom.HTMLNativeElements.*;
 
-public class _05Child implements Component<h1> {
+public class _05Child implements Component0<h1> {
     //FIXME: this class must be inner class of _05CustomComponent
     int mainAnswer;
 

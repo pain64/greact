@@ -15,10 +15,9 @@ public class SlotWith_new_slot_element {
                 """
                     package js;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                         
-                    class Decorator implements Component<div> {
-                        Component<h1> forDecorate = () -> null;
+                    class Decorator implements Component0<div> {
+                        Component0<h1> forDecorate = () -> null;
                                     
                         @Override public div mount() {
                             return new div() {{
@@ -33,14 +32,13 @@ public class SlotWith_new_slot_element {
                                         
                     import org.over64.jscripter.StdTypeConversion;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                         
-                    class Decorator implements Component<div> {
+                    class Decorator implements Component0<div> {
                        \s
                         Decorator() {
                             super();
                         }
-                        Component<h1> forDecorate = ()->null;
+                        Component0<h1> forDecorate = ()->null;
                        \s
                         @Override
                         public div mount() {
@@ -57,9 +55,8 @@ public class SlotWith_new_slot_element {
                 """
                     package js;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                      
-                    class Demo implements Component<div> {                     
+                    class Demo implements Component0<div> {                     
                         @Override public div mount() {
                             return new div() {{
                                 new Decorator() {{
@@ -73,9 +70,8 @@ public class SlotWith_new_slot_element {
                                        
                     import org.over64.jscripter.StdTypeConversion;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                        
-                    class Demo implements Component<div> {
+                    class Demo implements Component0<div> {
                        \s
                         Demo() {
                             super();

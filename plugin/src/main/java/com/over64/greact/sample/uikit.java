@@ -1,15 +1,14 @@
 package com.over64.greact.sample;
 
+import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.div;
-import com.over64.greact.dom.HTMLNativeElements.slot;
 import com.over64.greact.dom.HTMLNativeElements.span;
-import com.over64.greact.model.components.Component;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class uikit {
-    public static class pagination<T> implements Component<div> {
+    public static class pagination<T> implements HTMLNativeElements.Component0<div> {
         private final T[] data;
         private int page = 0;
 

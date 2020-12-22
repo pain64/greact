@@ -1,13 +1,13 @@
 package com.over64.greact.sample;
 
+import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.button;
 import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.dom.HTMLNativeElements.h1;
-import com.over64.greact.model.components.Component;
 
 import java.util.Optional;
 
-public class DemoAdvanced implements Component<div> {
+public class DemoAdvanced implements HTMLNativeElements.Component0<div> {
 
     enum Mode {M1, M2}
 

@@ -1,17 +1,15 @@
 package com.over64.greact.sample.todoapp;
 
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.model.components.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.over64.greact.GReact.classIf;
 import static com.over64.greact.dom.HTMLNativeElements.style.id;
+import static com.over64.greact.dom.Utils.classIf;
 
 
-public class TodoApp implements Component<section> {
+public class TodoApp implements Component0<section> {
     enum Mode {All, Active, Completed}
     static class Todo {
         String title;
@@ -20,7 +18,7 @@ public class TodoApp implements Component<section> {
         Todo(String title) { this.title = title; }
     }
 
-    static class TodoItem implements Component<li> {
+    static class TodoItem implements Component0<li> {
         @FunctionalInterface public interface Handler {
             void apply();
         }

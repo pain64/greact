@@ -1,7 +1,7 @@
 package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
-import com.over64.greact.model.components.DomProperty;
+import com.over64.greact.dom.*;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -66,15 +66,15 @@ public class GReactPlugin implements Plugin {
         class Symbols {
             Symbol.ClassSymbol clObject = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Object"));
             Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
-            Symbol.ClassSymbol clComponent = lookupClass("com.over64.greact.model.components.Component");
-            Symbol.ClassSymbol clDocument = lookupClass("com.over64.greact.dom.Document");
-            Symbol.ClassSymbol clNode = lookupClass("com.over64.greact.dom.Node");
-            Symbol.ClassSymbol clHtmlElement = lookupClass("com.over64.greact.dom.HtmlElement");
-            Symbol.ClassSymbol clViewFragment = lookupClass("com.over64.greact.dom.ViewFragment");
-            Symbol.ClassSymbol clSlot = lookupClass("com.over64.greact.dom.HTMLNativeElements$slot");
+            Symbol.ClassSymbol clComponent = lookupClass(HTMLNativeElements.Component0.class.getName());
+            Symbol.ClassSymbol clDocument = lookupClass(Document.class.getName());
+            Symbol.ClassSymbol clNode = lookupClass(Node.class.getName());
+            Symbol.ClassSymbol clHtmlElement = lookupClass(HtmlElement.class.getName());
+            Symbol.ClassSymbol clViewFragment = lookupClass(Fragment.ViewFragment.class.getName());
+            Symbol.ClassSymbol clSlot = lookupClass(HTMLNativeElements.slot.class.getName());
 
-            Symbol.ClassSymbol clFragment = lookupClass("com.over64.greact.dom.Fragment");
-            Symbol.ClassSymbol clRenderer = lookupClass("com.over64.greact.dom.Renderer");
+            Symbol.ClassSymbol clFragment = lookupClass(Fragment.class.getName());
+            Symbol.ClassSymbol clRenderer = lookupClass(Fragment.Renderer.class.getName());
             Symbol.MethodSymbol mtFragmentOf = lookupMember(clFragment, "of");
             Symbol.MethodSymbol mtFragmentCleanup = lookupMember(clFragment, "cleanup");
             Symbol.MethodSymbol mtFragmentAppendChild = lookupMember(clFragment, "appendChild");
@@ -460,7 +460,7 @@ public class GReactPlugin implements Plugin {
                 var arg = newClass.args.get(i);
                 var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
                     .params.get(i)
-                    .getAnnotation(DomProperty.class);
+                    .getAnnotation(HTMLNativeElements.DomProperty.class);
 
                 var argSymbol = ctx.lookupMember(
                     (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,

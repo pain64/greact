@@ -1,9 +1,8 @@
 package greact.sample.plainjs;
 
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.model.components.Component;
 
-public class _01IfStmt implements Component<div> {
+public class _01IfStmt implements Component0<div> {
     int nUsers = 1;
 
     @Override

@@ -12,10 +12,8 @@ public class Simple {
                 """
                     package js;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
-                    import com.over64.greact.dom.HtmlElement;
                                         
-                    class Demo implements Component<div> {
+                    class Demo implements Component0<div> {
                       int nUsers = 1;
                       
                       @Override public div mount() {                        
@@ -29,37 +27,41 @@ public class Simple {
                     }""",
                 """
                     package js;
-                       
+                                       
                     import org.over64.jscripter.StdTypeConversion;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
-                    import com.over64.greact.dom.HtmlElement;
-                   
-                    class Demo implements Component {
+                                       
+                    class Demo implements Component0<div> {
                        \s
                         Demo() {
                             super();
                         }
+                        int nUsers = 1;
                        \s
                         @Override
-                        public void mount(HtmlElement dom) {
-                            {
-                                final com.over64.greact.dom.DocumentFragment $frag = com.over64.greact.dom.Globals.document.createDocumentFragment();
-                                final com.over64.greact.dom.HTMLNativeElements.div $el0 = com.over64.greact.dom.Globals.document.createElement("div");
+                        public div mount() {
+                            final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
+                            return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
                                 {
-                                    $el0.className = "my-div";
-                                    $el0.fake.className = "123";
-                                    {
-                                        final com.over64.greact.dom.HTMLNativeElements.h1 $el1 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                        {
-                                            $el1.innerText = "hello, GReact";
-                                        }
-                                        $frag.appendChild($el1);
-                                    }
+                                    ($viewFrag0 = com.over64.greact.dom.Fragment.of(()->{
+                                        $viewFrag0.cleanup();
+                                        $el0.innerText = "GReact users: " + nUsers;
+                                    }, $el0)).renderer.render();
                                 }
-                                $frag.appendChild($el0);
-                                dom.appendChild($frag);
-                            }
+                                $root.appendChild($el0);
+                                final com.over64.greact.dom.HTMLNativeElements.button $el1 = com.over64.greact.dom.Globals.document.createElement("button");
+                                {
+                                    $el1.innerText = "increment";
+                                    $el1.onclick = ()->effect$nUsers(nUsers += 1);
+                                }
+                                $root.appendChild($el1);
+                            });
+                        }
+                        private com.over64.greact.dom.Fragment $viewFrag0;
+                       \s
+                        private void effect$nUsers(java.lang.Object x0) {
+                            $viewFrag0.renderer.render();
                         }
                     }"""));
 

@@ -17,14 +17,13 @@ public class SlotBare {
                     import com.greact.model.JSExpression;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.dom.HtmlElement;
-                    import com.over64.greact.model.components.Component;
                                                   
-                    class Conditional<T extends HtmlElement> implements Component<T> {
+                    class Conditional<T extends HtmlElement> implements Component0<T> {
                         boolean cond = false;
-                        Component<T> doThen = () -> null;
-                        Component<T> doElse = () -> null;
+                        Component0<T> doThen = () -> null;
+                        Component0<T> doElse = () -> null;
                                                               
-                        T call(Component<T> comp) {
+                        T call(Component0<T> comp) {
                             return JSExpression.of("comp instanceof Function ? comp() : comp.mount()");
                         }
                                
@@ -40,18 +39,17 @@ public class SlotBare {
                     import com.greact.model.JSExpression;
                     import com.over64.greact.dom.HTMLNativeElements.*;
                     import com.over64.greact.dom.HtmlElement;
-                    import com.over64.greact.model.components.Component;
                                         
-                    class Conditional<T extends HtmlElement> implements Component<T> {
+                    class Conditional<T extends HtmlElement> implements Component0<T> {
                        \s
                         Conditional() {
                             super();
                         }
                         boolean cond = false;
-                        Component<T> doThen = ()->null;
-                        Component<T> doElse = ()->null;
+                        Component0<T> doThen = ()->null;
+                        Component0<T> doElse = ()->null;
                        \s
-                        T call(Component<T> comp) {
+                        T call(Component0<T> comp) {
                             return JSExpression.of("comp instanceof Function ? comp() : comp.mount()");
                         }
                        \s
@@ -66,10 +64,8 @@ public class SlotBare {
                     package js;
                                    
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                    
-                                   
-                    public class Demo implements Component<div> {                                   
+                    public class Demo implements Component0<div> {                                   
                         boolean showHint = true;
                                    
                         @Override
@@ -91,9 +87,8 @@ public class SlotBare {
                                        
                     import org.over64.jscripter.StdTypeConversion;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                        
-                    public class Demo implements Component<div> {
+                    public class Demo implements Component0<div> {
                        \s
                         public Demo() {
                             super();

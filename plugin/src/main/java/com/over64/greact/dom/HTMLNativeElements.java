@@ -1,10 +1,24 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
-import com.over64.greact.model.components.Component;
-import com.over64.greact.model.components.DomProperty;
 
 public class HTMLNativeElements {
+    public interface Component0<T extends HtmlElement>  {
+        default void effect(Object expression) {}
+        T mount();
+    }
+    public interface Component1<T extends HtmlElement, U>  {
+        default void effect(Object expression) {}
+        T mount(U u);
+    }
+    public interface Component2<T extends HtmlElement, U, V>  {
+        default void effect(Object expression) {}
+        T mount(U u, V v);
+    }
+
+    public @interface DomProperty {
+        String value();
+    }
 
     @JSNativeAPI public static class h1 extends HtmlElement {
         public h1() {};
@@ -25,7 +39,7 @@ public class HTMLNativeElements {
         public String foobar;
 
         public div(HtmlElement child) {};
-        public div(Component... components) {};
+        public div(Component0... components) {};
     }
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }
@@ -87,7 +101,7 @@ public class HTMLNativeElements {
 
 
     @JSNativeAPI public static class slot<T extends HtmlElement> extends HtmlElement {
-        public slot(Component<T> comp) {}
+        public slot(Component0<T> comp) {}
     }
     @JSNativeAPI public static class style extends HtmlElement{
         public static String id(String prefix) { return  prefix; }

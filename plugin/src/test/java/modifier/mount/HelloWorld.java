@@ -12,9 +12,8 @@ public class HelloWorld {
                 """
                     package js;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                                         
-                    class Demo implements Component<h1> {
+                    class Demo implements Component0<h1> {
                       int nUsers = 1;
                       
                       @Override public h1 mount() {                        
@@ -26,9 +25,8 @@ public class HelloWorld {
                      
                     import org.over64.jscripter.StdTypeConversion;
                     import com.over64.greact.dom.HTMLNativeElements.*;
-                    import com.over64.greact.model.components.Component;
                      
-                    class Demo implements Component<h1> {
+                    class Demo implements Component0<h1> {
                        \s
                         Demo() {
                             super();

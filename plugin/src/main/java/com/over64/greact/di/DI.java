@@ -16,6 +16,13 @@ public class DI {
             //return (T[]) sql2oConn.createQuery(query).executeAndFetch(klass).toArray();
             return null;
         }
+        public <T1, T2> Tuple2<T1, T2>[] list2(String query) {
+            return null;
+        }
+        public static class Tuple2<T1, T2> {
+            public T1 f1;
+            public T2 f2;
+        }
     }
     public static class Data {
         public final CommonDb commonDb;

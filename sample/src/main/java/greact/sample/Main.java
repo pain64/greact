@@ -22,7 +22,7 @@ public class Main {
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
                     <title>Hello, jScripter!</title>
                   </head>
-                  <body>
+                  <body style="padding:20px">
                     <h1 id="view00"></h1>
                     <hr>
                     <div id="view01"></div>

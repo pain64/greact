@@ -1,8 +1,7 @@
 package greact.sample.plainjs;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.model.components.Component;
 
-public class _02IfElseStmt implements Component<div> {
+public class _02IfElseStmt implements Component0<div> {
     boolean showUsers = true;
 
     @Override public div mount() {

@@ -1,6 +1,15 @@
 package com.over64.greact.dom;
 
 public class Fragment {
+    @FunctionalInterface
+    public interface ViewFragment {
+        void apply();
+    }
+    @FunctionalInterface
+    public interface Renderer {
+        void render();
+    }
+
     public final Renderer renderer;
     final Node dest;
     Node before = null;
