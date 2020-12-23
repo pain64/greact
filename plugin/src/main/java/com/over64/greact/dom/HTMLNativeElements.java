@@ -37,13 +37,8 @@ public class HTMLNativeElements {
         public button(@DomProperty("innerText") String innerText) { }
     }
 
+    @JSNativeAPI public static class body extends HtmlElement { }
     @JSNativeAPI public static class div extends HtmlElement {
-        public static class Fake {
-            public String className;
-        }
-        public Fake fake = new Fake();
-        public String foobar;
-
         public div(HtmlElement child) {};
         public div(Component0... components) {};
     }
