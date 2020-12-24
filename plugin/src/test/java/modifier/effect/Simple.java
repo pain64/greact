@@ -25,7 +25,7 @@ public class Simple {
                             
                           new button() {{
                             innerText = "increment";
-                            onclick = () -> {
+                            onclick = el -> {
                               effect(nUsers += 1);
                             };
                           }};
@@ -70,7 +70,7 @@ public class Simple {
                                 final com.over64.greact.dom.HTMLNativeElements.button $el2 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el2.innerText = "increment";
-                                    $el2.onclick = ()->{
+                                    $el2.onclick = (el)->{
                                         effect$nUsers(nUsers += 1);
                                     };
                                 }

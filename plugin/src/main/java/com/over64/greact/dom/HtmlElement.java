@@ -1,14 +1,17 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSNativeAPI;
+import com.greact.model.async;
 
-@JSNativeAPI
-public class HtmlElement extends Node {
+@JSNativeAPI public class HtmlElement extends Node {
     public static class Style {
         public String color;
         public String border;
         public String padding;
         public String margin;
+        public String maxWidth;
+        public String display;
+        public String cursor;
     }
 
     // HTML Global Attributes
@@ -20,15 +23,21 @@ public class HtmlElement extends Node {
 
     public Object dependsOn;
 
+
     // HTML Event Attributes
-    //   Mouse events
-    public interface MouseEventHandler {
-        void handle();
+    public static class Event<T> {
+        public T target;
     }
 
-    public MouseEventHandler onclick;
-    public MouseEventHandler ondblclick;
-    public MouseEventHandler onblur;
+    @FunctionalInterface
+    public interface ChangeHandler<T extends HtmlElement> {
+        void handle(Event<T> ev);
+    }
+
+    @FunctionalInterface
+    public interface MouseEventHandler<T extends HtmlElement> {
+        @async void handle(Event<T> ev);
+    }
 
     public enum Key {UP, ENTER, ESC}
 

@@ -12,7 +12,7 @@ public class _06SlotBareNoArgs implements Component0<div> {
                 doElse = () -> new h1("The hint is hidden");
             }};
             new button("show/hide") {{
-                onclick = () -> effect(showHint = !showHint);
+                onclick = ev -> effect(showHint = !showHint);
             }};
         }};
     }

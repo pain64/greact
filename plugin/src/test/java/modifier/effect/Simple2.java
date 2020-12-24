@@ -24,7 +24,7 @@ public class Simple2 {
                                    return new div() {{
                                        new button() {{
                                            innerText = "toggle show users " + users.length;
-                                           onclick = () -> effect(showUsers = !showUsers);
+                                           onclick = ev -> effect(showUsers = !showUsers);
                                        }};
                        
                                        if (showUsers)
@@ -56,7 +56,7 @@ public class Simple2 {
                                 final com.over64.greact.dom.HTMLNativeElements.button $el0 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el0.innerText = "toggle show users " + users.length;
-                                    $el0.onclick = ()->effect$showUsers(showUsers = !showUsers);
+                                    $el0.onclick = (ev)->effect$showUsers(showUsers = !showUsers);
                                 }
                                 $root.appendChild($el0);
                                 ($viewFrag0 = com.over64.greact.dom.Fragment.of(()->{

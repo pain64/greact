@@ -33,22 +33,20 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static  class button extends HtmlElement {
-        public button() {};
+        public MouseEventHandler<button> onclick;
+        public MouseEventHandler<button> ondblclick;
+        public MouseEventHandler<button> onblur;
+        public button() {}
         public button(@DomProperty("innerText") String innerText) { }
     }
 
     @JSNativeAPI public static class body extends HtmlElement { }
     @JSNativeAPI public static class div extends HtmlElement {
-        public div(HtmlElement child) {};
-        public div(Component0... components) {};
     }
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }
 
-    @FunctionalInterface
-    public interface ChangeHandler {
-        void handle(String value);
-    }
+
     @JSNativeAPI public static class input extends HtmlElement {
         public boolean autofocus = false;
         public enum Autocomplete {OFF, ON}
@@ -57,7 +55,7 @@ public class HTMLNativeElements {
         public InputType type;
         public String placeholder;
         public String value;
-        public ChangeHandler onchange;
+        public ChangeHandler<input> onchange;
     }
 
     @JSNativeAPI public static class ul extends HtmlElement {}
@@ -85,6 +83,9 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class table extends HtmlElement {
         public table() {}
     }
+    @JSNativeAPI public static class tbody extends HtmlElement {
+        public MouseEventHandler<tbody> onclick;
+    }
 
     @JSNativeAPI public static class td extends HtmlElement {
         public td() {}
@@ -92,6 +93,7 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class tr extends HtmlElement {
+        public MouseEventHandler<tr> onclick;
         public tr() {}
         public tr(HtmlElement child) {}
         public tr(td... childs) {}

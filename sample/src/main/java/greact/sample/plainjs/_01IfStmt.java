@@ -13,7 +13,7 @@ public class _01IfStmt implements Component0<div> {
                 new h1("Awesome! Too much users!");
 
             new button("increment") {{
-                onclick = () -> effect(nUsers += 1);
+                onclick = ev -> effect(nUsers += 1);
             }};
         }};
     }

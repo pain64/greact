@@ -25,7 +25,7 @@ public class DependsOn {
                           }};
                          
                           new button("do effect") {{
-                            onclick = () -> effect(list);
+                            onclick = ev -> effect(list);
                           }};
                         }};
                       }
@@ -69,7 +69,7 @@ public class DependsOn {
                                 final com.over64.greact.dom.HTMLNativeElements.button $el3 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el3.innerText = "do effect";
-                                    $el3.onclick = ()->effect$list(list);
+                                    $el3.onclick = (ev)->effect$list(list);
                                 }
                                 $root.appendChild($el3);
                             });

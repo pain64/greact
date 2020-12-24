@@ -196,9 +196,13 @@ public class GReactPlugin implements Plugin {
             var expr = exprStmt.expr;
 
             if (expr instanceof JCTree.JCNewClass newClass) {
-                if (newClass.def != null) {
-                    var ea = new EffectAnalyzer(forEffect);
+                // вызывается как для native и так для не native компонентов
+                var ea = new EffectAnalyzer(forEffect);
+                var isCustom = !ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type);
+                if (isCustom)
                     newClass.args.forEach(arg -> arg.accept(ea));
+
+                if (newClass.def != null) {
                     newClass.def.defs.forEach(def -> {
                         if (def instanceof JCTree.JCBlock block)
                             block.stats.forEach(st -> {
@@ -208,10 +212,9 @@ public class GReactPlugin implements Plugin {
                             });
                     });
 
-                    return ea.effected;
                 }
 
-                return new HashSet<>();
+                return ea.effected;
             } else if (expr instanceof JCTree.JCAssign assignExpr)
                 return new EffectAnalyzer(forEffect).apply(assignExpr);
             else
@@ -285,14 +288,16 @@ public class GReactPlugin implements Plugin {
             throw unexpectedStmt.apply(stmt);
     }
 
-    Type componentImpl(Type type) {
-        var componentImplOpt = ctx.types.interfaces(type).stream()
+    Optional<Type> componentImplOpt_(Type type) {
+        return ctx.types.interfaces(type).stream()
             .filter(iface -> iface.tsym == ctx.symbols.clComponent0 ||
                 iface.tsym == ctx.symbols.clComponent1 ||
                 iface.tsym == ctx.symbols.clComponent2)
             .findFirst();
+    }
 
-        return componentImplOpt.get();
+    Type componentImpl(Type type) {
+        return componentImplOpt_(type).get();
     }
 
     JCTree.JCStatement mapStmt(Ctx ctx, MountCtx mctx,
@@ -343,7 +348,9 @@ public class GReactPlugin implements Plugin {
                                     .setType(ctx.types.makeArrayType(ctx.symbols.clObject.type))
                             ))),
                             ctx.maker.Exec(appendElCall)));
-                    } else {
+                    } else if (ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type) ||
+                        componentImplOpt_(newClass.type).isPresent()) {
+
                         var isCustom = !ctx.types.isSubtype(newClass.type, ctx.symbols.clHtmlElement.type);
                         var htmlElementType = isCustom
                             ? componentImpl(newClass.type).allparams().get(0)
@@ -377,8 +384,7 @@ public class GReactPlugin implements Plugin {
                             ? List.<JCTree.JCStatement>of(
                             ctx.maker.Exec(makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactMount, List.of(
                                 ctx.maker.Ident(elVarSymbol), ctx.maker.Ident(mapToVarSymbol),
-                                ctx.maker.NewArray(ctx.maker.Ident(ctx.symbols.clObject), List.nil(),
-                                    newClass.args.tail != null ? newClass.args.tail : List.nil())
+                                ctx.maker.NewArray(ctx.maker.Ident(ctx.symbols.clObject), List.nil(), List.nil())
                                     .setType(ctx.types.makeArrayType(ctx.symbols.clObject.type))
                             ))))
                             : List.<JCTree.JCStatement>nil();
@@ -460,19 +466,25 @@ public class GReactPlugin implements Plugin {
     JCTree.JCBlock mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
                                boolean isCustom, Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
 
+        System.out.println("MAP NEW CLASS" + newClass);
 
-        var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
-            .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
-            .findFirst().orElseThrow(() ->
-                new RuntimeException("oops"));
-        newClass.constructorType = constructorSymbol.type;
-        newClass.constructor = constructorSymbol;
 
-        var mappedArgs = isCustom ? List.<JCTree.JCStatement>nil() :
-            IntStream.range(0, newClass.args.length())
+        if (newClass.def != null) {
+            // FIXME: don't map newClass for custom components
+            var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
+                .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
+                .findFirst().orElseThrow(() ->
+                    new RuntimeException("oops"));
+            newClass.constructorType = constructorSymbol.type;
+            newClass.constructor = constructorSymbol;
+        }
+
+        var mappedArgs = List.<JCTree.JCStatement>nil();
+        if (!isCustom) {
+            mappedArgs = IntStream.range(0, newClass.args.length())
                 .mapToObj(i -> {
                     var arg = newClass.args.get(i);
-                    var argAnnotation = ((Symbol.MethodSymbol) constructorSymbol)
+                    var argAnnotation = ((Symbol.MethodSymbol) newClass.constructor)
                         .params.get(i)
                         .getAnnotation(HTMLNativeElements.DomProperty.class);
 
@@ -487,6 +499,7 @@ public class GReactPlugin implements Plugin {
                                 argSymbol),
                             arg));
                 }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
+        }
 
         var blockBody = newClass.def != null ?
             newClass.def.defs.stream()
@@ -581,6 +594,7 @@ public class GReactPlugin implements Plugin {
                         var z = 1;
 
                         var viewFragments = new HashMap<Symbol.VarSymbol, List<Symbol.VarSymbol>>();
+                        var mappedLambda = new HashSet<JCTree.JCLambda>();
 
                         typeDecl.accept(new TreeScanner() {
                             @Override
@@ -588,6 +602,8 @@ public class GReactPlugin implements Plugin {
                                 if (!methodTree.getName().toString().equals("mount")) return;
 
                                 var rootElementType = componentImpl.allparams().get(0);
+
+                                System.out.println("create root for method" + methodTree);
 
                                 var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
                                     ctx.names.fromString("$root"),
@@ -625,9 +641,14 @@ public class GReactPlugin implements Plugin {
                                     @Override
                                     public void visitLambda(JCTree.JCLambda lmb) {
                                         super.visitLambda(lmb);
+
+                                        if(mappedLambda.contains(lmb)) return;
+
                                         if (lmb.type.tsym == ctx.symbols.clComponent0 ||
                                             lmb.type.tsym == ctx.symbols.clComponent1 ||
                                             lmb.type.tsym == ctx.symbols.clComponent2) {
+
+                                            mappedLambda.add(lmb);
 
                                             if (lmb.body instanceof JCTree.JCExpression expr) {
                                                 lmb.body = ctx.maker.Block(Flags.BLOCK, List.of(
@@ -637,6 +658,8 @@ public class GReactPlugin implements Plugin {
                                             var body = (JCTree.JCBlock) lmb.body;
                                             // FIXME: this code is duplicated!!!
                                             var rootElementType = lmb.type.allparams().get(0);
+
+                                            System.out.println("create root for lambda" + lmb);
 
                                             var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
                                                 ctx.names.fromString("$root"),

@@ -8,6 +8,7 @@ import java.util.List;
 
 public class TypesafeSql {
     final Sql2o db;
+
     public TypesafeSql(DataSource ds) {
         db = new Sql2o(ds);
     }
@@ -24,5 +25,10 @@ public class TypesafeSql {
 
             return query.executeAndFetch(klass);
         }
+    }
+
+    public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
+        var result = list(stmt, klass, args);
+        return result.isEmpty() ? null : result.get(0);
     }
 }

@@ -20,7 +20,7 @@ public class Simple {
                         return new div() {{
                            new h1("GReact users: " + nUsers);
                            new button("increment") {{
-                             onclick = () -> effect(nUsers += 1);
+                             onclick = ev -> effect(nUsers += 1);
                            }};
                         }};
                       }
@@ -53,7 +53,7 @@ public class Simple {
                                 final com.over64.greact.dom.HTMLNativeElements.button $el1 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el1.innerText = "increment";
-                                    $el1.onclick = ()->effect$nUsers(nUsers += 1);
+                                    $el1.onclick = (ev)->effect$nUsers(nUsers += 1);
                                 }
                                 $root.appendChild($el1);
                             });

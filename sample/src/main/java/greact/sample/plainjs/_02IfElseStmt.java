@@ -15,7 +15,7 @@ public class _02IfElseStmt implements Component0<div> {
                 new h1("user show disabled");
 
             new button("toggle show users " + users.length) {{
-                onclick = () -> effect(showUsers = !showUsers);
+                onclick = ev -> effect(showUsers = !showUsers);
             }};
         }};
     }

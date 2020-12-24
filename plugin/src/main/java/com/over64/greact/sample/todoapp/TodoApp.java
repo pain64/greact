@@ -62,14 +62,14 @@ public class TodoApp implements Component0<section> {
                         className = "toggle";
                         type = InputType.CHECKBOX;
                         value = "" + item.completed;
-                        onchange = is -> {
-                            effect(item.completed = Boolean.parseBoolean(is));
+                        onchange = ev -> {
+                            effect(item.completed = Boolean.parseBoolean(ev.target.value));
                             onChanged.apply();
                         };
                         new label(item.title);
                         new button() {{
                             className = "destroy";
-                            onclick = () -> onRemoved.apply();
+                            onclick = ev -> onRemoved.apply();
                         }};
                     }};
                 }};
@@ -77,9 +77,9 @@ public class TodoApp implements Component0<section> {
                     className = "edit";
                     type = InputType.TEXT;
                     value = item.title;
-                    onchange = s -> item.title = s;
-                    ondblclick = TodoItem.this::startEdit;
-                    onblur = TodoItem.this::doneEdit;
+                    onchange = ev -> item.title = ev.target.value;
+//                    ondblclick = ev -> startEdit();
+//                    onblur = ev -> doneEdit();
                     onkeyup = key -> {
                         if (key == Key.ENTER) doneEdit();
                         else if (key == Key.ESC) cancelEdit();
@@ -141,7 +141,7 @@ public class TodoApp implements Component0<section> {
                     autocomplete = Autocomplete.OFF;
                     placeholder = "What needs to be done?";
                     value = newTodo;
-                    onchange = v -> newTodo = v;
+                    onchange = ev -> newTodo = ev.target.value;
                     onkeyup = k -> { if (k == Key.ENTER) add(newTodo); };
                 }};
             }};
@@ -185,7 +185,7 @@ public class TodoApp implements Component0<section> {
                     // FIXME: if we have completed
                     new button("Clear completed") {{
                         className = "clear-completed";
-                        onclick = TodoApp.this::removeCompleted;
+                        onclick = ev -> removeCompleted();
                     }};
                 }};
             }

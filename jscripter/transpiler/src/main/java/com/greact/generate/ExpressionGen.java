@@ -5,6 +5,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.model.async;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -179,6 +180,15 @@ public class ExpressionGen {
             expr(deep, parens.getExpression());
             out.write(0, ")");
         } else if (expr instanceof LambdaExpressionTree lambda) {
+            var lmb = (JCTree.JCLambda) lambda;
+
+            var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
+                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
+                .findFirst().get();
+
+            if(invokeMethod.getAnnotation(async.class) != null)
+                out.write(0, "async ");
+
             out.mkString(lambda.getParameters(), (arg) ->
                 out.write(0, arg.getName().toString()), "(", ", ", ") =>");
             stmtGen.block(deep, lambda.getBody());

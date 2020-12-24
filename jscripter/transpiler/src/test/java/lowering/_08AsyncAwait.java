@@ -212,4 +212,25 @@ public class _08AsyncAwait {
             Assertions.assertSame(ce.error, CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC);
         }
     }
+
+    @Test void callAsyncLambda() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import com.greact.model.async;
+                public class Test {
+                  interface Foo {
+                    @async void foo();
+                  }
+                  Foo instance = () -> {};
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                    this.instance = async () => {
+                    }
+                  }
+                }""");
+    }
 }

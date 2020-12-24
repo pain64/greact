@@ -23,10 +23,6 @@ public class DemoAdvanced implements HTMLNativeElements.Component0<div> {
             if (userOption.isPresent())
                 new h1(userOption.get());
 
-            new uikit.pagination<>(users) {{
-                by = 5;
-       //         item = user -> new h1("user with name " + user);
-            }};
 
             new div() {{
                 className = "my-super-div";
@@ -40,7 +36,7 @@ public class DemoAdvanced implements HTMLNativeElements.Component0<div> {
 
             new button() {{    // view 0$0
                 innerText = "toggle show users " + users.length;
-                onclick = () -> effect(showUsers = !showUsers);   // view 0$0
+                onclick = ev -> effect(showUsers = !showUsers);   // view 0$0
             }};                                                   // view 0$0
 
             if (showUsers)                                        // view 0$1

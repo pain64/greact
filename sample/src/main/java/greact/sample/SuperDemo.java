@@ -29,8 +29,9 @@ public class SuperDemo {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">        
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
                   </head>
-                  <body></body>
+                  <body style="padding:20px;"></body>
                   <script src="/script/lib"></script>
                   <script src="/script/app"></script>
                   <script type="text/javascript">
@@ -70,7 +71,7 @@ public class SuperDemo {
             res.type("application/json");
             var id = Long.valueOf(req.queryParams("id"));
 
-            return db.list("SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
+            return db.uniqueOrNull("SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
                 UserInfo.class, id);
         }, gson::toJson);
     }

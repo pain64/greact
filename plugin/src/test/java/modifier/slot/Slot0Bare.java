@@ -77,7 +77,7 @@ public class Slot0Bare {
                                     doElse = () -> new h1("The hint is hidden");
                                 }};
                                 new button("show/hide") {{
-                                    onclick = () -> effect(showHint = !showHint);
+                                    onclick = ev -> effect(showHint = !showHint);
                                 }};
                             }};
                         }
@@ -124,7 +124,7 @@ public class Slot0Bare {
                                 final com.over64.greact.dom.HTMLNativeElements.button $el1 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el1.innerText = "show/hide";
-                                    $el1.onclick = ()->effect$showHint(showHint = !showHint);
+                                    $el1.onclick = (ev)->effect$showHint(showHint = !showHint);
                                 }
                                 $root.appendChild($el1);
                             });

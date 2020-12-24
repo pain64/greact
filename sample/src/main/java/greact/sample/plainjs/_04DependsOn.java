@@ -18,7 +18,7 @@ public class _04DependsOn implements Component0<div> {
             }};
 
             new button("no effects expected") {{
-                onclick = () -> effect(list);
+                onclick = ev -> effect(list);
             }};
         }};
     }
