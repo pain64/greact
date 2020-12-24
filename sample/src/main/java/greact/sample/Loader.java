@@ -113,6 +113,7 @@ public class Loader {
 
         @OnWebSocketConnect
         public void connected(Session session) {
+            session.setIdleTimeout(60 * 60 * 1000);
             System.out.println("connect");
             sessions.add(session);
         }
