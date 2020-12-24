@@ -1,27 +1,28 @@
 package greact.sample.server;
 
+import org.sql2o.Sql2o;
+
+import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.List;
 
 public class TypesafeSql {
-    public static class Param {
-        String name;
-        Object value;
+    final Sql2o db;
+    public TypesafeSql(DataSource ds) {
+        db = new Sql2o(ds);
     }
 
-    static Param param(String name, Object value) {
-        return new Param() {{
-            this.name = name;
-            this.value = value;
-        }};
+    public <T> List<T> list(String stmt, Class<T> klass, Object... args) {
+        try (var conn = db.open()) {
+            for (var i = 0; i < args.length; i++)
+                stmt = stmt.replace(":" + (i + 1), ":p" + (i + 1));
+
+            var query = conn.createQuery(stmt);
+
+            for (var i = 0; i < args.length; i++)
+                query.addParameter("p" + (i + 1), args[i]);
+
+            return query.executeAndFetch(klass);
+        }
     }
-
-    <T> List<T> list(String stmt, Class<T> klass) {
-        return Collections.EMPTY_LIST;
-    }
-
-    void exe(String stmt, Object value) {
-
-    }
-
 }

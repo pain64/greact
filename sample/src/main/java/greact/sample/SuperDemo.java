@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import greact.sample.plainjs.demo.User;
 import greact.sample.plainjs.demo.UserInfo;
+import greact.sample.server.TypesafeSql;
 import org.sql2o.Sql2o;
 
 import java.io.IOException;
@@ -54,35 +55,23 @@ public class SuperDemo {
             put("dataSource.logWriter", new PrintWriter(System.out));
         }});
 
-        var db = new Sql2o(new HikariDataSource(config));
+        var db = new TypesafeSql(new HikariDataSource(config));
         var gson = new Gson();
 
         get("/users", (req, res) -> {
             res.type("application/json");
             var nameLike = "%" + req.queryParams("nameLike") + "%";
 
-            try (var con = db.open()) {
-                var users = con.createQuery("""
-                    SELECT id, name, age, sex FROM users WHERE name like :nameLike""")
-                    .addParameter("nameLike", nameLike)
-                    .executeAndFetch(User.class);
-
-                return gson.toJson(users);
-            }
-        });
+            return db.list("SELECT id, name, age, sex FROM users WHERE name like :1",
+                User.class, nameLike);
+        }, gson::toJson);
 
         get("/userInfo", (req, res) -> {
             res.type("application/json");
             var id = Long.valueOf(req.queryParams("id"));
 
-            try (var con = db.open()) {
-                var info = con.createQuery("""
-                    SELECT faculty, address, phone FROM user_info WHERE user_id = :id""")
-                    .addParameter("id", id)
-                    .executeAndFetch(UserInfo.class);
-
-                return gson.toJson(info);
-            }
-        });
+            return db.list("SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
+                UserInfo.class, id);
+        }, gson::toJson);
     }
 }
