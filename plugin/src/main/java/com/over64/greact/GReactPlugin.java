@@ -466,13 +466,25 @@ public class GReactPlugin implements Plugin {
     JCTree.JCBlock mapNewClass(Ctx ctx, MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
                                boolean isCustom, Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
 
-        System.out.println("MAP NEW CLASS" + newClass);
-
-
         if (newClass.def != null) {
             // FIXME: don't map newClass for custom components
             var constructorSymbol = newClass.type.tsym.getEnclosedElements().stream()
-                .filter(el -> ctx.types.isSameType(el.type, newClass.constructorType))
+                .filter(el -> {
+                    if (el instanceof Symbol.MethodSymbol) {
+                        var mconsType = (Type.MethodType) newClass.constructorType;
+                        var mcandidateType = (Type.MethodType) ctx.types.erasure(el.type);
+
+                        if (!ctx.types.isAssignable(mconsType.restype, mcandidateType.restype)) return false;
+                        if (mconsType.argtypes.length() != mcandidateType.argtypes.length()) return false;
+
+                        for (var i = 0; i < mconsType.argtypes.length(); i++)
+                            if (!ctx.types.isAssignable(mconsType.argtypes.get(i), mcandidateType.argtypes.get(i)))
+                                return false;
+
+                        return true;
+                    } else
+                        return false;
+                })
                 .findFirst().orElseThrow(() ->
                     new RuntimeException("oops"));
             newClass.constructorType = constructorSymbol.type;
@@ -602,9 +614,6 @@ public class GReactPlugin implements Plugin {
                                 if (!methodTree.getName().toString().equals("mount")) return;
 
                                 var rootElementType = componentImpl.allparams().get(0);
-
-                                System.out.println("create root for method" + methodTree);
-
                                 var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
                                     ctx.names.fromString("$root"),
                                     rootElementType,
@@ -642,7 +651,7 @@ public class GReactPlugin implements Plugin {
                                     public void visitLambda(JCTree.JCLambda lmb) {
                                         super.visitLambda(lmb);
 
-                                        if(mappedLambda.contains(lmb)) return;
+                                        if (mappedLambda.contains(lmb)) return;
 
                                         if (lmb.type.tsym == ctx.symbols.clComponent0 ||
                                             lmb.type.tsym == ctx.symbols.clComponent1 ||
@@ -658,9 +667,6 @@ public class GReactPlugin implements Plugin {
                                             var body = (JCTree.JCBlock) lmb.body;
                                             // FIXME: this code is duplicated!!!
                                             var rootElementType = lmb.type.allparams().get(0);
-
-                                            System.out.println("create root for lambda" + lmb);
-
                                             var rootVar = new Symbol.VarSymbol(Flags.FINAL | Flags.HASINIT,
                                                 ctx.names.fromString("$root"),
                                                 rootElementType,

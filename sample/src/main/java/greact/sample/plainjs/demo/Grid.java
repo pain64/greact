@@ -7,14 +7,12 @@ import java.util.function.Consumer;
 
 public class Grid<T> implements Component0<div> {
     private final T[] list;
-    private final Column<T>[] columns;
-    final Component1<div, T> selectedRow;
+    Column<T>[] columns = (Column<T>[]) new Object[0];
+    Component1<div, T> selectedRow;
 
-    public Grid(T[] list, Column<T>[] columns, Component1<div, T> selectedRow) {
+    public Grid(T[] list) {
         this.list = list;
-        this.selectedRow = selectedRow;
         // FIXME: нужно разобраться с VarArgs
-        this.columns = columns;
         //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
     }
 
