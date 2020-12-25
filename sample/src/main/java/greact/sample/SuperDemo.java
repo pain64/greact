@@ -1,26 +1,44 @@
 package greact.sample;
 
-import com.google.gson.Gson;
+import com.over64.greact.rpc.RPC;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import greact.sample.plainjs.demo.User;
-import greact.sample.plainjs.demo.UserInfo;
 import greact.sample.server.TypesafeSql;
-import org.sql2o.Sql2o;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
 
-import static spark.Spark.get;
-import static spark.Spark.webSocket;
+import static spark.Spark.*;
 
 public class SuperDemo {
+    static final String RPC_BASE_URL = "/rpc";
+    public static class Server extends RPC<TypesafeSql> {
+        @RPCEntryPoint(RPC_BASE_URL)
+        public static <T> T server(Function<TypesafeSql, T> onServer) {
+            throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
+        }
+    }
     public static void main(String[] args) throws IOException {
-        var libraryCode = Loader.libraryCode();
+        var config = new HikariConfig(new Properties() {{
+            setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
+            setProperty("dataSource.user", "test");
+            setProperty("dataSource.password", "test");
+            setProperty("dataSource.databaseName", "users");
+            put("dataSource.logWriter", new PrintWriter(System.out));
+        }});
 
+        var db = new TypesafeSql(new HikariDataSource(config));
+        var server = new Server();
+
+        var libraryCode = Loader.libraryCode();
         webSocket("/livereload", new Loader.FileWatcher());
+        post(RPC_BASE_URL, (req, res) -> {
+            res.status(200);
+            res.type("application/json");
+            return server.handle(db, req.raw().getReader());
+        });
         get("/", (req, res) ->
             """
                 <!doctype html>
@@ -47,32 +65,6 @@ public class SuperDemo {
 
         get("/script/lib", (req, res) -> libraryCode);
         get("/script/app", (req, res) -> Loader.appCode());
-
-        var config = new HikariConfig(new Properties() {{
-            setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
-            setProperty("dataSource.user", "test");
-            setProperty("dataSource.password", "test");
-            setProperty("dataSource.databaseName", "users");
-            put("dataSource.logWriter", new PrintWriter(System.out));
-        }});
-
-        var db = new TypesafeSql(new HikariDataSource(config));
-        var gson = new Gson();
-
-        get("/users", (req, res) -> {
-            res.type("application/json");
-            var nameLike = "%" + req.queryParams("nameLike") + "%";
-
-            return db.list("SELECT id, name, age, sex FROM users WHERE name like :1",
-                User.class, nameLike);
-        }, gson::toJson);
-
-        get("/userInfo", (req, res) -> {
-            res.type("application/json");
-            var id = Long.valueOf(req.queryParams("id"));
-
-            return db.uniqueOrNull("SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
-                UserInfo.class, id);
-        }, gson::toJson);
+        init();
     }
 }

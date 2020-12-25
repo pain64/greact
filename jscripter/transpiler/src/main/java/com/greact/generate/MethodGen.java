@@ -68,11 +68,11 @@ public class MethodGen {
                             """);
         }
 
+        if (isStatic) out.write(0, "static ");
         var isAsync = isAsyncInSuper || isAsyncLocal;
         if (isAsync) out.write(0, "async ");
-
-        if (isStatic) out.write(0, "static ");
         out.write(0, isConstructor ? "constructor" : name);
+
 
         var params = group.stream()
             .map(p -> p.snd.getParameters())

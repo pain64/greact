@@ -236,7 +236,9 @@ public class ExpressionGen {
             if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) &&
                 methodSym.name.equals(names.fromString("of"))) {
 
-                var unescaped = call.getArguments().get(0).toString();
+                var unescaped = call.getArguments().get(0).toString()
+                    .replace("\\n", "\n")
+                    .replace("\\'", "'");
                 out.write(0, unescaped.substring(1, unescaped.length() - 1));
             } else {
 

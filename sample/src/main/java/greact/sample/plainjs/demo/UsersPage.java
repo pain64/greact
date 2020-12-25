@@ -1,24 +1,42 @@
 package greact.sample.plainjs.demo;
 
-import com.greact.model.JSExpression;
-import com.greact.model.async;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.over64.greact.dom.Globals;
 import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.rpc.RPC;
+import greact.sample.server.TypesafeSql;
+
+import java.util.List;
 
 public class UsersPage implements Component0<body> {
+    public static class Endpoint0 implements RPC.Endpoint<TypesafeSql> {
 
-    @async <T> T get(String url) {
-        return JSExpression.of("""
-            (await (await fetch(url)).json())""");
+        @Override
+        public Object handle(TypesafeSql db, Gson gson, List<JsonElement> args) {
+            var nameLike = args.get(0).getAsString();
+            return db.array(
+                "SELECT id, name, age, sex FROM users WHERE name like :1",
+                User.class, nameLike);
+        }
     }
 
-    void log(Object obj) {
-        JSExpression.of("console.log(obj)");
+    public static class Endpoint1 implements RPC.Endpoint<TypesafeSql> {
+
+        @Override
+        public Object handle(TypesafeSql db, Gson gson, List<JsonElement> args) {
+            var id = args.get(0).getAsInt();
+            return db.uniqueOrNull(
+                "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
+                UserInfo.class, id);
+        }
     }
 
     String nameLike = "";
     User[] users = new User[]{};
 
-    @Override public body mount() {
+    @Override
+    public body mount() {
         return new body() {{
             new input() {{
                 className = "form-control";
@@ -31,7 +49,12 @@ public class UsersPage implements Component0<body> {
             new button("искать") {{
                 className = "btn";
                 style.margin = "5px";
-                onclick = ev -> effect(users = get("/users?nameLike=" + nameLike));
+//                onclick = ev -> effect(users = server(db -> db.array(
+//                    "SELECT id, name, age, sex FROM users WHERE name like :1",
+//                    User.class, "%" + nameLike + "%")));
+                onclick = ev -> effect(users = Globals.doRemoteCall("/rpc",
+                    "greact.sample.plainjs.demo.UsersPage$Endpoint0",
+                    "%" + nameLike + "%"));
             }};
             new Grid<>(users) {{
                 columns = new Column[]{
@@ -41,7 +64,12 @@ public class UsersPage implements Component0<body> {
                     new Column<User>("Пол", c -> c.sex)
                 };
                 selectedRow = user -> {
-                    UserInfo info = get("/userInfo?id=" + user.id);
+//                    var info = server(db -> db.uniqueOrNull(
+//                        "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
+//                        UserInfo.class, user.id));
+                    UserInfo info =  Globals.doRemoteCall("/rpc",
+                        "greact.sample.plainjs.demo.UsersPage$Endpoint1", user.id);
+
                     return new div() {{
                         if (info != null) new h2("Адрес: " + info.address);
                         else new h2("Нет данных о студенте");

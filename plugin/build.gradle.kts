@@ -33,9 +33,8 @@ val test by tasks.getting(Test::class) {
 dependencies {
     implementation("com.over64:jscripter:0.0.1")
     implementation("org.antlr:antlr4-runtime:4.8-1")
-    implementation("org.eclipse.jetty:jetty-server:9.4.3.v20170317")
-    implementation("org.eclipse.jetty:jetty-servlet:9.4.3.v20170317")
     implementation("org.sql2o:sql2o:1.6.0")
+    implementation("com.google.code.gson:gson:2.8.6")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")

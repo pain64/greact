@@ -27,6 +27,10 @@ public class TypesafeSql {
         }
     }
 
+    public <T> T[] array(String stmt, Class<T> klass, Object... args) {
+        return (T[]) list(stmt, klass, args).toArray();
+    }
+
     public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
         var result = list(stmt, klass, args);
         return result.isEmpty() ? null : result.get(0);

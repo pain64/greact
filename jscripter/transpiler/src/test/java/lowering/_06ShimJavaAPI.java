@@ -57,6 +57,26 @@ public class _06ShimJavaAPI {
                 }""");
     }
 
+    @Test void jsExpressionMultiline() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import com.greact.model.JSExpression;
+                public class Test {
+                  int x = JSExpression.of(""\"
+                     1 
+                        + 1""\");
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                    this.x = 1
+                   + 1
+                  }
+                }""");
+    }
+
     @Test void jsExpressionCheckThatNoCollisionWithMethodNamed__of__() throws IOException {
         assertCompiled(
             """
