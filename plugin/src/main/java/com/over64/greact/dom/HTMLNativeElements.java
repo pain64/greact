@@ -83,6 +83,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class table extends HtmlElement {
         public table() {}
     }
+    @JSNativeAPI public static class thead extends HtmlElement { }
     @JSNativeAPI public static class tbody extends HtmlElement {
         public MouseEventHandler<tbody> onclick;
     }

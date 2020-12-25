@@ -19,6 +19,9 @@ public class Grid<T> implements Component0<div> {
     void log(Object obj) {
         JSExpression.of("console.log(obj)");
     }
+    boolean strictEqual(Object lhs, Object rhs) {
+        return JSExpression.of("lhs === rhs");
+    }
 
     private T current = null;
 
@@ -26,11 +29,19 @@ public class Grid<T> implements Component0<div> {
     public div mount() {
         return new div() {{
             new table() {{
-                className = "table table-striped";
+                className = "table table-hover table-striped";
+                new thead() {{
+                    for (var col : columns) new td(col.header);
+                }};
                 new tbody() {{
                     for (var row : list) new tr() {{
                         style.cursor = "pointer";
-                        onclick = ev -> effect(current = row);
+                        //className = row == current ? "table-active" : "";
+                        onclick = ev -> {
+                            //FIXME: эффективнее сделать через ev.target.toggleClass
+                            effect(current = row);
+                            //effect(list);
+                        };
                         for (var col : columns) new td(
                             col.rowData.fetch(row).toString());
                     }};
@@ -40,7 +51,7 @@ public class Grid<T> implements Component0<div> {
             if(current != null)
                 new slot<>(selectedRow, current);
             else
-                new h2("No row selected");
+                new div();
         }};
     }
 }
