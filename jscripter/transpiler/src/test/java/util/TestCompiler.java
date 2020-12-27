@@ -19,7 +19,7 @@ public class TestCompiler {
         var fileManager = new SimpleFileManager(
             compiler.getStandardFileManager(null, null, null));
 
-        var arguments = asList("--enable-preview", "--source", "14",
+        var arguments = asList("--enable-preview", "--source", "15",
             "-classpath", System.getProperty("java.class.path"),
             "-Xplugin:" + TranspilerPlugin.NAME +
                 " --js-src-package=js" +

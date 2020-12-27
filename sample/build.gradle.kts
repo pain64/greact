@@ -22,7 +22,7 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_14
+    sourceCompatibility = JavaVersion.VERSION_15
 }
 
 tasks.withType<JavaCompile> {

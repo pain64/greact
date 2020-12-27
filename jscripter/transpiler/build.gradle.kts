@@ -17,7 +17,7 @@ tasks.withType<JavaCompile> {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_14
+    sourceCompatibility = JavaVersion.VERSION_15
 }
 
 val test by tasks.getting(Test::class) {
