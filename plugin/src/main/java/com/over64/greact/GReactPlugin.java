@@ -547,7 +547,7 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
 
-                    new RCPPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    new RPCPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
 
                     var ctx = instance(context);
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();

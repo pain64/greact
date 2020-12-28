@@ -2,11 +2,12 @@ package rpc;
 
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
-
 import java.io.IOException;
+import java.util.function.Consumer;
 
-public class CallNoArgs {
-    @Test void simpleCall() throws IOException {
+public class CallWithArgs {
+    @Test
+    void simpleCall() throws IOException {
         CompileAssert.assertCompiledMany(
             new CompileAssert.CompileCase("js.Simple",
                 """
@@ -15,11 +16,20 @@ public class CallNoArgs {
                     import java.util.ArrayList;
                     import static util.TestServer.server;
                     class Simple {
+                      int x = 40;
                       @async void simple() {
-                        var list = new ArrayList<String>();
+                       var list = new ArrayList<String>();
                         list.add("Hello");
-                        var y = list.get(0);
-                        int x = server(none -> 42);
+                        var ff = list.get(0);
+                        
+                        var y = 1;
+                        
+                       // java.util.function.Consumer<Integer> c = e -> {
+                          server(none -> {
+                            var z = x + y;// + e;
+                            return z + 1;
+                          });
+                       // };
                       }
                     }""",
                 """

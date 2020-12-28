@@ -2,6 +2,7 @@ package com.over64.greact.rpc;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 
 import java.io.Reader;
 import java.util.List;
@@ -24,8 +25,20 @@ public class RPC<T> {
 
     public String handle(T di, Reader in) throws Exception {
         var req = gson.fromJson(in, Request.class);
-        var handler = ((Class<Endpoint<T>>) Class.forName(req.endpoint)).newInstance();
-        var result = handler.handle(di, gson, req.args);
-        return gson.toJson(result, result.getClass());
+        var methodNamePos = req.endpoint.lastIndexOf(".");
+        var className = req.endpoint.substring(0, methodNamePos);
+        var methodName = req.endpoint.substring(methodNamePos + 1);
+        var klass = Class.forName(className);
+        for (var method : klass.getMethods())
+            if (method.getName().equals(methodName)) {
+                var result = method.invoke(null, di, gson, req.args);
+
+                if (result == null)
+                    return gson.toJson(JsonNull.INSTANCE);
+                else
+                    return gson.toJson(result, result.getClass());
+            }
+
+        throw new RuntimeException("unreachable");
     }
 }

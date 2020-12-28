@@ -1,5 +1,6 @@
 package greact.sample;
 
+import com.google.gson.Gson;
 import com.over64.greact.rpc.RPC;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

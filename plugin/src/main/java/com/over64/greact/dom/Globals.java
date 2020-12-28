@@ -18,15 +18,14 @@ public class Globals {
         return null;
     }
 
-    @async
-    public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
+    @async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         return JSExpression.of("""
             await (await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ endpoint: endpoint, args: [].slice.call(arguments, 2)})
+                body: JSON.stringify({ endpoint: endpoint, args: args})
             })).json()""");
     }
 }
