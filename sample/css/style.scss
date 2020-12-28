@@ -1,0 +1,10 @@
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+
+button {
+    @extend .btn;
+    @extend .btn-secondary;
+}
+input {
+    @extend .form-control;
+    display: inline;
+}

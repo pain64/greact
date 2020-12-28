@@ -5,28 +5,23 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
+    record User(long id, String name, int age, String sex){}
+    record UserInfo(String faculty, String address, String phone){}
+
     String nameLike = "";
     User[] users = new User[]{};
 
-    @Override
-    public body mount() {
+    @Override public body mount() {
         return new body() {{
             new input() {{
-                className = "form-control";
-                style.maxWidth = "300px";
-                style.display = "inline";
-                style.margin = "5px";
                 placeholder = "Имя студента...";
                 onchange = ev -> nameLike = ev.target.value;
             }};
             new button("искать") {{
-                className = "btn";
-                style.margin = "5px";
                 onclick = ev -> effect(users = server(db -> db.array(
                     "SELECT id, name, age, sex FROM users WHERE name like :1",
                     User.class, "%" + nameLike + "%")));
             }};
-
             new Grid<>(users) {{
                 columns = new Column[]{
                     new Column<User>("Id", c -> c.id),
