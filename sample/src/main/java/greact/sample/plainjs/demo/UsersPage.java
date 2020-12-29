@@ -1,7 +1,5 @@
 package greact.sample.plainjs.demo;
-
 import com.over64.greact.dom.HTMLNativeElements.*;
-
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
@@ -17,7 +15,7 @@ public class UsersPage implements Component0<body> {
             }};
             new button("искать") {{
                 onclick = ev -> effect(users = server(db -> db.array(
-                    "SELECT id, name, age, sex FROM users WHERE name like :1",
+                    "SELECT * FROM users WHERE name like :1",
                     User.class, "%" + nameLike + "%")));
             }};
             new Grid<>(users) {{
@@ -32,8 +30,8 @@ public class UsersPage implements Component0<body> {
                         "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
                         UserInfo.class, user.id));
                     return new div() {{
-                        if (info != null) new h5("Адрес: " + info.address);
-                        else new h5("Нет данных о студенте");
+                        if (info != null) new span("Адрес: " + info.address);
+                        else new span("Нет данных о студенте");
                     }};
                 };
             }};

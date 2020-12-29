@@ -35,8 +35,6 @@ public class _04Constructor {
                     switch($over) {
                       case 1:
                         super();
-                        this.x = null
-                        this.y = null
                         this.z = 42
                         this.f = 0
                         this.x = x;
@@ -44,8 +42,6 @@ public class _04Constructor {
                         break
                       case 2:
                         super();
-                        this.x = null
-                        this.y = null
                         this.z = 42
                         this.f = 0
                         this.x = x;

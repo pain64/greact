@@ -178,7 +178,9 @@ public class TranspilerPlugin implements Plugin {
                             e.getTypeElement().getSimpleName() + ".js");
 
                         var writer = jsFile.openWriter();
-                        new TypeGen(new JSOut(writer), cu, env, context, new JavaStdShim(types, shimConversions)).type(0, e.getTypeElement());
+                        for(var typeDecl: cu.getTypeDecls()) {
+                            new TypeGen(new JSOut(writer), cu, env, context, new JavaStdShim(types, shimConversions)).type(0, typeDecl);
+                        }
                         writer.close();
 
                     } catch (IOException ex) {
