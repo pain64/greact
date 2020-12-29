@@ -3,6 +3,9 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
+    record User(long id, String name, int age, String sex){}
+    record UserInfo(String faculty, String address, String phone){}
+
     String nameLike = "";
     User[] users = new User[]{};
 

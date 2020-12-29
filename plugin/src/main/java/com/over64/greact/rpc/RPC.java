@@ -1,8 +1,7 @@
 package com.over64.greact.rpc;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Reader;
 import java.util.List;
@@ -13,30 +12,26 @@ public class RPC<T> {
     }
 
     public interface Endpoint<T> {
-        Object handle(T di, Gson gson, List<JsonElement> args);
+        Object handle(T di, ObjectMapper mapper, List<JsonNode> args);
     }
 
-    static class Request {
-        String endpoint;
-        List<JsonElement> args;
+    public static class Request {
+        public String endpoint;
+        public List<JsonNode> args;
     }
 
-    Gson gson = new Gson();
+    ObjectMapper mapper = new ObjectMapper();
 
     public String handle(T di, Reader in) throws Exception {
-        var req = gson.fromJson(in, Request.class);
+        var req = mapper.readValue(in, Request.class);
         var methodNamePos = req.endpoint.lastIndexOf(".");
         var className = req.endpoint.substring(0, methodNamePos);
         var methodName = req.endpoint.substring(methodNamePos + 1);
         var klass = Class.forName(className);
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                var result = method.invoke(null, di, gson, req.args);
-
-                if (result == null)
-                    return gson.toJson(JsonNull.INSTANCE);
-                else
-                    return gson.toJson(result, result.getClass());
+                var result = method.invoke(null, di, mapper, req.args);
+                return mapper.writeValueAsString(result);
             }
 
         throw new RuntimeException("unreachable");

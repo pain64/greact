@@ -1,10 +1,8 @@
 package greact.sample;
 
-import com.google.gson.Gson;
 import com.over64.greact.rpc.RPC;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import greact.sample.plainjs.demo.User;
 import greact.sample.server.TypesafeSql;
 
 import java.io.IOException;
@@ -75,12 +73,6 @@ public class SuperDemo {
         });
         get("/script/lib", (req, res) -> libraryCode);
         get("/script/app", (req, res) -> Loader.appCode());
-        get("/foo", (req, res) -> {
-            var zz = db.array(
-                "SELECT id, name, age, sex FROM users WHERE name like :1",
-                User2.class, "%%");
-            return "oops";
-        });
         init();
     }
 }

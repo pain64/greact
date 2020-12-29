@@ -12,13 +12,9 @@ public class CallNoArgs {
                 """
                     package js;
                     import com.greact.model.async;
-                    import java.util.ArrayList;
                     import static util.TestServer.server;
                     class Simple {
                       @async void simple() {
-                        var list = new ArrayList<String>();
-                        list.add("Hello");
-                        var y = list.get(0);
                         int x = server(none -> 42);
                       }
                     }""",
@@ -31,7 +27,7 @@ public class CallNoArgs {
                                        
                     class Simple {
                        \s
-                        public static java.lang.Object $endpoint0(java.lang.Void x0, com.google.gson.Gson x1, java.util.List<com.google.gson.JsonElement> x2) {
+                        public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             return 42;
                         }
                        \s

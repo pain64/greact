@@ -1,7 +1,7 @@
 package com.over64.greact;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.over64.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -43,18 +43,13 @@ public class RPCPlugin {
         Symbol.ClassSymbol clInt = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Integer"));
         Symbol.ClassSymbol clClass = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Class"));
         Symbol.ClassSymbol clRPC = lookupClass(RPC.class.getName());
-        Symbol.ClassSymbol clJsonElement = lookupClass(JsonElement.class.getName());
-        Symbol.ClassSymbol clGson = lookupClass(Gson.class.getName());
-        Symbol.MethodSymbol mtGsonFromJson = (Symbol.MethodSymbol) clGson.getEnclosedElements().stream()
-            .filter(el -> el.name.equals(names.fromString("fromJson")))
-            .filter(el -> el instanceof Symbol.MethodSymbol && ((Symbol.MethodSymbol) el).params.size() == 2
-            && ((Symbol.MethodSymbol) el).params.get(0).type.tsym == clJsonElement.type.tsym
-            && ((Symbol.MethodSymbol) el).params.get(1).type.tsym == clClass.type.tsym)
-            .findFirst().get();
+        Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
+        Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
+        Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
 
-        Symbol.MethodSymbol mtJsonElementGetAsInt = lookupMember(clJsonElement, "getAsInt");
-        Symbol.MethodSymbol mtJsonElementGetAsLong = lookupMember(clJsonElement, "getAsLong");
-        Symbol.MethodSymbol mtJsonElementGetAsString = lookupMember(clJsonElement, "getAsString");
+        Symbol.MethodSymbol mtJsonNodeAsInt = lookupMember(clJsonNode, "asInt");
+        Symbol.MethodSymbol mtJsonNodeAsLong = lookupMember(clJsonNode, "asLong");
+        Symbol.MethodSymbol mtJsonNodeAsString = lookupMember(clJsonNode, "asText");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
         Symbol.MethodSymbol mtListGet = lookupMember(clList, "get");
 
@@ -91,51 +86,36 @@ public class RPCPlugin {
         List<JCTree> list = List.nil();
     }
 
-    JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData, int idx, Type argType) {
+    JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData,
+                                 int idx, Type argType) {
         var paramReadExpr = maker.App(
             maker.Select(maker.Ident(argData), symbols.mtListGet)
-            .setType(new Type.MethodType(
-                List.of(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt)),
-                symbols.clJsonElement.type,
-                List.nil(),
-                method.owner.type.tsym
-            )),
+                .setType(new Type.MethodType(
+                    List.of(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt)),
+                    symbols.clJsonNode.type,
+                    List.nil(),
+                    method.owner.type.tsym
+                )),
             List.of(maker.Literal(TypeTag.INT, idx)
                 .setType(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt))));
 
         if (argType instanceof Type.JCPrimitiveType primitive) {
             return switch (primitive.getTag()) {
-                case INT -> maker.App(maker.Select(paramReadExpr, symbols.mtJsonElementGetAsInt), List.nil());
-                case LONG -> maker.App(maker.Select(paramReadExpr, symbols.mtJsonElementGetAsLong), List.nil());
+                case INT -> maker.App(maker.Select(paramReadExpr, symbols.mtJsonNodeAsInt), List.nil());
+                case LONG -> maker.App(maker.Select(paramReadExpr, symbols.mtJsonNodeAsLong), List.nil());
                 default -> throw new RuntimeException("not impl now for type " + argType);
             };
         } else if (argType.tsym == symbols.clString.type.tsym) {
-            return maker.App(maker.Select(paramReadExpr, symbols.mtJsonElementGetAsString), List.nil());
+            return maker.App(maker.Select(paramReadExpr, symbols.mtJsonNodeAsString), List.nil());
         } else {
-            return maker.App(maker.Select(maker.Ident(argGson), symbols.mtGsonFromJson),
+            return maker.App(maker.Select(maker.Ident(argGson), symbols.mtObjectMapperTreeToValue),
                 List.of(paramReadExpr, maker.ClassLiteral(argType)));
         }
     }
 
     Pair<List<JCTree.JCExpression>, JCTree.JCBlock> mapLambdaBody(
         Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
-        // Напиши меня!
-        // 1. Ищем VarDef внутри лямбды -> получаем список локальных переменных лямбды
-        // 2. Ищем все ипользованные Ident в лямбде, у которых
-        //      нет в списке 1
-        //      owner == current method || current class
-        //   2.1 складываем в rpcArgs: ArrayList => список аргументов к вызову doRemoteCall
-        //   2.2 заменяем их на новые VarDef
-        //       - того же типа, добавляем в список parsedArgs
-        //   3. Генерим дополнительные VarDef в лямбде для десериализации из parsedArgs
-        //      -- args.get(i)
-        //          switch(type)
-        //             boolean | Boolean -> getAsBoolean
-        //             integer | int -> getAsInt
-        //             String | getAsString
-        //             -> gson.fromJson(args.get(i), typeOf.class)
-        //   4. Вставляем эти VarDef в начало лямбды
-        //
+
         var localVars = new ArrayList<Symbol.VarSymbol>();
         var diSymbol = lambda.params.get(0).sym;
         localVars.add(diSymbol); // di symbol
@@ -219,7 +199,7 @@ public class RPCPlugin {
                                         var diType =
                                             ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
                                         var typeListOfJsonElement = new Type.ClassType(
-                                            classDecl.type, List.of(symbols.clJsonElement.type),
+                                            classDecl.type, List.of(symbols.clJsonNode.type),
                                             symbols.clList);
 
 
@@ -227,7 +207,7 @@ public class RPCPlugin {
                                             Flags.STATIC | Flags.PUBLIC,
                                             names.fromString(nextEndpointName),
                                             new Type.MethodType(
-                                                List.of(diType, symbols.clGson.type, typeListOfJsonElement),
+                                                List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
                                                 symbols.clObject.type, List.nil(), classDecl.type.tsym),
                                             classDecl.sym);
 
@@ -235,7 +215,7 @@ public class RPCPlugin {
                                             .append(new Symbol.ParamSymbol(0, names.fromString("x0"),
                                                 diType, endpointSymbol))
                                             .append(new Symbol.ParamSymbol(0, names.fromString("x1"),
-                                                symbols.clGson.type, endpointSymbol))
+                                                symbols.clObjectMapper.type, endpointSymbol))
                                             .append(new Symbol.ParamSymbol(0, names.fromString("x2"),
                                                 typeListOfJsonElement, endpointSymbol));
 

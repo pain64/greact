@@ -10,7 +10,7 @@ repositories {
 dependencies {
     implementation("com.sparkjava:spark-core:2.9.2")
     implementation("org.sql2o:sql2o:1.6.0")
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("org.postgresql:postgresql:42.2.18")
     implementation("ch.qos.logback:logback-classic:1.2.3")

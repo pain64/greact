@@ -13,15 +13,10 @@ public class CallWithArgs {
                 """
                     package js;
                     import com.greact.model.async;
-                    import java.util.ArrayList;
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
-                      @async void simple() {
-                       var list = new ArrayList<String>();
-                        list.add("Hello");
-                        var ff = list.get(0);
-                        
+                      @async void simple() {                        
                         var y = 1;
                         
                        // java.util.function.Consumer<Integer> c = e -> {
@@ -41,17 +36,22 @@ public class CallWithArgs {
                                        
                     class Simple {
                        \s
-                        public static java.lang.Object $endpoint0(java.lang.Void x0, com.google.gson.Gson x1, java.util.List<com.google.gson.JsonElement> x2) {
-                            return 42;
+                        public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                            final int $closure1 = x2.get(1).asInt();
+                            final int $closure0 = x2.get(0).asInt();
+                            int z = $closure0 + $closure1;
+                            return z + 1;
                         }
                        \s
                         Simple() {
                             super();
                         }
+                        int x = 40;
                        \s
                         @async
                         void simple() {
-                            int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{});
+                            int y = 1;
+                            com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{x, y});
                         }
                     }"""));
 
