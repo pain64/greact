@@ -32,6 +32,24 @@ public class HTMLNativeElements {
         }
     }
 
+    @JSNativeAPI public static class h3 extends HtmlElement {
+        public h3() {};
+        public h3(@DomProperty("innerText") String innerText) {
+        }
+    }
+
+    @JSNativeAPI public static class h4 extends HtmlElement {
+        public h4() {};
+        public h4(@DomProperty("innerText") String innerText) {
+        }
+    }
+
+    @JSNativeAPI public static class h5 extends HtmlElement {
+        public h5() {};
+        public h5(@DomProperty("innerText") String innerText) {
+        }
+    }
+
     @JSNativeAPI public static  class button extends HtmlElement {
         public MouseEventHandler<button> onclick;
         public MouseEventHandler<button> ondblclick;
@@ -89,6 +107,8 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class td extends HtmlElement {
+        public int colSpan;
+        public int rowSpan;
         public td() {}
         public td(@DomProperty("innerText") String innerText) {}
     }

@@ -23,35 +23,55 @@ public class Grid<T> implements Component0<div> {
         return JSExpression.of("lhs === rhs");
     }
 
+    private boolean rerenderAll;
     private T current = null;
 
     @Override
     public div mount() {
         return new div() {{
-            new table() {{
-                className = "table table-hover table-striped";
-                new thead() {{
-                    for (var col : columns) new td(col.header);
-                }};
-                new tbody() {{
-                    for (var row : list) new tr() {{
-                        style.cursor = "pointer";
-                        //className = row == current ? "table-active" : "";
-                        onclick = ev -> {
-                            //FIXME: эффективнее сделать через ev.target.toggleClass
-                            effect(current = row);
-                            //effect(list);
-                        };
-                        for (var col : columns) new td(
-                            col.rowData.fetch(row).toString());
+            new div() {{
+                dependsOn = rerenderAll;
+                new table() {{
+                    className = "table table-hover table-striped";
+                    new thead() {{
+                        for (var col : columns) new td(col.header);
+                    }};
+                    new tbody() {{
+                        for (var row : list)
+                            new tr() {{
+                                style.cursor = "pointer";
+                                //className = row == current ? "table-active" : "";
+                                onclick = ev -> {
+                                    //FIXME: эффективнее сделать через ev.target.toggleClass
+                                    if(current == row) current = null;
+                                    else current = row;
+                                    effect(rerenderAll);
+                                    //effect(list);
+                                };
+                                if (row == current)
+                                    new td() {{
+                                        colSpan = columns.length;
+                                        style.backgroundColor = "#fff9ad82";
+                                        new table() {{
+                                            className = "table";
+                                            new tr() {{
+                                                for (var col : columns)
+                                                    new td(col.rowData.fetch(row).toString());
+                                            }};
+                                        }};
+                                        new div() {{
+                                            style.display = "flex";
+                                            style.justifyContent = "center";
+                                            new slot<>(selectedRow, current);
+                                        }};
+                                    }};
+                                else
+                                    for (var col : columns)
+                                        new td(col.rowData.fetch(row).toString());
+                            }};
                     }};
                 }};
             }};
-
-            if(current != null)
-                new slot<>(selectedRow, current);
-            else
-                new div();
         }};
     }
 }

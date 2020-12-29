@@ -5,15 +5,13 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
-    record User(long id, String name, int age, String sex){}
-    record UserInfo(String faculty, String address, String phone){}
-
     String nameLike = "";
     User[] users = new User[]{};
 
     @Override public body mount() {
         return new body() {{
             new input() {{
+                style.maxWidth = "300px";
                 placeholder = "Имя студента...";
                 onchange = ev -> nameLike = ev.target.value;
             }};
@@ -34,8 +32,8 @@ public class UsersPage implements Component0<body> {
                         "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
                         UserInfo.class, user.id));
                     return new div() {{
-                        if (info != null) new h2("Адрес: " + info.address);
-                        else new h2("Нет данных о студенте");
+                        if (info != null) new h5("Адрес: " + info.address);
+                        else new h5("Нет данных о студенте");
                     }};
                 };
             }};

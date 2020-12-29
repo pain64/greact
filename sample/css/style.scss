@@ -3,8 +3,10 @@
 button {
     @extend .btn;
     @extend .btn-secondary;
+    margin: 5px 5px 5px 0px;
 }
 input {
     @extend .form-control;
     display: inline;
+    margin: 5px 5px 5px 0px;
 }

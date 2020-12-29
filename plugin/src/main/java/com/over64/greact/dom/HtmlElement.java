@@ -12,6 +12,8 @@ import com.greact.model.async;
         public String maxWidth;
         public String display;
         public String cursor;
+        public String justifyContent;
+        public String backgroundColor;
     }
 
     // HTML Global Attributes
