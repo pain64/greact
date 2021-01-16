@@ -27,7 +27,7 @@ import static com.greact.generate.util.Overloads.Mode.*;
 
 public class ExpressionGen {
     final JSOut out;
-    final MContext mctx;
+    MContext mctx;
     final StatementGen stmtGen;
 
     public ExpressionGen(JSOut out, MContext mctx, StatementGen stmtGen) {
@@ -186,12 +186,16 @@ public class ExpressionGen {
                 .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
                 .findFirst().get();
 
-            if(invokeMethod.getAnnotation(async.class) != null)
-                out.write(0, "async ");
+            var isAsync = invokeMethod.getAnnotation(async.class) != null;
+            if(isAsync) out.write(0, "async ");
 
             out.mkString(lambda.getParameters(), (arg) ->
                 out.write(0, arg.getName().toString()), "(", ", ", ") =>");
+            // FIXME: лямбда должна начинать @async контекст для метода, BAD GUY FIX
+            var old = mctx;
+            mctx = new MContext(old.ctx(), isAsync);
             stmtGen.block(deep, lambda.getBody());
+            mctx = old;
         } else if (expr instanceof SwitchExpressionTree switchExpr) {
             out.write(0, "(() => {\n");
             out.write(deep + 2, "switch");
@@ -251,10 +255,15 @@ public class ExpressionGen {
                     info = Overloads.methodInfo(mctx.ctx().types(),
                         (TypeElement) methodOwnerSym.type.tsym, methodSym);
 
-                if (info.isAsync() && !mctx.isAsync())
+                var callTree = (JCTree) call;
+
+                if (info.isAsync() && !mctx.isAsync()) {
+                    var line = mctx.ctx().cu().getLineMap().getLineNumber(callTree.pos);
+                    var col = mctx.ctx().cu().getLineMap().getColumnNumber(callTree.pos);
                     throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
                         """
-                            method which calls @async method must be defined as @async""");
+                            method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
+                }
 
                 if (info.isAsync()) out.write(0, "(await ");
 

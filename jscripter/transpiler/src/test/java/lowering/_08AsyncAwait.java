@@ -213,6 +213,37 @@ public class _08AsyncAwait {
         }
     }
 
+    @Test void asyncLambda() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import com.greact.model.async;
+                public class Test {
+                  interface Foo {
+                    @async void foo();
+                  }
+                  @async void doo() {};
+                  void bar() {
+                    Foo instance = () -> { doo(); }; 
+                  }
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
+                                
+                  async doo() {
+                  }
+                                
+                  bar() {
+                    let instance = async () => {
+                      (await this.doo());
+                    };
+                  }
+                }""");
+    }
+
     @Test void callAsyncLambda() throws IOException {
         assertCompiled(
             """

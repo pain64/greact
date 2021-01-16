@@ -2,6 +2,7 @@ package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
 import com.over64.greact.dom.*;
+import com.sun.jdi.ClassType;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -536,6 +537,23 @@ public class GReactPlugin implements Plugin {
         return ctx.maker.Block(Flags.BLOCK, mapped);
     }
 
+    Optional<Type> isComponent(Ctx ctx, Type type) {
+        for(var iface: ctx.types.interfaces(type)) {
+            if(iface.tsym == ctx.symbols.clComponent0 ||
+                iface.tsym == ctx.symbols.clComponent1 ||
+                iface.tsym == ctx.symbols.clComponent2) return Optional.of(iface);
+
+            var atInterface = isComponent(ctx, iface);
+            if(atInterface.isPresent()) return atInterface;
+        }
+
+        if(type instanceof Type.ClassType clType)
+            if(clType.supertype_field != null)
+                return isComponent(ctx, clType.supertype_field);
+
+        return Optional.empty();
+    }
+
     @Override
     public void init(JavacTask task, String... strings) {
         var context = ((BasicJavacTask) task).getContext();
@@ -554,11 +572,8 @@ public class GReactPlugin implements Plugin {
 
                     for (var typeDecl : cu.getTypeDecls()) {
                         // check that type implements Component interface
-                        var componentImplOpt = ctx.types.interfaces(typeDecl.type).stream()
-                            .filter(iface -> iface.tsym == ctx.symbols.clComponent0 ||
-                                iface.tsym == ctx.symbols.clComponent1 ||
-                                iface.tsym == ctx.symbols.clComponent2)
-                            .findFirst();
+                        // FIXME: нужно рекурсивно проверить у Super класса
+                        var componentImplOpt = isComponent(ctx, typeDecl.type);
 
                         final Type componentImpl;
                         if (componentImplOpt.isPresent()) componentImpl = componentImplOpt.get();
@@ -645,7 +660,8 @@ public class GReactPlugin implements Plugin {
                                             lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
                                             lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
-                                            ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn, List.of(lmb));
+                                            ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn,
+                                                List.of(lmb));
                                         }
                                     }
                                 });
@@ -694,7 +710,8 @@ public class GReactPlugin implements Plugin {
                                                 lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
                                                 lmb2.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
-                                                ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn, List.of(lmb2));
+                                                ret.expr = makeCall(ctx.symbols.clGlobals, ctx.symbols.mtGReactReturn
+                                                    , List.of(lmb2));
                                             }
                                         }
                                     }

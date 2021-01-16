@@ -57,7 +57,7 @@ public class TypeGen {
 
         var extendClause = typeDecl.extending;
         var superClass = extendClause != null
-            ? extendClause.type.toString().replace(".", "$")
+            ? extendClause.type.tsym.toString().replace(".", "$")
             : "Object";
         out.write(0, " extends ");
         out.write(0, superClass);

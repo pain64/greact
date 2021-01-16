@@ -23,6 +23,35 @@ public class _00DeclarationsTest {
     }
 
     @Test
+    void klassExtendsGenericType() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    public class A<T> {
+                    }""",
+                """
+                    class js$A extends Object {
+                      constructor() {
+                        super();
+                      }
+                    }"""),
+            new CompileCase("js.B",
+                """
+                    package js;
+                    public class B extends A<String> {
+                    }""",
+                """
+                    class js$B extends js$A {
+                      constructor() {
+                        super();
+                      }
+                    }""")
+        );
+    }
+
+
+    @Test
     void method() throws IOException {
         assertCompiled(
             """
