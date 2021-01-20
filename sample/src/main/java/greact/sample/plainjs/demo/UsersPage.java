@@ -7,8 +7,8 @@ import greact.sample.plainjs.demo.searchbox.StrInput;
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
-    record User(long id, String name, int age, String sex) {}
-    record UserInfo(String faculty, String address, String phone) {}
+    record User(long id, String name, int age, String sex) { }
+    record UserInfo(String faculty, String address, String phone) { }
 
     /**
      * @param <T> dangling, but will be checked by JScripter
@@ -25,8 +25,8 @@ public class UsersPage implements Component0<body> {
 
     @Override
     public body mount() {
-//        User u = new User(0, "", 42, "male");
-//        MemberRef<User, Long> mref = u::id;
+        User u = new User(0, "", 42, "male");
+        MemberRef<User, Long> mref = u::id;
         return new body() {{
 //            new input() {{
 //                style.maxWidth = "300px";
