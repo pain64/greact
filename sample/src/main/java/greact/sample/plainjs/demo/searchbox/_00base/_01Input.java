@@ -9,7 +9,10 @@ public abstract class _01Input<T> extends _00Control<T> {
     final String type;
 
     protected _01Input(String type) {this.type = type;}
-    protected abstract T parseValueOpt(String src);
+    protected abstract T parseValueOpt(input src);
+    protected String valueToHtmlValue() {
+        return  value.toString();
+    }
 
     @Override public _00Control child() { return null; }
 
@@ -28,10 +31,13 @@ public abstract class _01Input<T> extends _00Control<T> {
                     style.margin = "0px 5px 0px 0px";
                 }};
                 new input() {{
+                    //className = "form-check-input";
                     type = self.type;
-                    value = self.value == null ? "" : self.value.toString();
+                    value = self.value == null ? null : valueToHtmlValue();
+                    // FIXME: вот это вот - костыль для CheckBox
+                    checked = (Boolean) self.value;
                     onchange = ev -> {
-                        self.value = parseValueOpt(ev.target.value);
+                        self.value = parseValueOpt(ev.target);
                         self.ready = self.value != null;
                         self.onReadyChanged.run();
                     };

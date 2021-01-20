@@ -3,6 +3,7 @@ package greact.sample.plainjs.demo;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import greact.sample.plainjs.demo.searchbox.*;
 import greact.sample.plainjs.demo.searchbox._01impl.Cascade;
+import greact.sample.plainjs.demo.searchbox._01impl.CheckBox;
 import greact.sample.plainjs.demo.searchbox._01impl.Select;
 import greact.sample.plainjs.demo.searchbox._01impl.StrInput;
 
@@ -30,13 +31,15 @@ public class UsersPage implements Component0<body> {
                 data = new SearchBox<>(
                     new StrInput()
                         .label("Имя студента"),
+                    new CheckBox()
+                        .label("Включить"),
                     new Cascade<>(
                         new Select<>(new String[]{"М", "Ж"})
                             .label("Пол"),
                         sex ->
                             new Select<>(new String[]{"Омск", "Москва"})
                                 .label("Адрес")),
-                    (name, address) -> server(db -> db.array(
+                    (name, isEnabled, address) -> server(db -> db.array(
                         "SELECT * FROM users WHERE name like :1",
                         User.class, "%" + name + "%")));
                 columns = new Column[]{

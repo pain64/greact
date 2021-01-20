@@ -74,6 +74,7 @@ public class HTMLNativeElements {
         public String type;
         public String placeholder;
         public String value;
+        public Boolean checked;
         public ChangeHandler<input> onchange;
         public native void setCustomValidity(String text);
     }

@@ -1,5 +1,6 @@
 package greact.sample.plainjs.demo.searchbox._01impl;
 
+import com.over64.greact.dom.HTMLNativeElements.input;
 import greact.sample.plainjs.demo.searchbox._00base._01Input;
 
 public class StrInput extends _01Input<String> {
@@ -10,7 +11,7 @@ public class StrInput extends _01Input<String> {
         return this;
     }
 
-    @Override protected String parseValueOpt(String src) {
-        return src;
+    @Override protected String parseValueOpt(input src) {
+        return src.value;
     }
 }
