@@ -9,8 +9,7 @@ import java.io.IOException;
 import static util.CompileAssert.assertCompiledMany;
 
 public class _05Inheritance {
-    @Test
-    void callOverloadedMany() throws IOException {
+    @Test void callOverloadedMany() throws IOException {
         assertCompiledMany(
             new CompileCase("js.A",
                 """

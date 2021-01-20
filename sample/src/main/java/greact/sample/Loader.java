@@ -9,10 +9,8 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.WatchKey;
+import java.nio.file.*;
+import java.util.Comparator;
 import java.util.Queue;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -66,6 +64,7 @@ public class Loader {
         return Files.walk(Paths.get("./build/classes/"))
             .filter(Files::isRegularFile)
             .filter(p -> p.getFileName().toString().endsWith(".js"))
+            .sorted(Comparator.comparing(Path::toString))
             .map(p -> new String(readFile(p.toFile())))
             .collect(Collectors.joining("\n"));
     }

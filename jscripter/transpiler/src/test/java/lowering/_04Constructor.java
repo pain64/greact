@@ -1,10 +1,12 @@
 package lowering;
 
 import org.junit.jupiter.api.Test;
+import util.CompileAssert;
 
 import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
+import static util.CompileAssert.assertCompiledMany;
 
 public class _04Constructor {
 
@@ -50,5 +52,44 @@ public class _04Constructor {
                     }
                   }
                 }""");
+    }
+
+    @Test
+    void constructorOverloaded() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    public class A {
+                      A(int x){}
+                      A(float x){}
+                    }""",
+                """
+                    class js$A extends Object {
+                      constructor($over, x) {
+                        switch($over) {
+                          case 1:
+                            super();
+                            break
+                          case 2:
+                            super();
+                            break
+                        }
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.B",
+                """
+                    package js;
+                    public class B {
+                      B() { new A(42); }
+                    }""",
+                """
+                    class js$B extends Object {
+                      constructor() {
+                        super();
+                        new js$A(1, 42);
+                      }
+                    }""")
+        );
     }
 }

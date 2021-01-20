@@ -501,6 +501,9 @@ public class GReactPlugin implements Plugin {
                         .params.get(i)
                         .getAnnotation(HTMLNativeElements.DomProperty.class);
 
+//                    System.out.println("search dom property of " + argAnnotation.value());
+//                    System.out.println("search at type " + (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym);
+
                     var argSymbol = ctx.lookupMember(
                         (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
                         argAnnotation.value());

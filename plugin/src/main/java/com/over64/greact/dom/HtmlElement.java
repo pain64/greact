@@ -14,6 +14,9 @@ import com.greact.model.async;
         public String cursor;
         public String justifyContent;
         public String backgroundColor;
+        public String flexWrap;
+        public String alignItems;
+        public String whiteSpace;
     }
 
     // HTML Global Attributes

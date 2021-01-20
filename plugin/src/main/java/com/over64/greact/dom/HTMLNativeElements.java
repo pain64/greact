@@ -70,10 +70,22 @@ public class HTMLNativeElements {
         public enum Autocomplete {OFF, ON}
         public Autocomplete autocomplete;
         public enum InputType {CHECKBOX, TEXT}
-        public InputType type;
+        //public InputType type;
+        public String type;
         public String placeholder;
         public String value;
         public ChangeHandler<input> onchange;
+        public native void setCustomValidity(String text);
+    }
+
+    @JSNativeAPI public static class select extends HtmlElement {
+        public String value;
+        public ChangeHandler<select> onchange;
+    }
+    @JSNativeAPI public static class option extends HtmlElement {
+        public boolean selected;
+        public String value;
+        public option(@DomProperty("innerText") String innerText){}
     }
 
     @JSNativeAPI public static class ul extends HtmlElement {}

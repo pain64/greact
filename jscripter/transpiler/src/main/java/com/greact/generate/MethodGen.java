@@ -42,8 +42,9 @@ public class MethodGen {
 
         var name = group.get(0).snd.getName().toString();
         var isConstructor = name.equals("<init>");
-        out.write(2, "");
 
+        if(group.stream().allMatch(p -> p.snd.sym.isAbstract()))
+            return;
 
         if (hasInSuper) {
             if (isAsyncInSuper) {
@@ -71,6 +72,7 @@ public class MethodGen {
                             """);
         }
 
+        out.write(2, "");
         if (isStatic) out.write(0, "static ");
         var isAsync = isAsyncInSuper || isAsyncLocal;
         if (isAsync) out.write(0, "async ");
@@ -139,7 +141,8 @@ public class MethodGen {
 
                 // FIXME: args renaming required
 
-                var statements = m.snd.body.stats;
+                var statements = m.snd.sym.isAbstract() ?
+                    com.sun.tools.javac.util.List.<JCTree.JCStatement>nil() : m.snd.body.stats;
                 if (!statements.isEmpty()) {
                     stmtGen.stmt(8, statements.get(0));
                     out.write(0, "\n");

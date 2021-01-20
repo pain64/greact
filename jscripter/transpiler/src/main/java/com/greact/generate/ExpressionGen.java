@@ -164,7 +164,7 @@ public class ExpressionGen {
         } else if (expr instanceof ArrayAccessTree accessTree) {
             expr(deep, accessTree.getExpression());
             out.write(0, "[");
-            out.write(0, accessTree.getIndex().toString());
+            expr(deep, accessTree.getIndex());
             out.write(0, "]");
         } else if (expr instanceof MemberSelectTree memberSelect) {
             expr(deep, memberSelect.getExpression());
@@ -378,11 +378,20 @@ public class ExpressionGen {
             expr(deep, (ExpressionTree) pTree.getType());
         } else if (expr instanceof NewClassTree newClass) {
             // FIXME:
-            //  - deal with overload
             //  - anon inner classes?
             out.write(0, "new ");
+            var info = Overloads.methodInfo(
+                mctx.ctx().types(),
+                (TypeElement) (((JCTree.JCNewClass) newClass).type.tsym),
+                (ExecutableElement) ((JCTree.JCNewClass) newClass).constructor);
+
             expr(deep, newClass.getIdentifier());
-            out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "(", ", ", ")");
+            out.write(0, "(");
+            if (info.isOverloaded()) {
+                out.write(0, "" + info.n());
+                out.write(0, ", ");
+            }
+            out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "", ", ", ")");
         }
     }
 }

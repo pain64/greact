@@ -60,7 +60,7 @@ public class TodoApp implements Component0<section> {
                     className = "view";
                     new input() {{
                         className = "toggle";
-                        type = InputType.CHECKBOX;
+                        //type = InputType.CHECKBOX;
                         value = "" + item.completed;
                         onchange = ev -> {
                             effect(item.completed = Boolean.parseBoolean(ev.target.value));
@@ -75,7 +75,7 @@ public class TodoApp implements Component0<section> {
                 }};
                 new input() {{
                     className = "edit";
-                    type = InputType.TEXT;
+                    //type = InputType.TEXT;
                     value = item.title;
                     onchange = ev -> item.title = ev.target.value;
 //                    ondblclick = ev -> startEdit();
@@ -152,7 +152,7 @@ public class TodoApp implements Component0<section> {
                     new input() {{
                         id = "toggle-all";
                         className = "toggle-all";
-                        type = InputType.CHECKBOX;
+                        //type = InputType.CHECKBOX;
                         value = "" + allDone();
                     }};
                     new label() {{ _for = "toggle-all"; }};

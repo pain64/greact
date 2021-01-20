@@ -50,7 +50,6 @@ public class _00DeclarationsTest {
         );
     }
 
-
     @Test
     void method() throws IOException {
         assertCompiled(
@@ -75,6 +74,24 @@ public class _00DeclarationsTest {
                   
                   foobar() {
                   }
+                }""");
+    }
+
+    @Test
+    void abstractMethod() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public abstract class Test {
+                  abstract void bar();
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
+                                
+                                
                 }""");
     }
 

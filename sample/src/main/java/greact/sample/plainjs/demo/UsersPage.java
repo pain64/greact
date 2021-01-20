@@ -1,14 +1,17 @@
 package greact.sample.plainjs.demo;
 
 import com.over64.greact.dom.HTMLNativeElements.*;
-import greact.sample.plainjs.demo.searchbox.SearchBox;
-import greact.sample.plainjs.demo.searchbox.StrInput;
+import greact.sample.plainjs.demo.searchbox.*;
+import greact.sample.plainjs.demo.searchbox._01impl.Cascade;
+import greact.sample.plainjs.demo.searchbox._01impl.Select;
+import greact.sample.plainjs.demo.searchbox._01impl.StrInput;
 
 import static greact.sample.SuperDemo.Server.server;
 
 public class UsersPage implements Component0<body> {
-    record User(long id, String name, int age, String sex) { }
-    record UserInfo(String faculty, String address, String phone) { }
+    record User(long id, String name, int age, String sex) {}
+
+    record UserInfo(String faculty, String address, String phone) {}
 
     /**
      * @param <T> dangling, but will be checked by JScripter
@@ -20,28 +23,20 @@ public class UsersPage implements Component0<body> {
         V value();
     }
 
-//    String nameLike = "";
-//    User[] users = new User[]{};
-
     @Override
     public body mount() {
-        User u = new User(0, "", 42, "male");
-        MemberRef<User, Long> mref = u::id;
         return new body() {{
-//            new input() {{
-//                style.maxWidth = "300px";
-//                placeholder = "Имя студента...";
-//                onchange = ev -> nameLike = ev.target.value;
-//            }};
-//            new button("искать") {{
-//                onclick = ev -> effect(users = server(db -> db.array(
-//                    "SELECT * FROM users WHERE name like :1",
-//                    User.class, "%" + nameLike + "%")));
-//            }};
             new Grid<User>() {{
                 data = new SearchBox<>(
-                    new StrInput(true),
-                    name -> server(db -> db.array(
+                    new StrInput()
+                        .label("Имя студента"),
+                    new Cascade<>(
+                        new Select<>(new String[]{"М", "Ж"})
+                            .label("Пол"),
+                        sex ->
+                            new Select<>(new String[]{"Омск", "Москва"})
+                                .label("Адрес")),
+                    (name, address) -> server(db -> db.array(
                         "SELECT * FROM users WHERE name like :1",
                         User.class, "%" + name + "%")));
                 columns = new Column[]{
