@@ -28,17 +28,11 @@ public class Select<T> extends _00Control<T> {
         var self = this;
 
         return new div() {{
-            style.padding = "2px";
-            //style.margin = "5px 5px 5px 0px";
+            style.padding = "0px 2px";
+            style.margin = "0px 10px";
 
             new label() {{
-                style.margin = "0";
-                style.display = "flex";
-
                 new span(_label) {{
-                    style.display = "inline-flex";
-                    style.alignItems = "center";
-                    style.whiteSpace = "nowrap";
                     style.margin = "0px 5px 0px 0px";
                 }};
 

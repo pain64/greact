@@ -143,7 +143,7 @@ public class HTMLNativeElements {
     }
     @JSNativeAPI public static class style extends HtmlElement{
         public static String id(String prefix) { return  prefix; }
-        public style(String... parts) {}
+        public style(@DomProperty("innerText") String innerText) {}
     }
     @JSNativeAPI public static class cssclass extends HtmlElement{
         public cssclass(String name, String css) {}

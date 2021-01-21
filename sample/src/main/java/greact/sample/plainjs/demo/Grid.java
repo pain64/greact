@@ -40,9 +40,33 @@ public class Grid<T> implements Component0<div> {
             new div() {{
                 dependsOn = rerenderAll;
                 new slot<>(data, fetched -> effect(list = fetched));
+                new style("""
+                    .table {
+                       border-collapse: collapse;
+                       border-spacing: 0;
+                    }
+                    .table > tbody > tr {
+                        line-height: 40px; 
+                    }
+                    .table > thead {
+                        border-bottom: 2px  solid black;
+                        border-collapse: separate;
+                    }
+                    
+                    .table > thead > td {
+                        font-weight: 500;
+                    }
+                    .table > tbody > tr:nth-child(even) {
+                      background-color: #f2f2f2;
+                    }
+                    .table > tbody > tr:hover {
+                        background-color: #ddf4d1;
+                    }
+                    """);
                 new table() {{
-                    className = "table table-hover table-striped";
+                    className = "table";
                     style.width = "100%";
+                    style.margin = "20px 0px 0px 0px";
                     new thead() {{
                         for (var col : columns) new td(col.header);
                     }};

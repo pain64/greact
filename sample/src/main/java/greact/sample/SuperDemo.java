@@ -53,7 +53,7 @@ public class SuperDemo {
                     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
                     <link rel="preconnect" href="https://fonts.gstatic.com">
-                    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+                    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
                     <style>
                       html {
                         box-sizing: border-box;
@@ -61,6 +61,7 @@ public class SuperDemo {
                       *, *:before, *:after {
                         box-sizing: inherit;
                         font-family: 'Roboto', sans-serif;
+                        font-weight:400;
                         color: #403d3d;
                       }
                     </style>

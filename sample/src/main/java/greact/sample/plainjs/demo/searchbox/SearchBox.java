@@ -88,15 +88,31 @@ public class SearchBox<T> implements Grid.Searcher<T> {
     @Override
     public div mount(Grid.DataProvider<T> provider) {
         return new div() {{
+            new style("""
+                .search-button {
+                  background-color:black;
+                  color: #fff;
+                  border-radius:3px;
+                  border: none;
+                  height:24px;
+                }
+                .active {
+                 cursor:pointer;
+                }
+                .disabled {
+                  background-color: #cbc3c3;
+                }
+                """);
             style.display = "flex";
             style.justifyContent = "center";
             style.flexWrap = "wrap";
+            style.alignItems = "center";
 
             for (var control : controlsWithChildren)
                 new slot<div>(control);
-            new button("Искать") {{
+            new button("искать") {{
                 style.margin = "2px";
-                className = canSearch ? "" : "disabled";
+                className = canSearch ? "search-button active" : " search-button disabled";
                 onclick = ev -> provider.onData(loader.supply());
             }};
         }};
