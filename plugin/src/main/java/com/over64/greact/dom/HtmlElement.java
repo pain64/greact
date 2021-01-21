@@ -18,6 +18,7 @@ import com.greact.model.async;
         public String alignItems;
         public String whiteSpace;
         public String height;
+        public String width;
     }
 
     // HTML Global Attributes

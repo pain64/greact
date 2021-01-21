@@ -42,6 +42,7 @@ public class Grid<T> implements Component0<div> {
                 new slot<>(data, fetched -> effect(list = fetched));
                 new table() {{
                     className = "table table-hover table-striped";
+                    style.width = "100%";
                     new thead() {{
                         for (var col : columns) new td(col.header);
                     }};
