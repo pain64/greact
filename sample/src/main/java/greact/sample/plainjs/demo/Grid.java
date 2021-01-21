@@ -7,9 +7,11 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import java.util.function.Consumer;
 
 public class Grid<T> implements Component0<div> {
-    @FunctionalInterface public interface DataProvider<T> {
+    @FunctionalInterface
+    public interface DataProvider<T> {
         void onData(T[] data);
     }
+
     public interface Searcher<T> extends Component1<div, DataProvider<T>> {
     }
 
@@ -17,7 +19,7 @@ public class Grid<T> implements Component0<div> {
     Column<T>[] columns = (Column<T>[]) new Object[0];
     Component1<div, T> selectedRow;
 
-//    public Grid(T[] list) {
+    //    public Grid(T[] list) {
 //        this.list = list;
 //        // FIXME: нужно разобраться с VarArgs
 //        //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
@@ -52,7 +54,7 @@ public class Grid<T> implements Component0<div> {
                         border-bottom: 2px  solid black;
                         border-collapse: separate;
                     }
-                    
+                                        
                     .table > thead > td {
                         font-weight: 500;
                     }
@@ -69,6 +71,7 @@ public class Grid<T> implements Component0<div> {
                     style.margin = "20px 0px 0px 0px";
                     new thead() {{
                         for (var col : columns) new td(col.header);
+                        new td("");
                     }};
                     new tbody() {{
                         for (var row : list)
@@ -77,7 +80,7 @@ public class Grid<T> implements Component0<div> {
                                 //className = row == current ? "table-active" : "";
                                 onclick = ev -> {
                                     //FIXME: эффективнее сделать через ev.target.toggleClass
-                                    if(current == row) current = null;
+                                    if (current == row) current = null;
                                     else current = row;
                                     effect(rerenderAll);
                                     //effect(list);
@@ -102,6 +105,13 @@ public class Grid<T> implements Component0<div> {
                                 else
                                     for (var col : columns)
                                         new td(col.rowData.fetch(row).toString());
+
+                                new td() {{
+                                    style.width = "16px";
+                                    innerHTML = """
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-right-down"><polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path></svg>
+                                        """;
+                                }};
                             }};
                     }};
                 }};

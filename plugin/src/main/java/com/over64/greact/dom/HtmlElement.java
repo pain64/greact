@@ -25,6 +25,7 @@ import com.greact.model.async;
     public String id;
     public String className;
     public String innerText;
+    public String innerHTML;
     public String lang;
     public Style style = new Style();
 
