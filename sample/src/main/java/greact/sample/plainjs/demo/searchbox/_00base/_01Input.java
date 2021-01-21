@@ -23,6 +23,7 @@ public abstract class _01Input<T> extends _00Control<T> {
             new label() {{
                 style.margin = "0";
                 style.display = "flex";
+                style.height = "100%";
 
                 new span(_label) {{
                     style.display = "inline-flex";

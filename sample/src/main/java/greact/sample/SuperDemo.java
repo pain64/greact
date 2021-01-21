@@ -51,7 +51,19 @@ public class SuperDemo {
                   <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                    
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+                    <link rel="preconnect" href="https://fonts.gstatic.com">
+                    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+                    <style>
+                      html {
+                        box-sizing: border-box;
+                      }
+                      *, *:before, *:after {
+                        box-sizing: inherit;
+                        font-family: 'Roboto', sans-serif;
+                        color: #403d3d;
+                      }
+                    </style>
                   </head>
                   <body style="padding:20px;"></body>
                   <script src="/script/lib"></script>

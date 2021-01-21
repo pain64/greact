@@ -17,6 +17,7 @@ import com.greact.model.async;
         public String flexWrap;
         public String alignItems;
         public String whiteSpace;
+        public String height;
     }
 
     // HTML Global Attributes

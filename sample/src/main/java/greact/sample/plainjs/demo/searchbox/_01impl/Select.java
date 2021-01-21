@@ -29,7 +29,7 @@ public class Select<T> extends _00Control<T> {
 
         return new div() {{
             style.padding = "2px";
-            style.margin = "5px 5px 5px 0px";
+            //style.margin = "5px 5px 5px 0px";
 
             new label() {{
                 style.margin = "0";

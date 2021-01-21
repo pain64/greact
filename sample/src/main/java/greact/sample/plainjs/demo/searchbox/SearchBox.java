@@ -95,6 +95,7 @@ public class SearchBox<T> implements Grid.Searcher<T> {
             for (var control : controlsWithChildren)
                 new slot<div>(control);
             new button("Искать") {{
+                style.margin = "2px";
                 className = canSearch ? "" : "disabled";
                 onclick = ev -> provider.onData(loader.supply());
             }};
