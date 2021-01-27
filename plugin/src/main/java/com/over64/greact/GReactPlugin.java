@@ -20,6 +20,7 @@ import com.sun.tools.javac.util.Names;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.lang.invoke.MethodType;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -152,12 +153,19 @@ public class GReactPlugin implements Plugin {
 
         @Override
         public void visitIdent(JCTree.JCIdent id) {
-            if (id.sym.owner.type != null)  // foreach loop var
+            if (id.sym.owner.type != null) {// foreach loop var
                 if (scope.type.tsym == id.sym.owner.type.tsym ||
                     ctx.types.isSubtype(scope.type, id.sym.owner.type)) {
                     this.result = ctx.maker.Select(ctx.maker.Ident(scope), id.sym);
                     return;
                 }
+
+                if(id.name.equals(ctx.names.fromString("this")) &&
+                    ctx.types.isSubtype(id.sym.owner.type, scope.type)) {
+                    this.result = ctx.maker.Ident(scope);
+                    return;
+                }
+            }
 
             super.visitIdent(id);
         }
@@ -402,17 +410,26 @@ public class GReactPlugin implements Plugin {
                     throw unexpectedStmt.apply(st);
 
             } else if (st instanceof JCTree.JCIf ifStmt) {
-                ifStmt.thenpart = mapStmt(ctx, mctx, unhandledEffects, nextDest, ifStmt.thenpart);
+                if (ifStmt.thenpart instanceof JCTree.JCBlock block)
+                    block.stats = block.stats.map(bst -> mapStmt(ctx, mctx, unhandledEffects, nextDest, bst));
+                else
+                    ifStmt.thenpart = mapStmt(ctx, mctx, unhandledEffects, nextDest, ifStmt.thenpart);
+
                 if (ifStmt.elsepart != null)
-                    ifStmt.elsepart = mapStmt(ctx, mctx, unhandledEffects, nextDest, ifStmt.elsepart);
+                    if (ifStmt.elsepart instanceof JCTree.JCBlock block)
+                        block.stats = block.stats.map(bst -> mapStmt(ctx, mctx, unhandledEffects, nextDest, bst));
+                    else
+                        ifStmt.elsepart = mapStmt(ctx, mctx, unhandledEffects, nextDest, ifStmt.elsepart);
             } else if (st instanceof JCTree.JCSwitch switchStmt)
                 switchStmt.cases.forEach(tree -> {
                     if (tree.stats != null)
                         tree.stats = tree.stats.map(s -> mapStmt(ctx, mctx, unhandledEffects, nextDest, s));
                 });
-            else if (st instanceof JCTree.JCEnhancedForLoop foreachStmt)
-                foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, nextDest, foreachStmt.body);
-            else
+            else if (st instanceof JCTree.JCEnhancedForLoop foreachStmt) {
+                if (foreachStmt.body instanceof JCTree.JCBlock block)
+                    block.stats = block.stats.map(bst -> mapStmt(ctx, mctx, unhandledEffects, nextDest, bst));
+                else foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, nextDest, foreachStmt.body);
+            } else
                 throw unexpectedStmt.apply(st);
 
             return st;
@@ -502,7 +519,8 @@ public class GReactPlugin implements Plugin {
                         .getAnnotation(HTMLNativeElements.DomProperty.class);
 
 //                    System.out.println("search dom property of " + argAnnotation.value());
-//                    System.out.println("search at type " + (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym);
+//                    System.out.println("search at type " + (Symbol.ClassSymbol) ((Type.ClassType) newClass.type)
+//                    .supertype_field.tsym);
 
                     var argSymbol = ctx.lookupMember(
                         (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
@@ -541,17 +559,17 @@ public class GReactPlugin implements Plugin {
     }
 
     Optional<Type> isComponent(Ctx ctx, Type type) {
-        for(var iface: ctx.types.interfaces(type)) {
-            if(iface.tsym == ctx.symbols.clComponent0 ||
+        for (var iface : ctx.types.interfaces(type)) {
+            if (iface.tsym == ctx.symbols.clComponent0 ||
                 iface.tsym == ctx.symbols.clComponent1 ||
                 iface.tsym == ctx.symbols.clComponent2) return Optional.of(iface);
 
             var atInterface = isComponent(ctx, iface);
-            if(atInterface.isPresent()) return atInterface;
+            if (atInterface.isPresent()) return atInterface;
         }
 
-        if(type instanceof Type.ClassType clType)
-            if(clType.supertype_field != null)
+        if (type instanceof Type.ClassType clType)
+            if (clType.supertype_field != null)
                 return isComponent(ctx, clType.supertype_field);
 
         return Optional.empty();

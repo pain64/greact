@@ -122,6 +122,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class td extends HtmlElement {
         public int colSpan;
         public int rowSpan;
+        public MouseEventHandler<tr> onclick;
         public td() {}
         public td(@DomProperty("innerText") String innerText) {}
     }

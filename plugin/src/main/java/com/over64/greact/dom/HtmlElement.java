@@ -34,6 +34,7 @@ import com.greact.model.async;
 
     // HTML Event Attributes
     public static class Event<T> {
+        public native void stopPropagation();
         public T target;
     }
 
