@@ -4,6 +4,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.model.DoNotTranspile;
 import com.greact.model.async;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Symbol;

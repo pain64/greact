@@ -37,6 +37,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             artifactId = "jscripter"
+            groupId = "com.over64"
             from(components["java"])
 //            versionMapping {
 //                usage("java-api") {

@@ -11,23 +11,14 @@ import greact.sample.plainjs.demo.searchbox._01impl.Cascade;
 import java.util.function.Consumer;
 
 public class Grid<T> implements Component0<div> {
-    @FunctionalInterface
-    public interface DataProvider<T> {
-        void onData(T[] data);
-    }
-
-    public interface Searcher<T> extends Component1<div, DataProvider<T>> {
-    }
-
-    Searcher<T> data;
     Column<T>[] columns = (Column<T>[]) new Object[0];
     Component1<div, T> selectedRow;
 
-    //    public Grid(T[] list) {
-//        this.list = list;
-//        // FIXME: нужно разобраться с VarArgs
-//        //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
-//    }
+    public Grid(T[] data) {
+        this.list = arrayMap(data, v -> new _00Row<>(v));
+        // FIXME: нужно разобраться с VarArgs
+        //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
+    }
     void log(Object obj) {
         JSExpression.of("console.log(obj)");
     }
@@ -38,7 +29,7 @@ public class Grid<T> implements Component0<div> {
         return JSExpression.of("from.map(mapper)");
     }
 
-    private _00Row<T>[] list = JSExpression.of("[]");
+    private final _00Row<T>[] list;
     private boolean rerenderAll;
     private HtmlElement theTable;
 
@@ -48,7 +39,6 @@ public class Grid<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 dependsOn = rerenderAll;
-                new slot<>(data, fetched -> effect(list = arrayMap(fetched, v -> new _00Row<>(v))));
                 new style("""
                     .table {
                        border-collapse: collapse;

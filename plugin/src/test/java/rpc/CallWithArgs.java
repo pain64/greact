@@ -36,9 +36,10 @@ public class CallWithArgs {
                                        
                     class Simple {
                        \s
+                        @com.greact.model.DoNotTranspile
                         public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
-                            final int $closure1 = x2.get(1).asInt();
-                            final int $closure0 = x2.get(0).asInt();
+                            final int $closure1 = x1.treeToValue(x2.get(1), java.lang.Integer.class);
+                            final int $closure0 = x1.treeToValue(x2.get(0), java.lang.Integer.class);
                             int z = $closure0 + $closure1;
                             return z + 1;
                         }

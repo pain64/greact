@@ -72,6 +72,7 @@ public class GReactPlugin implements Plugin {
             Symbol.ClassSymbol clComponent0 = lookupClass(HTMLNativeElements.Component0.class.getName());
             Symbol.ClassSymbol clComponent1 = lookupClass(HTMLNativeElements.Component1.class.getName());
             Symbol.ClassSymbol clComponent2 = lookupClass(HTMLNativeElements.Component2.class.getName());
+            Symbol.ClassSymbol clComponent3 = lookupClass(HTMLNativeElements.Component3.class.getName());
             Symbol.ClassSymbol clDocument = lookupClass(Document.class.getName());
             Symbol.ClassSymbol clNode = lookupClass(Node.class.getName());
             Symbol.ClassSymbol clHtmlElement = lookupClass(HtmlElement.class.getName());
@@ -251,6 +252,8 @@ public class GReactPlugin implements Plugin {
                     scan(tree.expr);
                 }
             }.apply(foreachStmt);
+        else if(stmt instanceof JCTree.JCBreak)
+            return new HashSet<>();
         else
             throw unexpectedStmt.apply(stmt);
     }
@@ -293,6 +296,7 @@ public class GReactPlugin implements Plugin {
                     this.result = tree;
                 }
             }.translate(foreachStmt);
+        else if(stmt instanceof JCTree.JCBreak) {}
         else
             throw unexpectedStmt.apply(stmt);
     }
@@ -301,7 +305,8 @@ public class GReactPlugin implements Plugin {
         return ctx.types.interfaces(type).stream()
             .filter(iface -> iface.tsym == ctx.symbols.clComponent0 ||
                 iface.tsym == ctx.symbols.clComponent1 ||
-                iface.tsym == ctx.symbols.clComponent2)
+                iface.tsym == ctx.symbols.clComponent2 ||
+                iface.tsym == ctx.symbols.clComponent3)
             .findFirst();
     }
 
@@ -429,6 +434,8 @@ public class GReactPlugin implements Plugin {
                 if (foreachStmt.body instanceof JCTree.JCBlock block)
                     block.stats = block.stats.map(bst -> mapStmt(ctx, mctx, unhandledEffects, nextDest, bst));
                 else foreachStmt.body = mapStmt(ctx, mctx, unhandledEffects, nextDest, foreachStmt.body);
+            } else if(stmt instanceof JCTree.JCBreak) {
+                /* nop */
             } else
                 throw unexpectedStmt.apply(st);
 
@@ -562,7 +569,8 @@ public class GReactPlugin implements Plugin {
         for (var iface : ctx.types.interfaces(type)) {
             if (iface.tsym == ctx.symbols.clComponent0 ||
                 iface.tsym == ctx.symbols.clComponent1 ||
-                iface.tsym == ctx.symbols.clComponent2) return Optional.of(iface);
+                iface.tsym == ctx.symbols.clComponent2 ||
+                iface.tsym == ctx.symbols.clComponent3) return Optional.of(iface);
 
             var atInterface = isComponent(ctx, iface);
             if (atInterface.isPresent()) return atInterface;
@@ -696,7 +704,8 @@ public class GReactPlugin implements Plugin {
 
                                         if (lmb.type.tsym == ctx.symbols.clComponent0 ||
                                             lmb.type.tsym == ctx.symbols.clComponent1 ||
-                                            lmb.type.tsym == ctx.symbols.clComponent2) {
+                                            lmb.type.tsym == ctx.symbols.clComponent2 ||
+                                            lmb.type.tsym == ctx.symbols.clComponent3 ) {
 
                                             mappedLambda.add(lmb);
 

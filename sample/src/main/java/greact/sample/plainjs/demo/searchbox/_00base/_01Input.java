@@ -191,7 +191,7 @@ public abstract class _01Input<T> extends _00Control<T> {
                     checked = (Boolean) self.value;
                     onchange = ev -> {
                         self.value = parseValueOpt(ev.target);
-                        self.ready = self.value != null;
+                        self.ready = self._optional || self.value != null;
                         self.onReadyChanged.run();
                     };
                 }};

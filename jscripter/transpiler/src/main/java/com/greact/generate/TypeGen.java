@@ -2,6 +2,7 @@ package com.greact.generate;
 
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
+import com.greact.model.DoNotTranspile;
 import com.greact.model.JSNativeAPI;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
@@ -98,6 +99,8 @@ public class TypeGen {
         typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override
             public void visitMethodDef(JCTree.JCMethodDecl method) {
+                if(method.sym.getAnnotation(DoNotTranspile.class) != null) return;
+
                 var name = method.getName();
                 var group = methods.stream()
                     .filter(p -> p.fst.equals(name)).findFirst()

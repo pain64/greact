@@ -15,19 +15,13 @@ import java.util.List;
 public class GsonAndRecords {
     record Foo(int x, String y) {}
 
-    @Test
-    void foo() {
-        var gson = new Gson();
-        var d = gson.toJson(new Foo(42, "hello"));
-        gson.fromJson(d, Foo.class);
-
-    }
 
     static record Req(String endpoint, List<JsonNode> args){}
 
     @Test
     void jackson() throws JsonProcessingException {
         var om = new ObjectMapper();
+       // var ss = om.treeToValue("null", String.class);
         var d = om.writeValueAsString(new Req("/rpc", List.of(
             BooleanNode.TRUE,
             new IntNode(42)

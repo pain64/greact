@@ -16,6 +16,10 @@ public class HTMLNativeElements {
     public interface Component2<T extends HtmlElement, U, V>  extends Component {
         @async T mount(U u, V v);
     }
+    public interface Component3<T extends HtmlElement, A1, A2, A3>  extends Component {
+        @async T mount(A1 a1, A2 a2, A3 a3);
+    }
+
 
     public @interface DomProperty {
         String value();
@@ -141,6 +145,8 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class slot<T extends HtmlElement> extends HtmlElement {
         public slot(Component0<T> comp) {}
         public <U> slot(Component1<T, U> comp, U u) {}
+        public <A1, A2> slot(Component2<T, A1, A2> comp, A1 a1, A2 a2) {}
+        public <A1, A2, A3> slot(Component3<T, A1, A2, A3> comp, A1 a1, A2 a2, A3 a3) {}
     }
     @JSNativeAPI public static class style extends HtmlElement{
         public static String id(String prefix) { return  prefix; }

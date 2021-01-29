@@ -27,37 +27,35 @@ public class UsersPage implements Component0<body> {
     @Override
     public body mount() {
         return new body() {{
-            new Grid<User>() {{
-                data = new SearchBox<>(
-                    new StrInput()
-                        .label("Имя студента"),
-                    new CheckBox()
-                        .label("Включить"),
-                    new Cascade<>(
-                        new Select<>(new String[]{"М", "Ж"})
-                            .label("Пол"),
-                        sex ->
-                            new Select<>(new String[]{"Омск", "Москва"})
-                                .label("Адрес")),
-                    (name, isEnabled, address) -> server(db -> db.array(
-                        "SELECT * FROM users WHERE name like :1",
-                        User.class, "%" + name + "%")));
-                columns = new Column[]{
-                    new Column<User>("Id", c -> c.id),
-                    new Column<User>("Имя", c -> c.name),
-                    new Column<User>("Возраст", c -> c.age),
-                    new Column<User>("Пол", c -> c.sex)
-                };
-                selectedRow = user -> {
-                    var info = server(db -> db.uniqueOrNull(
-                        "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
-                        UserInfo.class, user.id));
+            new SearchBox<>(
+                new StrInput().label("Имя студента").optional(),
+//                new CheckBox().label("Включить"),
+//                new Cascade<>(
+//                    new Select<>(new String[]{"М", "Ж"}).label("Пол"),
+//                    sex -> new Select<>(new String[]{"Омск", "Москва"}).label("Адрес")),
+                (name /*, isEnabled, address */) -> {
+                    var data = server(db -> db.array(
+                        "SELECT * FROM users WHERE name like concat('%', coalesce(:1, ''), '%')", User.class, name));
                     return new div() {{
-                        if (info != null) new span("Адрес: " + info.address);
-                        else new span("Нет данных о студенте");
+                        new Grid<>(data) {{
+                            columns = new Column[]{
+                                new Column<User>("Id", c -> c.id),
+                                new Column<User>("Имя", c -> c.name),
+                                new Column<User>("Возраст", c -> c.age),
+                                new Column<User>("Пол", c -> c.sex)
+                            };
+                            selectedRow = user -> {
+                                var info = server(db -> db.uniqueOrNull(
+                                    "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",
+                                    UserInfo.class, user.id));
+                                return new div() {{
+                                    if (info != null) new span("Адрес: " + info.address);
+                                    else new span("Нет данных о студенте");
+                                }};
+                            };
+                        }};
                     }};
-                };
-            }};
+                });
         }};
     }
 }
