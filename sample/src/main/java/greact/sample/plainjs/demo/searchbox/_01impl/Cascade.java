@@ -5,8 +5,7 @@ import greact.sample.plainjs.demo.searchbox._00base._00Control;
 
 public class Cascade<T> extends _00Control<T> {
     //FIXME: duplicate with SearchBox
-    @FunctionalInterface
-    public interface Func1<U1, T> {
+    @FunctionalInterface public interface Func1<U1, T> {
         T apply(U1 u1);
     }
 

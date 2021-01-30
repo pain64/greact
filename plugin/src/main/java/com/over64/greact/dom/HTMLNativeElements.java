@@ -64,6 +64,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class body extends HtmlElement { }
     @JSNativeAPI public static class div extends HtmlElement {
+        public MouseEventHandler<div> onclick;
     }
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }

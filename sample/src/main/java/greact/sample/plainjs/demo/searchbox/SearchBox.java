@@ -1,15 +1,22 @@
 package greact.sample.plainjs.demo.searchbox;
 
 import com.greact.model.JSExpression;
+import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import greact.sample.plainjs.demo.searchbox._00base._00Control;
 
 public class SearchBox<T> implements Component0<div> {
     _00Control[] controls;
     _00Control[] controlsWithChildren;
-    Component0<div> onData;
     boolean canSearch = false;
     boolean doSearch = false;
+    AsyncSupplier<T> loader;
+    public Component0<div> view;
+    public Object dependsOn;
+
+    @FunctionalInterface public interface AsyncSupplier<T> {
+        @async T[] load();
+    }
 
     <V> void push(V[] array, V value) {
         JSExpression.of("array.push(value)");
@@ -46,7 +53,7 @@ public class SearchBox<T> implements Component0<div> {
     void nativeInit(/* arguments... */) {
         this.controls = JSExpression.of("[].slice.call(arguments, 1, arguments.length - 1)");
         for (var control : controls) control.onReadyChanged = this::onReadyChanged;
-        this.onData = JSExpression.of("arguments[arguments.length - 1]");
+        this.loader = () -> JSExpression.of("arguments[arguments.length - 1]");
         calcChildren();
     }
 

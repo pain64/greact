@@ -4,39 +4,40 @@ import com.greact.model.JSExpression;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.dom.HtmlElement;
-import greact.sample.plainjs.demo.searchbox.SearchBox;
-import greact.sample.plainjs.demo.searchbox._00base.Indexed;
 import greact.sample.plainjs.demo.searchbox._01impl.Cascade;
 
 import java.util.function.Consumer;
 
-public class Grid<T> implements Component0<div> {
+public class Grid<T> implements Component1<div, T[]> {
     Column<T>[] columns = (Column<T>[]) new Object[0];
-    Component1<div, T> selectedRow;
-
-    public Grid(T[] data) {
-        this.list = arrayMap(data, v -> new _00Row<>(v));
-        // FIXME: нужно разобраться с VarArgs
-        //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
+    Component1<div, T> expandedRow;
+    @FunctionalInterface public interface AsyncHandler<T> {
+        @async void handle(T value);
     }
+    AsyncHandler<T> onRowDelete;
 
-    void log(Object obj) {
-        JSExpression.of("console.log(obj)");
-    }
+//    public Grid(T[] data) {
+//        this.list = arrayMap(data, v -> new _00Row<>(v));
+//        // FIXME: нужно разобраться с VarArgs
+//        //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
+//    }
 
     <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of("lhs === rhs"); }
-
     <A, B> B[] arrayMap(A[] from, Cascade.Func1<A, B> mapper) {
         return JSExpression.of("from.map(mapper)");
     }
+    <A> A[] arrayFilter(A[] from, Cascade.Func1<A, Boolean> predicate) {
+        return JSExpression.of("from.filter(predicate)");
+    }
 
-    private final _00Row<T>[] list;
+    private _00Row<T>[] list;
     private boolean rerenderAll;
     private HtmlElement theTable;
 
 
-    @Override
-    public div mount() {
+    @Override public div mount(T[] data) {
+        this.list = arrayMap(data, v -> new _00Row<>(v));
+
         return new div() {{
             new div() {{
                 dependsOn = rerenderAll;
@@ -64,6 +65,21 @@ public class Grid<T> implements Component0<div> {
                     .table > tbody > tr:hover:not(.expansion-row) {
                         background-color: #ddf4d1;
                     }
+                    .toolbox {
+                      visibility: hidden;
+                    }
+                    tr:hover > td > .toolbox {
+                      visibility: visible;
+                    }
+                    .expansion-row > td {
+                      margin-bottom: 1px;
+                    }
+                    .toolbox > div {
+                      margin: 0px 1px 0px 1px;
+                    }
+                    .toolbox > div:hover {
+                      background-color: #ffbbc7;
+                    }
                     """);
                 new table() {{
                     theTable = this;
@@ -76,7 +92,7 @@ public class Grid<T> implements Component0<div> {
                                     new span(col.header);
                                 }};
                             new td("") {{
-                                style.width = "16px";
+                                style.width = "54px";
                             }};
                         }};
                     }};
@@ -84,85 +100,73 @@ public class Grid<T> implements Component0<div> {
                         for (var row : list) {
                             new tr() {{
                                 style.cursor = "pointer";
-                                //className = row == current ? "table-active" : "";
                                 onclick = ev -> {
                                     row.selected = !row.selected;
                                     effect(rerenderAll);
-                                    //effect(list);
                                 };
 
                                 for (var col : columns)
                                     new td(col.rowData.fetch(row.data).toString());
 
                                 new td() {{
-                                    style.width = "16px";
-
-                                    innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-right-down"><polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path></svg>
-                                        """;
-                                    onclick = ev -> {
-                                        ev.stopPropagation();
-                                        row.expanded = !row.expanded;
-                                        effect(rerenderAll);
-                                    };
+                                    new div() {{
+                                        style.display = "flex";
+                                        className = "toolbox";
+                                        new div() {{
+                                            innerHTML = """
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-minus"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                """;
+                                            onclick = ev -> {
+                                                ev.stopPropagation();
+                                                list = arrayFilter(list, r -> !strictEqual(row, r));
+                                                onRowDelete.handle(row.data);
+                                                effect(rerenderAll);
+                                            };
+                                        }};
+                                        new div() {{
+                                            innerHTML = """
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                """;
+                                        }};
+                                        new div() {{
+                                            innerHTML = row.expanded
+                                                ? """
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-minimize-2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                                """
+                                                : """
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize-2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                                """;
+                                            onclick = ev -> {
+                                                ev.stopPropagation();
+                                                row.expanded = !row.expanded;
+                                                effect(rerenderAll);
+                                            };
+                                        }};
+                                    }};
                                 }};
-
 
                                 if (row.selected)
                                     style.backgroundColor = "#93d7ff";
-
                             }};
 
                             if (row.expanded) {
-                                new tr(); // fake for strip color save
+                                new tr(); // fake for stripe color save
                                 new tr() {{
                                     className = "expansion-row";
                                     if (row.selected) style.backgroundColor = "#93d7ff";
                                     new td() {{
                                         colSpan = columns.length + 1;
                                         style.padding = "5px";
+                                        style.borderBottom = "1px solid white";
                                         new div() {{
                                             style.backgroundColor = "white";
                                             style.display = "flex";
                                             style.justifyContent = "center";
-                                            new slot<>(selectedRow, row.data);
+                                            new slot<>(expandedRow, row.data);
                                         }};
                                     }};
                                 }};
                             }
-
-//                            if (row.expanded) {
-//                                new tr(); //fake row for same color
-//                                new tr() {{
-//                                    className = "expansion-row";
-//                                    if(row.selected) style.backgroundColor = "#ddf4d1";
-//                                    new td() {{
-//                                        colSpan = columns.length;
-//                                        //style.backgroundColor = "#fff9ad82";
-//                                        new div() {{
-//                                            style.display = "flex";
-//                                            style.justifyContent = "center";
-//                                            new slot<>(selectedRow, row.data);
-//                                        }};
-//                                    }};
-//                                    new td() {{
-//                                        style.width = "16px";
-//                                        style.cursor = "pointer";
-//                                        innerHTML = """
-//                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-//                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-//                                            stroke-linecap="round" stroke-linejoin="round" class="feather
-//                                            feather-corner-right-up"><polyline points="10 9 15 4 20 9"/><path d="M4
-//                                            20h7a4 4 0 0 0 4-4V4"/></svg>
-//                                            """;
-//                                        onclick = ev -> {
-//                                            ev.stopPropagation();
-//                                            row.expanded = !row.expanded;
-//                                            effect(rerenderAll);
-//                                        };
-//                                    }};
-//                                }};
-//                            }
                         }
                     }};
                 }};

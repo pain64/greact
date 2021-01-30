@@ -7,6 +7,7 @@ import com.greact.model.async;
     public static class Style {
         public String color;
         public String border;
+        public String borderBottom;
         public String padding;
         public String margin;
         public String maxWidth;

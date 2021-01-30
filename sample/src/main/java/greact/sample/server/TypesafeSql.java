@@ -1,5 +1,7 @@
 package greact.sample.server;
 
+import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.ResultSetHandler;
 import org.sql2o.Sql2o;
 
@@ -18,18 +20,24 @@ public class TypesafeSql {
         db = new Sql2o(ds);
     }
 
+    Query queryWithParams(Connection conn, String stmt, Object... args) {
+        for (var i = 0; i < args.length; i++)
+            stmt = stmt.replace(":" + (i + 1), ":p" + (i + 1));
+
+        var query = conn.createQuery(stmt);
+
+        for (var i = 0; i < args.length; i++)
+            query.addParameter("p" + (i + 1), args[i]);
+
+        return query;
+    }
+
     public <T> List<T> list(String stmt, Class<T> klass, Object... args) {
         try (var conn = db.open()) {
-            for (var i = 0; i < args.length; i++)
-                stmt = stmt.replace(":" + (i + 1), ":p" + (i + 1));
-
-            var query = conn.createQuery(stmt);
-
-            for (var i = 0; i < args.length; i++)
-                query.addParameter("p" + (i + 1), args[i]);
+            var query = queryWithParams(conn, stmt, args);
 
             if (klass.isRecord()) {
-                var data =  query.executeAndFetch(new ResultSetHandler<T>() {
+                var data = query.executeAndFetch(new ResultSetHandler<T>() {
                     @Override
                     public T handle(ResultSet rs) throws SQLException {
                         var constuctor = klass.getDeclaredConstructors()[0];
@@ -60,5 +68,12 @@ public class TypesafeSql {
     public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
         var result = list(stmt, klass, args);
         return result.isEmpty() ? null : result.get(0);
+    }
+
+    public Void exec(String stmt, Object... args) {
+        try (var conn = db.open()) {
+            queryWithParams(conn, stmt, args).executeUpdate();
+            return null;
+        }
     }
 }
