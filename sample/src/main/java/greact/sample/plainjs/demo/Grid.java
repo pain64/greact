@@ -19,6 +19,7 @@ public class Grid<T> implements Component0<div> {
         // FIXME: нужно разобраться с VarArgs
         //this.columns = JSExpression.of("[].slice.call(arguments, 1)");
     }
+
     void log(Object obj) {
         JSExpression.of("console.log(obj)");
     }
@@ -44,16 +45,17 @@ public class Grid<T> implements Component0<div> {
                        border-collapse: collapse;
                        border-spacing: 0;
                        width: 100%;
+                       cellspacing: 1px;
                     }
                     .table > tbody > tr {
-                        line-height: 40px; 
+                        line-height: 40px;
                     }
                     .table > thead {
                         border-bottom: 2px  solid black;
                         border-collapse: separate;
                     }
                                         
-                    .table > thead > td {
+                    .table > thead > tr > td {
                         font-weight: 500;
                     }
                     .table-striped > tbody > tr:nth-child(even) {
@@ -88,65 +90,46 @@ public class Grid<T> implements Component0<div> {
                                     effect(rerenderAll);
                                     //effect(list);
                                 };
-                                if (row.expanded) {
-                                    new td() {{
-                                        colSpan = columns.length + 1;
-                                        new table() {{
-                                            className = "table";
-                                            new tbody() {{
-                                                new tr() {{
-                                                    for (var col : columns)
-                                                        new td(col.rowData.fetch(row.data).toString());
-                                                    new td() {{
-                                                        style.width = "16px";
-                                                        if (row.selected && !row.expanded) {
-                                                            innerHTML = """
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-right-down"><polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path></svg>
-                                                                """;
-                                                            onclick = ev -> {
-                                                                ev.stopPropagation();
-                                                                row.expanded = !row.expanded;
-                                                                effect(rerenderAll);
-                                                            };
-                                                        }
-                                                    }};
-                                                }};
-                                                new tr() {{
-                                                    new td() {{
-                                                        colSpan = columns.length + 1;
-                                                        new div() {{
-                                                            style.display = "flex";
-                                                            style.padding = "5px";
-                                                            style.justifyContent = "center";
-                                                            new slot<>(selectedRow, row.data);
-                                                        }};
-                                                    }};
-                                                }};
-                                            }};
-                                        }};
-                                    }};
-                                } else {
-                                    for (var col : columns)
-                                        new td(col.rowData.fetch(row.data).toString());
-                                    new td() {{
-                                        style.width = "16px";
-                                        if (row.selected && !row.expanded) {
-                                            innerHTML = """
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-right-down"><polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path></svg>
-                                                """;
-                                            onclick = ev -> {
-                                                ev.stopPropagation();
-                                                row.expanded = !row.expanded;
-                                                effect(rerenderAll);
-                                            };
-                                        }
-                                    }};
-                                }
+
+                                for (var col : columns)
+                                    new td(col.rowData.fetch(row.data).toString());
+
+                                new td() {{
+                                    style.width = "16px";
+
+                                    innerHTML = """
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-corner-right-down"><polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path></svg>
+                                        """;
+                                    onclick = ev -> {
+                                        ev.stopPropagation();
+                                        row.expanded = !row.expanded;
+                                        effect(rerenderAll);
+                                    };
+                                }};
+
 
                                 if (row.selected)
-                                    style.backgroundColor = "#ddf4d1";
+                                    style.backgroundColor = "#93d7ff";
 
                             }};
+
+                            if (row.expanded) {
+                                new tr(); // fake for strip color save
+                                new tr() {{
+                                    className = "expansion-row";
+                                    if (row.selected) style.backgroundColor = "#93d7ff";
+                                    new td() {{
+                                        colSpan = columns.length + 1;
+                                        style.padding = "5px";
+                                        new div() {{
+                                            style.backgroundColor = "white";
+                                            style.display = "flex";
+                                            style.justifyContent = "center";
+                                            new slot<>(selectedRow, row.data);
+                                        }};
+                                    }};
+                                }};
+                            }
 
 //                            if (row.expanded) {
 //                                new tr(); //fake row for same color
