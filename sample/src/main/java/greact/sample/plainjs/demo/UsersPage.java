@@ -25,7 +25,7 @@ public class UsersPage implements Component0<body> {
             new SearchBox<>(
                 new StrInput().label("Имя студента").optional(),
                 name -> server(db -> db.array(
-                    "SELECT * FROM users WHERE name like concat('%', coalesce(:1, ''), '%')", User.class, name))) {{
+                    "SELECT * FROM users WHERE name like coalesce(:1, '%')", User.class, "%" + name + "%"))) {{
                 view = new Pagination<>() {{
                     page = new Grid<>() {{
                         columns = new Column[]{

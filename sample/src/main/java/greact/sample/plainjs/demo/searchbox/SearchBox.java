@@ -11,11 +11,21 @@ public class SearchBox<T> implements Component0<div> {
     boolean canSearch = false;
     boolean doSearch = false;
     AsyncSupplier<T> loader;
-    public Component0<div> view;
+    public Component1<div, T[]> view;
+    T[] loaded;
     public Object dependsOn;
 
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T[] load();
+    }
+    @FunctionalInterface public interface AsyncFunc1<A1, R> {
+        @async R load(A1 a1);
+    }
+    @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
+        @async R load(A1 a1, A2 a2);
+    }
+    @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
+        @async R load(A1 a1, A2 a2, A3 a3);
     }
 
     <V> void push(V[] array, V value) {
@@ -53,19 +63,19 @@ public class SearchBox<T> implements Component0<div> {
     void nativeInit(/* arguments... */) {
         this.controls = JSExpression.of("[].slice.call(arguments, 1, arguments.length - 1)");
         for (var control : controls) control.onReadyChanged = this::onReadyChanged;
-        this.loader = () -> JSExpression.of("arguments[arguments.length - 1]");
+        this.loader = () -> JSExpression.of("arguments[arguments.length - 1](this.controls.map(c => c.value))");
         calcChildren();
     }
 
-    public <U1> SearchBox(_00Control<U1> in1, Component1<div, U1> slot) {
+    public <U1> SearchBox(_00Control<U1> in1, AsyncFunc1<U1, T[]> loader) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
-    public <U1, U2> SearchBox(_00Control<U1> in1, _00Control<U2> in2, Component2<div, U1, U2> slot) {
+    public <U1, U2> SearchBox(_00Control<U1> in1, _00Control<U2> in2, AsyncFunc2<U1, U2, T[]> loader) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
-    public <U1, U2, U3> SearchBox(_00Control<U1> in1, _00Control<U2> in2, _00Control<U3> in3, Component3<div, U1, U2, U3> slot) {
+    public <U1, U2, U3> SearchBox(_00Control<U1> in1, _00Control<U2> in2, _00Control<U3> in3, AsyncFunc3<U1, U2, U3, T[]> loader) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
@@ -101,18 +111,16 @@ public class SearchBox<T> implements Component0<div> {
                 new button("искать") {{
                     style.margin = "2px";
                     className = canSearch ? "search-button active" : " search-button disabled";
-                    onclick = ev -> effect(doSearch = true);
+                    onclick = ev -> {
+                        loaded = loader.load();
+                        effect(doSearch = true);
+                    };
                 }};
             }};
 
             if (doSearch) {
                 doSearch = false;
-                switch (controls.length) {
-                    case 0: new slot<>(onData); break;
-                    case 1: new slot<>((Component1<div, Object>) onData, controls[0].value); break;
-                    case 2: new slot<>((Component2<div, Object, Object>) onData, controls[0].value, controls[1].value); break;
-                    case 3: new slot<>((Component3<div, Object, Object, Object>) onData, controls[0].value, controls[1].value, controls[2].value); break;
-                }
+                new slot<>(view, loaded);
             }
         }};
     }
