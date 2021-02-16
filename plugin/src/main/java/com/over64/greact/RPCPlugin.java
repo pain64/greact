@@ -75,13 +75,13 @@ public class RPCPlugin {
             : maker.Select(buildStatic(sym.owner), sym);
     }
 
-    class IdxHolder {
+    static class IdxHolder {
         private int idx = 0;
 
         int inc() { return idx++; }
     }
 
-    class EnpointsHolder {
+    static class EndpointsHolder {
         List<JCTree> list = List.nil();
     }
 
@@ -184,7 +184,7 @@ public class RPCPlugin {
 
         for (var typeDecl : cu.getTypeDecls()) {
             if (typeDecl instanceof JCTree.JCClassDecl classDecl) {
-                var endpoints = new EnpointsHolder();
+                var endpoints = new EndpointsHolder();
 
                 typeDecl.accept(new TreeScanner() {
                     @Override

@@ -377,21 +377,26 @@ public class ExpressionGen {
         } else if (expr instanceof ParameterizedTypeTree pTree) {
             expr(deep, (ExpressionTree) pTree.getType());
         } else if (expr instanceof NewClassTree newClass) {
-            // FIXME:
-            //  - anon inner classes?
+            var jcNewClass = (JCTree.JCNewClass) newClass;
             out.write(0, "new ");
             var info = Overloads.methodInfo(
                 mctx.ctx().types(),
                 (TypeElement) (((JCTree.JCNewClass) newClass).type.tsym),
                 (ExecutableElement) ((JCTree.JCNewClass) newClass).constructor);
 
-            expr(deep, newClass.getIdentifier());
-            out.write(0, "(");
-            if (info.isOverloaded()) {
-                out.write(0, "" + info.n());
-                out.write(0, ", ");
+
+            if(jcNewClass.def != null) {
+                var tgen = new TypeGen(out, mctx.ctx().cu(), mctx.ctx().env(), mctx.ctx().context(), mctx.ctx().stdShim());
+                tgen.type(deep, jcNewClass.def);
+            } else {
+                expr(deep, newClass.getIdentifier());
+                out.write(0, "(");
+                if (info.isOverloaded()) {
+                    out.write(0, "" + info.n());
+                    out.write(0, ", ");
+                }
+                out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "", ", ", ")");
             }
-            out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "", ", ", ")");
         }
     }
 }

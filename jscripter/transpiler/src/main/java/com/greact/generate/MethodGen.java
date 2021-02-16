@@ -36,7 +36,7 @@ public class MethodGen {
 
     void NOP(int deep) {}
 
-    void group(boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
+    void group(int deep, boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
                List<Pair<Integer, JCTree.JCMethodDecl>> group) {
         if (group.isEmpty()) return;
         if (group.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE))) return;
@@ -73,7 +73,7 @@ public class MethodGen {
                             """);
         }
 
-        out.write(2, "");
+        out.write(deep + 2, "");
         if (isStatic) out.write(0, "static ");
         var isAsync = isAsyncInSuper || isAsyncLocal;
         if (isAsync) out.write(0, "async ");
@@ -92,8 +92,8 @@ public class MethodGen {
         // FIXME: PIZDATION END
         this.stmtGen = new StatementGen(out, new MContext(ctx, isAsync));
 
-        BiFunction<Integer, JCTree.JCVariableDecl, Void> initField = (deep, varDecl) -> {
-            out.write(deep, "this.");
+        BiFunction<Integer, JCTree.JCVariableDecl, Void> initField = (_deep, varDecl) -> {
+            out.write(_deep, "this.");
             out.write(0, varDecl.getName().toString());
             out.write(0, " = ");
 
@@ -117,26 +117,26 @@ public class MethodGen {
                 .filter(el -> !el.getModifiers().contains(Modifier.STATIC))
                 .collect(Collectors.toList());
 
-            defaultConstructLocals = deep ->
+            defaultConstructLocals = _deep ->
                 fields.forEach(field -> {
                     // FIXME: deduplicate with TypeGen
                     var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
                     if (!((Symbol.VarSymbol) field).isFinal() || varDecl.getInitializer() != null)
-                        initField.apply(deep, varDecl);
+                        initField.apply(_deep, varDecl);
                 });
         } else defaultConstructLocals = this::NOP;
 
-        BiFunction<Integer, JCTree.JCMethodDecl, Void> recordConstructLocals = (deep, method) -> {
+        BiFunction<Integer, JCTree.JCMethodDecl, Void> recordConstructLocals = (_deep, method) -> {
             if (((Symbol.ClassSymbol) method.sym.owner).isRecord())
                 method.params.forEach(varDecl ->
-                    out.write(deep, "this." + varDecl.getName() + " = " + varDecl.getName() + ";\n"));
+                    out.write(_deep, "this." + varDecl.getName() + " = " + varDecl.getName() + ";\n"));
             return null;
         };
 
         if (isOverloaded) {
-            out.write(4, "switch($over) {\n");
+            out.write(deep + 4, "switch($over) {\n");
             group.forEach(m -> {
-                out.write(6, "case ");
+                out.write(deep + 6, "case ");
                 out.write(0, String.valueOf(m.fst));
                 out.write(0, ":\n");
 
@@ -145,52 +145,52 @@ public class MethodGen {
                 var statements = m.snd.sym.isAbstract() ?
                     com.sun.tools.javac.util.List.<JCTree.JCStatement>nil() : m.snd.body.stats;
                 if (!statements.isEmpty()) {
-                    stmtGen.stmt(8, statements.get(0));
+                    stmtGen.stmt(deep + 8, statements.get(0));
                     out.write(0, "\n");
                 }
 
-                defaultConstructLocals.accept(8);
-                recordConstructLocals.apply(8, m.snd);
+                defaultConstructLocals.accept(deep + 8);
+                recordConstructLocals.apply(deep + 8, m.snd);
 
                 statements.stream().skip(1).forEach(stmt -> {
-                    stmtGen.stmt(8, stmt);
+                    stmtGen.stmt(deep + 8, stmt);
                     out.write(0, "\n");
                 });
 
                 if (statements.isEmpty() ||
                     !(statements.get(statements.size() - 1) instanceof ReturnTree))
-                    out.write(8, "break\n");
+                    out.write(deep + 8, "break\n");
             });
 
             if (!isConstructor && hasInSuper) {
-                out.write(6, "default:\n");
-                out.write(8, "return super.");
+                out.write(deep + 6, "default:\n");
+                out.write(deep + 8, "return super.");
                 out.write(0, name);
                 out.write(0, ".apply(this, arguments)\n");
             }
-            out.write(4, "}\n");
+            out.write(deep + 4, "}\n");
         } else {
             var method = group.get(0).snd;
             // FIXME: deduplicate code
             var statements = method.body.stats;
 
             if (!statements.isEmpty()) { // super constructor call
-                stmtGen.stmt(4, statements.get(0));
+                stmtGen.stmt(deep + 4, statements.get(0));
                 out.write(0, "\n");
             }
 
-            defaultConstructLocals.accept(4);
-            recordConstructLocals.apply(4, method);
+            defaultConstructLocals.accept(deep + 4);
+            recordConstructLocals.apply(deep + 4, method);
             statements.stream().skip(1).forEach(stmt -> {
-                stmtGen.stmt(4, stmt);
+                stmtGen.stmt(deep + 4, stmt);
                 out.write(0, "\n"); // FIXME: может быть пусть stmtGen сам ставит \n после каждого stmt
             });
         }
 
-        out.write(2, "}");
+        out.write(deep + 2, "}");
     }
 
-    void method(Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME: don't need pair here?
+    void method(int deep, Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME: don't need pair here?
         var types = Types.instance(ctx.context());
         var table = Overloads.table(types, ctx.typeEl().sym, group.fst);
         var staticMethods = group.snd.stream()
@@ -209,8 +209,8 @@ public class MethodGen {
             })
             .collect(Collectors.toList());
 
-        group(table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true,
+        group(deep, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true,
             staticMethods);
-        group(table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, nonStaticMethods);
+        group(deep, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, nonStaticMethods);
     }
 }

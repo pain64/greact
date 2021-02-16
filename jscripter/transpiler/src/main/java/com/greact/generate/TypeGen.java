@@ -26,7 +26,8 @@ public class TypeGen {
         Types types,
         Context context,
         JCTree.JCClassDecl typeEl,
-        JavaStdShim stdShim
+        JavaStdShim stdShim,
+        JavacProcessingEnvironment env
     ) {
     }
 
@@ -35,6 +36,7 @@ public class TypeGen {
     final Trees trees;
     final Context context;
     final JavaStdShim stdShim;
+    final JavacProcessingEnvironment env;
 
     public TypeGen(JSOut out, JCTree.JCCompilationUnit cu, JavacProcessingEnvironment env, Context context, JavaStdShim stdShim) {
         this.out = out;
@@ -42,28 +44,33 @@ public class TypeGen {
         this.trees = Trees.instance(env);
         this.context = context;
         this.stdShim = stdShim;
+        this.env = env;
     }
 
     public void type(int deep, JCTree decl) {
-        if(!(decl instanceof JCTree.JCClassDecl)) return;;
+        if (!(decl instanceof JCTree.JCClassDecl)) return;
+        ;
         var typeDecl = (JCTree.JCClassDecl) decl;
 
         if (typeDecl.getKind() == Tree.Kind.INTERFACE) return;
         if (typeDecl.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
-        out.write(deep, "class ");
-        out.write(deep, cu.getPackage().getPackageName().toString().replace(".", "$"));
-        out.write(0, "$");
-        out.write(0, typeDecl.getSimpleName().toString());
+        out.write(0, "class ");
+        if (!typeDecl.type.tsym.isAnonymous()) {
+            out.write(0, cu.getPackage().getPackageName().toString().replace(".", "$"));
+            out.write(0, "$");
+            out.write(0, typeDecl.getSimpleName().toString());
+            out.write(0, " ");
+        }
 
         var extendClause = typeDecl.extending;
         var superClass = extendClause != null
             ? extendClause.type.tsym.toString().replace(".", "$")
             : "Object";
-        out.write(0, " extends ");
+        out.write(0, "extends ");
         out.write(0, superClass);
 
-        var ctx = new TContext(cu, trees, Types.instance(context), context, typeDecl, stdShim);
+        var ctx = new TContext(cu, trees, Types.instance(context), context, typeDecl, stdShim, env);
         var mGen = new MethodGen(ctx, out);
 
         out.write(0, " {\n");
@@ -78,7 +85,7 @@ public class TypeGen {
         out.mkString(staticFields, field -> {
             var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
 
-            out.write(2, "static ");
+            out.write(deep + 2, "static ");
             out.write(0, varDecl.getName().toString());
             out.write(0, " = ");
 
@@ -92,14 +99,14 @@ public class TypeGen {
                 out.write(0, "null");
         }, "", "\n", "");
 
-        if(hasStaticFields) out.write(0, "\n\n");
+        if (hasStaticFields) out.write(0, "\n\n");
 
         var methods = new ArrayList<Pair<Name, List<JCTree.JCMethodDecl>>>();
 
         typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override
             public void visitMethodDef(JCTree.JCMethodDecl method) {
-                if(method.sym.getAnnotation(DoNotTranspile.class) != null) return;
+                if (method.sym.getAnnotation(DoNotTranspile.class) != null) return;
 
                 var name = method.getName();
                 var group = methods.stream()
@@ -116,8 +123,9 @@ public class TypeGen {
             public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
-        out.mkString(methods, mGen::method, "", "\n\n", "");
-        out.write(0, "\n}");
+        out.mkString(methods, g -> mGen.method(deep, g), "", "\n\n", "");
+        out.write(0, "\n");
+        out.write(deep, "}");
     }
     // ENUM
 }

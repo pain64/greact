@@ -2,7 +2,6 @@ package com.over64.greact;
 
 import com.greact.TranspilerPlugin;
 import com.over64.greact.dom.*;
-import com.sun.jdi.ClassType;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -20,7 +19,6 @@ import com.sun.tools.javac.util.Names;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.lang.invoke.MethodType;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
