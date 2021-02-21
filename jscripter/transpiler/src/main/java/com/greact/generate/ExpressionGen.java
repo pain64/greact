@@ -187,7 +187,7 @@ public class ExpressionGen {
                 .findFirst().get();
 
             var isAsync = invokeMethod.getAnnotation(async.class) != null;
-            if(isAsync) out.write(0, "async ");
+            if (isAsync) out.write(0, "async ");
 
             out.mkString(lambda.getParameters(), (arg) ->
                 out.write(0, arg.getName().toString()), "(", ", ", ") =>");
@@ -385,18 +385,20 @@ public class ExpressionGen {
                 (ExecutableElement) ((JCTree.JCNewClass) newClass).constructor);
 
 
-            if(jcNewClass.def != null) {
-                var tgen = new TypeGen(out, mctx.ctx().cu(), mctx.ctx().env(), mctx.ctx().context(), mctx.ctx().stdShim());
+            if (jcNewClass.def != null) {
+                var tgen = new TypeGen(out, mctx.ctx().cu(), mctx.ctx().env(), mctx.ctx().context(),
+                    mctx.ctx().stdShim());
                 tgen.type(deep, jcNewClass.def);
-            } else {
+            } else
                 expr(deep, newClass.getIdentifier());
-                out.write(0, "(");
-                if (info.isOverloaded()) {
-                    out.write(0, "" + info.n());
-                    out.write(0, ", ");
-                }
-                out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "", ", ", ")");
+
+            out.write(0, "(");
+            if (info.isOverloaded()) {
+                out.write(0, "" + info.n());
+                out.write(0, ", ");
             }
+            out.mkString(newClass.getArguments(), arg -> expr(deep, arg), "", ", ", ")");
+
         }
     }
 }

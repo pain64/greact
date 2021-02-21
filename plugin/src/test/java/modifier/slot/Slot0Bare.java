@@ -102,22 +102,27 @@ public class Slot0Bare {
                                 ($viewFrag0 = com.over64.greact.dom.Fragment.of(()->{
                                     $viewFrag0.cleanup();
                                     final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                    final js.Conditional<com.over64.greact.dom.HTMLNativeElements.h1> $comp0 = new Conditional<h1>();
-                                    {
-                                        $comp0.cond = showHint;
-                                        $comp0.doThen = ()->{
-                                            final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
-                                            return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                                $root.innerText = "This is the hint";
-                                            });
-                                        };
-                                        $comp0.doElse = ()->{
-                                            final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
-                                            return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                                $root.innerText = "The hint is hidden";
-                                            });
-                                        };
-                                    }
+                                    final js.Demo$1$1 $comp0 = new Conditional<h1>(){
+                                       \s
+                                        () {
+                                            super();
+                                        }
+                                        {
+                                            cond = showHint;
+                                            doThen = ()->{
+                                                final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
+                                                return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                                    $root.innerText = "This is the hint";
+                                                });
+                                            };
+                                            doElse = ()->{
+                                                final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
+                                                return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                                    $root.innerText = "The hint is hidden";
+                                                });
+                                            };
+                                        }
+                                    };
                                     com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                     $viewFrag0.appendChild($el0);
                                 }, $root)).renderer.render();

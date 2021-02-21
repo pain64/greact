@@ -17,9 +17,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.x = std$java$lang$Integer.valueOf('42')
+                  }
                   constructor() {
                     super();
-                    this.x = std$java$lang$Integer.valueOf('42')
+                    this.__init__();
                   }
                 }""");
     }
@@ -33,9 +36,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.x = std$java$lang$String.compareTo.call('x', 'y')
+                  }
                   constructor() {
                     super();
-                    this.x = std$java$lang$String.compareTo.call('x', 'y')
+                    this.__init__();
                   }
                 }""");
     }
@@ -50,9 +56,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.x = 1 + 1
+                  }
                   constructor() {
                     super();
-                    this.x = 1 + 1
+                    this.__init__();
                   }
                 }""");
     }
@@ -69,10 +78,13 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  constructor() {
-                    super();
+                  __init__() {
                     this.x = 1
                    + 1
+                  }
+                  constructor() {
+                    super();
+                    this.__init__();
                   }
                 }""");
     }
@@ -88,9 +100,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.x = this.constructor.of()
+                  }
                   constructor() {
                     super();
-                    this.x = this.constructor.of()
+                    this.__init__();
                   }
                   
                   static of() {

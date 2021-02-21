@@ -17,6 +17,7 @@ import javax.lang.model.element.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class TypeGen {
@@ -38,7 +39,8 @@ public class TypeGen {
     final JavaStdShim stdShim;
     final JavacProcessingEnvironment env;
 
-    public TypeGen(JSOut out, JCTree.JCCompilationUnit cu, JavacProcessingEnvironment env, Context context, JavaStdShim stdShim) {
+    public TypeGen(JSOut out, JCTree.JCCompilationUnit cu, JavacProcessingEnvironment env, Context context,
+                   JavaStdShim stdShim) {
         this.out = out;
         this.cu = cu;
         this.trees = Trees.instance(env);
@@ -47,9 +49,23 @@ public class TypeGen {
         this.env = env;
     }
 
+    void initField(int deep, TContext ctx, boolean isStatic, JCTree.JCVariableDecl varDecl) {
+        out.write(deep, isStatic ? "static " : "this.");
+        out.write(0, varDecl.getName().toString());
+        out.write(0, " = ");
+
+        if (varDecl.getInitializer() != null)
+            new StatementGen(out, new MethodGen.MContext(ctx, false)).exprGen.expr(deep, varDecl.getInitializer());
+        else if (varDecl.getType().type.isIntegral())
+            out.write(0, "0");
+        else
+            out.write(0, "null");
+
+        out.write(0, "\n");
+    }
+
     public void type(int deep, JCTree decl) {
         if (!(decl instanceof JCTree.JCClassDecl)) return;
-        ;
         var typeDecl = (JCTree.JCClassDecl) decl;
 
         if (typeDecl.getKind() == Tree.Kind.INTERFACE) return;
@@ -81,25 +97,38 @@ public class TypeGen {
             .filter(el -> el.getModifiers().contains(Modifier.STATIC)).iterator();
 
         var hasStaticFields = staticFields.hasNext();
-
-        out.mkString(staticFields, field -> {
+        staticFields.forEachRemaining(field -> {
             var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
+            initField(deep + 2, ctx, true, varDecl);
+        });
+        if (hasStaticFields) out.write(0, "\n");
 
-            out.write(deep + 2, "static ");
-            out.write(0, varDecl.getName().toString());
-            out.write(0, " = ");
+        var fields = typeDecl.sym.getEnclosedElements().stream()
+            .filter(el -> el.getKind() == ElementKind.FIELD)
+            .map(el -> (VariableElement) el)
+            .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
+        var hasFields = fields.hasNext();
 
-            // FIXME: use new StmtGen
-            // FIXME: constructor cannot be async by Javascript design
-            if (varDecl.getInitializer() != null)
-                new StatementGen(out, new MethodGen.MContext(ctx, false)).exprGen.expr(4, varDecl.getInitializer());
-            else if (varDecl.getType().type.isIntegral())
-                out.write(0, "0");
-            else
-                out.write(0, "null");
-        }, "", "\n", "");
+        var initBlock = typeDecl.defs.stream()
+            .filter(def -> def instanceof JCTree.JCBlock)
+            .map(def -> (JCTree.JCBlock) def)
+            .findFirst();
 
-        if (hasStaticFields) out.write(0, "\n\n");
+        var hasInitMethod = hasFields || initBlock.isPresent();
+        if (hasInitMethod) {
+            out.write(deep + 2, "__init__() {\n");
+            fields.forEachRemaining(field -> {
+                var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
+                initField(deep + 4, ctx, false, varDecl);
+            });
+            initBlock.ifPresent(block ->
+                block.stats.forEach(stmt -> {
+                    new StatementGen(out, new MethodGen.MContext(ctx, false)).stmt(deep + 4, stmt);
+                    out.write(0, "\n");
+                }));
+            out.write(deep + 2, "}\n");
+        }
+
 
         var methods = new ArrayList<Pair<Name, List<JCTree.JCMethodDecl>>>();
 
@@ -123,7 +152,7 @@ public class TypeGen {
             public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
-        out.mkString(methods, g -> mGen.method(deep, g), "", "\n\n", "");
+        out.mkString(methods, g -> mGen.method(deep, hasInitMethod, g), "", "\n\n", "");
         out.write(0, "\n");
         out.write(deep, "}");
     }

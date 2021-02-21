@@ -82,15 +82,20 @@ public class Slot0With_new_slot_element {
                             final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
                                 final com.over64.greact.dom.HTMLNativeElements.div $el0 = com.over64.greact.dom.Globals.document.createElement("div");
-                                final js.Decorator $comp0 = new Decorator();
-                                {
-                                    $comp0.forDecorate = ()->{
-                                        final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
-                                        return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                            $root.innerText = "decorated text!";
-                                        });
-                                    };
-                                }
+                                final js.Demo$1$1 $comp0 = new Decorator(){
+                                   \s
+                                    () {
+                                        super();
+                                    }
+                                    {
+                                        forDecorate = ()->{
+                                            final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
+                                            return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                                $root.innerText = "decorated text!";
+                                            });
+                                        };
+                                    }
+                                };
                                 com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });

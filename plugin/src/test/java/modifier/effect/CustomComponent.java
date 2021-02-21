@@ -71,10 +71,15 @@ public class CustomComponent {
                             final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
                                 final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                final js.Child $comp0 = new Child();
-                                {
-                                    $comp0.mainAnswer = 42;
-                                }
+                                final js.Demo$1$1 $comp0 = new Child(){
+                                   \s
+                                    () {
+                                        super();
+                                    }
+                                    {
+                                        mainAnswer = 42;
+                                    }
+                                };
                                 com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });

@@ -20,7 +20,7 @@ public class SuperDemo {
             throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
         }
     }
-    static record User2(long id, String name, int age, String sex){}
+
     public static void main(String[] args) throws IOException {
         var config = new HikariConfig(new Properties() {{
             setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");

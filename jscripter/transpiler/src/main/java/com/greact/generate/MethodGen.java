@@ -4,7 +4,6 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
-import com.greact.model.DoNotTranspile;
 import com.greact.model.async;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Symbol;
@@ -36,7 +35,7 @@ public class MethodGen {
 
     void NOP(int deep) {}
 
-    void group(int deep, boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
+    void group(int deep, boolean hasInitMethod, boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
                List<Pair<Integer, JCTree.JCMethodDecl>> group) {
         if (group.isEmpty()) return;
         if (group.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE))) return;
@@ -117,13 +116,15 @@ public class MethodGen {
                 .filter(el -> !el.getModifiers().contains(Modifier.STATIC))
                 .collect(Collectors.toList());
 
-            defaultConstructLocals = _deep ->
-                fields.forEach(field -> {
-                    // FIXME: deduplicate with TypeGen
-                    var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
-                    if (!((Symbol.VarSymbol) field).isFinal() || varDecl.getInitializer() != null)
-                        initField.apply(_deep, varDecl);
-                });
+            defaultConstructLocals = _deep -> {
+                if(hasInitMethod) out.write(_deep, "this.__init__();\n");
+//                fields.forEach(field -> {
+//                    // FIXME: deduplicate with TypeGen
+//                    var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
+//                    if (!((Symbol.VarSymbol) field).isFinal() || varDecl.getInitializer() != null)
+//                        initField.apply(_deep, varDecl);
+//                });
+            };
         } else defaultConstructLocals = this::NOP;
 
         BiFunction<Integer, JCTree.JCMethodDecl, Void> recordConstructLocals = (_deep, method) -> {
@@ -190,7 +191,7 @@ public class MethodGen {
         out.write(deep + 2, "}");
     }
 
-    void method(int deep, Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME: don't need pair here?
+    void method(int deep, boolean hasInitMethod, Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME: don't need pair here?
         var types = Types.instance(ctx.context());
         var table = Overloads.table(types, ctx.typeEl().sym, group.fst);
         var staticMethods = group.snd.stream()
@@ -209,8 +210,8 @@ public class MethodGen {
             })
             .collect(Collectors.toList());
 
-        group(deep, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true,
+        group(deep, hasInitMethod, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true,
             staticMethods);
-        group(deep, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, nonStaticMethods);
+        group(deep, hasInitMethod, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, nonStaticMethods);
     }
 }

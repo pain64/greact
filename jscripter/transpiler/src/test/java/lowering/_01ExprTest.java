@@ -65,9 +65,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.z = 0
+                  }
                   constructor() {
                     super();
-                    this.z = 0
+                    this.__init__();
                   }
                   
                   baz() {
@@ -247,9 +250,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.z = 0
+                  }
                   constructor() {
                     super();
-                    this.z = 0
+                    this.__init__();
                   }
                   
                   baz() {
@@ -452,9 +458,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.xx = 1
+                  }
                   constructor() {
                     super();
-                    this.xx = 1
+                    this.__init__();
                   }
                   
                   foo() {
@@ -590,9 +599,12 @@ public class _01ExprTest {
                     }""",
                 """
                     class js$Test extends Object {
+                      __init__() {
+                        this.a = new js$A()
+                      }
                       constructor() {
                         super();
-                        this.a = new js$A()
+                        this.__init__();
                       }
                     }"""));
     }

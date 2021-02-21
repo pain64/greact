@@ -15,8 +15,14 @@ public class _09RecordDeclaration {
                     """,
                 """
                     class js$Test extends Object {
+                      __init__() {
+                        this.x = 0
+                        this.y = 0
+                        this.z = 0
+                      }
                       constructor(x, y, z) {
                         super();
+                        this.__init__();
                         this.x = x;
                         this.y = y;
                         this.z = z;

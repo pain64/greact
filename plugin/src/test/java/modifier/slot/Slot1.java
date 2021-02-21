@@ -101,15 +101,20 @@ public class Slot1 {
                             java.lang.String[] list = new String[]{"one", "two", "three"};
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
                                 final com.over64.greact.dom.HTMLNativeElements.div $el0 = com.over64.greact.dom.Globals.document.createElement("div");
-                                final js.ListDecorator $comp0 = new ListDecorator(list);
-                                {
-                                    $comp0.forDecorate = (s)->{
-                                        final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
-                                        return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                            $root.innerText = "text:" + s;
-                                        });
-                                    };
-                                }
+                                final js.Demo$1$1 $comp0 = new ListDecorator(list){
+                                   \s
+                                    (java.lang.String[] list) {
+                                        super(list);
+                                    }
+                                    {
+                                        forDecorate = (s)->{
+                                            final com.over64.greact.dom.HTMLNativeElements.h1 $root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.Globals.gReactElement;
+                                            return com.over64.greact.dom.Globals.gReactReturn(()->{
+                                                $root.innerText = "text:" + s;
+                                            });
+                                        };
+                                    }
+                                };
                                 com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });

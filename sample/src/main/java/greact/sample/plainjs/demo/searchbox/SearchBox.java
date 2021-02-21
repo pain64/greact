@@ -63,7 +63,7 @@ public class SearchBox<T> implements Component0<div> {
     void nativeInit(/* arguments... */) {
         this.controls = JSExpression.of("[].slice.call(arguments, 1, arguments.length - 1)");
         for (var control : controls) control.onReadyChanged = this::onReadyChanged;
-        this.loader = () -> JSExpression.of("arguments[arguments.length - 1](this.controls.map(c => c.value))");
+        this.loader = () -> JSExpression.of("arguments[arguments.length - 1](...this.controls.map(c => c.value))");
         calcChildren();
     }
 

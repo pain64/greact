@@ -77,9 +77,14 @@ public class CustomTypeWithGenericConstructor {
                             final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
                                 final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                final js.A<java.lang.String> $comp0 = new A<>(new String[]{});
-                                {
-                                }
+                                final js.Demo$1$1 $comp0 = new A<>(new String[]{}){
+                                   \s
+                                    (java.lang.String[] data) {
+                                        super(data);
+                                    }
+                                    {
+                                    }
+                                };
                                 com.over64.greact.dom.Globals.gReactMount($el0, $comp0, new Object[]{});
                                 $root.appendChild($el0);
                             });

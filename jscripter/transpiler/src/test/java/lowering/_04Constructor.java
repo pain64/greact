@@ -33,23 +33,59 @@ public class _04Constructor {
                 }""",
             """
                 class js$Test extends Object {
+                  __init__() {
+                    this.x = null
+                    this.y = null
+                    this.z = 42
+                    this.f = 0
+                  }
                   constructor($over, x, y) {
                     switch($over) {
                       case 1:
                         super();
-                        this.z = 42
-                        this.f = 0
+                        this.__init__();
                         this.x = x;
                         this.y = y;
                         break
                       case 2:
                         super();
-                        this.z = 42
-                        this.f = 0
+                        this.__init__();
                         this.x = x;
                         this.y = 'hello';
                         break
                     }
+                  }
+                }""");
+    }
+
+    @Test
+    void initBlock() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  final String x;
+                  final String y;
+                  
+                  {
+                    x = "hello";
+                  }
+                  
+                  public Test(String y) {
+                    this.y = y;
+                  }
+                }""",
+            """
+                class js$Test extends Object {
+                  __init__() {
+                    this.x = null
+                    this.y = null
+                    this.x = 'hello';
+                  }
+                  constructor(y) {
+                    super();
+                    this.__init__();
+                    this.y = y;
                   }
                 }""");
     }

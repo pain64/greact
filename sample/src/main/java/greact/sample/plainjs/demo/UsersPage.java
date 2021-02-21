@@ -20,14 +20,19 @@ public class UsersPage implements Component0<body> {
         V value();
     }
 
+    static String like(String value) {
+        if(value == null) value = "";
+        return "%" + value + "%";
+    }
+
     @Override public body mount() {
         return new body() {{
             new SearchBox<>(
                 new StrInput().label("Имя студента").optional(),
                 name -> server(db -> db.array(
-                    "SELECT * FROM users WHERE name like coalesce(:1, '%')", User.class, "%" + name + "%"))) {{
-                view = new Pagination<>() {{
-                    page = new Grid<>() {{
+                    "SELECT * FROM users WHERE name like :1", User.class, like(name)))) {{
+                view = new PaginationSlot<>() {{
+                    page = new GridSlot<>() {{
                         columns = new Column[]{
                             new Column<User>("Id", c -> c.id),
                             new Column<User>("Имя", c -> c.name),

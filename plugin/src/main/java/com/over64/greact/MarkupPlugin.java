@@ -289,6 +289,12 @@ public class MarkupPlugin {
         return componentImplOpt_(type).get();
     }
 
+    Type popNativeElementAnonTypes(Type anon) {
+        if (types.isSubtype(anon.getEnclosingType(), symbols.clHtmlElement.type))
+            return popNativeElementAnonTypes(anon.getEnclosingType());
+        return anon.getEnclosingType();
+    }
+
     JCTree.JCStatement mapStmt(MountCtx mctx,
                                HashSet<Symbol.VarSymbol> forEffect,
                                Symbol.VarSymbol dest, JCTree.JCStatement stmt) {
@@ -308,14 +314,15 @@ public class MarkupPlugin {
                 var expr = exprStmt.expr;
 
                 if (expr instanceof JCTree.JCNewClass newClass) {
-                    if (newClass.def != null)  // anon inner class
-                        newClass.type = ((Type.ClassType) newClass.type).supertype_field;
+                    var compType = newClass.def == null // anon inner class
+                        ? newClass.type
+                        : ((Type.ClassType) newClass.type).supertype_field;
 
                     var nextN = mctx.nextN();
 
-                    if (newClass.type.tsym == symbols.clSlot) {
+                    if (compType.tsym == symbols.clSlot) {
                         // FIXME: dedup code
-                        var htmlElementType = newClass.type.allparams().get(0);
+                        var htmlElementType = compType.allparams().get(0);
                         var elInit = makeCall(symbols.documentField, symbols.createElementMethod, List.of(
                             maker.Literal(htmlElementType.tsym.name.toString()).setType(symbols.clString.type)));
                         var elVarSymbol = new Symbol.VarSymbol(Flags.HASINIT | Flags.FINAL,
@@ -337,13 +344,24 @@ public class MarkupPlugin {
                                     .setType(types.makeArrayType(symbols.clObject.type))
                             ))),
                             maker.Exec(appendElCall)));
-                    } else if (types.isSubtype(newClass.type, symbols.clHtmlElement.type) ||
-                        componentImplOpt_(newClass.type).isPresent()) {
+                    } else if (types.isSubtype(compType, symbols.clHtmlElement.type) ||
+                        componentImplOpt_(compType).isPresent()) {
 
-                        var isCustom = !types.isSubtype(newClass.type, symbols.clHtmlElement.type);
+                        var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
                         var htmlElementType = isCustom
-                            ? componentImpl(newClass.type).allparams().get(0)
-                            : newClass.type;
+                            ? componentImpl(compType).allparams().get(0)
+                            : compType;
+
+                        if (isCustom) {
+                            if (newClass.def != null) { // anon inner class
+                                var ct = ((Type.ClassType) newClass.type);
+                                ct.setEnclosingType(popNativeElementAnonTypes(newClass.type));
+                            }
+                        } else {
+                            if (newClass.def != null)  // anon inner class
+                                newClass.type = ((Type.ClassType) newClass.type).supertype_field;
+
+                        }
 
                         var elInit = makeCall(symbols.documentField, symbols.createElementMethod, List.of(
                             maker.Literal(htmlElementType.tsym.name.toString()).setType(symbols.clString.type)));
@@ -356,8 +374,6 @@ public class MarkupPlugin {
                             names.fromString("$comp" + nextN), newClass.type, mctx.owner)
                             : elVarSymbol;
 
-                        var mapped = mapNewClass(mctx, unhandledEffects, isCustom, mapToVarSymbol, newClass);
-
                         var appendMethod = nextDest.type.tsym == symbols.clFragment ?
                             symbols.mtFragmentAppendChild : symbols.appendChildMethod;
                         var appendElCall = makeCall(nextDest, appendMethod,
@@ -365,10 +381,10 @@ public class MarkupPlugin {
                         appendElCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
                         var prologue = isCustom
-                            ? List.<JCTree.JCStatement>of(elDecl,
-                            maker.VarDef(mapToVarSymbol,
-                                newClass))
-                            : List.<JCTree.JCStatement>of(elDecl);
+                            ? List.<JCTree.JCStatement>of(
+                            elDecl, maker.VarDef(mapToVarSymbol, newClass))
+                            : List.<JCTree.JCStatement>of(
+                            elDecl, mapNewClass(mctx, unhandledEffects, mapToVarSymbol, newClass));
                         var epilogue = isCustom
                             ? List.<JCTree.JCStatement>of(
                             maker.Exec(makeCall(symbols.clGlobals, symbols.mtGReactMount, List.of(
@@ -379,7 +395,6 @@ public class MarkupPlugin {
                             : List.<JCTree.JCStatement>nil();
 
                         return maker.Block(Flags.BLOCK, prologue
-                            .append(mapped)
                             .appendList(epilogue)
                             .append(maker.Exec(appendElCall)));
                     }
@@ -464,7 +479,7 @@ public class MarkupPlugin {
     }
 
     JCTree.JCBlock mapNewClass(MountCtx mctx, HashSet<Symbol.VarSymbol> forEffect,
-                               boolean isCustom, Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
+                               Symbol.VarSymbol elVarSymbol, JCTree.JCNewClass newClass) {
 
         if (newClass.def != null) {
             // FIXME: don't map newClass for custom components
@@ -491,31 +506,28 @@ public class MarkupPlugin {
             newClass.constructor = constructorSymbol;
         }
 
-        var mappedArgs = List.<JCTree.JCStatement>nil();
-        if (!isCustom) {
-            mappedArgs = IntStream.range(0, newClass.args.length())
-                .mapToObj(i -> {
-                    var arg = newClass.args.get(i);
-                    var argAnnotation = ((Symbol.MethodSymbol) newClass.constructor)
-                        .params.get(i)
-                        .getAnnotation(HTMLNativeElements.DomProperty.class);
+        var mappedArgs = IntStream.range(0, newClass.args.length())
+            .mapToObj(i -> {
+                var arg = newClass.args.get(i);
+                var argAnnotation = ((Symbol.MethodSymbol) newClass.constructor)
+                    .params.get(i)
+                    .getAnnotation(HTMLNativeElements.DomProperty.class);
 
 //                    System.out.println("search dom property of " + argAnnotation.value());
 //                    System.out.println("search at type " + (Symbol.ClassSymbol) ((Type.ClassType) newClass.type)
 //                    .supertype_field.tsym);
 
-                    var argSymbol = symbols.lookupMember(
-                        (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
-                        argAnnotation.value());
+                var argSymbol = symbols.lookupMember(
+                    (Symbol.ClassSymbol) ((Type.ClassType) newClass.type).supertype_field.tsym,
+                    argAnnotation.value());
 
-                    return maker.Exec(
-                        maker.Assign(
-                            maker.Select(
-                                maker.Ident(elVarSymbol),
-                                argSymbol),
-                            arg));
-                }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
-        }
+                return maker.Exec(
+                    maker.Assign(
+                        maker.Select(
+                            maker.Ident(elVarSymbol),
+                            argSymbol),
+                        arg));
+            }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
         var blockBody = newClass.def != null ?
             newClass.def.defs.stream()
@@ -536,7 +548,7 @@ public class MarkupPlugin {
                 throw new RuntimeException("unexpected tree " + tree);
             }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
-        newClass.def = null;
+        // newClass.def = null;
         return maker.Block(Flags.BLOCK, mapped);
     }
 
@@ -644,7 +656,7 @@ public class MarkupPlugin {
                                 var lmb = maker.Lambda(List.nil(), mapNewClass(
                                     new MountCtx(viewFragments, methodTree.sym),
                                     new HashSet<>(effectCalls.keySet()),
-                                    false, rootVar, that))
+                                    rootVar, that))
                                     .setType(symbols.clRenderer.type);
                                 lmb.target = symbols.clRenderer.type;
                                 lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -695,7 +707,7 @@ public class MarkupPlugin {
                                     var lmb2 = maker.Lambda(List.nil(), mapNewClass(
                                         new MountCtx(viewFragments, methodTree.sym),
                                         new HashSet<>(effectCalls.keySet()),
-                                        false, rootVar, that))
+                                        rootVar, that))
                                         .setType(symbols.clRenderer.type);
                                     lmb2.target = symbols.clRenderer.type;
                                     lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
