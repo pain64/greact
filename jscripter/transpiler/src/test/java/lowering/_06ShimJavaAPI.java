@@ -17,12 +17,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = std$java$lang$Integer.valueOf('42')
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.x = std$java$lang$Integer.valueOf('42')
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                 }""");
     }
@@ -36,12 +36,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = std$java$lang$String.compareTo.call('x', 'y')
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.x = std$java$lang$String.compareTo.call('x', 'y')
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                 }""");
     }
@@ -56,12 +56,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = 1 + 1
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.x = 1 + 1
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                 }""");
     }
@@ -78,13 +78,13 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = 1
-                   + 1
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.x = 1
+                   + 1
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                 }""");
     }
@@ -100,12 +100,12 @@ public class _06ShimJavaAPI {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = this.constructor.of()
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.x = this.constructor.of()
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                   
                   static of() {

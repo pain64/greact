@@ -32,6 +32,7 @@ public class UsersPage implements Component0<body> {
                 name -> server(db -> db.array(
                     "SELECT * FROM users WHERE name like :1", User.class, like(name)))) {{
                 view = new PaginationSlot<>() {{
+                    var thePagination = this;
                     page = new GridSlot<>() {{
                         columns = new Column[]{
                             new Column<User>("Id", c -> c.id),
@@ -39,8 +40,10 @@ public class UsersPage implements Component0<body> {
                             new Column<User>("Возраст", c -> c.age),
                             new Column<User>("Пол", c -> c.sex)
                         };
-                        onRowDelete = user ->
+                        onRowDelete = user -> {
                             server(db -> db.exec("DELETE FROM users WHERE id = :1", user.id));
+                            thePagination.dropRowFor(user);
+                        };
                         expandedRow = user -> {
                             var info = server(db -> db.uniqueOrNull(
                                 "SELECT faculty, address, phone FROM user_info WHERE user_id = :1",

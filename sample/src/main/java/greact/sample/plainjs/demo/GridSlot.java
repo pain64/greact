@@ -9,6 +9,7 @@ import greact.sample.plainjs.demo.searchbox._01impl.Cascade;
 import java.util.function.Consumer;
 
 public class GridSlot<T> implements Component1<div, T[]> {
+    Object dependsOn;
     Column<T>[] columns = (Column<T>[]) new Object[0];
     Component1<div, T> expandedRow;
     @FunctionalInterface public interface AsyncHandler<T> {

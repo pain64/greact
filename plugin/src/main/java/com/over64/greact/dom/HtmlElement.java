@@ -10,6 +10,8 @@ import com.greact.model.async;
         public String borderBottom;
         public String padding;
         public String margin;
+        public String marginLeft;
+        public String marginRight;
         public String maxWidth;
         public String display;
         public String cursor;

@@ -42,14 +42,14 @@ public class Simple {
                         public div mount() {
                             final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
                             return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                {
-                                    ($viewFrag0 = com.over64.greact.dom.Fragment.of(()->{
-                                        $viewFrag0.cleanup();
+                                ($viewFrag0 = com.over64.greact.dom.Fragment.of(()->{
+                                    $viewFrag0.cleanup();
+                                    final com.over64.greact.dom.HTMLNativeElements.h1 $el0 = com.over64.greact.dom.Globals.document.createElement("h1");
+                                    {
                                         $el0.innerText = "GReact users: " + nUsers;
-                                    }, $el0)).renderer.render();
-                                }
-                                $root.appendChild($el0);
+                                    }
+                                    $viewFrag0.appendChild($el0);
+                                }, $root)).renderer.render();
                                 final com.over64.greact.dom.HTMLNativeElements.button $el1 = com.over64.greact.dom.Globals.document.createElement("button");
                                 {
                                     $el1.innerText = "increment";

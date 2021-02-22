@@ -14,6 +14,7 @@ import com.sun.tools.javac.util.Pair;
 import javax.lang.model.element.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -35,7 +36,8 @@ public class MethodGen {
 
     void NOP(int deep) {}
 
-    void group(int deep, boolean hasInitMethod, boolean isOverloaded, boolean hasInSuper, boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
+    void group(int deep, Optional<JCTree.JCBlock> initBlock, boolean isOverloaded, boolean hasInSuper,
+               boolean isAsyncInSuper, boolean isAsyncLocal, boolean isStatic,
                List<Pair<Integer, JCTree.JCMethodDecl>> group) {
         if (group.isEmpty()) return;
         if (group.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE))) return;
@@ -43,7 +45,7 @@ public class MethodGen {
         var name = group.get(0).snd.getName().toString();
         var isConstructor = name.equals("<init>");
 
-        if(group.stream().allMatch(p -> p.snd.sym.isAbstract()))
+        if (group.stream().allMatch(p -> p.snd.sym.isAbstract()))
             return;
 
         if (hasInSuper) {
@@ -97,7 +99,7 @@ public class MethodGen {
             out.write(0, " = ");
 
             if (varDecl.getInitializer() != null)
-                stmtGen.exprGen.expr(4, varDecl.getInitializer());
+                stmtGen.exprGen.expr(_deep, varDecl.getInitializer());
             else if (varDecl.getType().type.isIntegral())
                 out.write(0, "0");
             else
@@ -107,25 +109,31 @@ public class MethodGen {
             return null;
         };
 
-
-        final Consumer<Integer> defaultConstructLocals;
+        final boolean hasInit;
         if (isConstructor) {
             var fields = ctx.typeEl().sym.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
-                .filter(el -> !el.getModifiers().contains(Modifier.STATIC))
-                .collect(Collectors.toList());
+                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
 
-            defaultConstructLocals = _deep -> {
-                if(hasInitMethod) out.write(_deep, "this.__init__();\n");
-//                fields.forEach(field -> {
-//                    // FIXME: deduplicate with TypeGen
-//                    var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
-//                    if (!((Symbol.VarSymbol) field).isFinal() || varDecl.getInitializer() != null)
-//                        initField.apply(_deep, varDecl);
-//                });
-            };
-        } else defaultConstructLocals = this::NOP;
+            hasInit = fields.hasNext() || initBlock.isPresent();
+
+            if (hasInit) {
+                out.write(deep + 4, "let __init__ = () => {\n");
+                fields.forEachRemaining(field -> {
+                    // FIXME: deduplicate with TypeGen
+                    var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
+                    initField.apply(deep + 6, varDecl);
+                });
+                initBlock.ifPresent(block -> {
+                    block.stats.forEach(stmt -> {
+                        new StatementGen(out, new MethodGen.MContext(ctx, false)).stmt(deep + 6, stmt);
+                        out.write(0, "\n");
+                    });
+                });
+                out.write(deep + 4, "};\n");
+            }
+        } else hasInit = false;
 
         BiFunction<Integer, JCTree.JCMethodDecl, Void> recordConstructLocals = (_deep, method) -> {
             if (((Symbol.ClassSymbol) method.sym.owner).isRecord())
@@ -133,6 +141,7 @@ public class MethodGen {
                     out.write(_deep, "this." + varDecl.getName() + " = " + varDecl.getName() + ";\n"));
             return null;
         };
+
 
         if (isOverloaded) {
             out.write(deep + 4, "switch($over) {\n");
@@ -150,7 +159,7 @@ public class MethodGen {
                     out.write(0, "\n");
                 }
 
-                defaultConstructLocals.accept(deep + 8);
+                if (hasInit) out.write(deep + 8, "__init__();\n");
                 recordConstructLocals.apply(deep + 8, m.snd);
 
                 statements.stream().skip(1).forEach(stmt -> {
@@ -180,7 +189,7 @@ public class MethodGen {
                 out.write(0, "\n");
             }
 
-            defaultConstructLocals.accept(deep + 4);
+            if (hasInit) out.write(deep + 4, "__init__();\n");
             recordConstructLocals.apply(deep + 4, method);
             statements.stream().skip(1).forEach(stmt -> {
                 stmtGen.stmt(deep + 4, stmt);
@@ -191,7 +200,8 @@ public class MethodGen {
         out.write(deep + 2, "}");
     }
 
-    void method(int deep, boolean hasInitMethod, Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME: don't need pair here?
+    void method(int deep, Optional<JCTree.JCBlock> initBlock, Pair<Name, List<JCTree.JCMethodDecl>> group) { // FIXME
+        // : don't need pair here?
         var types = Types.instance(ctx.context());
         var table = Overloads.table(types, ctx.typeEl().sym, group.fst);
         var staticMethods = group.snd.stream()
@@ -210,8 +220,10 @@ public class MethodGen {
             })
             .collect(Collectors.toList());
 
-        group(deep, hasInitMethod, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), true,
+        group(deep, initBlock, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal()
+            , true,
             staticMethods);
-        group(deep, hasInitMethod, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal(), false, nonStaticMethods);
+        group(deep, initBlock, table.isOverloaded(), table.hasInSuper(), table.isAsyncInSuper(), table.isAsyncLocal()
+            , false, nonStaticMethods);
     }
 }

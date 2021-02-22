@@ -33,23 +33,23 @@ public class _04Constructor {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = null
-                    this.y = null
-                    this.z = 42
-                    this.f = 0
-                  }
                   constructor($over, x, y) {
+                    let __init__ = () => {
+                      this.x = null
+                      this.y = null
+                      this.z = 42
+                      this.f = 0
+                    };
                     switch($over) {
                       case 1:
                         super();
-                        this.__init__();
+                        __init__();
                         this.x = x;
                         this.y = y;
                         break
                       case 2:
                         super();
-                        this.__init__();
+                        __init__();
                         this.x = x;
                         this.y = 'hello';
                         break
@@ -77,14 +77,14 @@ public class _04Constructor {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.x = null
-                    this.y = null
-                    this.x = 'hello';
-                  }
                   constructor(y) {
+                    let __init__ = () => {
+                      this.x = null
+                      this.y = null
+                      this.x = 'hello';
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                     this.y = y;
                   }
                 }""");

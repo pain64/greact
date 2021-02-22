@@ -103,32 +103,10 @@ public class TypeGen {
         });
         if (hasStaticFields) out.write(0, "\n");
 
-        var fields = typeDecl.sym.getEnclosedElements().stream()
-            .filter(el -> el.getKind() == ElementKind.FIELD)
-            .map(el -> (VariableElement) el)
-            .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
-        var hasFields = fields.hasNext();
-
         var initBlock = typeDecl.defs.stream()
             .filter(def -> def instanceof JCTree.JCBlock)
             .map(def -> (JCTree.JCBlock) def)
             .findFirst();
-
-        var hasInitMethod = hasFields || initBlock.isPresent();
-        if (hasInitMethod) {
-            out.write(deep + 2, "__init__() {\n");
-            fields.forEachRemaining(field -> {
-                var varDecl = (JCTree.JCVariableDecl) ctx.trees().getTree(field);
-                initField(deep + 4, ctx, false, varDecl);
-            });
-            initBlock.ifPresent(block ->
-                block.stats.forEach(stmt -> {
-                    new StatementGen(out, new MethodGen.MContext(ctx, false)).stmt(deep + 4, stmt);
-                    out.write(0, "\n");
-                }));
-            out.write(deep + 2, "}\n");
-        }
-
 
         var methods = new ArrayList<Pair<Name, List<JCTree.JCMethodDecl>>>();
 
@@ -152,7 +130,7 @@ public class TypeGen {
             public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
-        out.mkString(methods, g -> mGen.method(deep, hasInitMethod, g), "", "\n\n", "");
+        out.mkString(methods, g -> mGen.method(deep, initBlock, g), "", "\n\n", "");
         out.write(0, "\n");
         out.write(deep, "}");
     }

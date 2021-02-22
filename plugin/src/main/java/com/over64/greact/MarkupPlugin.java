@@ -185,8 +185,8 @@ public class MarkupPlugin {
                 // вызывается как для native и так для не native компонентов
                 var ea = new EffectAnalyzer(forEffect);
                 var isCustom = !types.isSubtype(newClass.type, symbols.clHtmlElement.type);
-                if (isCustom)
-                    newClass.args.forEach(arg -> arg.accept(ea));
+                //if (isCustom)
+                newClass.args.forEach(arg -> arg.accept(ea));
 
                 if (newClass.def != null) {
                     newClass.def.defs.forEach(def -> {

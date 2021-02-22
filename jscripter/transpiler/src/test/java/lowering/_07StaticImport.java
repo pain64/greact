@@ -33,12 +33,12 @@ public class _07StaticImport {
                     }""",
                 """
                     class js$B extends Object {
-                      __init__() {
-                        this.ss = js$A.s + js$A.s
-                      }
                       constructor() {
+                        let __init__ = () => {
+                          this.ss = js$A.s + js$A.s
+                        };
                         super();
-                        this.__init__();
+                        __init__();
                       }
                     }"""));
     }
@@ -69,12 +69,12 @@ public class _07StaticImport {
                     }""",
                 """
                     class js$C extends Object {
-                      __init__() {
-                        this.ss = js$B.a.foo()
-                      }
                       constructor() {
+                        let __init__ = () => {
+                          this.ss = js$B.a.foo()
+                        };
                         super();
-                        this.__init__();
+                        __init__();
                       }
                     }"""),
             new CompileAssert.CompileCase("js.B",

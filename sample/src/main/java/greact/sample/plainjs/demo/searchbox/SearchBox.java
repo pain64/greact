@@ -81,7 +81,10 @@ public class SearchBox<T> implements Component0<div> {
 
     @Override public div mount() {
         checkCanSearch();
-        if(canSearch) doSearch = true;
+        if(canSearch) {
+            loaded = loader.load();
+            doSearch = true;
+        }
 
         return new div() {{
             new style("""

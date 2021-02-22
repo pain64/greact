@@ -257,13 +257,13 @@ public class _08AsyncAwait {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.instance = async () => {
-                    }
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.instance = async () => {
+                      }
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                 }""");
     }

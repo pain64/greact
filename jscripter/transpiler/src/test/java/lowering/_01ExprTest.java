@@ -65,12 +65,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.z = 0
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.z = 0
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                   
                   baz() {
@@ -250,12 +250,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.z = 0
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.z = 0
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                   
                   baz() {
@@ -458,12 +458,12 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
-                  __init__() {
-                    this.xx = 1
-                  }
                   constructor() {
+                    let __init__ = () => {
+                      this.xx = 1
+                    };
                     super();
-                    this.__init__();
+                    __init__();
                   }
                   
                   foo() {
@@ -599,12 +599,12 @@ public class _01ExprTest {
                     }""",
                 """
                     class js$Test extends Object {
-                      __init__() {
-                        this.a = new js$A()
-                      }
                       constructor() {
+                        let __init__ = () => {
+                          this.a = new js$A()
+                        };
                         super();
-                        this.__init__();
+                        __init__();
                       }
                     }"""));
     }
