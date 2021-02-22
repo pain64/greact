@@ -12,9 +12,13 @@ public class GridSlot<T> implements Component1<div, T[]> {
     Object dependsOn;
     Column<T>[] columns = (Column<T>[]) new Object[0];
     Component1<div, T> expandedRow;
-    @FunctionalInterface public interface AsyncHandler<T> {
-        @async void handle(T value);
+
+    @FunctionalInterface
+    public interface AsyncHandler<T> {
+        @async
+        void handle(T value);
     }
+
     AsyncHandler<T> onRowDelete;
 
 //    public Grid(T[] data) {
@@ -24,9 +28,11 @@ public class GridSlot<T> implements Component1<div, T[]> {
 //    }
 
     <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of("lhs === rhs"); }
+
     <A, B> B[] arrayMap(A[] from, Cascade.Func1<A, B> mapper) {
         return JSExpression.of("from.map(mapper)");
     }
+
     <A> A[] arrayFilter(A[] from, Cascade.Func1<A, Boolean> predicate) {
         return JSExpression.of("from.filter(predicate)");
     }
@@ -36,7 +42,8 @@ public class GridSlot<T> implements Component1<div, T[]> {
     private HtmlElement theTable;
 
 
-    @Override public div mount(T[] data) {
+    @Override
+    public div mount(T[] data) {
         this.list = arrayMap(data, v -> new _00Row<>(v));
 
         return new div() {{
@@ -53,7 +60,7 @@ public class GridSlot<T> implements Component1<div, T[]> {
                         line-height: 40px;
                     }
                     .table > thead {
-                        border-bottom: 2px  solid black;
+                        border-bottom: 1px  solid black;
                         border-collapse: separate;
                     }
                                         
@@ -81,6 +88,9 @@ public class GridSlot<T> implements Component1<div, T[]> {
                     .toolbox > div:hover {
                       background-color: #ffbbc7;
                     }
+                    .toolbox-header > div:hover {
+                      background-color: #ffbbc7;
+                    }
                     """);
                 new table() {{
                     theTable = this;
@@ -92,8 +102,23 @@ public class GridSlot<T> implements Component1<div, T[]> {
                                 new td() {{
                                     new span(col.header);
                                 }};
-                            new td("") {{
+                            new td() {{
                                 style.width = "54px";
+                                new div() {{
+                                    style.display = "flex";
+                                    style.justifyContent = "flex-end";
+                                    className = "toolbox-header";
+                                    new div() {{
+                                        style.width = "16px";
+//                                        innerHTML = """
+//                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+//                                            """;
+                                        innerHTML = """
+                                            
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                            """;
+                                    }};
+                                }};
                             }};
                         }};
                     }};
