@@ -81,8 +81,8 @@ public class TodoApp implements Component0<section> {
 //                    ondblclick = ev -> startEdit();
 //                    onblur = ev -> doneEdit();
                     onkeyup = key -> {
-                        if (key == Key.ENTER) doneEdit();
-                        else if (key == Key.ESC) cancelEdit();
+//                        if (key == Key.ENTER) doneEdit();
+//                        else if (key == Key.ESC) cancelEdit();
                     };
                 }};
             }};
@@ -142,7 +142,7 @@ public class TodoApp implements Component0<section> {
                     placeholder = "What needs to be done?";
                     value = newTodo;
                     onchange = ev -> newTodo = ev.target.value;
-                    onkeyup = k -> { if (k == Key.ENTER) add(newTodo); };
+//                    onkeyup = k -> { if (k == Key.ENTER) add(newTodo); };
                 }};
             }};
 

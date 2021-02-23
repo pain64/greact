@@ -26,8 +26,8 @@ public class PaginationSlot<T> implements Component1<div, T[]> {
 
     void switchPage(int diff) {
         currentPage += diff;
-        if(currentPage < 1) currentPage = 1;
-        if(currentPage > nPages) currentPage = nPages;
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > nPages) currentPage = nPages;
         calcPage();
         effect(rerenderAll); // FIXME: move rerenderAll to calcPage
     }
@@ -57,43 +57,44 @@ public class PaginationSlot<T> implements Component1<div, T[]> {
             new div() {{
                 dependsOn = rerenderAll;
 
-                new div() {{
-                    style.display = "flex";
-                    style.alignItems = "center";
-                    new select() {{
-                        onchange = ev -> {
-                            currentSize = Integer.parseInt(ev.target.value);
-                            currentPage = 1;
-                            calcPage();
-                            effect(rerenderAll);
-                        };
-
-                        for (var size : pageSizes)
-                            new option("" + size) {{
-                                value = "" + size;
-                                selected = size == currentSize;
-                            }};
-                        style.marginRight = "10px";
-                    }};
-                    new span("записей на странице " + currentPage + " из " + nPages);
+                if (data.length > pageSizes[0])
                     new div() {{
-                        style.marginLeft = "auto";
-                        new div() {{
-                            innerHTML = """
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                """;
-                            className = "page-turn";
-                            onclick = ev -> switchPage(-1);
+                        style.display = "flex";
+                        style.alignItems = "center";
+                        new select() {{
+                            onchange = ev -> {
+                                currentSize = Integer.parseInt(ev.target.value);
+                                currentPage = 1;
+                                calcPage();
+                                effect(rerenderAll);
+                            };
+
+                            for (var size : pageSizes)
+                                new option("" + size) {{
+                                    value = "" + size;
+                                    selected = size == currentSize;
+                                }};
+                            style.marginRight = "10px";
                         }};
+                        new span("записей на странице " + currentPage + " из " + nPages);
                         new div() {{
-                            innerHTML = """
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                """;
-                            className = "page-turn";
-                            onclick = ev -> switchPage(1);
+                            style.marginLeft = "auto";
+                            new div() {{
+                                innerHTML = """
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                    """;
+                                className = "page-turn";
+                                onclick = ev -> switchPage(-1);
+                            }};
+                            new div() {{
+                                innerHTML = """
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                    """;
+                                className = "page-turn";
+                                onclick = ev -> switchPage(1);
+                            }};
                         }};
                     }};
-                }};
                 new slot<>(page, pageData);
             }};
         }};

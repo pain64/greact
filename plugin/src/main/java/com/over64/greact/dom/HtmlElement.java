@@ -52,10 +52,12 @@ import com.greact.model.async;
         @async void handle(Event<T> ev);
     }
 
-    public enum Key {UP, ENTER, ESC}
+    public static class KeyEvent extends Event<HtmlElement> {
+
+    }
 
     public interface KeyHandler {
-        void handle(Key key);
+        void handle(KeyEvent event);
     }
 
     public KeyHandler onkeyup;

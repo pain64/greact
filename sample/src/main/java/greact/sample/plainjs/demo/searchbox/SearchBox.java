@@ -104,7 +104,7 @@ public class SearchBox<T> implements Component0<div> {
                 """);
             new div() {{
                 style.display = "flex";
-                style.justifyContent = "center";
+                //style.justifyContent = "";
                 style.flexWrap = "wrap";
                 style.alignItems = "center";
 

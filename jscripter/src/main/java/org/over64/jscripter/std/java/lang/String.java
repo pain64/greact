@@ -12,6 +12,9 @@ public class String {
     @Static public boolean isEmpty() {
         return JSExpression.of("this.length != 0");
     }
+    @Static public java.lang.String[] split(java.lang.String regex) {
+        return JSExpression.of("this.split(new RegExp(regex))");
+    }
 
     @Static public boolean equals(Object anObject) {
         return JSExpression.of("this === anObject");

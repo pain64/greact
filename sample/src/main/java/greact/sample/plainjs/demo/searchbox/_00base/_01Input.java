@@ -165,7 +165,7 @@ public abstract class _01Input<T> extends _00Control<T> {
                 """);
 //            style.alignItems = "center";
             style.padding = "0px 2px";
-            style.margin = "0px 10px";
+            style.margin = "0px 10px 0px 0px";
             new label() {{
                 style.display = "flex";
                 style.alignItems = "center";

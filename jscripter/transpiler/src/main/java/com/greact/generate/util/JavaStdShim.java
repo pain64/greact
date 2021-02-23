@@ -28,6 +28,6 @@ public class JavaStdShim {
             .filter(el -> types.isSameType(method.type, el.type))
             .findFirst()
             .orElseThrow(() ->
-                new RuntimeException("bad shimmed type " + shimmedType));
+                new RuntimeException("bad shimmed type " + shimmedType + " for method " + method.getSimpleName()));
     }
 }
