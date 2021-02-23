@@ -116,6 +116,8 @@ public class GridSlot<T> implements Component1<div, T[]> {
                     new div() {{
                         style.display = "flex";
                         style.alignItems = "center";
+                        style.backgroundColor = "#eee";
+                        style.padding = "5px";
                         new select() {{
                             onchange = ev -> {
                                 currentSize = Integer.parseInt(ev.target.value);
