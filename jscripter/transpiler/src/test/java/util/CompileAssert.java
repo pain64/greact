@@ -35,7 +35,7 @@ public class CompileAssert {
         var res = TestCompiler.compile(compilationUnits);
 
         for (var t : tests) {
-            var jsOut = res.get(t.fullQualified + ".js");
+            var jsOut = res.get(t.fullQualified + ".js.new");
             Assertions.assertEquals(t.jsDest, jsOut.getCharContent(true));
         }
     }

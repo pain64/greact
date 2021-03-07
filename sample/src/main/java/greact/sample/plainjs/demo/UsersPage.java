@@ -11,19 +11,18 @@ public class UsersPage implements Component0<body> {
     record User(long id, String name, int age, String sex) {}
     record UserInfo(String faculty, String address, String phone) {}
 
-    @Override
-    public body mount() {
+    @Override public body mount() {
         return new body() {{
             new SearchBox<>(
-                new StrInput().label("Имя студента").optional(),
+                new StrInput().label("Имя студентаs").optional(),
                 name -> server(db -> db.array(
                     "SELECT * FROM users WHERE name like :1", User.class, DbUtil.like(name)))) {{
                 view = new GridSlot<>() {{
                     columns = new Column[]{
-                        new Column<User>("Id", c -> c.id),
-                        new Column<User>("Имя", c -> c.name),
-                        new Column<User>("Возраст", c -> c.age),
-                        new Column<User>("Пол", c -> c.sex)
+                        new Column<>("Id", User::id),
+                        new Column<>("Имя", User::name),
+                        new Column<>("Возраст", User::age),
+                        new Column<>("Пол", User::sex)
                     };
                     onRowDelete = user -> server(db -> db.exec("DELETE FROM users WHERE id = :1", user.id));
                     expandedRow = user -> {

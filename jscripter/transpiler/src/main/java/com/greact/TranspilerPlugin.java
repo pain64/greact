@@ -18,6 +18,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -98,8 +100,10 @@ public class TranspilerPlugin implements Plugin {
                     }
 
                     var xx = buildImport(maker, names, stdConversionClass);
-//                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "Integer"});
-//                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64.jscripter.std.java.lang", "String"});
+//                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
+//                    .jscripter.std.java.lang", "Integer"});
+//                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
+//                    .jscripter.std.java.lang", "String"});
 
 
                     cu.defs = tail.prepend(xx)/*.prepend(xx2).prepend(xx3)*/.prependList(head);
@@ -147,7 +151,6 @@ public class TranspilerPlugin implements Plugin {
                     var trees = Trees.instance(env);
 
 
-
                     var types = Types.instance(context);
                     // FIXME: NPE
                     var pkg = cu.getPackage().getPackageName().toString();
@@ -167,7 +170,8 @@ public class TranspilerPlugin implements Plugin {
                                 m -> ((Symbol.ClassSymbol) m.getParameters().get(0).type.tsym).fullname,
                                 Symbol.MethodSymbol::getReturnType));
 
-                    // Types.instance(context).isSameType(intType.tsym.getEnclosedElements().get(1).type, ((Symbol.MethodSymbol) sym).type)
+                    // Types.instance(context).isSameType(intType.tsym.getEnclosedElements().get(1).type, ((Symbol
+                    // .MethodSymbol) sym).type)
 
 
                     System.out.println("after analyze for: " + e + "cu: " + cu);
@@ -175,14 +179,18 @@ public class TranspilerPlugin implements Plugin {
                     try {
                         var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
                             cu.getPackageName().toString(),
-                            e.getTypeElement().getSimpleName() + ".js");
+                            e.getTypeElement().getSimpleName() + ".js.new");
 
                         var writer = jsFile.openWriter();
-                        for(var typeDecl: cu.getTypeDecls()) {
+                        for (var typeDecl : cu.getTypeDecls()) {
                             new TypeGen(new JSOut(writer), cu, env, context, new JavaStdShim(types, shimConversions)).type(0, typeDecl);
                         }
                         writer.close();
 
+                        var jsFileUri = jsFile.toUri();
+                        if (!jsFileUri.getScheme().equals("string")) // release mode
+                            Files.move(Paths.get(jsFile.toUri()),
+                                Paths.get(jsFile.toUri().getPath().replace(".js.new", ".js")));
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -228,7 +236,8 @@ public class TranspilerPlugin implements Plugin {
 //
 //
 ////                            Log.instance(((BasicJavacTask) task).getContext())
-////                                .error(JCDiagnostic.DiagnosticFlag.API, pos,  CompilerProperties.Errors.ProcMessager(msg.toString()));
+////                                .error(JCDiagnostic.DiagnosticFlag.API, pos,  CompilerProperties.Errors
+// .ProcMessager(msg.toString()));
 //
 //                            env.getMessager().printMessage(Diagnostic.Kind.ERROR, "oops");
 //

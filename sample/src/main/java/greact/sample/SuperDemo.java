@@ -22,6 +22,7 @@ public class SuperDemo {
     }
 
     public static void main(String[] args) throws IOException {
+        // FIXME: reconfigure DB for oracle
         var config = new HikariConfig(new Properties() {{
             setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
             setProperty("dataSource.user", "test");
@@ -31,6 +32,7 @@ public class SuperDemo {
         }});
 
         var db = new TypesafeSql(new HikariDataSource(config));
+        //TypesafeSql db = null;
         var server = new Server();
 
         var libraryCode = Loader.libraryCode();
@@ -52,8 +54,6 @@ public class SuperDemo {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-                    <link rel="preconnect" href="https://fonts.gstatic.com">
-                    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
                     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
                     <style>
                       html {
@@ -61,7 +61,9 @@ public class SuperDemo {
                       }
                       *, *:before, *:after {
                         box-sizing: inherit;
-                        font-family: 'Roboto', sans-serif;
+                      }
+                      body {
+                        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
                         font-weight:400;
                         color: #403d3d;
                       }

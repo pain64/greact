@@ -36,6 +36,22 @@ public class ExpressionGen {
         this.stmtGen = stmtGen;
     }
 
+    CompileException memberRefUsedIncorrect() {
+        return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
+            MemberRef<T> usage:
+              for record fields:
+                record X(long field) {}
+                MemberRef<X, Long> ref = X::field;
+              for class fields:
+                class X { long field; }
+                MemberRef<X, Long> ref = x -> x.field;
+                """);
+    }
+
+    boolean isMemberRefSymbol(Symbol.TypeSymbol tsym, Names names) {
+        return tsym.getQualifiedName().equals(names.fromString("com.greact.model.MemberRef"));
+    }
+
     void expr(int deep, ExpressionTree expr) {
         if (expr instanceof LiteralTree) {
             var value = ((LiteralTree) expr).getValue();
@@ -181,21 +197,36 @@ public class ExpressionGen {
             out.write(0, ")");
         } else if (expr instanceof LambdaExpressionTree lambda) {
             var lmb = (JCTree.JCLambda) lambda;
+            var names = Names.instance(mctx.ctx().context());
 
-            var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
-                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
-                .findFirst().get();
+            if (isMemberRefSymbol(lmb.type.tsym, names)) {
+                if (lmb.body instanceof JCTree.JCFieldAccess fieldAccess) {
+                    if (fieldAccess.selected.type.tsym instanceof Symbol.ClassSymbol clSymbol) {
+                        if (clSymbol.isRecord()) throw memberRefUsedIncorrect();
+                    } else throw memberRefUsedIncorrect();
 
-            var isAsync = invokeMethod.getAnnotation(async.class) != null;
-            if (isAsync) out.write(0, "async ");
+                    out.write(0, "{memberName: () => '");
+                    out.write(0, fieldAccess.name.toString());
+                    out.write(0, "', value: (v) => v.");
+                    out.write(0, fieldAccess.name.toString());
+                    out.write(0, "}");
+                } else throw memberRefUsedIncorrect();
+            } else {
+                var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
+                    .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
+                    .findFirst().get();
 
-            out.mkString(lambda.getParameters(), (arg) ->
-                out.write(0, arg.getName().toString()), "(", ", ", ") =>");
-            // FIXME: лямбда должна начинать @async контекст для метода, BAD GUY FIX
-            var old = mctx;
-            mctx = new MContext(old.ctx(), isAsync);
-            stmtGen.block(deep, lambda.getBody());
-            mctx = old;
+                var isAsync = invokeMethod.getAnnotation(async.class) != null;
+                if (isAsync) out.write(0, "async ");
+
+                out.mkString(lambda.getParameters(), (arg) ->
+                    out.write(0, arg.getName().toString()), "(", ", ", ") =>");
+                // FIXME: лямбда должна начинать @async контекст для метода, BAD GUY FIX
+                var old = mctx;
+                mctx = new MContext(old.ctx(), isAsync);
+                stmtGen.block(deep, lambda.getBody());
+                mctx = old;
+            }
         } else if (expr instanceof SwitchExpressionTree switchExpr) {
             out.write(0, "(() => {\n");
             out.write(deep + 2, "switch");
@@ -311,28 +342,42 @@ public class ExpressionGen {
             }
         } else if (expr instanceof MemberReferenceTree memberRef) {
             var types = Types.instance(mctx.ctx().context()); // FIXME: move types to ctx, remove context from ctx
+            var names = Names.instance(mctx.ctx().context());
 
-            var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
-            var mSym = TreeInfo.symbol((JCTree) memberRef);
-            var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
+            var jcMemberRef = (JCTree.JCMemberReference) memberRef;
+            if (isMemberRefSymbol(jcMemberRef.type.tsym, names)) {
+                if (jcMemberRef.expr.type.tsym instanceof Symbol.ClassSymbol clSymbol) {
+                    if (!clSymbol.isRecord()) throw memberRefUsedIncorrect();
+                } else throw memberRefUsedIncorrect();
 
-            if (info.mode() == Overloads.Mode.STATIC) {
-                var fullClassName = tSym.packge().toString().replace(".", "$") +
-                    "$" + memberRef.getQualifierExpression();
-                out.write(0, fullClassName);
-                out.write(0, ".");
-                out.write(0, memberRef.getName().toString());
-                out.write(0, ".bind(");
-                out.write(0, fullClassName);
+                out.write(0, "{memberName: () => '");
+                out.write(0, jcMemberRef.name.toString());
+                out.write(0, "', value: (v) => v.");
+                out.write(0, jcMemberRef.name.toString());
+                out.write(0, "}");
             } else {
-                expr(deep, memberRef.getQualifierExpression());
-                out.write(0, ".");
-                out.write(0, memberRef.getName().toString());
-                out.write(0, ".bind(this");
-            }
+                var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
+                var mSym = TreeInfo.symbol((JCTree) memberRef);
+                var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
 
-            if (info.isOverloaded()) out.write(0, ", " + info.n() + ")");
-            else out.write(0, ")");
+                if (info.mode() == Overloads.Mode.STATIC) {
+                    var fullClassName = tSym.packge().toString().replace(".", "$") +
+                        "$" + memberRef.getQualifierExpression();
+                    out.write(0, fullClassName);
+                    out.write(0, ".");
+                    out.write(0, memberRef.getName().toString());
+                    out.write(0, ".bind(");
+                    out.write(0, fullClassName);
+                } else {
+                    expr(deep, memberRef.getQualifierExpression());
+                    out.write(0, ".");
+                    out.write(0, memberRef.getName().toString());
+                    out.write(0, ".bind(this");
+                }
+
+                if (info.isOverloaded()) out.write(0, ", " + info.n() + ")");
+                else out.write(0, ")");
+            }
 
         } else if (expr instanceof InstanceOfTree instanceOf) {
             var ofType = TreeInfo.symbol((JCTree) instanceOf.getType())

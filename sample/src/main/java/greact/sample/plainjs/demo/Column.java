@@ -1,15 +1,13 @@
 package greact.sample.plainjs.demo;
 
+import com.greact.model.MemberRef;
+
 class Column<T> {
-    @FunctionalInterface interface RowData<T> {
-        Object fetch(T row);
-    }
-
     final String header;
-    final RowData<T> rowData;
+    final String memberName;
 
-    Column(String header, RowData<T> rowData) {
+    Column(String header, MemberRef<T, Object> ref) {
         this.header = header;
-        this.rowData = rowData;
+        this.memberName = ref.memberName();
     }
 }

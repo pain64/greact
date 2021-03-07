@@ -26,6 +26,7 @@ java {
 }
 
 tasks.withType<JavaCompile> {
+    options.isIncremental = true
     options.compilerArgs.add("--enable-preview")
 //    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=greact.sample.plainjs")
     options.compilerArgs.add("-Xplugin:GReact --js-src-package=greact.sample.plainjs")
