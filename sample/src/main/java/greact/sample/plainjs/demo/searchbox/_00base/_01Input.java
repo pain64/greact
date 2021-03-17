@@ -164,8 +164,8 @@ public abstract class _01Input<T> extends _00Control<T> {
                       
                 """);
 //            style.alignItems = "center";
-            style.padding = "0px 2px";
-            style.margin = "0px 10px 0px 0px";
+            //style.padding = "0px 2px";
+         //   style.margin = "0px 10px 0px 0px";
             new label() {{
                 style.display = "flex";
                 style.alignItems = "center";
@@ -181,10 +181,11 @@ public abstract class _01Input<T> extends _00Control<T> {
 //                    style.display = "inline-flex";
 //                    style.alignItems = "center";
 //                    style.whiteSpace = "nowrap";
-                    style.margin = "0px 5px 0px 0px";
+                    //style.margin = "0px 5px 0px 0px";
                 }};
                 new input() {{
                     //className = "form-check-input";
+                    style.width = "100%";
                     type = self.type;
                     value = self.value == null ? null : valueToHtmlValue();
                     // FIXME: вот это вот - костыль для CheckBox

@@ -28,19 +28,20 @@ public class Select<T> extends _00Control<T> {
         var self = this;
 
         return new div() {{
-            style.padding = "0px 2px";
-            style.margin = "0px 10px";
+          //  style.padding = "0px 2px";
+         //   style.margin = "0px 10px";
 
             new label() {{
                 new span(_label) {{
-                    style.margin = "0px 5px 0px 0px";
+                 //   style.margin = "0px 5px 0px 0px";
                 }};
 
                 new select() {{
+                    style.width = "100%";
                     className = "form-control";
                     for (var variant : variants)
                         new option(variant.element.toString()) {{
-                            selected = self.valueIdx == variant.i;
+                            selected = self.value == variant.element;
                             value = "" + variant.i;
                         }};
                     onchange = ev -> {

@@ -2,6 +2,8 @@ package greact.sample.plainjs.demo;
 
 import com.over64.greact.dom.HTMLNativeElements.*;
 import greact.sample.plainjs.demo.searchbox.*;
+import greact.sample.plainjs.demo.searchbox._01impl.IntInput;
+import greact.sample.plainjs.demo.searchbox._01impl.Select;
 import greact.sample.plainjs.demo.searchbox._01impl.StrInput;
 import greact.sample.server.DbUtil;
 
@@ -14,16 +16,25 @@ public class UsersPage implements Component0<body> {
     @Override public body mount() {
         return new body() {{
             new SearchBox<>(
-                new StrInput().label("Имя студентаs").optional(),
+                new StrInput().label("Имя студента").optional(),
                 name -> server(db -> db.array(
-                    "SELECT * FROM users WHERE name like :1", User.class, DbUtil.like(name)))) {{
+                    "SELECT * FROM users WHERE name like :1 order by id desc", User.class, DbUtil.like(name)))) {{
                 view = new GridSlot<>() {{
                     columns = new Column[]{
                         new Column<>("Id", User::id),
-                        new Column<>("Имя", User::name),
-                        new Column<>("Возраст", User::age),
+                        new Column<>("Имя", User::name)
+                            .editable(new StrInput()),
+                        new Column<>("Возраст", User::age)
+                            .editable(new IntInput()),
                         new Column<>("Пол", User::sex)
+                            .editable(new Select<>(new String[]{"М", "Ж"}))
                     };
+                    onRowAdd = user -> server(db ->
+                        db.exec("insert into users(id, name, age, sex) values(nextval('users_id_seq'), :1, :2, :3)",
+                            user.name, user.age, user.sex));
+                    onRowChange = user -> server(db ->
+                        db.exec("UPDATE users set name = :1, age = :2, sex = :3 WHERE id = :4",
+                            user.name, user.age, user.sex, user.id));
                     onRowDelete = user -> server(db -> db.exec("DELETE FROM users WHERE id = :1", user.id));
                     expandedRow = user -> {
                         var info = server(db -> db.uniqueOrNull(
