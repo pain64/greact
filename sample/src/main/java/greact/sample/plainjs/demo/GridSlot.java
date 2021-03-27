@@ -63,8 +63,7 @@ public class GridSlot<T> implements Component1<div, T[]> {
         JSExpression.of("rowData[memberName] = value");
     }
 
-    @async
-    void persistNewRow(T rowData) {
+    @async void persistNewRow(T rowData) {
         onRowAdd.handle(rowData);
         var offset = (currentPage - 1) * currentSize;
         JSExpression.of("this.data.splice(offset, 0, rowData)");

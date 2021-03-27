@@ -63,6 +63,55 @@ public class _03CallAndRefLocalTest {
     }
 
     @Test
+    void callStaticGenericExternal() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    public class A<T> {
+                      static int bar() { return 42; }
+                      static int baz() { return 42; }
+                      
+                    }""",
+                """
+                    class js$A extends Object {
+                      constructor() {
+                        super();
+                      }
+                      
+                      static bar() {
+                        return 42
+                      }
+                      
+                      static baz() {
+                        return 42
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.B",
+                """
+                    package js;
+                    import static js.A.baz;
+                    public class B {
+                      void fizz() {
+                        A.bar();
+                        baz();
+                      }
+                    }""",
+                """
+                    class js$B extends Object {
+                      constructor() {
+                        super();
+                      }
+                      
+                      fizz() {
+                        js$A.bar();
+                        js$A.baz();
+                      }
+                    }""")
+        );
+    }
+
+    @Test
     void callOverloaded() throws IOException {
         assertCompiled(
             """

@@ -10,6 +10,8 @@ import com.greact.model.async;
         public String borderBottom;
         public String padding;
         public String margin;
+        public String marginBottom;
+        public String marginTop;
         public String marginLeft;
         public String marginRight;
         public String maxWidth;
@@ -31,6 +33,7 @@ import com.greact.model.async;
     public String innerText;
     public String innerHTML;
     public String lang;
+    public String title;
     public Style style = new Style();
 
     public Object dependsOn;

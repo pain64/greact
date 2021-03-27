@@ -301,10 +301,16 @@ public class ExpressionGen {
 
                 // FIXME: on-demand static import, foreign module call
                 if (select instanceof IdentifierTree ident) { // call local
+                    var jcIdent = (JCTree.JCIdent) ident;
                     var name = ident.getName().toString();
 
-                    if (!name.equals("super")) out.write(0, "this.");
-                    if (info.mode() == Overloads.Mode.STATIC) out.write(0, "constructor.");
+                    if (jcIdent.sym.isStatic() && jcIdent.sym.owner != mctx.ctx().typeEl().sym) { // import static call
+                        out.write(0, jcIdent.sym.owner.toString().replace(".", "$"));
+                        out.write(0, ".");
+                    } else {
+                        if (!name.equals("super")) out.write(0, "this.");
+                        if (info.mode() == Overloads.Mode.STATIC) out.write(0, "constructor.");
+                    }
                     out.write(0, name);
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
@@ -316,7 +322,7 @@ public class ExpressionGen {
                         out.write(0, "(");
                     } else {
                         var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
-                        out.write(0, onType.toString().replace(".", "$"));
+                        out.write(0, onType.tsym.toString().replace(".", "$"));
                         out.write(0, ".");
                         out.write(0, prop.getIdentifier().toString());
 
