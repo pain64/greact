@@ -100,6 +100,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class span extends HtmlElement {
         public span() {}
         public span(@DomProperty("innerText") String innerText) {}
+        public MouseEventHandler<tbody> onclick;
     }
     @JSNativeAPI public static class strong extends HtmlElement {
         public strong() {}

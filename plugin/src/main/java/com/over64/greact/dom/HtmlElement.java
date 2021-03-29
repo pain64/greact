@@ -20,6 +20,7 @@ import com.greact.model.async;
         public String justifyContent;
         public String backgroundColor;
         public String flexWrap;
+        public String flexDirection;
         public String alignItems;
         public String whiteSpace;
         public String height;
