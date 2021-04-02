@@ -299,7 +299,7 @@ public class _01ExprTest {
                   }
                   
                   baz() {
-                    let x =  [];
+                    let x = [];
                     let y = ['hello', 'world'];
                     let x1 = [];
                     let y2 = [['1', '2'], ['3', '4']];
