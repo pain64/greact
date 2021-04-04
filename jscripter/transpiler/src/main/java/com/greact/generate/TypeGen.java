@@ -80,9 +80,11 @@ public class TypeGen {
         }
 
         var extendClause = typeDecl.extending;
-        var superClass = extendClause != null
-            ? extendClause.type.tsym.toString().replace(".", "$")
-            : "Object";
+        var superClass = "Object";
+        if(extendClause != null) {
+            superClass = extendClause.type.tsym.toString().replace(".", "$");
+            out.dependsOnTypes.add(extendClause.type.tsym.toString() + ".js");
+        }
         out.write(0, "extends ");
         out.write(0, superClass);
 

@@ -179,18 +179,26 @@ public class TranspilerPlugin implements Plugin {
                     try {
                         var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
                             cu.getPackageName().toString(),
-                            e.getTypeElement().getSimpleName() + ".js.new");
+                            e.getTypeElement().getSimpleName() + ".js");
 
-                        var writer = jsFile.openWriter();
-                        for (var typeDecl : cu.getTypeDecls()) {
-                            new TypeGen(new JSOut(writer), cu, env, context, new JavaStdShim(types, shimConversions)).type(0, typeDecl);
+                        var depFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
+                            cu.getPackageName().toString(),
+                            e.getTypeElement().getSimpleName() + ".js.dep");
+
+                        try (var writer = jsFile.openWriter();
+                             var depWriter = depFile.openWriter()) {
+
+                            for (var typeDecl : cu.getTypeDecls()) {
+                                var out = new JSOut(writer);
+                                new TypeGen(out, cu, env, context, new JavaStdShim(types,
+                                    shimConversions)).type(0, typeDecl);
+                                for (var type : out.dependsOnTypes) {
+                                    depWriter.write(type);
+                                    depWriter.write(10); // \n
+                                }
+                            }
+
                         }
-                        writer.close();
-
-                        var jsFileUri = jsFile.toUri();
-                        if (!jsFileUri.getScheme().equals("string")) // release mode
-                            Files.move(Paths.get(jsFile.toUri()),
-                                Paths.get(jsFile.toUri().getPath().replace(".js.new", ".js")));
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }

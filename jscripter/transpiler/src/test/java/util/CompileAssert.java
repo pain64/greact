@@ -4,14 +4,11 @@ import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class CompileAssert {
     public static void assertCompiled(String javaSrc, String jsDest) throws IOException {
-        Assertions.assertEquals(jsDest,
-            TestCompiler.compile(List.of(new StringSourceFile("js.Test", javaSrc)))
-                .values().iterator().next().getCharContent(true));
+        assertCompiledMany(new CompileCase("js.Test", javaSrc, jsDest));
     }
 
     public static class CompileCase {
@@ -35,7 +32,7 @@ public class CompileAssert {
         var res = TestCompiler.compile(compilationUnits);
 
         for (var t : tests) {
-            var jsOut = res.get(t.fullQualified + ".js.new");
+            var jsOut = res.get(t.fullQualified + ".js");
             Assertions.assertEquals(t.jsDest, jsOut.getCharContent(true));
         }
     }

@@ -3,10 +3,13 @@ package com.greact.generate.util;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 public class JSOut {
     final Writer out;
+    public final Set<String> dependsOnTypes = new TreeSet<>();
 
     public JSOut(Writer writer) {
         this.out = writer;
