@@ -1,13 +1,10 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
 
 import java.io.IOException;
 
-import static util.CompileAssert.assertCompiled;
 import static util.CompileAssert.assertCompiledMany;
 
 public class _11MemberRef {
@@ -35,36 +32,20 @@ public class _11MemberRef {
                     package js;
                     import com.greact.model.MemberRef;
                     class B {
-                      MemberRef<A, Long> ref = A::age;
+                      MemberRef<A, Long> ref1 = A::age;
+                      MemberRef<A, Long> ref3 = a -> a.age();
                     }""",
                 """
                     class js$B extends Object {
                       constructor() {
                         let __init__ = () => {
-                          this.ref = {memberName: () => 'age', value: (v) => v.age}
+                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age}
+                          this.ref3 = {memberNames: () => ['age'], value: (v) => v.age}
                         };
                         super();
                         __init__();
                       }
                     }"""));
-    }
-
-    @Test void memberRefForClassIncorrect() {
-        try {
-            assertCompiled(
-                """
-                    package js;
-                    import com.greact.model.MemberRef;
-                    class Test {
-                      static class B { public static long age(B b) { return 0; } };
-                      MemberRef<B, Long> ref = B::age;
-                    }
-                    """,
-                "");
-        } catch (Exception ex) {
-            var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(ce.error, CompileException.ERROR.MEMBER_REF_USED_INCORRECT);
-        }
     }
 
     @Test void memberRefForClass() throws IOException {
@@ -87,37 +68,36 @@ public class _11MemberRef {
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
-                    import com.greact.model.MemberRef;
-                    class B {
-                      MemberRef<A, Long> ref = a -> a.age;
-                    }""",
+                    public class B { A a; }
+                    """,
                 """
                     class js$B extends Object {
                       constructor() {
                         let __init__ = () => {
-                          this.ref = {memberName: () => 'age', value: (v) => v.age}
+                          this.a = null
+                        };
+                        super();
+                        __init__();
+                      }
+                    }"""),
+            new CompileAssert.CompileCase("js.C",
+                """
+                    package js;
+                    import com.greact.model.MemberRef;
+                    class C {
+                      MemberRef<A, Long> ref1 = a -> a.age;
+                      MemberRef<B, Long> ref2 = b -> b.a.age;
+                    }""",
+                """
+                    class js$C extends Object {
+                      constructor() {
+                        let __init__ = () => {
+                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age}
+                          this.ref2 = {memberNames: () => ['a', 'age'], value: (v) => v.a.age}
                         };
                         super();
                         __init__();
                       }
                     }"""));
-    }
-
-    @Test void memberRefForRecordIncorrect() {
-        try {
-            assertCompiled(
-                """
-                    package js;
-                    import com.greact.model.MemberRef;
-                    class Test {
-                      record B(long age) {};
-                      MemberRef<B, Long> ref = b -> b.age;
-                    }
-                    """,
-                "");
-        } catch (Exception ex) {
-            var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(ce.error, CompileException.ERROR.MEMBER_REF_USED_INCORRECT);
-        }
     }
 }

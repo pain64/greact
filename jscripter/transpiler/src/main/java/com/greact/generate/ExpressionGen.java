@@ -18,10 +18,13 @@ import com.sun.tools.javac.util.Pair;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.greact.generate.util.Overloads.Mode.*;
 
@@ -45,7 +48,31 @@ public class ExpressionGen {
               for class fields:
                 class X { long field; }
                 MemberRef<X, Long> ref = x -> x.field;
+              for nested fields (class or record):
+                record X { long b; }
+                record Y { long a; }
+                MemberRef<Y, Long> ref = y -> y.a.b
                 """);
+    }
+
+    List<String> memberRefExtractFields(List<String> acc, JCTree tree) {
+        if (tree instanceof JCTree.JCIdent) {
+            return acc;
+        } else if (tree instanceof JCTree.JCFieldAccess access) {
+            acc.add(access.name.toString());
+            return memberRefExtractFields(acc, access.selected);
+        } else if (tree instanceof JCTree.JCMethodInvocation invoke) {
+            if (invoke.meth instanceof JCTree.JCFieldAccess access)
+                if (access.sym.owner instanceof Symbol.ClassSymbol classSymbol)
+                    if (classSymbol.getRecordComponents().stream().anyMatch(comp -> comp.accessor == access.sym)) {
+                        acc.add(access.name.toString());
+                        return memberRefExtractFields(acc, access.selected);
+                    } else throw memberRefUsedIncorrect();
+                else throw memberRefUsedIncorrect();
+            else throw memberRefUsedIncorrect();
+        }
+
+        throw memberRefUsedIncorrect();
     }
 
     boolean isMemberRefSymbol(Symbol.TypeSymbol tsym, Names names) {
@@ -200,17 +227,14 @@ public class ExpressionGen {
             var names = Names.instance(mctx.ctx().context());
 
             if (isMemberRefSymbol(lmb.type.tsym, names)) {
-                if (lmb.body instanceof JCTree.JCFieldAccess fieldAccess) {
-                    if (fieldAccess.selected.type.tsym instanceof Symbol.ClassSymbol clSymbol) {
-                        if (clSymbol.isRecord()) throw memberRefUsedIncorrect();
-                    } else throw memberRefUsedIncorrect();
+                var fields = memberRefExtractFields(new ArrayList<>(), lmb.body);
+                Collections.reverse(fields);
 
-                    out.write(0, "{memberName: () => '");
-                    out.write(0, fieldAccess.name.toString());
-                    out.write(0, "', value: (v) => v.");
-                    out.write(0, fieldAccess.name.toString());
-                    out.write(0, "}");
-                } else throw memberRefUsedIncorrect();
+                out.write(0, "{memberNames: () => ");
+                out.write(0, fields.stream().map(f -> "'" + f + "'").collect(Collectors.joining(", ", "[", "]")));
+                out.write(0, ", value: (v) => v.");
+                out.write(0, String.join(".", fields));
+                out.write(0, "}");
             } else {
                 var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
                     .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
@@ -353,12 +377,12 @@ public class ExpressionGen {
             var jcMemberRef = (JCTree.JCMemberReference) memberRef;
             if (isMemberRefSymbol(jcMemberRef.type.tsym, names)) {
                 if (jcMemberRef.expr.type.tsym instanceof Symbol.ClassSymbol clSymbol) {
-                    if (!clSymbol.isRecord()) throw memberRefUsedIncorrect();
+                    //    if (!clSymbol.isRecord()) throw memberRefUsedIncorrect();
                 } else throw memberRefUsedIncorrect();
 
-                out.write(0, "{memberName: () => '");
+                out.write(0, "{memberNames: () => ['");
                 out.write(0, jcMemberRef.name.toString());
-                out.write(0, "', value: (v) => v.");
+                out.write(0, "'], value: (v) => v.");
                 out.write(0, jcMemberRef.name.toString());
                 out.write(0, "}");
             } else {
