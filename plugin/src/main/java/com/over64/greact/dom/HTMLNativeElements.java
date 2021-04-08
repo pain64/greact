@@ -66,6 +66,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class div extends HtmlElement {
         public MouseEventHandler<div> onclick;
     }
+    @JSNativeAPI public static class nav extends HtmlElement {}
     @JSNativeAPI public static class section extends HtmlElement { }
     @JSNativeAPI public static class header extends HtmlElement { }
 
@@ -114,6 +115,9 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class a extends HtmlElement {
         public String href;
         public a() {}
+        public MouseEventHandler<a> onmouseover;
+        public MouseEventHandler<a> onmouseout;
+
         public a(@DomProperty("innerText") String innerText) {}
     }
 
@@ -162,4 +166,9 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class cssmedia extends HtmlElement{
         public cssmedia(String selector, cssclass... classes) {}
     }
+
+    @JSNativeAPI public static class img extends HtmlElement{
+        public String src;
+    }
+
 }
