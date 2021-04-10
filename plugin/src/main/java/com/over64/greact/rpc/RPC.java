@@ -1,5 +1,6 @@
 package com.over64.greact.rpc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,5 +36,10 @@ public class RPC<T> {
             }
 
         throw new RuntimeException("unreachable");
+    }
+
+    public record  RPCError(String error) {}
+    public static String rpcErrorJson(String error) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(new RPCError(error));
     }
 }

@@ -6,6 +6,8 @@ import com.greact.model.async;
 @JSNativeAPI public class HtmlElement extends Node {
     public static class Style {
         public String color;
+        public String borderColor;
+        public String backgroundColor;
         public String border;
         public String borderBottom;
         public String padding;
@@ -18,7 +20,6 @@ import com.greact.model.async;
         public String display;
         public String cursor;
         public String justifyContent;
-        public String backgroundColor;
         public String flexWrap;
         public String flexDirection;
         public String alignItems;
