@@ -1,11 +1,13 @@
 package com.greact.generate;
 
+import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
 import com.greact.model.DoNotTranspile;
 import com.greact.model.JSNativeAPI;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -65,18 +67,31 @@ public class TypeGen {
     }
 
     public void type(int deep, JCTree decl) {
+        var self = this;
+
         if (!(decl instanceof JCTree.JCClassDecl)) return;
         var typeDecl = (JCTree.JCClassDecl) decl;
 
         if (typeDecl.getKind() == Tree.Kind.INTERFACE) return;
         if (typeDecl.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
-        out.write(0, "class ");
-        if (!typeDecl.type.tsym.isAnonymous()) {
-            out.write(0, cu.getPackage().getPackageName().toString().replace(".", "$"));
-            out.write(0, "$");
+        if(!typeDecl.type.tsym.isAnonymous() &&
+            typeDecl.sym.owner instanceof Symbol.ClassSymbol) {
+
+            if(!typeDecl.sym.isStatic())
+                throw new RuntimeException("Cannot compile non static inner classes yet");
+
+            out.write(0, "static ");
             out.write(0, typeDecl.getSimpleName().toString());
-            out.write(0, " ");
+            out.write(0, " = class ");
+        } else {
+            out.write(0, "class ");
+            if (!typeDecl.type.tsym.isAnonymous()) {
+                out.write(0, cu.getPackage().getPackageName().toString().replace(".", "$"));
+                out.write(0, "$");
+                out.write(0, typeDecl.getSimpleName().toString());
+                out.write(0, " ");
+            }
         }
 
         var extendClause = typeDecl.extending;
@@ -129,7 +144,14 @@ public class TypeGen {
             }
 
             @Override
-            public void visitClassDef(JCTree.JCClassDecl tree) { }
+            public void visitClassDef(JCTree.JCClassDecl tree) {
+                if(tree.getKind() == Tree.Kind.RECORD ||
+                    (tree.getKind() == Tree.Kind.CLASS && tree.sym.isStatic())) {
+                    out.write(deep + 2, "");
+                    self.type(deep + 2, tree);
+                    out.write(0, "\n\n");
+                }
+            }
         }));
 
         out.mkString(methods, g -> mGen.method(deep, initBlock, g), "", "\n\n", "");

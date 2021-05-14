@@ -117,8 +117,14 @@ public class ExpressionGen {
                 }
 
             } else if (jcIdent.sym instanceof Symbol.ClassSymbol cl) {
-                var fullName = cl.fullname.toString().replace(".", "$");
-                out.write(0, fullName);
+                var owner = jcIdent.sym.owner;
+                if(owner != null) {
+                    out.write(0, owner.toString().replace(".", "$"));
+                    var delim = jcIdent.sym.isStatic() ? "." : "$";
+                    out.write(0, delim);
+                    out.write(0, jcIdent.name.toString());
+                } else
+                    out.write(0, jcIdent.sym.toString().replace(".", "$"));
             } else {
                 if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
                     var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;

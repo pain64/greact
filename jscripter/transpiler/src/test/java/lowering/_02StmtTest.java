@@ -281,6 +281,46 @@ public class _02StmtTest {
                 }""",
             """
                 class js$Test extends Object {
+                  static E1 = class extends java$lang$Exception {
+                    constructor($over, ) {
+                      switch($over) {
+                        case 11:
+                          super(6, );
+                          break
+                      }
+                    }
+                  }
+                 
+                  static E2 = class extends java$lang$Exception {
+                    constructor($over, ) {
+                      switch($over) {
+                        case 11:
+                          super(6, );
+                          break
+                      }
+                    }
+                  }
+                 
+                  static E3 = class extends java$lang$Exception {
+                    constructor($over, ) {
+                      switch($over) {
+                        case 11:
+                          super(6, );
+                          break
+                      }
+                    }
+                  }
+                 
+                  static E4 = class extends java$lang$Exception {
+                    constructor($over, ) {
+                      switch($over) {
+                        case 11:
+                          super(6, );
+                          break
+                      }
+                    }
+                  }
+                  
                   constructor() {
                     super();
                   }

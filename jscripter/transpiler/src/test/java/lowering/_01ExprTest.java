@@ -349,6 +349,17 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  static A = class extends Object {
+                    constructor() {
+                      let __init__ = () => {
+                        this.field = 0
+                        this.next = null
+                      };
+                      super();
+                      __init__();
+                    }
+                  }
+                    
                   constructor() {
                     super();
                   }
@@ -554,7 +565,7 @@ public class _01ExprTest {
             """
                 package js;
                 public class Test {
-                  class A {
+                  static class A {
                     final int x;
                     final int y;
                     public A(int x, int y) {
@@ -568,12 +579,25 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  static A = class extends Object {
+                    constructor(x, y) {
+                      let __init__ = () => {
+                        this.x = 0
+                        this.y = 0
+                      };
+                      super();
+                      __init__();
+                      this.x = x;
+                      this.y = y;
+                    }
+                  }
+                                      
                   constructor() {
                     super();
                   }
                   
                   newA() {
-                    return new js$Test$A(1, 2)
+                    return new js$Test.A(1, 2)
                   }
                 }""");
     }
