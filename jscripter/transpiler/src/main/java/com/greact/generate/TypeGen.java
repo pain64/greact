@@ -3,7 +3,9 @@ package com.greact.generate;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
+import com.greact.model.ClassRef;
 import com.greact.model.DoNotTranspile;
+import com.greact.model.JSExpression;
 import com.greact.model.JSNativeAPI;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
@@ -17,6 +19,7 @@ import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -128,8 +131,41 @@ public class TypeGen {
         var methods = new ArrayList<Pair<Name, List<JCTree.JCMethodDecl>>>();
 
         typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
-            @Override
-            public void visitMethodDef(JCTree.JCMethodDecl method) {
+            @Override public void visitClassDef(JCTree.JCClassDecl tree) {
+                if(tree.getKind() == Tree.Kind.RECORD ||
+                    (tree.getKind() == Tree.Kind.CLASS && tree.sym.isStatic())) {
+                    out.write(deep + 2, "");
+                    self.type(deep + 2, tree);
+                    out.write(0, "\n\n");
+                }
+            }
+        }));
+
+        var reflectiveExpressions = new ArrayList<JCTree.JCExpression>();
+
+        typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
+            @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
+                if(invoke.meth instanceof JCTree.JCIdent methId)
+                    if(methId.sym instanceof Symbol.MethodSymbol mSym)
+                        for(var i = 0; i < mSym.params.length(); i++)
+                            if(mSym.params.get(i).getAnnotation(ClassRef.Reflexive.class) != null)
+                                reflectiveExpressions.add(invoke.args.get(i));
+            }
+        }));
+
+        for(var i = 0; i < reflectiveExpressions.size(); i++) {
+            out.write(deep + 2, "static __reflect" + i);
+            out.write(0, "(obj) {\n");
+            out.write(deep + 2, "}\n");
+        }
+
+        if(!reflectiveExpressions.isEmpty())
+            out.write(0, "\n");
+
+        var zz = 1;
+
+        typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
+            @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
                 if (method.sym.getAnnotation(DoNotTranspile.class) != null) return;
 
                 var name = method.getName();
@@ -143,15 +179,7 @@ public class TypeGen {
                 group.snd.add(method);
             }
 
-            @Override
-            public void visitClassDef(JCTree.JCClassDecl tree) {
-                if(tree.getKind() == Tree.Kind.RECORD ||
-                    (tree.getKind() == Tree.Kind.CLASS && tree.sym.isStatic())) {
-                    out.write(deep + 2, "");
-                    self.type(deep + 2, tree);
-                    out.write(0, "\n\n");
-                }
-            }
+            @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
         out.mkString(methods, g -> mGen.method(deep, initBlock, g), "", "\n\n", "");
