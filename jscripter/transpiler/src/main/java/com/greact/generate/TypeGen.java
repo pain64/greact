@@ -10,6 +10,7 @@ import com.greact.model.JSNativeAPI;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -23,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class TypeGen {
@@ -78,10 +81,10 @@ public class TypeGen {
         if (typeDecl.getKind() == Tree.Kind.INTERFACE) return;
         if (typeDecl.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
-        if(!typeDecl.type.tsym.isAnonymous() &&
+        if (!typeDecl.type.tsym.isAnonymous() &&
             typeDecl.sym.owner instanceof Symbol.ClassSymbol) {
 
-            if(!typeDecl.sym.isStatic())
+            if (!typeDecl.sym.isStatic())
                 throw new RuntimeException("Cannot compile non static inner classes yet");
 
             out.write(0, "static ");
@@ -99,7 +102,7 @@ public class TypeGen {
 
         var extendClause = typeDecl.extending;
         var superClass = "Object";
-        if(extendClause != null) {
+        if (extendClause != null) {
             superClass = extendClause.type.tsym.toString().replace(".", "$");
             out.dependsOnTypes.add(extendClause.type.tsym.toString() + ".js");
         }
@@ -107,7 +110,6 @@ public class TypeGen {
         out.write(0, superClass);
 
         var ctx = new TContext(cu, trees, Types.instance(context), context, typeDecl, stdShim, env);
-        var mGen = new MethodGen(ctx, out);
 
         out.write(0, " {\n");
 
@@ -132,7 +134,7 @@ public class TypeGen {
 
         typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) {
-                if(tree.getKind() == Tree.Kind.RECORD ||
+                if (tree.getKind() == Tree.Kind.RECORD ||
                     (tree.getKind() == Tree.Kind.CLASS && tree.sym.isStatic())) {
                     out.write(deep + 2, "");
                     self.type(deep + 2, tree);
@@ -140,29 +142,6 @@ public class TypeGen {
                 }
             }
         }));
-
-        var reflectiveExpressions = new ArrayList<JCTree.JCExpression>();
-
-        typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
-            @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
-                if(invoke.meth instanceof JCTree.JCIdent methId)
-                    if(methId.sym instanceof Symbol.MethodSymbol mSym)
-                        for(var i = 0; i < mSym.params.length(); i++)
-                            if(mSym.params.get(i).getAnnotation(ClassRef.Reflexive.class) != null)
-                                reflectiveExpressions.add(invoke.args.get(i));
-            }
-        }));
-
-        for(var i = 0; i < reflectiveExpressions.size(); i++) {
-            out.write(deep + 2, "static __reflect" + i);
-            out.write(0, "(obj) {\n");
-            out.write(deep + 2, "}\n");
-        }
-
-        if(!reflectiveExpressions.isEmpty())
-            out.write(0, "\n");
-
-        var zz = 1;
 
         typeDecl.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
@@ -182,6 +161,7 @@ public class TypeGen {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
+        var mGen = new MethodGen(ctx, out);
         out.mkString(methods, g -> mGen.method(deep, initBlock, g), "", "\n\n", "");
         out.write(0, "\n");
         out.write(deep, "}");

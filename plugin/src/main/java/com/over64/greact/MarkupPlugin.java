@@ -744,6 +744,9 @@ public class MarkupPlugin {
                         new Type.JCVoidType(), List.nil(), classDecl.sym),
                     classDecl.sym);
 
+                methodSym.params = List.of(new Symbol.VarSymbol(
+                    0, names.fromString("x0"), symbols.clObject.type, methodSym));
+
                 classDecl.sym.members_field.enterIfAbsent(methodSym);
 
                 var fragmentsForVar = viewFragments.getOrDefault(eVar, List.nil());

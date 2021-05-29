@@ -12,6 +12,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.*;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

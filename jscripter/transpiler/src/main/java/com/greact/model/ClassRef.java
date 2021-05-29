@@ -9,6 +9,7 @@ public interface ClassRef {
     }
 
     String name();
+    ClassRef[] params();
     FieldRef[] fields();
 
     static ClassRef of(@SuppressWarnings("unused") Object obj) {

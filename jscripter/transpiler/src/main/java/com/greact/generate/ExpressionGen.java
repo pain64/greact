@@ -5,6 +5,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.model.ClassRef;
 import com.greact.model.async;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.code.Symbol;
@@ -77,6 +78,45 @@ public class ExpressionGen {
 
     boolean isMemberRefSymbol(Symbol.TypeSymbol tsym, Names names) {
         return tsym.getQualifiedName().equals(names.fromString("com.greact.model.MemberRef"));
+    }
+
+    void reflectWriteClassMembers(int deep, Type classType) {
+        if(classType.tsym instanceof Symbol.ClassSymbol classSym) {
+            out.write(0, "{\n");
+            out.write(deep + 2, "name: () => '");
+            out.write(0, "" + classSym.className());
+            out.write(0, "',\n");
+
+            out.write(deep + 2, "params: () => [\n");
+            if (classType instanceof  Type.ArrayType arrayType){
+                out.write(deep + 4, "");
+                reflectWriteClassMembers(deep + 4, arrayType.elemtype);
+                out.write(0, "\n");
+            }
+            out.write(deep + 2, "],\n");
+
+            out.write(deep + 2, "fields: () => [\n");
+            for (var i = 0; i < classSym.getRecordComponents().length(); i++) {
+                var comp = classSym.getRecordComponents().get(i);
+
+                out.write(deep + 4, "{\n");
+                if (comp.type.tsym instanceof Symbol.ClassSymbol next) {
+                    out.write(deep + 6, "name: () => '");
+                    out.write(0, comp.name.toString());
+                    out.write(0, "',\n");
+                    out.write(deep + 6, "__class__: () => (");
+                    reflectWriteClassMembers(deep + 6, comp.type);
+                    out.write(0, ")\n");
+                }
+                out.write(deep + 4, "}");
+                if (i != classSym.getRecordComponents().length() - 1)
+                    out.write(0, ",");
+                out.write(0, "\n");
+            }
+
+            out.write(deep + 2, "]\n");
+            out.write(deep, "}");
+        }
     }
 
     void expr(int deep, ExpressionTree expr) {
@@ -305,16 +345,20 @@ public class ExpressionGen {
                     .replace("\\n", "\n")
                     .replace("\\'", "'");
                 out.write(0, unescaped.substring(1, unescaped.length() - 1));
+            } else if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.ClassRef")) &&
+                methodSym.name.equals(names.fromString("of"))) {
+                expr(deep, call.getArguments().get(0));
+                out.write(0, ".__class__");
             } else {
 
                 var shimmedType = mctx.ctx().stdShim().findShimmedType(methodOwnerSym.type);
-                final Overloads.Info info;
-                if (shimmedType != null) {
-                    info = Overloads.methodInfo(mctx.ctx().types(),
-                        (TypeElement) shimmedType.tsym, mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym));
-                } else
-                    info = Overloads.methodInfo(mctx.ctx().types(),
-                        (TypeElement) methodOwnerSym.type.tsym, methodSym);
+                var targetMethod = shimmedType != null
+                    ? mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym)
+                    : methodSym;
+
+                var info = shimmedType != null
+                    ? Overloads.methodInfo(mctx.ctx().types(), (TypeElement) shimmedType.tsym, targetMethod)
+                    : Overloads.methodInfo(mctx.ctx().types(), (TypeElement) methodOwnerSym.type.tsym, methodSym);
 
                 var callTree = (JCTree) call;
 
@@ -371,9 +415,32 @@ public class ExpressionGen {
                     out.write(0, ", ");
                 }
 
-                out.mkString(call.getArguments(), (arg) ->
-                    expr(deep, arg), "", ", ", ")");
+                for(var i = 0; i < call.getArguments().size(); i++) {
+                    var param = targetMethod.isVarArgs() && i >= targetMethod.getParameters().length()
+                        ? targetMethod.getParameters().last()
+                        : targetMethod.getParameters().get(i);
+                    var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
+                    var arg = (JCTree.JCExpression) call.getArguments().get(i);
 
+                    if(isReflexive) {
+                        out.write(0, "(() => {\n");
+                        out.write(deep + 2, "let __obj = ");
+                    }
+                    expr(deep, arg);
+                    if(isReflexive) {
+                        out.write(0, ";\n");
+                        if(arg.type.tsym instanceof Symbol.ClassSymbol){
+                            out.write(deep + 2, "__obj.__class__ = (");
+                            reflectWriteClassMembers(deep + 2, arg.type);
+                            out.write(0, ")\n");
+                            out.write(deep + 2, "return __obj;\n");
+                        }
+                        out.write(deep, "})()");
+                    }
+                    if(i != call.getArguments().size() - 1) out.write(0, ", ");
+                }
+
+                out.write(0, ")");
                 if (info.isAsync()) out.write(0, ")");
             }
         } else if (expr instanceof MemberReferenceTree memberRef) {
