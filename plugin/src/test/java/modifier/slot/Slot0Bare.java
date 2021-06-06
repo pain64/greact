@@ -28,8 +28,8 @@ public class Slot0Bare {
                         }
                                
                         @Override
-                        public T mount() {
-                            return cond ? call(doThen) : call(doElse);
+                        public Component0<T> mount() {
+                            return cond ? doThen : doElse;
                         }
                     }""",
                 """
@@ -54,9 +54,9 @@ public class Slot0Bare {
                         }
                        \s
                         @Override
-                        public T mount() {
+                        public Component0<T> mount() {
                             final T $root = (T)com.over64.greact.dom.Globals.gReactElement;
-                            return cond ? call(doThen) : call(doElse);
+                            return cond ? doThen : doElse;
                         }
                     }"""),
             new CompileAssert.CompileCase("js.Demo",

@@ -348,6 +348,7 @@ public class MarkupPlugin {
                         componentImplOpt_(compType).isPresent()) {
 
                         var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
+
                         var htmlElementType = isCustom
                             ? componentImpl(compType).allparams().get(0)
                             : compType;
@@ -653,10 +654,22 @@ public class MarkupPlugin {
                         public void visitReturn(JCTree.JCReturn ret) {
                             this.result = ret;
                             if (ret.expr instanceof JCTree.JCNewClass that) {
-                                var lmb = maker.Lambda(List.nil(), mapNewClass(
-                                    new MountCtx(viewFragments, methodTree.sym),
-                                    new HashSet<>(effectCalls.keySet()),
-                                    rootVar, that))
+                                var compType = that.def == null // anon inner class
+                                    ? that.type
+                                    : ((Type.ClassType) that.type).supertype_field;
+                                var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
+
+                                var lmb = maker.Lambda(List.nil(),
+                                    isCustom
+                                        ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
+                                        List.of(maker.Ident(rootVar), that,
+                                            maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                                List.nil())
+                                                .setType(types.makeArrayType(symbols.clObject.type))))
+                                        : mapNewClass(
+                                        new MountCtx(viewFragments, methodTree.sym),
+                                        new HashSet<>(effectCalls.keySet()),
+                                        rootVar, that))
                                     .setType(symbols.clRenderer.type);
                                 lmb.target = symbols.clRenderer.type;
                                 lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -704,10 +717,22 @@ public class MarkupPlugin {
                                 var ret = (JCTree.JCReturn) body.stats.last();
 
                                 if (ret.expr instanceof JCTree.JCNewClass that) {
-                                    var lmb2 = maker.Lambda(List.nil(), mapNewClass(
-                                        new MountCtx(viewFragments, methodTree.sym),
-                                        new HashSet<>(effectCalls.keySet()),
-                                        rootVar, that))
+                                    var compType = that.def == null // anon inner class
+                                        ? that.type
+                                        : ((Type.ClassType) that.type).supertype_field;
+                                    var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
+
+                                    var lmb2 = maker.Lambda(List.nil(),
+                                        isCustom
+                                            ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
+                                            List.of(maker.Ident(rootVar), that,
+                                                maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                                    List.nil())
+                                                    .setType(types.makeArrayType(symbols.clObject.type))))
+                                            : mapNewClass(
+                                            new MountCtx(viewFragments, methodTree.sym),
+                                            new HashSet<>(effectCalls.keySet()),
+                                            rootVar, that))
                                         .setType(symbols.clRenderer.type);
                                     lmb2.target = symbols.clRenderer.type;
                                     lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;

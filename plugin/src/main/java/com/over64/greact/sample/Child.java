@@ -1,9 +1,8 @@
 package com.over64.greact.sample;
 
-import com.over64.greact.dom.HTMLNativeElements;
-import com.over64.greact.dom.HTMLNativeElements.h1;
+import com.over64.greact.dom.HTMLNativeElements.*;
 
-class Child implements HTMLNativeElements.Component0<h1> {
+class Child implements Component0<h1> {
     int answer;
 
     @Override public h1 mount() {
