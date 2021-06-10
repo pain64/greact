@@ -3,7 +3,7 @@ Make Java great (fullstack) again! Use Java compiler plugin technology for AST -
 
 ## UI written on java
 - Java to JS transpiling (latest java versions: 17+)
-- React-like component system with compile-time reactive (Svelte-like)
+- React-like component system with compile-time reactive (Svelte-like, but much more explicit)
 - Typesafe web page markup (via anon inner classes)
 - Libgrid: typesafe UIKit
 
