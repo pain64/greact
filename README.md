@@ -63,8 +63,6 @@ public class MainPage implements Component0<div> {
 ```
 
 ```java
-import spark.Spark;
-
 public class Main {
     static final String RPC_BASE_URL = "/rpc";
 
