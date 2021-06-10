@@ -1,5 +1,5 @@
 # GReact: typesafe and productive web for Java
-Make Java great (fullstack) again! Use java plugin technology for AST -> AST transformations to achieve fluent API and typesafety
+Make Java great (fullstack) again! Use Java compiler plugin technology for AST -> AST transformations to achieve fluent API and typesafety
 
 ## UI written on java
 - Java to JS transpiling (latest java versions: 17+)
