@@ -86,8 +86,6 @@ public class Main {
 
         var db = new TypesafeSql(ds);
         var server = new Server();
-
-        Spark.staticFiles.location("/public");
         
         var resources = Loader.bundle(MainPage.class, false /* not release */);
         for(var resource: resources)
