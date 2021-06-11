@@ -280,7 +280,9 @@ public class ExpressionGen {
                 out.write(0, fields.stream().map(f -> "'" + f + "'").collect(Collectors.joining(", ", "[", "]")));
                 out.write(0, ", value: (v) => v.");
                 out.write(0, String.join(".", fields));
-                out.write(0, "}");
+                out.write(0, ", className: () => '");
+                out.write(0, ((Symbol.ClassSymbol) lmb.type.allparams().get(1).tsym).className().toString());
+                out.write(0, "'}");
             } else {
                 var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
                     .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
@@ -457,7 +459,9 @@ public class ExpressionGen {
                 out.write(0, jcMemberRef.name.toString());
                 out.write(0, "'], value: (v) => v.");
                 out.write(0, jcMemberRef.name.toString());
-                out.write(0, "}");
+                out.write(0, ", className: () => '");
+                out.write(0, ((Symbol.ClassSymbol) jcMemberRef.type.allparams().get(1).tsym).className().toString());
+                out.write(0, "'}");
             } else {
                 var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
                 var mSym = TreeInfo.symbol((JCTree) memberRef);
