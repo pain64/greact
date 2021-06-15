@@ -25,7 +25,7 @@ Make Java great (fullstack) again! Use Java compiler plugin technology for AST -
 - Livereload for client and server code (in dev mode)
 - Simple API as much as posible
 - Library way (not framework)
-- Compile-time type safety (tired of compiling and running to get shit too?)
+- Compile-time type safety
   
 ## Simple Demo (also see sample subproject)
 Built with:
