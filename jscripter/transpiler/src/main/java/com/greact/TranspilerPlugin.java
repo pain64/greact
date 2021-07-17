@@ -18,8 +18,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -192,7 +190,7 @@ public class TranspilerPlugin implements Plugin {
                                 var out = new JSOut(writer);
                                 new TypeGen(out, cu, env, context, new JavaStdShim(types,
                                     shimConversions)).type(0, typeDecl);
-                                for (var type : out.dependsOnTypes) {
+                                for (var type : out.dependsOn) {
                                     depWriter.write(type);
                                     depWriter.write(10); // \n
                                 }

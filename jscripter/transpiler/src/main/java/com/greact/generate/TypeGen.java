@@ -1,16 +1,11 @@
 package com.greact.generate;
 
-import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
-import com.greact.model.ClassRef;
-import com.greact.model.DoNotTranspile;
-import com.greact.model.JSExpression;
-import com.greact.model.JSNativeAPI;
+import com.greact.model.*;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -20,13 +15,8 @@ import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.*;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class TypeGen {
     public static record TContext(
@@ -78,6 +68,10 @@ public class TypeGen {
         if (!(decl instanceof JCTree.JCClassDecl)) return;
         var typeDecl = (JCTree.JCClassDecl) decl;
 
+        var cssRequire = typeDecl.sym.getAnnotation(CSS.Require.class);
+        if(cssRequire != null)
+            out.dependsOn.addAll(Arrays.asList(cssRequire.value()));
+
         if (typeDecl.getKind() == Tree.Kind.INTERFACE) return;
         if (typeDecl.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
@@ -104,7 +98,7 @@ public class TypeGen {
         var superClass = "Object";
         if (extendClause != null) {
             superClass = extendClause.type.tsym.toString().replace(".", "$");
-            out.dependsOnTypes.add(extendClause.type.tsym.toString() + ".js");
+            out.dependsOn.add(extendClause.type.tsym.toString() + ".js");
         }
         out.write(0, "extends ");
         out.write(0, superClass);

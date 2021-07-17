@@ -7,7 +7,19 @@ public class HTMLNativeElements {
     public interface Component {
         default void effect(Object expression) {}
     }
+
+    public static class View {
+        public static void remount(View view) {}
+        public static Caused causedBy(Object... changes) {
+            return new Caused();
+        }
+        public static class Caused {
+            public void remount(View... views) { }
+        }
+    };
+
     public interface Component0<T extends HtmlElement> extends Component {
+        default View view() { return null; }
         @async Component0<T> mount();
     }
     public interface Component1<T extends HtmlElement, U> extends Component {

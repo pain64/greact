@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 public class JSOut {
     final Writer out;
-    public final Set<String> dependsOnTypes = new TreeSet<>();
+    public final Set<String> dependsOn = new TreeSet<>();
 
     public JSOut(Writer writer) {
         this.out = writer;

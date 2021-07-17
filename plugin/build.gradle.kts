@@ -19,6 +19,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
     options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
     options.fork()
@@ -36,6 +37,7 @@ dependencies {
     implementation("org.sql2o:sql2o:1.6.0")
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
+    implementation("commons-io:commons-io:2.10.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")

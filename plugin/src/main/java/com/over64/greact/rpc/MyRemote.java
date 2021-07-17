@@ -3,6 +3,7 @@ package com.over64.greact.rpc;
 import java.util.function.Function;
 
 public class MyRemote extends RPC<MyRemote.DI> {
+    public MyRemote() {super("");}
     public static class DI {
         final String dependency;
 
