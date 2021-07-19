@@ -52,7 +52,7 @@ public class MainPage implements Component0<div> {
             // this code will be executed on server-side
             return db.select(User.class, "order by id")
         });
-        return new Grid<>(departments) {{
+        return new Grid<>(users) {{
             onRowChange = u -> server(db -> db.update(u));
             onRowDelete = u -> server(db -> db.delete(u));
             onRowAdd = u -> server(db -> db.insert(u));
