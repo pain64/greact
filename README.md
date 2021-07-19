@@ -80,7 +80,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         var ds = new HikariDataSource() {{
           setDataSourceClassName("oracle.jdbc.pool.OracleDataSource");
-          addDataSourceProperty("url", "jdbc:oracle:thin:@//[localhost][1521]/student");
+          addDataSourceProperty("url", "jdbc:oracle:thin:@//[localhost][1521]/users");
           setUsername("app_owner");
           setPassword("test");
           setConnectionTestQuery("select 1 from dual");
