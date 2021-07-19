@@ -45,7 +45,6 @@ Built with:
 ``` java
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.libgrid.Grid;
-import com.over64.greact.libgrid.controls.Select;
 import com.over64.greact.TypesafeSql.Id;
 import com.over64.greact.TypesafeSql.Table;
 
