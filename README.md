@@ -44,7 +44,7 @@ import java.sql.Date;
 
 import static iias.web.Main.Server.server;
 
-public class MainPage implements Component0<div> {
+public class MainPage implements Component<div> {
     @Table("users") record User(long id, String name, int age, String sex) {}
    
     @Override public Grid<User> mount() {
@@ -66,12 +66,7 @@ public class MainPage implements Component0<div> {
 public class Main {
     static final String RPC_BASE_URL = "/rpc";
 
-    public static class Server extends RPC<TypesafeSql> {
-        @RPCEntryPoint(RPC_BASE_URL)
-        public static <T> T server(Function<TypesafeSql, T> onServer) {
-            throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
-        }
-    }
+    @RPCEntryPoint(RPC_BASE_URL) static class Server extends RPC<TypesafeSql> {}
 
     public static void main(String[] args) throws IOException {
         var ds = new HikariDataSource() {{
