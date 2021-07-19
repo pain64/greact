@@ -26,6 +26,15 @@ Make Java great (fullstack) again! Use Java compiler plugin technology for AST -
 - Simple API as much as posible
 - Library way (not framework)
 - Compile-time type safety
+
+## Hello world
+```java
+class HelloWorld implements Component<h1> {
+    @Override public h1 mount() {
+        return new h1("Hello, world");
+    }
+}
+```
   
 ## Simple Demo (also see sample subproject)
 Built with:
