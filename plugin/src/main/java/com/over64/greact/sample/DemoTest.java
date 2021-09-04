@@ -1,9 +1,8 @@
 package com.over64.greact.sample;
 
+import com.greact.model.JSExpression;
 import com.over64.greact.dom.Globals;
 import com.over64.greact.dom.HTMLNativeElements.*;
-
-import static com.over64.greact.dom.HTMLNativeElements.View.remount;
 
 public class DemoTest implements Component0<div> {
 
@@ -16,20 +15,32 @@ public class DemoTest implements Component0<div> {
             this.list = list;
         }
 
-        // div filterView, clockView, otherView;
+        Runnable me;
+
+        static Runnable $render(Runnable fragment) {
+            fragment.run();
+            return fragment;
+        }
+
+        int bar = 0;
 
         @Override public div mount() {
             return new div() {{
                 style.border = "1px red solid";
-                var filterView = new div() {{
+                new div() {{
                     for (var s : list)
                         new div() {{
-                            style.border = "1px green solid";
-                            new slot<>(forDecorate, s);
+                            Runnable me = () -> {
+                                var _me = JSExpression.<Runnable>of("me");
+                                style.border = "1px green solid" + bar;
+                                new slot<>(forDecorate, s);
+                                _me.run();
+                            };
+                            me.run();
                         }};
-                }}.view();
+                }};
 
-                new div() {{ onclick = ev -> remount(filterView); }};
+                new div() {{ onclick = ev -> effect(bar = 42); }};
             }};
         }
     }

@@ -1,0 +1,203 @@
+package ui.analyze;
+
+import com.over64.greact.GReactExceptions.NewClassDeniedHere;
+import com.over64.greact.ViewEntryFinder;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
+import org.junit.jupiter.api.Test;
+import util.AnalyzeAssertionsCompiler.CompilerAssertion;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static util.AnalyzeAssertionsCompiler.withAssert;
+
+public class FindViewEntriesTest {
+    public static class HasViewsAssert extends CompilerAssertion<String[]> {
+        @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String[] expected) {
+            var entries = new ViewEntryFinder(ctx).find(cu);
+            var hasViews = entries.stream()
+                .map(e -> e.view().toString())
+                .collect(Collectors.toList());
+
+            assertLinesMatch(Arrays.asList(expected), hasViews);
+        }
+    }
+
+    public static class NewViewDeniedAssert extends CompilerAssertion<String> {
+        @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String nop) {
+            assertThrows(NewClassDeniedHere.class, () ->
+                new ViewEntryFinder(ctx).find(cu));
+        }
+    }
+
+    @Test void check_new_class_for_non_component_not_affected() {
+        withAssert(HasViewsAssert.class, """
+                class A {
+                    void bar() { new String("hello"); }
+                }""",
+            new String[]{});
+    }
+
+    @Test void at_return_in_mount_method() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    @Override public div mount() {
+                        return new div();
+                    }
+                }""",
+            new String[]{"new div()"});
+    }
+
+    @Test void at_component_lambda() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A {
+                    Component0<div> slot = () -> new div();
+                }""",
+            new String[]{"new div()"});
+    }
+
+    @Test void at_component_lambda_in_return() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A {
+                    Component0<div> slot = () ->  {
+                        return new div();
+                    };
+                }""",
+            new String[]{"new div()"});
+    }
+
+    @Test void at_component_lambda_in_nested() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A {
+                    Component0<div> slot = () ->  {
+                        Component0<h1> nestedSlot = () -> new h1();
+                        return new div();
+                    };
+                }""",
+            new String[]{"new h1()", "new div()"});
+    }
+
+    @Test void at_component_in_inner_class() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    static class B implements Component0<h1> {
+                        @Override public h1 mount() {
+                            return new h1();
+                        }
+                    }
+                    @Override public div mount() {
+                        return new div();
+                    }
+                }""",
+            new String[]{"new h1()", "new div()"});
+    }
+
+    @Test void at_component_returns_component() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<h1> {
+                    static class B implements Component0<h1> {
+                        @Override public h1 mount() {
+                            return new h1();
+                        }
+                    }
+                    @Override public B mount() {
+                        return new B();
+                    }
+                }""",
+            new String[]{"new h1()", "new B()"});
+    }
+
+    @Test void at_component_in_anon_inner_class_override() {
+        /*
+         * Do not do like this. It's violates idea of components, but it will be compiled
+         * FIXME: deny this ???
+         */
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<h1> {
+                    static class B implements Component0<h1> {
+                        @Override public h1 mount() {
+                            return new h1();
+                        }
+                    }
+                    @Override public B mount() {
+                        return new B() {
+                            @Override public h1 mount() {
+                                return new h1("overridden");
+                            }
+                        };
+                    }
+                }""",
+            new String[]{
+                """
+                    new h1()""",
+                """
+                    new h1("overridden")""",
+                """
+                    new B(){
+                       \s
+                        () {
+                            super();
+                        }
+                       \s
+                        @Override
+                        public h1 mount() {
+                            return new h1("overridden");
+                        }
+                    }"""
+            });
+    }
+
+    @Test void denied_at_arbitrary_method() {
+        withAssert(NewViewDeniedAssert.class, """
+            import com.over64.greact.dom.HTMLNativeElements.*;
+            class A {
+                h1 someMethod() {
+                    return new h1();
+                }
+            }""", null);
+    }
+
+    @Test void denied_at_method_named_mount_but_not_component() {
+        withAssert(NewViewDeniedAssert.class, """
+            import com.over64.greact.dom.HTMLNativeElements.*;
+            class A {
+                h1 mount() {
+                    return new h1();
+                }
+            }""", null);
+    }
+
+    @Test void nested_components_creation_should_work() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    @Override public div mount() {
+                        return new div() {{
+                            new h1();
+                        }};
+                    }
+                }""",
+            new String[]{
+                """
+                    new div(){
+                       \s
+                        () {
+                            super();
+                        }
+                        {
+                            new h1();
+                        }
+                    }"""
+            });
+    }
+}

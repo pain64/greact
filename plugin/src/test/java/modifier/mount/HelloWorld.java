@@ -16,7 +16,7 @@ public class HelloWorld {
                     class Demo implements Component0<h1> {
                       int nUsers = 1;
                       
-                      @Override public h1 mount() {                        
+                      @Override public h1 mount() {
                         return new h1("hello, world");
                       }
                     }""",

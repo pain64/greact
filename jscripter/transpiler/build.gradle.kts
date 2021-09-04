@@ -17,18 +17,29 @@ tasks.withType<JavaCompile> {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_15
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
-    jvmArgs = listOf("--enable-preview")
+    jvmArgs = listOf("--enable-preview",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
 }
 
 dependencies {
-    compile("commons-cli:commons-cli:1.3.1")
+    implementation("commons-cli:commons-cli:1.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar> {
+    from(configurations.runtimeClasspath.get()
+        .onEach { println("add from dependencies: ${it.name}") }
+        .map { if (it.isDirectory) it else zipTree(it) })
 }
 
 publishing {

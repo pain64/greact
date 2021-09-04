@@ -25,12 +25,19 @@ tasks.withType<JavaCompile> {
         " --js-src-package=org.over64.jscripter.std" +
         " --std-conv-class=org.over64.jscripter.NoStdTypeConversion")
     options.compilerArgs.add("--enable-preview")
+
     options.fork()
-    options.forkOptions.jvmArgs = listOf("--enable-preview")
+    options.forkOptions.jvmArgs = listOf("--enable-preview",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"
+    )
 }
 
 dependencies {
-    compile(project(":transpiler"))
+    implementation(project(":transpiler"))
 }
 
 publishing {

@@ -12,6 +12,10 @@ allprojects {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
+
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
@@ -23,16 +27,30 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--enable-preview")
     options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
     options.fork()
-    options.forkOptions.jvmArgs = listOf("--enable-preview")
+    options.forkOptions.jvmArgs = listOf("--enable-preview",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
+    )
 }
 
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
-    jvmArgs = listOf("--enable-preview")
+    jvmArgs = listOf("--enable-preview",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
 }
 
 dependencies {
     implementation("com.over64:jscripter:0.0.1")
+    implementation("com.over64:jscripter-transpiler:0.0.1")
     implementation("org.antlr:antlr4-runtime:4.8-1")
     implementation("org.sql2o:sql2o:1.6.0")
     implementation("com.google.code.gson:gson:2.8.6")

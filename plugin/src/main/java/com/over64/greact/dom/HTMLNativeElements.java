@@ -19,7 +19,6 @@ public class HTMLNativeElements {
     };
 
     public interface Component0<T extends HtmlElement> extends Component {
-        default View view() { return null; }
         @async Component0<T> mount();
     }
     public interface Component1<T extends HtmlElement, U> extends Component {
@@ -37,7 +36,7 @@ public class HTMLNativeElements {
         String value();
     }
 
-    interface NativeElementAsComponent<T extends HtmlElement> extends Component0<T> {
+    public interface NativeElementAsComponent<T extends HtmlElement> extends Component0<T> {
         @Override default Component0<T> mount() { return null; }
     }
 

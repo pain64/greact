@@ -517,7 +517,7 @@ public class ExpressionGen {
                 //  1. before method body gen
                 //    - find all insanceof
                 //    - write all pattern vars at function begin
-                var name = ((BindingPatternTree) pattern).getBinding().toString();
+                var name = ((BindingPatternTree) pattern).getVariable().getName().toString();
                 out.write(0, "(");
                 out.write(0, name);
                 out.write(0, " = ");

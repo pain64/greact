@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 
 import static com.sun.tools.javac.util.List.nil;
 
+
 public class MarkupPlugin {
     final Context context;
     final JavacProcessingEnvironment env;
@@ -121,7 +122,7 @@ public class MarkupPlugin {
         return maker.App(select, args);
     }
 
-    class IdentPatcher extends TreeTranslator {
+    class IdentPatcher extends TreeTranslator { // patch this
         final Symbol.VarSymbol scope;
 
         IdentPatcher(Symbol.VarSymbol scope) {
@@ -217,7 +218,7 @@ public class MarkupPlugin {
             return new EffectAnalyzer(forEffect) {
                 @Override
                 public void visitCase(JCTree.JCCase tree) {
-                    scan(tree.pats);
+                    scan(tree.stats);
                 }
             }.apply(switchStmt);
         else if (stmt instanceof JCTree.JCEnhancedForLoop foreachStmt)
@@ -259,7 +260,7 @@ public class MarkupPlugin {
             new IdentPatcher(dest) {
                 @Override
                 public void visitCase(JCTree.JCCase tree) {
-                    tree.pats = translate(tree.pats);
+                    tree.stats = translate(tree.stats);
                     this.result = tree;
                 }
             }.translate(switchStmt);
@@ -340,7 +341,7 @@ public class MarkupPlugin {
                             maker.Exec(makeCall(symbols.clGlobals, symbols.mtGReactMount, List.of(
                                 maker.Ident(elVarSymbol), newClass.args.get(0),
                                 maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                    newClass.args.tail != null ? newClass.args.tail : List.nil())
+                                        newClass.args.tail != null ? newClass.args.tail : List.nil())
                                     .setType(types.makeArrayType(symbols.clObject.type))
                             ))),
                             maker.Exec(appendElCall)));
@@ -456,8 +457,8 @@ public class MarkupPlugin {
                 block.stats : List.of(patchedStmt);
 
             var lmb = maker.Lambda(
-                nil(),
-                maker.Block(Flags.BLOCK, stmtBody.prepend(cleanupCall)))
+                    nil(),
+                    maker.Block(Flags.BLOCK, stmtBody.prepend(cleanupCall)))
                 .setType(symbols.clRenderer.type);
             lmb.target = symbols.clRenderer.type;
             lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -539,14 +540,13 @@ public class MarkupPlugin {
 
         var mapped = mappedArgs.appendList(blockBody).stream()
             .flatMap(tree -> {
-                if (tree instanceof JCTree.JCStatement stmt) {
-                    var mappedStmt = mapStmt(mctx, forEffect, elVarSymbol, stmt);
-                    if (mappedStmt instanceof JCTree.JCBlock block)
-                        return block.stats.stream();
-                    else return Stream.of(mappedStmt);
-                }
 
-                throw new RuntimeException("unexpected tree " + tree);
+                var mappedStmt = mapStmt(mctx, forEffect, elVarSymbol, tree);
+                if (mappedStmt instanceof JCTree.JCBlock block)
+                    return block.stats.stream();
+                else return Stream.of(mappedStmt);
+
+
             }).reduce(List.<JCTree.JCStatement>nil(), List::append, List::appendList);
 
         // newClass.def = null;
@@ -660,16 +660,16 @@ public class MarkupPlugin {
                                 var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
 
                                 var lmb = maker.Lambda(List.nil(),
-                                    isCustom
-                                        ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
-                                        List.of(maker.Ident(rootVar), that,
-                                            maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                                List.nil())
-                                                .setType(types.makeArrayType(symbols.clObject.type))))
-                                        : mapNewClass(
-                                        new MountCtx(viewFragments, methodTree.sym),
-                                        new HashSet<>(effectCalls.keySet()),
-                                        rootVar, that))
+                                        isCustom
+                                            ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
+                                            List.of(maker.Ident(rootVar), that,
+                                                maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                                        List.nil())
+                                                    .setType(types.makeArrayType(symbols.clObject.type))))
+                                            : mapNewClass(
+                                            new MountCtx(viewFragments, methodTree.sym),
+                                            new HashSet<>(effectCalls.keySet()),
+                                            rootVar, that))
                                     .setType(symbols.clRenderer.type);
                                 lmb.target = symbols.clRenderer.type;
                                 lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
@@ -723,16 +723,16 @@ public class MarkupPlugin {
                                     var isCustom = !types.isSubtype(compType, symbols.clHtmlElement.type);
 
                                     var lmb2 = maker.Lambda(List.nil(),
-                                        isCustom
-                                            ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
-                                            List.of(maker.Ident(rootVar), that,
-                                                maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                                    List.nil())
-                                                    .setType(types.makeArrayType(symbols.clObject.type))))
-                                            : mapNewClass(
-                                            new MountCtx(viewFragments, methodTree.sym),
-                                            new HashSet<>(effectCalls.keySet()),
-                                            rootVar, that))
+                                            isCustom
+                                                ? makeCall(symbols.clGlobals, symbols.mtGReactMount,
+                                                List.of(maker.Ident(rootVar), that,
+                                                    maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                                            List.nil())
+                                                        .setType(types.makeArrayType(symbols.clObject.type))))
+                                                : mapNewClass(
+                                                new MountCtx(viewFragments, methodTree.sym),
+                                                new HashSet<>(effectCalls.keySet()),
+                                                rootVar, that))
                                         .setType(symbols.clRenderer.type);
                                     lmb2.target = symbols.clRenderer.type;
                                     lmb2.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
