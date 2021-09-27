@@ -11,79 +11,135 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
-import static com.over64.greact.dom.HTMLNativeElements.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.over64.greact.dom.HTMLNativeElements.Component0;
+import static com.over64.greact.dom.HTMLNativeElements.Component1;
 
 public class ViewEntryFinder {
     final Symtab symtab;
     final Names names;
     final Types types;
+    final Util util;
     final Name mountMethodName;
+    final Name defaultConstructorMethodName;
 
     public ViewEntryFinder(Context context) {
         this.symtab = Symtab.instance(context);
         this.names = Names.instance(context);
         this.types = Types.instance(context);
+        this.util = new Util(context);
         this.symbols = new Symbols();
         this.mountMethodName = names.fromString("mount");
+        this.defaultConstructorMethodName = names.fromString("<init>");
     }
 
     class Symbols {
-        Symbol.ClassSymbol clComponent0 = Util.lookupClass(symtab, names, Component0.class);
-        Symbol.ClassSymbol clComponent1 = Util.lookupClass(symtab, names, Component1.class);
-        Symbol.ClassSymbol clNativeElementAsComponent = Util.lookupClass(symtab, names, NativeElementAsComponent.class);
+        Symbol.ClassSymbol clComponent0 = util.lookupClass(Component0.class);
+        Symbol.ClassSymbol clComponent1 = util.lookupClass(Component1.class);
     }
     final Symbols symbols;
 
-    public record ViewEntry(JCTree holder, JCTree.JCNewClass view) {}
-    enum ComponentKind {NOT_COMPONENT, NATIVE, COMPONENT0, COMPONENT1}
+    public sealed interface ViewHolder {
+        JCTree.JCMethodDecl owner();
+        JCTree target();
+        JCTree.JCNewClass view();
+    }
+    public record MountMethodViewHolder(JCTree.JCMethodDecl owner, JCTree.JCNewClass view) implements ViewHolder {
+        @Override public JCTree target() {return owner;}
+    }
+    public record LambdaViewHolder(JCTree.JCMethodDecl owner /* mount method, or class default constructor */,
+                                   JCTree.JCLambda lmb,
+                                   JCTree.JCNewClass view) implements ViewHolder {
+        @Override public JCTree target() {return lmb;}
+    }
 
-    ComponentKind isTypeImplementsComponent(Type type) {
+    public record ClassEntry(JCTree.JCClassDecl classDecl, List<ViewHolder> viewHolders) {}
+
+    boolean isImplementsComponent(Type type) {
         Type realType = type;
-        if (type.tsym.isAnonymous())
+        if (type.tsym != null && type.tsym.isAnonymous())
             if (type.tsym instanceof Symbol.ClassSymbol classSym)
                 realType = classSym.getSuperclass();
 
         var ifaces = types.interfaces(realType);
-        if (ifaces.stream().anyMatch(iface -> iface.tsym == symbols.clNativeElementAsComponent)) return ComponentKind.NATIVE;
-        if (ifaces.stream().anyMatch(iface -> iface.tsym == symbols.clComponent0)) return ComponentKind.COMPONENT0;
-        if (ifaces.stream().anyMatch(iface -> iface.tsym == symbols.clComponent1)) return ComponentKind.COMPONENT1;
+        if (ifaces.stream().anyMatch(iface -> iface.tsym == symbols.clComponent0)) return true;
+        if (ifaces.stream().anyMatch(iface -> iface.tsym == symbols.clComponent1)) return true;
 
-        return ComponentKind.NOT_COMPONENT;
+        if (realType instanceof Type.ClassType clType)
+            if (clType.supertype_field != null)
+                return isImplementsComponent(clType.supertype_field);
+
+        return false;
     }
 
-    public java.util.List<ViewEntry> find(JCTree.JCCompilationUnit cu) {
-        var found = new java.util.ArrayList<ViewEntry>();
+    public List<ClassEntry> find(JCTree.JCCompilationUnit cu) {
+        var found = new ArrayList<ClassEntry>();
 
         cu.accept(new TreeScanner() {
+            ClassEntry currentClassEntry;
+            JCTree.JCMethodDecl currentMethod;
+
+            @Override public void visitClassDef(JCTree.JCClassDecl tree) {
+                if(tree.sym.isAnonymous())
+                    super.visitClassDef(tree);
+                else {
+                    var oldClassEntry = currentClassEntry;
+                    currentClassEntry = new ClassEntry(tree, new ArrayList<>());
+                    found.add(currentClassEntry);
+                    super.visitClassDef(tree);
+                    currentClassEntry = oldClassEntry;
+                }
+            }
+
             @Override public void visitMethodDef(JCTree.JCMethodDecl mt) {
+                var oldMethod = currentMethod;
+                currentMethod = mt;
                 super.visitMethodDef(mt);
+                currentMethod = oldMethod;
 
                 if (mt.name == mountMethodName)
-                    if (isTypeImplementsComponent(mt.sym.owner.type) != ComponentKind.NOT_COMPONENT)
+                    if (isImplementsComponent(mt.sym.owner.type))
                         if (mt.body.stats.last() instanceof JCTree.JCReturn ret)
                             if (ret.expr instanceof JCTree.JCNewClass newClass)
-                                found.add(new ViewEntry(ret, newClass));
+                                currentClassEntry.viewHolders.add(new MountMethodViewHolder(mt, newClass));
             }
 
             @Override public void visitLambda(JCTree.JCLambda lmb) {
                 super.visitLambda(lmb);
 
+                var parent = currentMethod != null ? currentMethod :
+                    currentClassEntry.classDecl.defs.stream()
+                        .filter(d -> d instanceof JCTree.JCMethodDecl mt &&
+                            mt.name.equals(defaultConstructorMethodName))
+                        .map(d -> (JCTree.JCMethodDecl) d)
+                        .findFirst().orElseThrow(() ->
+                            new IllegalStateException("unreachable: cannot find default constructor"));
+
                 if (lmb.type.tsym == symbols.clComponent0 || lmb.type.tsym == symbols.clComponent1)
                     if (lmb.body instanceof JCTree.JCExpression expr) {
                         if (expr instanceof JCTree.JCNewClass newClass)
-                            found.add(new ViewEntry(lmb, newClass));
+                            currentClassEntry.viewHolders.add(new LambdaViewHolder(parent, lmb, newClass));
                     } else if (lmb.body instanceof JCTree.JCBlock block)
                         if (block.stats.last() instanceof JCTree.JCReturn ret)
                             if (ret.expr instanceof JCTree.JCNewClass newClass)
-                                found.add(new ViewEntry(lmb, newClass));
+                                currentClassEntry.viewHolders.add(new LambdaViewHolder(parent, lmb, newClass));
             }
         });
 
+        var allViewEntries = found.stream()
+            .flatMap(ce -> ce.viewHolders.stream())
+            .map(ViewHolder::view)
+            .toList();
+
         cu.accept(new TreeScanner() {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
-                if (isTypeImplementsComponent(newClass.type) != ComponentKind.NOT_COMPONENT)
-                    if (found.stream().noneMatch(ve -> ve.view == newClass))
-                        throw new NewClassDeniedHere();
+                if (!(util.classifyView(newClass.type) instanceof Util.IsNotComponent))
+                    if (!allViewEntries.contains(newClass))
+                        throw new NewClassDeniedHere(cu.getSourceFile().getName() + ":" +
+                            cu.getLineMap().getLineNumber(newClass.getStartPosition()) + ":" +
+                            cu.getLineMap().getColumnNumber(newClass.getStartPosition()));
             }
             /*
              * FIXME: нужны более точные проверки

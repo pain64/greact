@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import util.AnalyzeAssertionsCompiler.CompilerAssertion;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
@@ -15,18 +16,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static util.AnalyzeAssertionsCompiler.withAssert;
 
 public class FindViewEntriesTest {
-    public static class HasViewsAssert extends CompilerAssertion<String[]> {
+    static class HasViewsAssert extends CompilerAssertion<String[]> {
         @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String[] expected) {
-            var entries = new ViewEntryFinder(ctx).find(cu);
-            var hasViews = entries.stream()
-                .map(e -> e.view().toString())
+            var classEntries = new ViewEntryFinder(ctx).find(cu);
+            var hasViews = classEntries.stream()
+                .flatMap(ce -> ce.viewHolders().stream())
+                .map(vh -> vh.view().toString())
                 .collect(Collectors.toList());
 
             assertLinesMatch(Arrays.asList(expected), hasViews);
         }
     }
 
-    public static class NewViewDeniedAssert extends CompilerAssertion<String> {
+    static class NewViewDeniedAssert extends CompilerAssertion<String> {
         @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String nop) {
             assertThrows(NewClassDeniedHere.class, () ->
                 new ViewEntryFinder(ctx).find(cu));
@@ -97,7 +99,7 @@ public class FindViewEntriesTest {
                         return new div();
                     }
                 }""",
-            new String[]{"new h1()", "new div()"});
+            new String[]{"new div()", "new h1()"});
     }
 
     @Test void at_component_returns_component() {
@@ -113,7 +115,22 @@ public class FindViewEntriesTest {
                         return new B();
                     }
                 }""",
-            new String[]{"new h1()", "new B()"});
+            new String[]{"new B()", "new h1()"});
+    }
+
+    @Test void via_superclass_implements_component() {
+        withAssert(HasViewsAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A {
+                    abstract static class B implements Component0<h1> {}
+                    
+                    class C extends B {
+                        @Override public h1 mount() {
+                            return new h1();
+                        }
+                    }
+                }""",
+            new String[]{"new h1()"});
     }
 
     @Test void at_component_in_anon_inner_class_override() {
@@ -139,8 +156,6 @@ public class FindViewEntriesTest {
                 }""",
             new String[]{
                 """
-                    new h1()""",
-                """
                     new h1("overridden")""",
                 """
                     new B(){
@@ -153,7 +168,9 @@ public class FindViewEntriesTest {
                         public h1 mount() {
                             return new h1("overridden");
                         }
-                    }"""
+                    }""",
+                """
+                    new h1()"""
             });
     }
 

@@ -4,7 +4,7 @@ import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
 public class HTMLNativeElements {
-    public interface Component {
+    public interface Component<T extends HtmlElement> {
         default void effect(Object expression) {}
     }
 
@@ -18,19 +18,20 @@ public class HTMLNativeElements {
         }
     };
 
-    public interface Component0<T extends HtmlElement> extends Component {
+    public interface Component0<T extends HtmlElement> extends Component<T> {
         @async Component0<T> mount();
     }
-    public interface Component1<T extends HtmlElement, U> extends Component {
+    public interface Component1<T extends HtmlElement, U> extends Component<T> {
         @async Component0<T> mount(U u);
     }
+
+    // FIXME: for remove
     public interface Component2<T extends HtmlElement, U, V>  extends Component {
         @async Component0<T> mount(U u, V v);
     }
     public interface Component3<T extends HtmlElement, A1, A2, A3>  extends Component {
         @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
-
 
     public @interface DomProperty {
         String value();
@@ -161,7 +162,7 @@ public class HTMLNativeElements {
     }
 
 
-    @JSNativeAPI public static class slot<T extends HtmlElement> extends HtmlElement {
+    @JSNativeAPI public static final class slot<T extends HtmlElement> extends HtmlElement {
         public slot(Component0<T> comp) {}
         public <U> slot(Component1<T, U> comp, U u) {}
         public <A1, A2> slot(Component2<T, A1, A2> comp, A1 a1, A2 a2) {}

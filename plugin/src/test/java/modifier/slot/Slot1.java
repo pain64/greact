@@ -50,18 +50,14 @@ public class Slot1 {
                        \s
                         @Override
                         public div mount() {
-                            final com.over64.greact.dom.HTMLNativeElements.div $root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.Globals.gReactElement;
-                            return com.over64.greact.dom.Globals.gReactReturn(()->{
-                                $root.style.border = "1px red solid";
-                                for (java.lang.String s : list) {
-                                    final com.over64.greact.dom.HTMLNativeElements.div $el0 = com.over64.greact.dom.Globals.document.createElement("div");
-                                    {
-                                        $el0.style.border = "1px green solid";
-                                        final com.over64.greact.dom.HTMLNativeElements.h1 $el1 = com.over64.greact.dom.Globals.document.createElement("h1");
-                                        com.over64.greact.dom.Globals.gReactMount($el1, forDecorate, new Object[]{s});
-                                        $el0.appendChild($el1);
-                                    }
-                                    $root.appendChild($el0);
+                            let _root = GReact.element;
+                            return GReact.entry(() => {
+                                _root.style.border = "1px red solid";
+                                for (let s in list) {
+                                    GReact.make(_root, 'div', _el0 => {
+                                        _el0.style.border = "1px green solid";
+                                        GReact.mountSlot(_el0, 'h1', forDecorate, new Object[]{s});
+                                    });
                                 }
                             });
                         }

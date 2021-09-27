@@ -3,9 +3,14 @@ package com.over64.greact;
 public class GReactExceptions {
     public static class GReactCompileException extends RuntimeException {}
     public static class NewClassDeniedHere extends GReactCompileException {
+        final String at;
+        public NewClassDeniedHere(String at) {
+            this.at = at;
+
+        }
         @Override public String toString() {
             return """
-                Unexpected view root here
+                Unexpected view root here %s
                 Expected one of:
                   Mount method:
                     class X implements Component<div> {
@@ -28,7 +33,7 @@ public class GReactExceptions {
                         return new h1("hello"); /* <--- this is view root */
                       }
                     }
-                """;
+                """.formatted(at);
         }
     }
 }

@@ -7,9 +7,11 @@ import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import org.opentest4j.AssertionFailedError;
 
 import javax.tools.ToolProvider;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.List;
@@ -38,7 +40,8 @@ public class AnalyzeAssertionsCompiler {
                         Base64.getDecoder().decode(argsData)))
                     .readObject();
                 var cl = Class.forName(klass);
-                var constructor = cl.getConstructors()[0];
+                var constructor = cl.getDeclaredConstructors()[0];
+                constructor.setAccessible(true);
                 inst = constructor.newInstance();
 
                 for (var decl : cl.getDeclaredMethods())
@@ -50,12 +53,18 @@ public class AnalyzeAssertionsCompiler {
             }
 
             var mt = methodDecl;
+            mt.setAccessible(true);
+
             task.addTaskListener(new TaskListener() {
                 @Override public void finished(TaskEvent e) {
                     if (e.getKind() == TaskEvent.Kind.ANALYZE)
                         try {
-                           mt.invoke(inst, context, e.getCompilationUnit(), args);
+                            mt.invoke(inst, context, e.getCompilationUnit(), args);
                         } catch (Exception ex) {
+                            if (ex instanceof InvocationTargetException itEx) {
+                                if (itEx.getCause() instanceof AssertionFailedError err)
+                                    throw err;
+                            }
                             throw new RuntimeException(ex);
                         }
                 }
