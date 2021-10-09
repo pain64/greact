@@ -68,8 +68,9 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
                     System.out.println("before init: " + System.currentTimeMillis());
+                    System.out.println("compile for:  " + e.getCompilationUnit().getSourceFile().getName());
                     new RPCPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
-                    new MarkupPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    new MarkupPlugin2(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     System.out.println("after init:  " + System.currentTimeMillis());
 
                     var env = JavacProcessingEnvironment.instance(context);

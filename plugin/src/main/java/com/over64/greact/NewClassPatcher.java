@@ -42,6 +42,8 @@ public class NewClassPatcher {
         Symbol.ClassSymbol clConsumer = util.lookupClass(Consumer.class);
         Symbol.ClassSymbol clString = util.lookupClass(String.class);
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
+        Symbol.ClassSymbol clNode = util.lookupClass(com.over64.greact.dom.Node.class);
+        Symbol.MethodSymbol mtReplaceChildren = util.lookupMember(clNode, "replaceChildren");
         //Symbol.ClassSymbol clBoolean = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Boolean"));
     }
 
@@ -240,6 +242,12 @@ public class NewClassPatcher {
                 }
 
                 @Override public void visitNewClass(JCTree.JCNewClass newClass) {
+                    System.out.println("###NEW CLASS: " + newClass);
+//                    if(currentThis == null) {
+//                        super.visitNewClass(newClass);
+//                        return;
+//                    }
+
                     var classified = util.classifyView(newClass.type);
                     if (classified instanceof IsNotComponent) {
                         this.result = newClass;
@@ -293,16 +301,27 @@ public class NewClassPatcher {
                                         )).setType(symbols.clRunnable.type),
                                     symbols.mtRunnableRun)
                             ))));
+                        renderLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                           maker.Exec(makeCall(newClassEl, symbols.mtReplaceChildren, com.sun.tools.javac.util.List.nil()))
+                        ));
                         destLambda = renderLambda;
-                    } else
+                    } else {
+                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
                         destLambda = lmb;
+                    }
+
+                    var destBlock = (JCTree.JCBlock) destLambda.body;
 
                     if (component instanceof IsCustomComponent custom) {
+
+                        var ct = (Type.ClassType) newClass.type;
+                        ct.setEnclosingType(root.type.getEnclosingType());
+
                         var forMount = custom instanceof IsSlot ? newClass.args.head : newClass;
                         var mountArgs = custom instanceof IsSlot ? newClass.args.tail
                             : com.sun.tools.javac.util.List.<JCTree.JCExpression>nil();
 
-                        destLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                        destBlock.stats = destBlock.stats.append(
                             maker.Exec(makeCall(symbols.clGReact, symbols.mtGReactMount,
                                 com.sun.tools.javac.util.List.of(
                                     maker.Ident(newClassEl),
@@ -310,9 +329,9 @@ public class NewClassPatcher {
                                     maker.NewArray(maker.Ident(symbols.clObject), com.sun.tools.javac.util.List.nil(),
                                             mountArgs)
                                         .setType(types.makeArrayType(symbols.clObject.type))))
-                            )));
+                            ));
                     } else  // native
-                        destLambda.body = mapNewClassBody(newClassEl, htmlElementType, newClass);
+                        destBlock.stats = destBlock.stats.appendList(mapNewClassBody(newClassEl, htmlElementType, newClass).stats);
 
                     this.result = isViewEntry ?
                         makeCall(symbols.clGReact, symbols.mtGReactEntry,

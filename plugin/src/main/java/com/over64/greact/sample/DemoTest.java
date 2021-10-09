@@ -31,6 +31,7 @@ public class DemoTest implements Component0<div> {
         return new div() {{
             new h1() {{
                 innerText = "hello, world!";
+
             }};
         }};
     }

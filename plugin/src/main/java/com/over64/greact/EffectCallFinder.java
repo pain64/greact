@@ -78,10 +78,11 @@ public class EffectCallFinder {
                                 return (Symbol.VarSymbol) id.sym;
 
                         throw new RuntimeException("""
+                            error at: %s
                             for ∀ x is variable expected any of:
                               effect(x)
                               effect(x = expression)
-                              effect(x op= expression)""");
+                              effect(x op= expression)""".formatted(tree));
                     };
 
                     result.computeIfAbsent(currentClass, _cd -> new ArrayList<>())

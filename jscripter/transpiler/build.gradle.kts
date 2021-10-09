@@ -16,6 +16,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--enable-preview")
 }
 
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
 }

@@ -70,7 +70,10 @@ public class ViewHolderPatcher {
         final Type.ClassType htmlElementType;
         if(util.classifyView(rootElementType) instanceof IsComponent comp)
             htmlElementType = comp.htmlElementType();
-        else throw new IllegalStateException("unreachable");
+        else {
+            System.out.println("##ROOT_ELEMENT_TYPE = " + rootElementType);
+            throw new IllegalStateException("unreachable");
+        }
 
         var rootVar = new Symbol.VarSymbol(
             Flags.FINAL | Flags.HASINIT,

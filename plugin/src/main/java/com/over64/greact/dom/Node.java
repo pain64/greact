@@ -10,4 +10,5 @@ import com.greact.model.JSNativeAPI;
     public native Node appendChild(Node child);
     public native Node insertBefore(Node child, Node reference);
     public native Node removeChild(Node child);
+    public native void replaceChildren(/* FIXME add args here */);
 }
