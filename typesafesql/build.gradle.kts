@@ -3,13 +3,17 @@ plugins {
     id("maven-publish")
 }
 
-repositories {
-    jcenter()
-}
-
 allprojects {
     group = "com.over64"
     version = "0.0.1"
+    repositories {
+        jcenter()
+        mavenLocal()
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<JavaCompile> {
@@ -18,12 +22,19 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-}
-
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
+    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
+    options.fork()
+    options.forkOptions.jvmArgs = listOf("--enable-preview",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
+    )
 }
 
 val test by tasks.getting(Test::class) {
@@ -33,25 +44,26 @@ val test by tasks.getting(Test::class) {
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
 }
 
 dependencies {
-    implementation("commons-cli:commons-cli:1.3.1")
+    implementation(project(":jscripter:transpiler"))
+    implementation("org.antlr:antlr4-runtime:4.8-1")
+    implementation("org.sql2o:sql2o:1.6.0")
+    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
+    implementation("commons-io:commons-io:2.10.0")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
-}
-
-tasks.withType<org.gradle.jvm.tasks.Jar> {
-    from(configurations.runtimeClasspath.get()
-        .onEach { println("add from dependencies: ${it.name}") }
-        .map { if (it.isDirectory) it else zipTree(it) })
 }
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "jscripter-transpiler"
+            artifactId = "typesafesql"
             from(components["java"])
 //            versionMapping {
 //                usage("java-api") {
@@ -62,8 +74,8 @@ publishing {
 //                }
 //            }
             pom {
-//                name.set("jScripter")
-//                description.set("Java to Javascript compiler plugin")
+                name.set("TypesafeSQL")
+                description.set("Java Typesafe SQL Access Library")
 //                url.set("http://www.example.com/library")
 //                properties.set(mapOf(
 //                        "myProp" to "value",

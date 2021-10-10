@@ -1,0 +1,21 @@
+package iias.web.plainjs.libgrid;
+
+import com.greact.model.JSExpression;
+import com.over64.greact.dom.HTMLNativeElements.Component0;
+import com.over64.greact.dom.HTMLNativeElements.div;
+
+import static com.greact.model.ClassRef.Reflexive;
+
+public class Grid<T> extends GridSlot<T> implements Component0<div> {
+    final T[] rowsData;
+
+    public Grid(@Reflexive T[] data) {
+        this.rowsData = data;
+        initColumnsByDefault(data);
+    }
+
+    @Override
+    public div mount() {
+        return JSExpression.of("super.mount(this.rowsData)");
+    }
+}
