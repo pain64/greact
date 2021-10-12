@@ -1,7 +1,6 @@
 rootProject.name = "jstack"
 include(
     "jscripter:transpiler",
-    "jscripter:bundler",
     "greact",
     "greact-uikit",
     "greact-uikit-sample",
@@ -9,6 +8,7 @@ include(
 )
 
 pluginManagement {
+    includeBuild("jscripter/bundler")
     repositories {
         mavenLocal()
         gradlePluginPortal()
