@@ -69,6 +69,7 @@ public class GReactPlugin implements Plugin {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
                     System.out.println("before init: " + System.currentTimeMillis());
                     System.out.println("compile for:  " + e.getCompilationUnit().getSourceFile().getName());
+                    new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     new RPCPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     new MarkupPlugin2(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     System.out.println("after init:  " + System.currentTimeMillis());
