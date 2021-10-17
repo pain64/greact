@@ -33,7 +33,7 @@ public class String {
 //    @Replace("{this}.replace(new RegExp({regex}), {replacement})")
 //    public native java.lang.String replaceFirst(java.lang.String regex, java.lang.String replacement);
 //    @Replace("{this}.replaceAll(new RegExp({regex}), {replacement})")
-//    public native java.lang.String replaceAll(java.lang.String regex, java.lang.String replacement);
+      public native java.lang.String replaceAll(java.lang.String regex, java.lang.String replacement);
 //    @Replace("{this}.split(new RegExp({regex}), {limit})")
 //    public native java.lang.String[] split(java.lang.String regex, int limit);
 //    @Replace("{this}.split(new RegExp({regex}))")

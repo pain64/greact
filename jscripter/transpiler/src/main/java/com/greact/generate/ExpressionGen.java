@@ -125,7 +125,7 @@ public class ExpressionGen {
             switch (expr.getKind()) {
                 case CHAR_LITERAL, STRING_LITERAL -> {
                     out.write(0, "'");
-                    out.write(0, value.toString().replace("\n", "\\\n"));
+                    out.write(0, value.toString().replace("\n", "\\n"));
                     out.write(0, "'");
                 }
                 case NULL_LITERAL -> out.write(0, "null");

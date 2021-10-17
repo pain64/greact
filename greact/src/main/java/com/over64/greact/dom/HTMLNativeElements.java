@@ -185,4 +185,7 @@ public class HTMLNativeElements {
         public String src;
     }
 
+    @JSNativeAPI public static class textarea extends HtmlElement implements NativeElementAsComponent<textarea> {
+    }
+
 }

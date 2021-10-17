@@ -34,20 +34,33 @@ public class CodeViewPlugin {
     final TreeMaker maker;
     final Symbols symbols;
 
+    String whitespacePrefix(CharSequence code, int start) {
+        int i = 0;
+        while(start - i - 1 >= 0 && code.charAt(start - i - 1) == ' ') i++;
+        return " ".repeat(i);
+    }
+
     public void apply(JCTree.JCCompilationUnit cu) {
         cu.accept(new TreeScanner() {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
                 if (newClass.type.tsym == symbols.clCodeView) {
                     var viewCompExpression = newClass.args.head;
                     final String code;
+
                     if (viewCompExpression instanceof JCTree.JCLambda lambda)
                         if (lambda.body instanceof JCTree.JCNewClass compExpr) {
                             var exprForCode = ((JCTree.JCBlock) compExpr.def.defs.last()).stats.head;
+
                             try {
-                                code = cu.getSourceFile().getCharContent(true).subSequence(
+                                var cuCode = cu.getSourceFile().getCharContent(true);
+                                var prefix = whitespacePrefix(cuCode, exprForCode.getStartPosition());
+
+                                code = cuCode.subSequence(
                                     exprForCode.getStartPosition(),
-                                    exprForCode.getEndPosition(cu.endPositions)
-                                ).toString();
+                                    exprForCode.getEndPosition(cu.endPositions))
+                                    .toString()
+                                    .replaceAll("\n" + prefix, "\n");
+
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -62,6 +75,7 @@ public class CodeViewPlugin {
                     newClass.constructorType = symbols.constructor2.type;
                     newClass.args = newClass.args.append(maker.Literal(code).setType(symbols.clString.type));
                 }
+
                 super.visitNewClass(newClass);
             }
         });
