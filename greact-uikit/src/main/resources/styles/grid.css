@@ -35,6 +35,8 @@
 }
 .toolbox {
   visibility: hidden;
+  width: 54px;
+  justify-content: flex-end;
 }
 tr:hover > td > .toolbox {
   visibility: visible;

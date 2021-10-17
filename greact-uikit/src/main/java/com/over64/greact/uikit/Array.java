@@ -30,7 +30,7 @@ public class Array<T> {
     public static <A, B> Pair<A, B>[] zip(A[] left, B[] right) {
         Pair<A, B>[] result = (Pair<A, B>[]) new Object[0];
         for (var i = 0; i < left.length; i++)
-            push(result, new Pair<>(left[i], right[i]));
+            Array.push(result, new Pair<>(left[i], right[i]));
         return result;
     }
 }

@@ -2,16 +2,17 @@ package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.uikit.GridConfig2.AsyncHandler;
 
 import java.util.function.Consumer;
 
 public class GridRowAdd<T> implements Component0<tr> {
     T data;
     final GridConfig2<T> conf;
-    final Consumer<T> onConfirmRowAdd;
+    final AsyncHandler<T> onConfirmRowAdd;
     final Runnable onCancelRowAdd;
 
-    public GridRowAdd(GridConfig2<T> conf, Consumer<T> onConfirmRowAdd, Runnable onCancelRowAdd) {
+    public GridRowAdd(GridConfig2<T> conf, AsyncHandler<T> onConfirmRowAdd, Runnable onCancelRowAdd) {
         data = JSExpression.of("{}"); // Fixme: instantiate with new()
         this.conf = conf;
         this.onConfirmRowAdd = onConfirmRowAdd;
@@ -38,7 +39,10 @@ public class GridRowAdd<T> implements Component0<tr> {
                     }};
 
             new td() {{ /* toolbox */
+                style.display = "flex";
+                style.justifyContent = "flex-end";
                 new div() {{
+                    style.width = "54px";
                     style.display = "flex";
                     className = "toolbox";
 
@@ -54,7 +58,7 @@ public class GridRowAdd<T> implements Component0<tr> {
                                     if (col._editor != null)
                                         Grid.setValue(data, col.memberNames, col._editor.value);
 
-                            onConfirmRowAdd.accept(data);
+                            onConfirmRowAdd.handle(data);
                         };
                     }};
                     new div() {{ /* cancel create row */

@@ -2,6 +2,7 @@ package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HtmlElement;
 
 import java.util.function.Consumer;
 
@@ -20,6 +21,16 @@ class GridTable<T> implements Component0<table> {
     boolean addNewRowMode = false;
     RowData<T>[] rows;
     RowData<T> selectedRow = null;
+    HtmlElement theTable;
+    Integer[] columnSizes;
+
+    void keepSizes() {
+        columnSizes = JSExpression.of("[].slice.call(this.theTable.tHead.rows[0].cells).map(e => e" +
+            ".getBoundingClientRect().width)");
+    }
+    void clearSizes() {
+        columnSizes = Array.map(conf.columns, v -> 0);
+    }
 
     GridTable(T[] data, GridConfig2<T> conf,
               Consumer<T> onRowSelect, Runnable onFilterEnableDisable) {
@@ -30,68 +41,32 @@ class GridTable<T> implements Component0<table> {
     }
 
     @Override public table mount() {
+        clearSizes();
+
+        if (rows.length != 0 && conf.selectedRow != null) {
+            onRowSelect.accept(rows[0].data);
+            selectedRow = rows[0];
+        }
+
         return new table() {{
-            new style("""
-                .table {
-                   border-collapse: collapse;
-                   border-spacing: 0;
-                   width: 100%;
-                   cellspacing: 1px;
-                }
-                .table > tbody > tr {
-                    line-height: 40px;
-                }
-                .table > tbody > tr > td {
-                    padding: 0px 5px;
-                }
-                .table > thead {
-                    border-bottom: 2px  solid #eee;
-                    border-collapse: separate;
-                }
-                                    
-                .table > thead > tr > td {
-                    font-weight: 500;
-                }
-                .table-striped > tbody > tr:nth-child(even) {
-                  background-color: #f2f2f2;
-                }
-                .table > tbody > tr:hover:not(.expansion-row) {
-                    background-color: #ddf4d1;
-                }
-                .toolbox {
-                  visibility: hidden;
-                }
-                tr:hover > td > .toolbox {
-                  visibility: visible;
-                }
-                .expansion-row > td {
-                  margin-bottom: 1px;
-                }
-                .toolbox > div {
-                  margin: 0px 1px 0px 1px;
-                }
-                .toolbox > div:hover {
-                  background-color: #ffbbc7;
-                }
-                .toolbox-header > div:hover {
-                  background-color: #ffbbc7;
-                }
-                """);
+            theTable = this;
 
             className = "table table-striped";
             style.margin = "0px 0px 0px 0px";
 
             new thead() {{
                 new tr() {{
-                    //for (var colWithSize : Array.zip(columns, columnSizes))
-                    for (var col : conf.columns)
+                    for (var colWithSize : Array.zip(conf.columns, columnSizes))
                         new td() {{
-                            // style.width = colWithSize.b + "px";
-                            new span(col._header);
+                            if(colWithSize.b != 0)
+                                style.width = colWithSize.b + "px";
+                            new span(colWithSize.a._header);
                         }};
                     new td() {{
-                        style.width = "54px";
+                        style.display = "flex";
+                        style.justifyContent = "flex-end";
                         new div() {{
+                            style.width = "54px";
                             style.display = "flex";
                             style.justifyContent = "flex-end";
                             className = "toolbox-header";
@@ -107,22 +82,27 @@ class GridTable<T> implements Component0<table> {
                                 innerHTML = """
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                     """;
-                                onclick = ev -> effect(addNewRowMode = true);
+                                onclick = ev -> {
+                                    keepSizes();
+                                    effect(addNewRowMode = true);
+                                    effect(columnSizes);
+                                    clearSizes();
+                                };
                             }};
                         }};
                     }};
                 }};
             }};
             new tbody() {{
-                if (rows.length != 0) onRowSelect.accept(rows[0].data);
-
                 if (addNewRowMode)
                     new GridRowAdd<>(conf,
                         newRowData -> {
+                            var persisted = conf.onRowAdd.supply(newRowData);
+                            var newRow = new RowData<>(persisted);
                             // add row locally
                             // add row to filtered data
                             // add row to grid data
-                            JSExpression.of("this.rows.splice(0, 0, newRowData)");
+                            JSExpression.of("this.rows.splice(0, 0, newRow)");
                             effect(rows);
                             effect(addNewRowMode = false);
                         },
@@ -147,10 +127,13 @@ class GridTable<T> implements Component0<table> {
 
 
                             for (var col : conf.columns)
-                                new td() {{ innerText = Grid.colViewAsString(col, row.data); }};
+                                new td() {{innerText = Grid.colViewAsString(col, row.data);}};
 
                             new td() {{ /* toolbox */
+                                style.display = "flex";
+                                style.justifyContent = "flex-end";
                                 new div() {{
+                                    style.width = "54px";
                                     style.display = "flex";
                                     className = "toolbox";
 
@@ -161,6 +144,7 @@ class GridTable<T> implements Component0<table> {
                                         onclick = ev -> {
                                             ev.stopPropagation();
                                             conf.onRowDelete.handle(row.data);
+                                            effect(rows = Array.filter(rows, r -> r != row));
                                         };
                                     }};
                                     new div() {{ /* edit */
@@ -171,7 +155,10 @@ class GridTable<T> implements Component0<table> {
                                             ev.stopPropagation();
                                             row.expanded = false;
                                             row.editing = true;
+                                            keepSizes();
+                                            effect(columnSizes);
                                             effect(row);
+                                            clearSizes();
                                         };
                                     }};
                                     new div() {{ /* expand */

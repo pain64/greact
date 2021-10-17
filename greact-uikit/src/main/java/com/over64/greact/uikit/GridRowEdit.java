@@ -26,6 +26,8 @@ class GridRowEdit<T> implements Component0<tr> {
                 }};
 
             new td() {{ /* toolbox */
+                style.display = "flex";
+                style.justifyContent = "flex-end";
                 new div() {{
                     style.display = "flex";
                     className = "toolbox";
