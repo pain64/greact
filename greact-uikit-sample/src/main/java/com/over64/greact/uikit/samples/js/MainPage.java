@@ -523,14 +523,16 @@ public class MainPage implements Component0<div> {
                                     }};
 
                                     new CodeView(() -> new div() {{
-                                        var data = Array.of(
+                                        new div() {{
+                                            var data = Array.of(
                                                 new Data(1, "One"),
                                                 new Data(2, "Two"),
                                                 new Data(3, "Three")
-                                        );
+                                            );
 
-                                        new Grid<>(data) {{
-                                            adjust(Data::x).name("the X");
+                                            new Grid<>(data) {{
+                                                adjust(Data::x).name("the X");
+                                            }};
                                         }};
                                     }}, rendererWithCountString(9, 20));
                                 }};

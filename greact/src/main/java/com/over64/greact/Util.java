@@ -47,13 +47,15 @@ public class Util {
             new RuntimeException("No such member with name " + name + " at type " + from));
     }
 
-    public sealed interface ViewKind {}
+    /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
+    public /* sealed */ interface ViewKind {}
     public record IsNotComponent() implements ViewKind {}
-    public sealed interface IsComponent extends ViewKind {
+    public /* sealed */ interface IsComponent extends ViewKind {
         Type.ClassType htmlElementType();
     }
     public record IsNativeComponent(Type.ClassType htmlElementType) implements IsComponent {}
-    public sealed interface IsCustomComponent extends IsComponent {}
+    /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
+    public /* sealed */ interface IsCustomComponent extends IsComponent {}
     public record IsSlot(Type.ClassType htmlElementType) implements IsCustomComponent {}
     public record IsComponent0(Type.ClassType htmlElementType) implements IsCustomComponent {}
 

@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,13 +33,10 @@ public class TypesafeSql {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Id {
-    }
+    public @interface Id {}
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Joined {
-    }
-
+    public @interface Joined {}
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Inner {
@@ -85,48 +84,90 @@ public class TypesafeSql {
         return rs::getObject;
     }
 
-    public <T> List<T> list(String stmt, Class<T> klass, Object... args) {
+    /* FIXME: may handler throw Exception ??? */
+    public <T> T withConnection(Function<Connection, T> handler) {
         try (var conn = db.open()) {
-            var query = queryWithParams(conn, stmt, false, Arrays.asList(args));
-
-            if (klass.isRecord()) {
-                var data = query.executeAndFetch(new ResultSetHandler<T>() {
-                    @Override
-                    public T handle(ResultSet rs) throws SQLException {
-                        var constuctor = klass.getDeclaredConstructors()[0];
-                        constuctor.setAccessible(true);
-                        var consArgs = new Object[constuctor.getParameters().length];
-                        for (var i = 0; i < consArgs.length; i++) {
-                            var param = constuctor.getParameters()[i];
-                            consArgs[i] = fetchByTypeRef(param.getType(), rs).fetch(param.getName());
-                        }
-                        try {
-                            return (T) constuctor.newInstance(consArgs);
-                        } catch (Exception ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                });
-                return data;
-            } else {
-                return query.executeAndFetch(klass);
-            }
+            return handler.apply(conn);
         }
     }
 
+    <T> List<T> list(Connection conn, String stmt, Class<T> klass, Object... args) {
+        var query = queryWithParams(conn, stmt, false, Arrays.asList(args));
+
+        if (klass.isRecord()) {
+            var data = query.executeAndFetch(new ResultSetHandler<T>() {
+                @Override
+                public T handle(ResultSet rs) throws SQLException {
+                    var constuctor = klass.getDeclaredConstructors()[0];
+                    constuctor.setAccessible(true);
+                    var consArgs = new Object[constuctor.getParameters().length];
+                    for (var i = 0; i < consArgs.length; i++) {
+                        var param = constuctor.getParameters()[i];
+                        consArgs[i] = fetchByTypeRef(param.getType(), rs).fetch(param.getName());
+                    }
+                    try {
+                        return (T) constuctor.newInstance(consArgs);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+            return data;
+        } else {
+            return query.executeAndFetch(klass);
+        }
+
+    }
+
+
+    public <T> T[] array(Connection conn, String stmt, Class<T> klass, Object... args) {
+        return list(conn, stmt, klass, args).toArray((T[]) Array.newInstance(klass, 0));
+    }
+
     public <T> T[] array(String stmt, Class<T> klass, Object... args) {
-        return (T[]) list(stmt, klass, args).toArray((T[]) Array.newInstance(klass, 0));
+        try (var conn = db.open()) {
+            return array(conn, stmt, klass, args);
+        }
+    }
+
+    public <T> T uniqueOrNull(Connection conn, String stmt, Class<T> klass, Object... args) {
+        var result = list(conn, stmt, klass, args);
+        return result.isEmpty() ? null : result.get(0);
     }
 
     public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
-        var result = list(stmt, klass, args);
-        return result.isEmpty() ? null : result.get(0);
+        try (var conn = db.open()) {
+            return uniqueOrNull(conn, stmt, klass, args);
+        }
+    }
+
+    public Void call(Connection conn, String stmt, Object... args) {
+        var jconn = conn.getJdbcConnection();
+        try {
+            var exprAndOffsets = mapQueryArgs("call " + stmt, args);
+            var offsets = exprAndOffsets.offsets;
+
+            var procCall = jconn.prepareCall(exprAndOffsets.newExpr);
+
+            for (var i = 0; i < offsets.size(); i++)
+                procCall.setObject(i + 1, args[offsets.get(i).argIdx]);
+
+            procCall.executeUpdate();
+            return null;
+
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public Void exec(Connection conn, String stmt, Object... args) {
+        queryWithParams(conn, stmt, false, Arrays.asList(args)).executeUpdate();
+        return null;
     }
 
     public Void exec(String stmt, Object... args) {
         try (var conn = db.open()) {
-            queryWithParams(conn, stmt, false, Arrays.asList(args)).executeUpdate();
-            return null;
+            return exec(conn, stmt, args);
         }
     }
 
@@ -142,11 +183,32 @@ public class TypesafeSql {
         return length;
     }
 
-    public <T> T[] select(Class<T> klass, String expr, Object... args) {
+    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) {}
+
+    public ExprAndOffsets mapQueryArgs(String expr, Object... args) {
+        var offsets = new ArrayList<ArgOffset>();
+
+        for (var i = 0; i < args.length; i++) {
+            for (; ; ) {
+                var offset = expr.indexOf(":" + (i + 1));
+                var iLength = nDigits(i + 1);
+                if (offset == -1) break;
+                expr = expr.substring(0, offset) + "?" + " ".repeat(iLength) + expr.substring(offset + iLength + 1);
+                offsets.add(new ArgOffset(i, offset));
+            }
+        }
+
+        offsets.sort(Comparator.comparingInt(o -> o.offset));
+
+        return new ExprAndOffsets(expr, offsets);
+    }
+
+    public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
+
         // FIXME: check that @Table and @Joined annotations do not used both
         if (klass.getAnnotation(Table.class) != null) {
             var tableName = klass.getAnnotation(Table.class).value();
-            return array("select * from " + tableName + " " + expr, klass, args);
+            return array(conn, "select * from " + tableName + " " + expr, klass, args);
         } else if (klass.getAnnotation(Joined.class) != null) {
             var query =
                 "select " + Arrays.stream(klass.getRecordComponents())
@@ -168,23 +230,12 @@ public class TypesafeSql {
                     })
                     .collect(Collectors.joining(" "));
 
-            var offsets = new ArrayList<ArgOffset>();
+            var exprAndOffsets = mapQueryArgs(expr, args);
+            var offsets = exprAndOffsets.offsets;
 
-            for (var i = 0; i < args.length; i++) {
-                for (; ; ) {
-                    var offset = expr.indexOf(":" + (i + 1));
-                    var iLength = nDigits(i + 1);
-                    if (offset == -1) break;
-                    expr = expr.substring(0, offset) + "?" + " ".repeat(iLength) + expr.substring(offset + iLength + 1);
-                    offsets.add(new ArgOffset(i, offset));
-                }
-            }
-
-            offsets.sort(Comparator.comparingInt(o -> o.offset));
-
-            try (var conn = db.open()) {
+            try {
                 var jdbcConn = conn.getJdbcConnection();
-                var pstmt = jdbcConn.prepareStatement(query + " " + expr);
+                var pstmt = jdbcConn.prepareStatement(query + " " + exprAndOffsets.newExpr);
 
                 for (var i = 0; i < offsets.size(); i++)
                     pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
@@ -224,12 +275,24 @@ public class TypesafeSql {
         throw new RuntimeException("selected entity class must be annotated as @Table or @Joined");
     }
 
+    public <T> T[] select(Class<T> klass, String expr, Object... args) {
+        try (var conn = db.open()) {
+            return select(conn, klass, expr, args);
+        }
+    }
+
     public interface Ref<A, B> {
         B supply(A instance);
     }
 
-    public <T> T[] select(Class<T> klass) {
-        return select(klass, "");
+    public <T> T[] selectAll(Connection conn, Class<T> klass) {
+        return select(conn, klass, "");
+    }
+
+    public <T> T[] selectAll(Class<T> klass) {
+        try(var conn = db.open()) {
+            return selectAll(conn, klass);
+        }
     }
 
     public <T> T selectOne(Class<T> klass, String expr, Object... args) {

@@ -91,6 +91,7 @@ public class HTMLNativeElements {
         public Autocomplete autocomplete;
         public enum InputType {CHECKBOX, TEXT}
         //public InputType type;
+        public String name;
         public String type;
         public String placeholder;
         public String value;

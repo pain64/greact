@@ -25,7 +25,6 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
     options.fork()
     options.forkOptions.jvmArgs = listOf("--enable-preview",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
@@ -49,8 +48,6 @@ val test by tasks.getting(Test::class) {
 }
 
 dependencies {
-    implementation(project(":jscripter:transpiler"))
-    implementation("org.antlr:antlr4-runtime:4.8-1")
     implementation("org.sql2o:sql2o:1.6.0")
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
