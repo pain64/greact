@@ -2,18 +2,23 @@ package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
-import com.over64.greact.uikit.controls.Control;
-import com.over64.greact.uikit.controls.IntInput;
-import com.over64.greact.uikit.controls.LongInput;
-import com.over64.greact.uikit.controls.StrInput;
+import com.over64.greact.dom.HTMLNativeElements;
+import com.over64.greact.dom.HTMLNativeElements.Component1;
+import com.over64.greact.dom.HTMLNativeElements.td;
+import com.over64.greact.uikit.controls.*;
 
 import java.sql.Date;
 
 public class Column<T, U> {
+    public static final Component1<td, String> TEXT_AT_LEFT = value ->
+            new td(value == null ? "" : value) {{
+                style.textAlign = "left";
+            }};
+
     public String _header;
     public String[] memberNames;
-    public Mapper<U, String> viewMapper = null;
     public Control<U> _editor = null;
+    Component1<td, U> _view = value -> new td(value == null ? "" : value.toString());
 
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
@@ -37,15 +42,17 @@ public class Column<T, U> {
             case "long", "java.lang.Long" -> new LongInput();
             case "int", "java.lang.Integer" -> new IntInput();
             case "java.lang.String" -> new StrInput();
-            default -> null;
-        };
-        Mapper<?, String> viewMapper = switch (className) {
-            case "java.sql.Date" -> d -> Dates.toLocaleDateString((Date) d);
+            case "java.math.BigDecimal" -> new FloatInput();
+            case "com.over64.greact.uikit.Dates", "java.util.Date" -> new DateInput();
             default -> null;
         };
 
+        this._view = switch (className) {
+            case "java.sql.Date" -> d -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            default -> _view;
+        };
+
         this._editor = (Control<U>) editor;
-        this.viewMapper = (Mapper<U, String>) viewMapper;
     }
 
     public Column(MemberRef<T, U> ref) {
@@ -63,7 +70,12 @@ public class Column<T, U> {
     }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
-        this.viewMapper = mapper;
+        this._view = value -> new td(mapper.map(value));
+        return this;
+    }
+
+    public Column<T, U> viewCell(Component1<td, U> newView) {
+        this._view = newView;
         return this;
     }
 
