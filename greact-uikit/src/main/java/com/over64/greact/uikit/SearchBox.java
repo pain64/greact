@@ -5,14 +5,13 @@ import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.controls.Control;
 
-public class SearchBox<T> implements Component0<div> {
+public class SearchBox implements Component0<div> {
     Control[] controls;
     Control[] controlsWithChildren;
     boolean canSearch = false;
     boolean doSearch = false;
-    AsyncSupplier<T> loader;
-    public Component1<div, T> view;
-    T loaded;
+    AsyncSupplier<Component0<div>> loader;
+    Component0<div> loaded;
     public Object dependsOn;
 
     @FunctionalInterface public interface AsyncSupplier<T> {
@@ -56,6 +55,13 @@ public class SearchBox<T> implements Component0<div> {
     void onReadyChanged() {
         checkCanSearch();
         calcChildren();
+        JSExpression.of("this.performChangedEffects()");
+    }
+
+    @async void performChangedEffects() {
+        if(canSearch)
+            loaded = loader.load();
+
         effect(controlsWithChildren);
         effect(canSearch);
     }
@@ -67,15 +73,15 @@ public class SearchBox<T> implements Component0<div> {
         calcChildren();
     }
 
-    public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, T> loader) {
+    public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, Component0<div>> view) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
-    public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, T> loader) {
+    public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, Component<div>> view) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
-    public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, T> loader) {
+    public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, Component0<div>> view) {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
@@ -103,6 +109,7 @@ public class SearchBox<T> implements Component0<div> {
                 }
                 """);
             new div() {{
+                style.marginBottom = "15px";
                 style.display = "flex";
                 //style.justifyContent = "";
                 style.flexWrap = "wrap";
@@ -111,19 +118,22 @@ public class SearchBox<T> implements Component0<div> {
                 for (var control : controlsWithChildren)
                     new slot<div>(control);
 
-                new button("искать") {{
-                    style.margin = "2px";
-                    className = canSearch ? "search-button active" : " search-button disabled";
-                    onclick = ev -> {
-                        loaded = loader.load();
-                        effect(doSearch = true);
-                    };
-                }};
+                /* FIXME: make autosearch */
+
+//                new button("искать") {{
+//                    style.margin = "2px";
+//                    className = canSearch ? "search-button active" : " search-button disabled";
+//                    onclick = ev -> {
+//                        loaded = loader.load();
+//                        effect(doSearch = true);
+//                    };
+//                }};
             }};
 
-            if (doSearch) {
-                doSearch = false;
-                new slot<>(view, loaded);
+            if (canSearch) {
+                // doSearch = false;
+                JSExpression.of("console.log('rerender')");
+                new slot<>(loaded);
             }
         }};
     }

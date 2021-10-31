@@ -33,4 +33,10 @@ public class Array<T> {
             Array.push(result, new Pair<>(left[i], right[i]));
         return result;
     }
+
+    public static <T> T[] spliced(T[] array, int start, int deleteCount) {
+        var cloned = JSExpression.<T[]>of("Array.from(array)");
+        JSExpression.of("cloned.splice(start, deleteCount)");
+        return cloned;
+    }
 }

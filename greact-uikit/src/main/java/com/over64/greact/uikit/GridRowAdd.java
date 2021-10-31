@@ -31,12 +31,15 @@ public class GridRowAdd<T> implements Component0<tr> {
                     }};
             } else
                 for (var col : conf.columns)
-                    new td() {{
-                        if (col._editor != null) {
+                    if (col._editor != null)
+                        new td() {{
                             Grid.setEditorValueFromRowValue(col, data);
                             new slot<>(col._editor);
-                        } else innerText = Grid.colViewAsString(col, data);
-                    }};
+                        }};
+                    else
+                        new slot<>(
+                            (Component1<td, Object>) col._view,
+                            Grid.fetchValue(data, col.memberNames));
 
             new td() {{ /* toolbox */
                 style.display = "flex";

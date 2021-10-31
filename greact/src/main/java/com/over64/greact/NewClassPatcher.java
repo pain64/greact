@@ -242,7 +242,7 @@ public class NewClassPatcher {
                 }
 
                 @Override public void visitNewClass(JCTree.JCNewClass newClass) {
-                    System.out.println("###NEW CLASS: " + newClass);
+//                    System.out.println("###NEW CLASS: " + newClass);
 //                    if(currentThis == null) {
 //                        super.visitNewClass(newClass);
 //                        return;

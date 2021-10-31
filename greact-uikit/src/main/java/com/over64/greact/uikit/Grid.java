@@ -38,17 +38,6 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
         _col._editor.value = JSExpression.of("this.fetchValue(rowData, col.memberNames)");
     }
 
-    static <T> String colViewAsString(Column<T, ?> col, T rowData) {
-        var colValue = JSExpression.of("this.fetchValue(rowData, col.memberNames)");
-        if (colValue != null && col.viewMapper != null) {
-            @SuppressWarnings("unchecked")
-            var mapper = (Column.Mapper<Object, String>) col.viewMapper;
-            return mapper.map(colValue);
-        }
-
-        return colValue != null ? colValue.toString() : "";
-    }
-
     static <T> void setValue(T rowData, String[] memberNames, Object value) {
         Object acc = rowData;
         for (var i = 0; i < memberNames.length - 1; i++) {

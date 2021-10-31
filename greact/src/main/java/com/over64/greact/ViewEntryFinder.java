@@ -41,7 +41,8 @@ public class ViewEntryFinder {
     }
     final Symbols symbols;
 
-    public sealed interface ViewHolder {
+    /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
+    /* sealed */ public interface ViewHolder {
         JCTree.JCMethodDecl owner();
         JCTree target();
         JCTree.JCNewClass view();

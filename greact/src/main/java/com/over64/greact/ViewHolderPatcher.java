@@ -71,7 +71,7 @@ public class ViewHolderPatcher {
         if(util.classifyView(rootElementType) instanceof IsComponent comp)
             htmlElementType = comp.htmlElementType();
         else {
-            System.out.println("##ROOT_ELEMENT_TYPE = " + rootElementType);
+//            System.out.println("##ROOT_ELEMENT_TYPE = " + rootElementType);
             throw new IllegalStateException("unreachable");
         }
 

@@ -38,18 +38,11 @@ class GridFilter<T> implements Component0<div> {
     }
 
     String[] stringSplit(String str, String delim) {
+        JSExpression.of("console.log('split')");
         return JSExpression.of("str.split(delim)");
     }
     int stringLength(String str) {
         return JSExpression.of("str.length");
-    }
-
-    @async void persistNewRow(Row<T> row) {
-        for (var generator : conf.generated)
-            Grid.setValue(row.data, generator.memberNames, generator.supplier.supply());
-        row.data = conf.onRowAdd.supply(row.data);
-        var offset = (currentPage - 1) * currentSize;
-        JSExpression.of("this._data.splice(offset, 0, row.data)");
     }
 
     void effectUnaffectedMe(Runnable ef) {
@@ -66,7 +59,8 @@ class GridFilter<T> implements Component0<div> {
                 T[] filtered = filterWords.length != 0 ?
                     Array.filter(data, v -> {
                         for (var col : conf.columns) {
-                            var strVal = Grid.colViewAsString(col, v);
+                            var strVal = Grid.fetchValue(v, col.memberNames);
+                            if (strVal == null) strVal = "";
                             for (var fVal : filterWords)
                                 if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
                         }
@@ -143,12 +137,14 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }};
 
+
             new div() {{
-                new GridTable<>(pageData, conf, onRowSelect, () -> {
+                var hint = pageData;
+                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
                     effect(filterEnabled = !filterEnabled);
                     effect(currentPage = 1);
                     effect(filterValue = "");
-                });
+                }));
             }};
         }};
     }
