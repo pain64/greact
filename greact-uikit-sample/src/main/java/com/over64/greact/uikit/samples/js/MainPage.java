@@ -31,7 +31,7 @@ public class MainPage implements Component0<div> {
         return rendererWithHeight(count * height);
     }
 
-    record Data(int x, String y) {
+    record Data(int x, String y, Dates z) {
     }
 
     @Override
@@ -525,9 +525,13 @@ public class MainPage implements Component0<div> {
                                     new CodeView(() -> new div() {{
                                         new div() {{
                                             var data = Array.of(
+
+                                                    new Data(1, "One", Dates.toLocaleString("1997-11-23"))
+
                                                 new Data(1, "One"),
                                                 new Data(2, "Two"),
                                                 new Data(3, "Three")
+
                                             );
 
                                             new Grid<>(data) {{

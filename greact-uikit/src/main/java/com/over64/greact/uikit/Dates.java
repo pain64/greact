@@ -7,6 +7,10 @@ public class Dates {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }
 
+    public static Dates toLocaleString(String date) {
+        return JSExpression.of("new Date(date).toLocaleDateString()");
+    }
+
     public static String toLocaleString(java.util.Date date) {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }

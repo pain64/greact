@@ -11,9 +11,9 @@ import java.sql.Date;
 
 public class Column<T, U> {
     public static final Component1<td, String> TEXT_AT_LEFT = value ->
-        new td(value == null ? "" : value) {{
-            style.textAlign = "left";
-        }};
+            new td(value == null ? "" : value) {{
+                style.textAlign = "left";
+            }};
 
     public String _header;
     public String[] memberNames;
@@ -43,6 +43,7 @@ public class Column<T, U> {
             case "int", "java.lang.Integer" -> new IntInput();
             case "java.lang.String" -> new StrInput();
             case "java.math.BigDecimal" -> new FloatInput();
+            case "com.over64.greact.uikit.Dates", "java.util.Date" -> new DateInput();
             default -> null;
         };
 
