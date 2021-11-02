@@ -1,5 +1,5 @@
 package com.over64.greact.uikit;
-
+import java.util.Date;
 import com.greact.model.JSExpression;
 
 public class Dates {
@@ -7,7 +7,7 @@ public class Dates {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }
 
-    public static Dates toLocaleString(String date) {
+    public static Date parse(String date) {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }
 
