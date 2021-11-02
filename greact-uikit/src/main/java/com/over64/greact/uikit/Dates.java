@@ -8,7 +8,7 @@ public class Dates {
     }
 
     public static Date parse(String date) {
-        return JSExpression.of("new Date(Date.parse(date))");
+        return JSExpression.of("new Date(date)");
     }
 
     public static String toLocaleString(java.util.Date date) {

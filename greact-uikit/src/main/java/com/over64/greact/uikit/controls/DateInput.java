@@ -8,6 +8,6 @@ public class DateInput extends Input<Date> {
     public DateInput() {super("date");}
 
     @Override protected Date parseValueOpt(input src) {
-        return JSExpression.of("new Date(Date.parse(src.value))");
+        return JSExpression.of("new Date(src.value)");
     }
 }
