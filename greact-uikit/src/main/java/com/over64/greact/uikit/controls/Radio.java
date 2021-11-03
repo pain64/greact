@@ -11,18 +11,17 @@ public class Radio<T> extends Control<T> {
     @SafeVarargs public Radio(String label, Variant<T>... variants) {
         this._label = label;
         this.variants = JSExpression.of("Array.from(arguments).slice(1)");
-        if(this.variants.length > 0)
+        if(this.variants.length > 0) {
             this.value = this.variants[0].value;
-        this.ready = true;
-        onReadyChanged.run();
+            this.ready = true;
+            onReadyChanged.run();
+        }
     }
 
     @Override public Control<T> child() {return null;}
 
     @Override public div mount() {
         var self = this;
-
-        JSExpression.of("console.log(self.value)");
 
         return new div() {{
             new span(_label + " ");

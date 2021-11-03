@@ -32,8 +32,11 @@ public class Select<T> extends Control<T> {
         this.variants = new Indexed[options.length];
         for (var i = 0; i < options.length; i++)
             this.variants[i] = new Indexed<>(i, values.value(options[i]), captions.value(options[i]));
-        if(this.variants.length != 0)
+        if(this.variants.length != 0) {
             this.value = this.variants[0].element;
+            this.ready = true;
+            this.onReadyChanged.run();
+        }
     }
 
     public Select<T> label(String lbl) {
@@ -61,7 +64,7 @@ public class Select<T> extends Control<T> {
                 style.whiteSpace = "nowrap";
 
                 new span(_label) {{
-                 //   style.margin = "0px 5px 0px 0px";
+                    style.margin = "0px 5px 0px 0px";
                 }};
 
                 new select() {{

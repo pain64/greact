@@ -38,7 +38,6 @@ class GridFilter<T> implements Component0<div> {
     }
 
     String[] stringSplit(String str, String delim) {
-        JSExpression.of("console.log('split')");
         return JSExpression.of("str.split(delim)");
     }
     int stringLength(String str) {

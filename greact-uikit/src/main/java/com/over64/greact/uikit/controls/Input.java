@@ -148,7 +148,7 @@ public abstract class Input<T> extends Control<T> {
                         }
                         input[type=checkbox].switch:disabled:not(:checked):after {
                           opacity: 0.6;
-                        }
+                        }Date
                       
                         input[type=radio] {
                           border-radius: 50%;

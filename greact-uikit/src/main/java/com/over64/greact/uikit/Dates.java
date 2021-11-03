@@ -14,4 +14,8 @@ public class Dates {
     public static String toLocaleString(java.util.Date date) {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }
+
+    public static int getYear(java.util.Date date) {
+        return JSExpression.of("new Date(date).getFullYear()");
+    }
 }

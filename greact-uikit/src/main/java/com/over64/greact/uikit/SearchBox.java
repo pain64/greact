@@ -132,7 +132,6 @@ public class SearchBox implements Component0<div> {
 
             if (canSearch) {
                 // doSearch = false;
-                JSExpression.of("console.log('rerender')");
                 new slot<>(loaded);
             }
         }};

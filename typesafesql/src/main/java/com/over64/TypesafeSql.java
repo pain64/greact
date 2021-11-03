@@ -15,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,13 +35,23 @@ public class TypesafeSql {
     public @interface Id {}
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Joined {}
+    public @interface Joins {
+        Join[] value();
+    }
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Inner {
+    public @interface Join {
+        Mode mode();
+        String table();
+        String on();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface At {
         String value();
     }
 
+    public enum Mode {INNER, LEFT, RIGHT, FULL}
 
     final Sql2o db;
 
@@ -64,17 +73,6 @@ public class TypesafeSql {
 
     interface Fetcher {
         Object fetch(String paramName) throws SQLException;
-    }
-
-    interface FetcherByIdx {
-        Object fetch(int idx) throws SQLException;
-    }
-
-    FetcherByIdx fetchByTypeRefByIdx(Class<?> klass, ResultSet rs) {
-        if (klass.equals(long.class) || klass.equals(Long.class)) return rs::getLong;
-        else if (klass.equals(int.class) || klass.equals(Integer.class)) return rs::getInt;
-
-        return rs::getObject;
     }
 
     Fetcher fetchByTypeRef(Class<?> klass, ResultSet rs) {
@@ -160,6 +158,12 @@ public class TypesafeSql {
         }
     }
 
+    public Void call(String stmt, Object... args) {
+        try (var conn = db.open()) {
+            return call(conn, stmt, args);
+        }
+    }
+
     public Void exec(Connection conn, String stmt, Object... args) {
         queryWithParams(conn, stmt, false, Arrays.asList(args)).executeUpdate();
         return null;
@@ -204,75 +208,54 @@ public class TypesafeSql {
     }
 
     public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
+        var meta = Meta.parseClass(klass);
+        var fromTable = meta.table();
+        var query = " select\n\t%s\n from\n\t%s\n\t%s".formatted(
+            meta.fields().stream().map(f ->
+                    (f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
+                .collect(Collectors.joining(",\n\t")),
+            fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
+            meta.joins().stream()
+                .map(join -> {
+                    var kind = join.mode().toString().toLowerCase() + " join";
+                    var tableExpr = " " + join.table().name() +
+                        (join.table().alias() != null ? " " + join.table().alias() : "");
 
-        // FIXME: check that @Table and @Joined annotations do not used both
-        if (klass.getAnnotation(Table.class) != null) {
-            var tableName = klass.getAnnotation(Table.class).value();
-            return array(conn, "select * from " + tableName + " " + expr, klass, args);
-        } else if (klass.getAnnotation(Joined.class) != null) {
-            var query =
-                "select " + Arrays.stream(klass.getRecordComponents())
-                    .map(field -> Arrays.stream(field.getType().getRecordComponents())
-                        .map(innerField -> field.getName() + "." + innerField.getName())
-                        .collect(Collectors.joining(", ")))
-                    .collect(Collectors.joining(", ")) +
-                    " from " + Arrays.stream(klass.getRecordComponents())
-                    .map(field -> {
-                        var fieldClass = field.getType();
-                        var table = fieldClass.getAnnotation(Table.class).value();
-                        var joinedInner = field.getAnnotation(Inner.class);
-                        var tableAndName = table + " " + field.getName();
+                    return kind + tableExpr + " on " + join.onExpr();
+                }).collect(Collectors.joining("\n\t")));
 
-                        if (joinedInner != null)
-                            return "inner join " + tableAndName + " on " + joinedInner.value();
+        var exprAndOffsets = mapQueryArgs(expr, args);
+        var offsets = exprAndOffsets.offsets;
 
-                        return tableAndName;
-                    })
-                    .collect(Collectors.joining(" "));
+        try {
+            var jdbcConn = conn.getJdbcConnection();
+            var destQuery = query + "\n" + exprAndOffsets.newExpr;
+            System.out.println("### EXEC QUERY:\n" + destQuery);
+            var pstmt = jdbcConn.prepareStatement(destQuery);
 
-            var exprAndOffsets = mapQueryArgs(expr, args);
-            var offsets = exprAndOffsets.offsets;
+            for (var i = 0; i < offsets.size(); i++)
+                pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
 
-            try {
-                var jdbcConn = conn.getJdbcConnection();
-                var pstmt = jdbcConn.prepareStatement(query + " " + exprAndOffsets.newExpr);
+            pstmt.execute();
+            var rs = pstmt.getResultSet();
+            var data = new ArrayList<T>();
+            var constructor = meta.cons();
+            var consArgs = new Object[constructor.getParameters().length];
 
-                for (var i = 0; i < offsets.size(); i++)
-                    pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
-
-                pstmt.execute();
-                var rs = pstmt.getResultSet();
-                var data = new ArrayList<T>();
-                var constructor = klass.getDeclaredConstructors()[0];
-                var consArgs = new Object[constructor.getParameters().length];
-                constructor.setAccessible(true);
-
-                while (rs.next()) {
-                    var fetchArgId = 1;
-                    for (var i = 0; i < consArgs.length; i++) {
-                        var param = constructor.getParameters()[i];
-                        var joinedClass = param.getType();
-                        var joinedConstructor = joinedClass.getDeclaredConstructors()[0];
-                        var joinedConsArgs = new Object[joinedConstructor.getParameters().length];
-                        joinedConstructor.setAccessible(true);
-
-                        for (var j = 0; j < joinedConsArgs.length; j++)
-                            joinedConsArgs[j] = fetchByTypeRefByIdx(joinedConstructor.getParameters()[j].getType(), rs)
-                                .fetch(fetchArgId++);
-
-                        consArgs[i] = joinedConstructor.newInstance(joinedConsArgs);
-                    }
-
-                    data.add((T) constructor.newInstance(consArgs));
+            while (rs.next()) {
+                var fetchArgId = 1;
+                for (var i = 0; i < consArgs.length; i++) {
+                    var field = meta.fields().get(i);
+                    consArgs[i] = field.fetcher().fetch(rs, fetchArgId++);
                 }
 
-                return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-            } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
-                throw new RuntimeException(ex);
+                data.add((T) constructor.newInstance(consArgs));
             }
-        }
 
-        throw new RuntimeException("selected entity class must be annotated as @Table or @Joined");
+            return data.toArray(n -> (T[]) Array.newInstance(klass, n));
+        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public <T> T[] select(Class<T> klass, String expr, Object... args) {
@@ -281,17 +264,13 @@ public class TypesafeSql {
         }
     }
 
-    public interface Ref<A, B> {
-        B supply(A instance);
-    }
-
-    public <T> T[] selectAll(Connection conn, Class<T> klass) {
+    public <T> T[] select(Connection conn, Class<T> klass) {
         return select(conn, klass, "");
     }
 
-    public <T> T[] selectAll(Class<T> klass) {
-        try(var conn = db.open()) {
-            return selectAll(conn, klass);
+    public <T> T[] select(Class<T> klass) {
+        try (var conn = db.open()) {
+            return select(conn, klass);
         }
     }
 
@@ -303,28 +282,26 @@ public class TypesafeSql {
         return null;
     }
 
-    public <T> T insert(T entity) {
-        var tableName = entity.getClass().getAnnotation(Table.class).value();
-        var fields = entity.getClass().getRecordComponents();
+    public <T> T insertSelf(T entity) {
+        var meta = Meta.parseClass(entity.getClass());
+        var nonJoinedFields = meta.fields().stream()
+            .filter(f -> f.atTable() == meta.table()).toList();
 
-        var values = Stream.of(fields)
-            .map(RecordComponent::getName)
+        var values = nonJoinedFields.stream()
+            .map(Meta.FieldRef::atColumn)
             .collect(Collectors.joining(", ", "(", ")"));
 
         var params = new ArrayList<String>();
         var paramValues = new ArrayList<>();
         var generated = new ArrayList<String>();
 
-        for (var field : fields) {
-            var sequenceAnnotation = field.getAnnotation(Sequence.class);
-            if (sequenceAnnotation != null) {
-                params.add(sequenceAnnotation.value() + ".nextval");
-                generated.add(field.getName());
+        for (var field : nonJoinedFields) {
+            if (field.sequence() != null) {
+                params.add(field.sequence() + ".nextval");
+                generated.add(field.atColumn());
             } else {
                 try {
-                    var accessor = field.getAccessor();
-                    accessor.setAccessible(true);
-                    paramValues.add(accessor.invoke(entity));
+                    paramValues.add(field.accessor().invoke(entity));
                     params.add("?");
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     throw new RuntimeException(ex);
@@ -332,12 +309,14 @@ public class TypesafeSql {
             }
         }
 
-        var query = "insert into " + tableName + values + " values " +
+        var query = "insert into " + meta.table().name() + values + " values " +
             params.stream().collect(Collectors.joining(", ", "(", ")"));
 
         if (!generated.isEmpty())
             query += " returning " + String.join(", ", generated) + " into " +
                 generated.stream().map(it -> "?").collect(Collectors.joining(", "));
+
+        System.out.println("### EXEC QUERY:\n" + query);
 
         try (var conn = db.open()) {
             var jdbcConn = conn.getJdbcConnection();
@@ -351,20 +330,15 @@ public class TypesafeSql {
 
             cstmt.execute();
 
-            var constuctor = entity.getClass().getDeclaredConstructors()[0];
-            constuctor.setAccessible(true);
+            var constuctor = meta.cons();
             var consArgs = new Object[constuctor.getParameters().length];
             for (var i = 0; i < consArgs.length; i++) {
-                var param = constuctor.getParameters()[i];
-                var name = param.getName();
-                var genIdx = generated.indexOf(name);
+                var field = meta.fields().get(i);
+                var genIdx = generated.indexOf(field.atColumn());
                 if (genIdx != -1)
                     consArgs[i] = cstmt.getLong(paramValues.size() + genIdx + 1);
-                else {
-                    var accessor = fields[i].getAccessor();
-                    accessor.setAccessible(true);
-                    consArgs[i] = accessor.invoke(entity);
-                }
+                else
+                    consArgs[i] = field.accessor().invoke(entity);
             }
             return (T) constuctor.newInstance(consArgs);
 
@@ -373,40 +347,35 @@ public class TypesafeSql {
         }
     }
 
-    public <T> Void update(T entity) {
-        var tableName = entity.getClass().getAnnotation(Table.class).value();
-        var fields = entity.getClass().getRecordComponents();
-        var noIdFields = Arrays.stream(fields)
-            .filter(f -> !f.isAnnotationPresent(Id.class))
-            .collect(Collectors.toList());
-        var idFields = Arrays.stream(fields)
-            .filter(f -> f.isAnnotationPresent(Id.class))
-            .collect(Collectors.toList());
+    public <T> Void updateSelf(T entity) {
+        var meta = Meta.parseClass(entity.getClass());
+        var nonJoinedFields = meta.fields().stream()
+            .filter(f -> f.atTable() == meta.table()).toList();
+        var noIdFields = nonJoinedFields.stream()
+            .filter(f -> !f.isId()).toList();
+        var idFields = nonJoinedFields.stream()
+            .filter(f -> f.isId()).toList();
 
-        var query = "update " + tableName
+        var query = "update " + meta.table().name()
             + " set " +
             noIdFields.stream()
-                .map(f -> f.getName() + " = ?")
+                .map(f -> f.atColumn() + " = ?")
                 .collect(Collectors.joining(", ")) +
             " where " +
-            idFields.stream().map(f -> f.getName() + " = ?")
+            idFields.stream().map(f -> f.atColumn() + " = ?")
                 .collect(Collectors.joining(" and "));
+
+        System.out.println("### EXEC QUERY:\n" + query);
 
         try (var conn = db.open()) {
             var jdbcConn = conn.getJdbcConnection();
             var pstmt = jdbcConn.prepareStatement(query);
 
-            for (var i = 0; i < noIdFields.size(); i++) {
-                var accessor = noIdFields.get(i).getAccessor();
-                accessor.setAccessible(true);
-                pstmt.setObject(i + 1, accessor.invoke(entity));
-            }
+            for (var i = 0; i < noIdFields.size(); i++)
+                pstmt.setObject(i + 1, noIdFields.get(i).accessor().invoke(entity));
 
-            for (var i = 0; i < idFields.size(); i++) {
-                var accessor = idFields.get(i).getAccessor();
-                accessor.setAccessible(true);
-                pstmt.setObject(noIdFields.size() + i + 1, accessor.invoke(entity));
-            }
+            for (var i = 0; i < idFields.size(); i++)
+                pstmt.setObject(noIdFields.size() + i + 1, idFields.get(i).accessor().invoke(entity));
 
             pstmt.execute();
 
@@ -417,25 +386,23 @@ public class TypesafeSql {
         return null;
     }
 
-    public <T> Void delete(T entity) {
-        var tableName = entity.getClass().getAnnotation(Table.class).value();
-        var idFields = Arrays.stream(entity.getClass().getRecordComponents())
-            .filter(f -> f.isAnnotationPresent(Id.class))
-            .collect(Collectors.toList());
+    public <T> Void deleteSelf(T entity) {
+        var meta = Meta.parseClass(entity.getClass());
+        var idFields = meta.fields().stream()
+            .filter(Meta.FieldRef::isId).toList();
 
-        var query = "delete from " + tableName + " where " +
-            idFields.stream().map(f -> f.getName() + " = ?")
+        var query = "delete from " + meta.table().name() + " where " +
+            idFields.stream().map(f -> f.atColumn() + " = ?")
                 .collect(Collectors.joining(" and "));
+
+        System.out.println("### EXEC QUERY:\n" + query);
 
         try (var conn = db.open()) {
             var jdbcConn = conn.getJdbcConnection();
             var pstmt = jdbcConn.prepareStatement(query);
 
-            for (var i = 0; i < idFields.size(); i++) {
-                var accessor = idFields.get(i).getAccessor();
-                accessor.setAccessible(true);
-                pstmt.setObject(i + 1, accessor.invoke(entity));
-            }
+            for (var i = 0; i < idFields.size(); i++)
+                pstmt.setObject(i + 1, idFields.get(i).accessor().invoke(entity));
 
             pstmt.execute();
 

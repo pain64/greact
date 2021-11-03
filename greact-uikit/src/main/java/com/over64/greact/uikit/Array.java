@@ -39,4 +39,8 @@ public class Array<T> {
         JSExpression.of("cloned.splice(start, deleteCount)");
         return cloned;
     }
+
+    public static <T> T last(T[] array) {
+        return array.length == 0 ? null : array[array.length - 1];
+    }
 }

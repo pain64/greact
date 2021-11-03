@@ -77,12 +77,7 @@ public class RPCPlugin {
 
     static class IdxHolder {
         private int idx = 0;
-
-        int inc() { return idx++; }
-    }
-
-    static class EndpointsHolder {
-        List<JCTree> list = List.nil();
+        int inc() {return idx++;}
     }
 
     JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData,
@@ -182,87 +177,86 @@ public class RPCPlugin {
     void apply(JCTree.JCCompilationUnit cu) {
         var idx = new IdxHolder();
 
-        for (var typeDecl : cu.getTypeDecls()) {
-            if (typeDecl instanceof JCTree.JCClassDecl classDecl) {
-                var endpoints = new EndpointsHolder();
+        cu.accept(new TreeScanner() {
+            JCTree.JCClassDecl classDecl;
 
-                typeDecl.accept(new TreeScanner() {
-                    @Override
-                    public void visitMethodDef(JCTree.JCMethodDecl methodDecl) {
-                        methodDecl.accept(new TreeScanner() {
-                            @Override
-                            public void visitApply(JCTree.JCMethodInvocation invoke) {
-                                super.visitApply(invoke);
+            void withNewClassDecl(JCTree.JCClassDecl newDecl, Runnable in) {
+                JCTree.JCClassDecl old = classDecl;
+                classDecl = newDecl;
+                in.run();
+                classDecl = old;
+            }
 
-                                if (invoke.meth instanceof JCTree.JCIdent id) {
-                                    var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
-                                    if (epAnnotation != null) {
-                                        var nextEndpointName = "$endpoint" + idx.inc();
-                                        var fullQualified = classDecl.sym.flatname + "." + nextEndpointName;
-                                        var diType =
-                                            ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
-                                        var typeListOfJsonElement = new Type.ClassType(
-                                            classDecl.type, List.of(symbols.clJsonNode.type),
-                                            symbols.clList);
+            @Override public void visitClassDef(JCTree.JCClassDecl tree) {
+                System.out.println("NEW CLASS DEF: " + tree.sym + "is static: " + tree.sym.isStatic());
+                if(!tree.sym.isStatic()) classDecl = tree;
+                withNewClassDecl(tree, () -> super.visitClassDef(tree));
+            }
 
+            @Override
+            public void visitMethodDef(JCTree.JCMethodDecl methodDecl) {
+                methodDecl.accept(new TreeScanner() {
+                    @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
+                        super.visitApply(invoke);
 
-                                        var endpointSymbol = new Symbol.MethodSymbol(
-                                            Flags.STATIC | Flags.PUBLIC,
-                                            names.fromString(nextEndpointName),
-                                            new Type.MethodType(
-                                                List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
-                                                symbols.clObject.type, List.nil(), classDecl.type.tsym),
-                                            classDecl.sym);
-                                        endpointSymbol.prependAttributes(
-                                            List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
-                                        );
-
-                                        endpointSymbol.params = List.<Symbol.VarSymbol>nil()
-                                            .append(new Symbol.ParamSymbol(0, names.fromString("x0"),
-                                                diType, endpointSymbol))
-                                            .append(new Symbol.ParamSymbol(0, names.fromString("x1"),
-                                                symbols.clObjectMapper.type, endpointSymbol))
-                                            .append(new Symbol.ParamSymbol(0, names.fromString("x2"),
-                                                typeListOfJsonElement, endpointSymbol));
-
-                                        classDecl.sym.members_field.enterIfAbsent(endpointSymbol);
+                        if (invoke.meth instanceof JCTree.JCIdent id) {
+                            var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
+                            if (epAnnotation != null) {
+                                var nextEndpointName = "$endpoint" + idx.inc();
+                                var fullQualified = classDecl.sym.flatname + "." + nextEndpointName;
+                                var diType =
+                                    ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
+                                var typeListOfJsonElement = new Type.ClassType(
+                                    classDecl.type, List.of(symbols.clJsonNode.type),
+                                    symbols.clList);
 
 
-                                        var argsAndBlock = mapLambdaBody(methodDecl.sym, endpointSymbol,
-                                            (JCTree.JCLambda) invoke.args.get(0));
+                                var endpointSymbol = new Symbol.MethodSymbol(
+                                    Flags.STATIC | Flags.PUBLIC,
+                                    names.fromString(nextEndpointName),
+                                    new Type.MethodType(
+                                        List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
+                                        symbols.clObject.type, List.nil(), classDecl.type.tsym),
+                                    classDecl.sym);
+                                endpointSymbol.prependAttributes(
+                                    List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
+                                );
 
-                                        invoke.meth = buildStatic(symbols.mtDoRemoteCall);
-                                        invoke.args = List.of(
-                                            maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
-                                            maker.Literal(fullQualified).setType(symbols.clString.type),
-                                            maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                                argsAndBlock.fst)
-                                                .setType(types.makeArrayType(symbols.clObject.type)));
+                                endpointSymbol.params = List.<Symbol.VarSymbol>nil()
+                                    .append(new Symbol.ParamSymbol(0, names.fromString("x0"),
+                                        diType, endpointSymbol))
+                                    .append(new Symbol.ParamSymbol(0, names.fromString("x1"),
+                                        symbols.clObjectMapper.type, endpointSymbol))
+                                    .append(new Symbol.ParamSymbol(0, names.fromString("x2"),
+                                        typeListOfJsonElement, endpointSymbol));
 
-                                        // generate new static class
-
-
-                                        var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
+                                classDecl.sym.members_field.enterIfAbsent(endpointSymbol);
 
 
-                                        endpoints.list = endpoints.list.prepend(endpoint);
+                                var argsAndBlock = mapLambdaBody(methodDecl.sym, endpointSymbol,
+                                    (JCTree.JCLambda) invoke.args.get(0));
+
+                                invoke.meth = buildStatic(symbols.mtDoRemoteCall);
+                                invoke.args = List.of(
+                                    maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
+                                    maker.Literal(fullQualified).setType(symbols.clString.type),
+                                    maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                            argsAndBlock.fst)
+                                        .setType(types.makeArrayType(symbols.clObject.type)));
+
+                                // generate new static class
 
 
-                                        var zz = 1;
-                                    }
-                                }
+                                var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
+                                classDecl.defs = classDecl.defs.prepend(endpoint);
+
+
+                                var zz = 1;
                             }
-                        });
+                        }
                     }
                 });
-
-                //((JCTree.JCMethodDecl) ((JCTree.JCClassDecl) cu.defs.get(4)).defs.get(0)).body.stats
-//((JCTree.JCMethodDecl) ((JCTree.JCClassDecl) cu.defs.get(4)).defs.get(3)).body.stats
-
-                classDecl.defs = classDecl.defs.prependList(endpoints.list);
-                var tt = 1;
             }
-        }
-
+        });
     }
 }

@@ -316,6 +316,7 @@ public class NewClassPatcher {
 
                         var ct = (Type.ClassType) newClass.type;
                         ct.setEnclosingType(root.type.getEnclosingType());
+//                        System.out.println("### SET ET FOR " + ct + " as " + root.type.getEnclosingType());
 
                         var forMount = custom instanceof IsSlot ? newClass.args.head : newClass;
                         var mountArgs = custom instanceof IsSlot ? newClass.args.tail

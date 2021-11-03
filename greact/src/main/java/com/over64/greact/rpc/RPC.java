@@ -56,6 +56,7 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
+                method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 return mapper.writeValueAsString(result);
             }
