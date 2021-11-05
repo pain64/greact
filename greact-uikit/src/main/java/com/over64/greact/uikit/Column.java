@@ -43,7 +43,7 @@ public class Column<T, U> {
             case "int", "java.lang.Integer" -> new IntInput();
             case "java.lang.String" -> new StrInput();
             case "java.math.BigDecimal" -> new FloatInput();
-            case "java.util.Date" -> new DateInput();
+            case "java.util.Date" -> new DateInput<java.util.Date>();
             default -> null;
         };
 
