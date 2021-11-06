@@ -43,12 +43,12 @@ public class Column<T, U> {
             case "int", "java.lang.Integer" -> new IntInput();
             case "java.lang.String" -> new StrInput();
             case "java.math.BigDecimal" -> new FloatInput();
-            case "com.over64.greact.uikit.Dates", "java.util.Date" -> new DateInput();
+            case "java.util.Date" -> new DateInput();
             default -> null;
         };
 
         this._view = switch (className) {
-            case "java.sql.Date" -> d -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            case "java.util.Date" -> d -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
             default -> _view;
         };
 

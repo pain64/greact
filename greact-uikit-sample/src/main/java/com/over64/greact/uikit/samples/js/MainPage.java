@@ -1,10 +1,11 @@
 package com.over64.greact.uikit.samples.js;
 
 import com.greact.model.CSS.Require;
+import com.greact.model.JSExpression;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.*;
-
+import java.util.Date;
 @Require("main_page.css")
 public class MainPage implements Component0<div> {
     private Component1<div, CodeView.CodeAndView> rendererWithHeight(int height) {
@@ -31,7 +32,7 @@ public class MainPage implements Component0<div> {
         return rendererWithHeight(count * height);
     }
 
-    record Data(int x, String y, Dates z) {
+    record Data(int x, String y, Date z) {
     }
 
     @Override
@@ -525,11 +526,12 @@ public class MainPage implements Component0<div> {
                                     new CodeView(() -> new div() {{
                                         new div() {{
                                             var data = Array.of(
-                                                    new Data(1, "One", Dates.toLocaleString("1997-11-23"))
+                                                    new Data(1, "One", Dates.parse("1997-11-23"))
                                             );
 
                                             new Grid<>(data) {{
                                                 adjust(Data::x).name("the X");
+                                                onRowChange = row -> JSExpression.of("console.log(row)");
                                             }};
                                         }};
                                     }}, rendererWithCountString(9, 20));
