@@ -24,4 +24,10 @@ public class GReact {
         maker.accept(el);
         parent.appendChild(el);
     }
+
+    public static <T extends HtmlElement> T mountMe(String htmlElName) {
+        T newEl = document.createElement(htmlElName);
+        element.appendChild(newEl);
+        return newEl;
+    }
 }

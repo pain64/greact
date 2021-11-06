@@ -48,10 +48,6 @@ val test by tasks.getting(Test::class) {
 }
 
 dependencies {
-    implementation("org.sql2o:sql2o:1.6.0")
-    implementation("com.google.code.gson:gson:2.8.6")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
-    implementation("commons-io:commons-io:2.10.0")
     implementation("org.jetbrains:annotations:20.1.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")

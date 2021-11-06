@@ -144,16 +144,15 @@ public class _02PatchNewClassTest {
                 
                 @Override
                 public Child mount() {
-                    final com.over64.greact.dom.HTMLNativeElements.h1 _root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.GReact.element;
-                    return com.over64.greact.dom.GReact.entry(()->{
-                        com.over64.greact.dom.GReact.mount(_root, new Child(), new Object[]{});
-                    });
+                    final com.over64.greact.dom.HTMLNativeElements.h1 _root = com.over64.greact.dom.GReact.mountMe("h1");
+                    // async operation
+                    return com.over64.greact.dom.GReact.mount(_root, new Child(), new Object[]{});
                 }""",
                 """
                 
                 @Override
                 public h1 mount() {
-                    final com.over64.greact.dom.HTMLNativeElements.h1 _root = (com.over64.greact.dom.HTMLNativeElements.h1)com.over64.greact.dom.GReact.element;
+                    final com.over64.greact.dom.HTMLNativeElements.h1 _root = com.over64.greact.dom.GReact.mountMe("h1");
                     return com.over64.greact.dom.GReact.entry(()->{
                         _root.innerText = "hello";
                     });

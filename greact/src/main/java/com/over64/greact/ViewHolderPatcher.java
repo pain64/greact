@@ -21,8 +21,9 @@ public class ViewHolderPatcher {
     final Name rootVarName;
 
     class Symbols {
+        Symbol.ClassSymbol clString = util.lookupClass(String.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
-        Symbol.VarSymbol flGReactElement = util.lookupMember(clGReact, "element");
+        Symbol.MethodSymbol mtMountMe = util.lookupMember(clGReact, "mountMe");
     }
 
     final Symbols symbols;
@@ -42,6 +43,13 @@ public class ViewHolderPatcher {
         return sym.owner instanceof Symbol.RootPackageSymbol
             ? maker.Ident(sym)
             : maker.Select(buildStatic(sym.owner), sym);
+    }
+    JCTree.JCMethodInvocation makeCall(Symbol self, Symbol.MethodSymbol method, com.sun.tools.javac.util.List<JCTree.JCExpression> args) {
+        var select = (self instanceof Symbol.ClassSymbol || self.isStatic())
+            ? maker.Select(buildStatic(self), method)
+            : maker.Select(maker.Ident(self), method);
+
+        return maker.App(select, args);
     }
 
     // FIXME: remove ViewHolderWithRoot => just return root
@@ -68,9 +76,11 @@ public class ViewHolderPatcher {
             throw new IllegalStateException("unreachable");
 
         final Type.ClassType htmlElementType;
-        if(util.classifyView(rootElementType) instanceof IsComponent comp)
+        final String nativeComponentName;
+        if(util.classifyView(rootElementType) instanceof IsComponent comp) {
             htmlElementType = comp.htmlElementType();
-        else {
+            nativeComponentName = htmlElementType.tsym.getSimpleName().toString();
+        } else {
 //            System.out.println("##ROOT_ELEMENT_TYPE = " + rootElementType);
             throw new IllegalStateException("unreachable");
         }
@@ -79,11 +89,8 @@ public class ViewHolderPatcher {
             Flags.FINAL | Flags.HASINIT,
             rootVarName, htmlElementType, owner);
 
-        var rootVarDecl = maker.VarDef(rootVar,
-            maker.TypeCast(htmlElementType,
-                maker.Select(
-                    buildStatic(symbols.clGReact),
-                    symbols.flGReactElement)));
+        var rootVarDecl = maker.VarDef(rootVar, makeCall(symbols.clGReact, symbols.mtMountMe,
+                List.of(maker.Literal(nativeComponentName).setType(symbols.clString.type))));
 
         body.stats = body.stats.prepend(rootVarDecl);
 

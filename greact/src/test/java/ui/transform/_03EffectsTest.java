@@ -53,7 +53,7 @@ public class _03EffectsTest {
                    \s
                     @Override
                     public div mount() {
-                        final com.over64.greact.dom.HTMLNativeElements.div _root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.GReact.element;
+                        final com.over64.greact.dom.HTMLNativeElements.div _root = com.over64.greact.dom.GReact.mountMe("div");
                         return com.over64.greact.dom.GReact.entry(()->{
                             (_render0 = ()->{
                                 _root.replaceChildren();

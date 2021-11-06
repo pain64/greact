@@ -1,23 +1,19 @@
 package com.over64;
 
-import org.sql2o.Connection;
-import org.sql2o.Query;
-import org.sql2o.ResultSetHandler;
-import org.sql2o.Sql2o;
-
 import javax.sql.DataSource;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.RecordComponent;
-import java.sql.ResultSet;
+
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class TypesafeSql {
 
@@ -53,99 +49,80 @@ public class TypesafeSql {
 
     public enum Mode {INNER, LEFT, RIGHT, FULL}
 
-    final Sql2o db;
+    final DataSource ds;
 
     public TypesafeSql(DataSource ds) {
-        db = new Sql2o(ds);
-    }
-
-    Query queryWithParams(Connection conn, String stmt, boolean returnGeneratedKeys, List<Object> args) {
-        for (var i = 0; i < args.size(); i++)
-            stmt = stmt.replace(":" + (i + 1), ":p" + (i + 1));
-
-        var query = conn.createQuery(stmt, returnGeneratedKeys);
-
-        for (var i = 0; i < args.size(); i++)
-            query.addParameter("p" + (i + 1), args.get(i));
-
-        return query;
-    }
-
-    interface Fetcher {
-        Object fetch(String paramName) throws SQLException;
-    }
-
-    Fetcher fetchByTypeRef(Class<?> klass, ResultSet rs) {
-        if (klass.equals(long.class) || klass.equals(Long.class)) return rs::getLong;
-        else if (klass.equals(int.class) || klass.equals(Integer.class)) return rs::getInt;
-
-        return rs::getObject;
+        this.ds = ds;
     }
 
     /* FIXME: may handler throw Exception ??? */
     public <T> T withConnection(Function<Connection, T> handler) {
-        try (var conn = db.open()) {
+        try (var conn = ds.getConnection()) {
             return handler.apply(conn);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
-
-    <T> List<T> list(Connection conn, String stmt, Class<T> klass, Object... args) {
-        var query = queryWithParams(conn, stmt, false, Arrays.asList(args));
-
-        if (klass.isRecord()) {
-            var data = query.executeAndFetch(new ResultSetHandler<T>() {
-                @Override
-                public T handle(ResultSet rs) throws SQLException {
-                    var constuctor = klass.getDeclaredConstructors()[0];
-                    constuctor.setAccessible(true);
-                    var consArgs = new Object[constuctor.getParameters().length];
-                    for (var i = 0; i < consArgs.length; i++) {
-                        var param = constuctor.getParameters()[i];
-                        consArgs[i] = fetchByTypeRef(param.getType(), rs).fetch(param.getName());
-                    }
-                    try {
-                        return (T) constuctor.newInstance(consArgs);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            });
-            return data;
-        } else {
-            return query.executeAndFetch(klass);
-        }
-
-    }
-
 
     public <T> T[] array(Connection conn, String stmt, Class<T> klass, Object... args) {
-        return list(conn, stmt, klass, args).toArray((T[]) Array.newInstance(klass, 0));
+        var exprAndOffsets = mapQueryArgs(stmt, args);
+        var offsets = exprAndOffsets.offsets;
+
+        try {
+            System.out.println("### EXEC QUERY:\n" + exprAndOffsets.newExpr);
+            var pstmt = conn.prepareStatement(exprAndOffsets.newExpr);
+
+            for (var i = 0; i < offsets.size(); i++)
+                pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
+
+            pstmt.execute();
+            var rs = pstmt.getResultSet();
+            var data = new ArrayList<T>();
+
+            if (klass.isRecord()) {
+                @SuppressWarnings("unchecked")
+                var cons = (Constructor<T>) klass.getDeclaredConstructors()[0];
+                cons.setAccessible(true);
+                var consArgs = new Object[cons.getParameters().length];
+
+                while (rs.next()) {
+                    var fetchArgId = 1;
+                    for (var i = 0; i < consArgs.length; i++) {
+                        var fetcher = Meta.fetcherForFieldType(cons.getParameters()[i].getType());
+                        consArgs[i] = fetcher.fetch(rs, fetchArgId++);
+                    }
+
+                    data.add(cons.newInstance(consArgs));
+                }
+            } else
+                while (rs.next())
+                    data.add((T) rs.getObject(0));
+
+            return data.toArray(n -> (T[]) Array.newInstance(klass, n));
+        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public <T> T[] array(String stmt, Class<T> klass, Object... args) {
-        try (var conn = db.open()) {
-            return array(conn, stmt, klass, args);
-        }
+        return withConnection(conn -> array(conn, stmt, klass, args));
     }
 
     public <T> T uniqueOrNull(Connection conn, String stmt, Class<T> klass, Object... args) {
-        var result = list(conn, stmt, klass, args);
-        return result.isEmpty() ? null : result.get(0);
+        var result = array(conn, stmt, klass, args);
+        return result.length == 0 ? null : result[0];
     }
 
     public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
-        try (var conn = db.open()) {
-            return uniqueOrNull(conn, stmt, klass, args);
-        }
+        return withConnection(conn -> uniqueOrNull(conn, stmt, klass, args));
     }
 
-    public Void call(Connection conn, String stmt, Object... args) {
-        var jconn = conn.getJdbcConnection();
+    public Void exec(Connection conn, String stmt, Object... args) {
         try {
-            var exprAndOffsets = mapQueryArgs("call " + stmt, args);
+            var exprAndOffsets = mapQueryArgs(stmt, args);
             var offsets = exprAndOffsets.offsets;
 
-            var procCall = jconn.prepareCall(exprAndOffsets.newExpr);
+            var procCall = conn.prepareCall(exprAndOffsets.newExpr);
 
             for (var i = 0; i < offsets.size(); i++)
                 procCall.setObject(i + 1, args[offsets.get(i).argIdx]);
@@ -158,21 +135,8 @@ public class TypesafeSql {
         }
     }
 
-    public Void call(String stmt, Object... args) {
-        try (var conn = db.open()) {
-            return call(conn, stmt, args);
-        }
-    }
-
-    public Void exec(Connection conn, String stmt, Object... args) {
-        queryWithParams(conn, stmt, false, Arrays.asList(args)).executeUpdate();
-        return null;
-    }
-
     public Void exec(String stmt, Object... args) {
-        try (var conn = db.open()) {
-            return exec(conn, stmt, args);
-        }
+        return withConnection(conn -> exec(conn, stmt, args));
     }
 
     record ArgOffset(int argIdx, int offset) {}
@@ -228,10 +192,9 @@ public class TypesafeSql {
         var offsets = exprAndOffsets.offsets;
 
         try {
-            var jdbcConn = conn.getJdbcConnection();
             var destQuery = query + "\n" + exprAndOffsets.newExpr;
             System.out.println("### EXEC QUERY:\n" + destQuery);
-            var pstmt = jdbcConn.prepareStatement(destQuery);
+            var pstmt = conn.prepareStatement(destQuery);
 
             for (var i = 0; i < offsets.size(); i++)
                 pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
@@ -249,7 +212,7 @@ public class TypesafeSql {
                     consArgs[i] = field.fetcher().fetch(rs, fetchArgId++);
                 }
 
-                data.add((T) constructor.newInstance(consArgs));
+                data.add(constructor.newInstance(consArgs));
             }
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
@@ -259,9 +222,7 @@ public class TypesafeSql {
     }
 
     public <T> T[] select(Class<T> klass, String expr, Object... args) {
-        try (var conn = db.open()) {
-            return select(conn, klass, expr, args);
-        }
+        return withConnection(conn -> select(conn, klass, expr, args));
     }
 
     public <T> T[] select(Connection conn, Class<T> klass) {
@@ -269,9 +230,7 @@ public class TypesafeSql {
     }
 
     public <T> T[] select(Class<T> klass) {
-        try (var conn = db.open()) {
-            return select(conn, klass);
-        }
+        return select(klass, "");
     }
 
     public <T> T selectOne(Class<T> klass, String expr, Object... args) {
@@ -282,7 +241,7 @@ public class TypesafeSql {
         return null;
     }
 
-    public <T> T insertSelf(T entity) {
+    public <T> T insertSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass());
         var nonJoinedFields = meta.fields().stream()
             .filter(f -> f.atTable() == meta.table()).toList();
@@ -318,9 +277,8 @@ public class TypesafeSql {
 
         System.out.println("### EXEC QUERY:\n" + query);
 
-        try (var conn = db.open()) {
-            var jdbcConn = conn.getJdbcConnection();
-            var cstmt = jdbcConn.prepareCall("begin " + query + "; end;");
+        try {
+            var cstmt = conn.prepareCall("begin " + query + "; end;");
 
             for (var i = 0; i < paramValues.size(); i++)
                 cstmt.setObject(i + 1, paramValues.get(i));
@@ -330,8 +288,8 @@ public class TypesafeSql {
 
             cstmt.execute();
 
-            var constuctor = meta.cons();
-            var consArgs = new Object[constuctor.getParameters().length];
+            var constructor = meta.cons();
+            var consArgs = new Object[constructor.getParameters().length];
             for (var i = 0; i < consArgs.length; i++) {
                 var field = meta.fields().get(i);
                 var genIdx = generated.indexOf(field.atColumn());
@@ -340,14 +298,18 @@ public class TypesafeSql {
                 else
                     consArgs[i] = field.accessor().invoke(entity);
             }
-            return (T) constuctor.newInstance(consArgs);
+            return (T) constructor.newInstance(consArgs);
 
         } catch (SQLException | IllegalAccessException | InstantiationException | InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public <T> Void updateSelf(T entity) {
+    public <T> T insertSelf(T entity) {
+        return withConnection(conn -> insertSelf(conn, entity));
+    }
+
+    public <T> Void updateSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass());
         var nonJoinedFields = meta.fields().stream()
             .filter(f -> f.atTable() == meta.table()).toList();
@@ -367,9 +329,8 @@ public class TypesafeSql {
 
         System.out.println("### EXEC QUERY:\n" + query);
 
-        try (var conn = db.open()) {
-            var jdbcConn = conn.getJdbcConnection();
-            var pstmt = jdbcConn.prepareStatement(query);
+        try {
+            var pstmt = conn.prepareStatement(query);
 
             for (var i = 0; i < noIdFields.size(); i++)
                 pstmt.setObject(i + 1, noIdFields.get(i).accessor().invoke(entity));
@@ -386,7 +347,11 @@ public class TypesafeSql {
         return null;
     }
 
-    public <T> Void deleteSelf(T entity) {
+    public <T> Void updateSelf(T entity) {
+        return withConnection(conn -> updateSelf(conn, entity));
+    }
+
+    public <T> Void deleteSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass());
         var idFields = meta.fields().stream()
             .filter(Meta.FieldRef::isId).toList();
@@ -397,9 +362,8 @@ public class TypesafeSql {
 
         System.out.println("### EXEC QUERY:\n" + query);
 
-        try (var conn = db.open()) {
-            var jdbcConn = conn.getJdbcConnection();
-            var pstmt = jdbcConn.prepareStatement(query);
+        try {
+            var pstmt = conn.prepareStatement(query);
 
             for (var i = 0; i < idFields.size(); i++)
                 pstmt.setObject(i + 1, idFields.get(i).accessor().invoke(entity));
@@ -412,5 +376,8 @@ public class TypesafeSql {
 
         return null;
     }
-}
 
+    public <T> Void deleteSelf(T entity) {
+        return withConnection(conn -> deleteSelf(conn, entity));
+    }
+}

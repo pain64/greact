@@ -38,7 +38,7 @@ public class _01PatchViewHolderTest {
                                     
                 @Override
                 public div mount() {
-                    final com.over64.greact.dom.HTMLNativeElements.div _root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.GReact.element;
+                    final com.over64.greact.dom.HTMLNativeElements.div _root = com.over64.greact.dom.GReact.mountMe("div");
                     return new div();
                 }""");
     }
@@ -51,7 +51,7 @@ public class _01PatchViewHolderTest {
                 }""",
             """
                 ()->{
-                    final com.over64.greact.dom.HTMLNativeElements.div _root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.GReact.element;
+                    final com.over64.greact.dom.HTMLNativeElements.div _root = com.over64.greact.dom.GReact.mountMe("div");
                     return new div();
                 }""");
     }
@@ -66,7 +66,7 @@ public class _01PatchViewHolderTest {
                 }""",
             """
                 ()->{
-                    final com.over64.greact.dom.HTMLNativeElements.div _root = (com.over64.greact.dom.HTMLNativeElements.div)com.over64.greact.dom.GReact.element;
+                    final com.over64.greact.dom.HTMLNativeElements.div _root = com.over64.greact.dom.GReact.mountMe("div");
                     return new div();
                 }""");
     }

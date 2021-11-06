@@ -242,11 +242,6 @@ public class NewClassPatcher {
                 }
 
                 @Override public void visitNewClass(JCTree.JCNewClass newClass) {
-//                    System.out.println("###NEW CLASS: " + newClass);
-//                    if(currentThis == null) {
-//                        super.visitNewClass(newClass);
-//                        return;
-//                    }
 
                     var classified = util.classifyView(newClass.type);
                     if (classified instanceof IsNotComponent) {
@@ -259,89 +254,87 @@ public class NewClassPatcher {
                     var htmlElementType = component.htmlElementType();
                     var nativeComponentName = htmlElementType.tsym.getSimpleName().toString();
 
-                    final com.sun.tools.javac.util.List<JCTree.JCVariableDecl> lambdaArgs;
-                    final Symbol.VarSymbol newClassEl;
-
-                    if (isViewEntry) {
-                        lambdaArgs = com.sun.tools.javac.util.List.nil();
-                        newClassEl = root;
-                    } else {
-                        var nextEl = maker.Param(names.fromString("_el" + nextElNumber++), htmlElementType, vh.owner().sym);
-                        lambdaArgs = com.sun.tools.javac.util.List.of(nextEl);
-                        newClassEl = nextEl.sym;
-                    }
-
-                    var lmbType = isViewEntry ? symbols.clRunnable.type : symbols.clConsumer.type;
-                    var lmb = maker.Lambda(lambdaArgs, maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil())).setType(lmbType);
-
-                    lmb.target = lmbType;
-                    lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
-                    lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
-
-                    var updateIndex = viewsForUpdate.indexOf(newClass);
-                    final JCTree.JCLambda destLambda;
-                    if (updateIndex != -1) {
-                        var viewRenderSymbol = viewRenderSymbols.get(updateIndex);
-
-                        var renderBody = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
-                        var renderLambda = maker.Lambda(com.sun.tools.javac.util.List.nil(), renderBody)
-                            .setType(symbols.clRunnable.type);
-
-                        renderLambda.target = symbols.clRunnable.type;
-                        renderLambda.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
-                        renderLambda.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
-
-                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
-                            maker.Exec(maker.App(
-                                maker.Select(
-                                    maker.Parens(
-                                        maker.Assign(
-                                            maker.Ident(viewRenderSymbol),
-                                            renderLambda
-                                        )).setType(symbols.clRunnable.type),
-                                    symbols.mtRunnableRun)
-                            ))));
-                        renderLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
-                           maker.Exec(makeCall(newClassEl, symbols.mtReplaceChildren, com.sun.tools.javac.util.List.nil()))
-                        ));
-                        destLambda = renderLambda;
-                    } else {
-                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
-                        destLambda = lmb;
-                    }
-
-                    var destBlock = (JCTree.JCBlock) destLambda.body;
-
                     if (component instanceof IsCustomComponent custom) {
 
                         var ct = (Type.ClassType) newClass.type;
                         ct.setEnclosingType(root.type.getEnclosingType());
-//                        System.out.println("### SET ET FOR " + ct + " as " + root.type.getEnclosingType());
 
                         var forMount = custom instanceof IsSlot ? newClass.args.head : newClass;
                         var mountArgs = custom instanceof IsSlot ? newClass.args.tail
                             : com.sun.tools.javac.util.List.<JCTree.JCExpression>nil();
 
-                        destBlock.stats = destBlock.stats.append(
-                            maker.Exec(makeCall(symbols.clGReact, symbols.mtGReactMount,
+                        this.result = makeCall(symbols.clGReact, symbols.mtGReactMount,
                                 com.sun.tools.javac.util.List.of(
-                                    maker.Ident(newClassEl),
+                                    maker.Ident(isViewEntry ? root : currentThis),
                                     forMount,
                                     maker.NewArray(maker.Ident(symbols.clObject), com.sun.tools.javac.util.List.nil(),
                                             mountArgs)
-                                        .setType(types.makeArrayType(symbols.clObject.type))))
+                                        .setType(types.makeArrayType(symbols.clObject.type))));
+                    } else { // native
+
+                        final com.sun.tools.javac.util.List<JCTree.JCVariableDecl> lambdaArgs;
+                        final Symbol.VarSymbol newClassEl;
+
+                        if (isViewEntry) {
+                            lambdaArgs = com.sun.tools.javac.util.List.nil();
+                            newClassEl = root;
+                        } else {
+                            var nextEl = maker.Param(names.fromString("_el" + nextElNumber++), htmlElementType, vh.owner().sym);
+                            lambdaArgs = com.sun.tools.javac.util.List.of(nextEl);
+                            newClassEl = nextEl.sym;
+                        }
+
+                        var lmbType = isViewEntry ? symbols.clRunnable.type : symbols.clConsumer.type;
+                        var lmb = maker.Lambda(lambdaArgs, maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil())).setType(lmbType);
+
+                        lmb.target = lmbType;
+                        lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+                        lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+                        var updateIndex = viewsForUpdate.indexOf(newClass);
+                        final JCTree.JCLambda destLambda;
+                        if (updateIndex != -1) {
+                            var viewRenderSymbol = viewRenderSymbols.get(updateIndex);
+
+                            var renderBody = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
+                            var renderLambda = maker.Lambda(com.sun.tools.javac.util.List.nil(), renderBody)
+                                .setType(symbols.clRunnable.type);
+
+                            renderLambda.target = symbols.clRunnable.type;
+                            renderLambda.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+                            renderLambda.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+                            lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                                maker.Exec(maker.App(
+                                    maker.Select(
+                                        maker.Parens(
+                                            maker.Assign(
+                                                maker.Ident(viewRenderSymbol),
+                                                renderLambda
+                                            )).setType(symbols.clRunnable.type),
+                                        symbols.mtRunnableRun)
+                                ))));
+                            renderLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                                maker.Exec(makeCall(newClassEl, symbols.mtReplaceChildren, com.sun.tools.javac.util.List.nil()))
                             ));
-                    } else  // native
+                            destLambda = renderLambda;
+                        } else {
+                            lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
+                            destLambda = lmb;
+                        }
+
+                        var destBlock = (JCTree.JCBlock) destLambda.body;
                         destBlock.stats = destBlock.stats.appendList(mapNewClassBody(newClassEl, htmlElementType, newClass).stats);
 
-                    this.result = isViewEntry ?
-                        makeCall(symbols.clGReact, symbols.mtGReactEntry,
-                            com.sun.tools.javac.util.List.of(lmb)) :
-                        makeCall(symbols.clGReact, symbols.mtGReactMake,
-                            com.sun.tools.javac.util.List.of(
-                                maker.Ident(currentThis),
-                                maker.Literal(nativeComponentName).setType(symbols.clString.type),
-                                lmb));
+                        this.result = isViewEntry ?
+                            makeCall(symbols.clGReact, symbols.mtGReactEntry,
+                                com.sun.tools.javac.util.List.of(lmb)) :
+                            makeCall(symbols.clGReact, symbols.mtGReactMake,
+                                com.sun.tools.javac.util.List.of(
+                                    maker.Ident(currentThis),
+                                    maker.Literal(nativeComponentName).setType(symbols.clString.type),
+                                    lmb));
+                    }
                 }
 
                 @Override public void visitIdent(JCTree.JCIdent id) {

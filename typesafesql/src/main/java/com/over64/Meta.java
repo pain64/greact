@@ -98,10 +98,11 @@ class Meta {
                 return new FieldRef(fieldName, tableRef, fieldName, fetcher, isId, accessor, sequence);
             }).toList();
 
-        var cons = klass.getDeclaredConstructors()[0];
+        @SuppressWarnings("unchecked")
+        var cons = (Constructor<T>) klass.getDeclaredConstructors()[0];
         cons.setAccessible(true);
 
-        return new ClassMeta(cons, tableRef, joinTables, fields);
+        return new ClassMeta<>(cons, tableRef, joinTables, fields);
     }
 
 }
