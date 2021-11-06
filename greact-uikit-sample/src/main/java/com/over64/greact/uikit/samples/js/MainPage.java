@@ -1,6 +1,7 @@
 package com.over64.greact.uikit.samples.js;
 
 import com.greact.model.CSS.Require;
+import com.greact.model.JSExpression;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.*;
@@ -530,6 +531,7 @@ public class MainPage implements Component0<div> {
 
                                             new Grid<>(data) {{
                                                 adjust(Data::x).name("the X");
+                                                onRowChange = row -> JSExpression.of("console.log(row)");
                                             }};
                                         }};
                                     }}, rendererWithCountString(9, 20));
