@@ -95,6 +95,7 @@ public class HTMLNativeElements {
         public String type;
         public String placeholder;
         public String value;
+        public String valueAsNumber;
         public Boolean checked;
         public ChangeHandler<input> onchange;
         public native void setCustomValidity(String text);

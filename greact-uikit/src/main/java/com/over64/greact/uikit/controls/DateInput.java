@@ -9,12 +9,6 @@ public class DateInput<T> extends Control<T> {
     final String type = "date";
 
     DateInput<T> selfDate = this;
-    Input<T> selfInput = new Input<T>(type) {
-        @Override
-        protected T parseValueOpt(input src) {
-            return JSExpression.of("new Date(src.value)");
-        }
-    };
 
     @Override
     public Control child() {
@@ -191,19 +185,14 @@ public class DateInput<T> extends Control<T> {
                 new input() {{
                     //className = "form-check-input";
                     style.width = "100%";
-                    type = selfInput.type;
-                    value = selfInput.value == null ? null : selfInput.valueToHtmlValue();
-                    // FIXME: вот это вот - костыль для CheckBox
-                    checked = (Boolean) selfInput.value;
-                    onchange = ev -> {
-                        selfInput.value = selfInput.parseValueOpt(ev.target);
-                        selfInput.ready = selfInput._optional || selfInput.value != null;
-                        selfInput.onReadyChanged.run();
+                    type = "date";
 
-                        JSExpression.of("this.selfDate.value = target.valueAsNumber");
-                        selfDate.ready = selfDate._optional || selfDate.value != null;
-                        selfDate.onReadyChanged.run();
-                        JSExpression.of("console.log(this.selfDate.value)");
+                    onchange = ev -> {
+                        value = ev.target.value;
+                        ready = _optional || value != null;
+                        onReadyChanged.run();
+
+                        selfDate.value = (T) ev.target.valueAsNumber;
                     };
                 }};
             }};
