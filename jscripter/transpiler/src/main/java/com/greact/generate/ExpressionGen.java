@@ -221,11 +221,20 @@ public class ExpressionGen {
                 default -> throw new RuntimeException("unexpected kind: " + binary.getKind());
             };
 
-            expr(deep, binary.getLeftOperand());
-            out.write(0, " ");
-            out.write(0, op);
-            out.write(0, " ");
-            expr(deep, binary.getRightOperand());
+            if(((JCTree.JCExpression) binary).type.isIntegral() && op.equals("/")) {
+                out.write(0, "Math.floor(");
+                expr(deep, binary.getLeftOperand());
+                out.write(0, ", ");
+                expr(deep, binary.getRightOperand());
+                out.write(0, ")");
+            } else {
+                expr(deep, binary.getLeftOperand());
+                out.write(0, " ");
+                out.write(0, op);
+                out.write(0, " ");
+                expr(deep, binary.getRightOperand());
+            }
+
         } else if (expr instanceof CompoundAssignmentTree compoundAssign) {
             expr(deep, compoundAssign.getVariable());
             var op = switch (expr.getKind()) {
@@ -337,6 +346,11 @@ public class ExpressionGen {
             var select = call.getMethodSelect();
             var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
+
+            if(methodOwnerSym.isRecord()) {
+                boolean isRecordAccessor = methodOwnerSym.getRecordComponents().stream()
+                    .anyMatch(rc -> rc.getAccessor() == methodSym);
+            }
 
             var names = Names.instance(mctx.ctx().context());
 
@@ -506,6 +520,8 @@ public class ExpressionGen {
                     eGen.run();
                     out.write(0, " instanceof ");
                     out.write(0, ofType);
+
+                    // here: Escape class Name
                 };
             };
 
