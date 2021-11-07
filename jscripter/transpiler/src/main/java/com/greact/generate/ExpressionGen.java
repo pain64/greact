@@ -224,7 +224,7 @@ public class ExpressionGen {
             if(((JCTree.JCExpression) binary).type.isIntegral() && op.equals("/")) {
                 out.write(0, "Math.floor(");
                 expr(deep, binary.getLeftOperand());
-                out.write(0, ", ");
+                out.write(0, " / ");
                 expr(deep, binary.getRightOperand());
                 out.write(0, ")");
             } else {

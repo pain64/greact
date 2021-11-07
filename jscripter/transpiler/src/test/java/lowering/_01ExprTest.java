@@ -176,6 +176,9 @@ public class _01ExprTest {
                   void baz() {
                     int x0 = 1 * 1;
                     int x1 = 1 / 2;
+                    float d1 = 1.0f / 2.0f;
+                    var d2 = 1 / 2;
+                    var d3 = 1.0f / 2.0f;
                     int x2 = 1 % 1;
                     int x3 = 1 + 1;
                     int x4 = 1 - 1;
@@ -203,7 +206,10 @@ public class _01ExprTest {
                   
                   baz() {
                     let x0 = 1 * 1;
-                    let x1 = Math.floor(1, 2);
+                    let x1 = Math.floor(1 / 2);
+                    let d1 = 1.0 / 2.0;
+                    let d2 = Math.floor(1 / 2);
+                    let d3 = 1.0 / 2.0;
                     let x2 = 1 % 1;
                     let x3 = 1 + 1;
                     let x4 = 1 - 1;
