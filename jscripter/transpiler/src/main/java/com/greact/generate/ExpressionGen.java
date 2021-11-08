@@ -81,14 +81,14 @@ public class ExpressionGen {
     }
 
     void reflectWriteClassMembers(int deep, Type classType) {
-        if(classType.tsym instanceof Symbol.ClassSymbol classSym) {
+        if (classType.tsym instanceof Symbol.ClassSymbol classSym) {
             out.write(0, "{\n");
             out.write(deep + 2, "name: () => '");
             out.write(0, "" + classSym.className());
             out.write(0, "',\n");
 
             out.write(deep + 2, "params: () => [\n");
-            if (classType instanceof  Type.ArrayType arrayType){
+            if (classType instanceof Type.ArrayType arrayType) {
                 out.write(deep + 4, "");
                 reflectWriteClassMembers(deep + 4, arrayType.elemtype);
                 out.write(0, "\n");
@@ -139,9 +139,9 @@ public class ExpressionGen {
         } else if (expr instanceof IdentifierTree id) {
             var jcIdent = ((JCTree.JCIdent) id);
             if (jcIdent.sym instanceof Symbol.VarSymbol varSym) {
-                if (varSym.owner instanceof Symbol.MethodSymbol)
+                if (varSym.owner instanceof Symbol.MethodSymbol) {
                     out.write(0, id.getName().toString());
-                else {
+                } else {
                     if (jcIdent.sym.getModifiers().contains(Modifier.STATIC)) {
                         var owner = (Symbol.ClassSymbol) jcIdent.sym.owner;
                         var fullName = owner.fullname.toString().replace(".", "$");
@@ -158,7 +158,7 @@ public class ExpressionGen {
 
             } else if (jcIdent.sym instanceof Symbol.ClassSymbol cl) {
                 var owner = jcIdent.sym.owner;
-                if(owner != null) {
+                if (owner != null) {
                     out.write(0, owner.toString().replace(".", "$"));
                     var delim = jcIdent.sym.isStatic() ? "." : "$";
                     out.write(0, delim);
@@ -221,7 +221,7 @@ public class ExpressionGen {
                 default -> throw new RuntimeException("unexpected kind: " + binary.getKind());
             };
 
-            if(((JCTree.JCExpression) binary).type.isIntegral() && op.equals("/")) {
+            if (((JCTree.JCExpression) binary).type.isIntegral() && op.equals("/")) {
                 out.write(0, "Math.floor(");
                 expr(deep, binary.getLeftOperand());
                 out.write(0, " / ");
@@ -347,10 +347,9 @@ public class ExpressionGen {
             var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
 
-            if(methodOwnerSym.isRecord()) {
-                boolean isRecordAccessor = methodOwnerSym.getRecordComponents().stream()
-                    .anyMatch(rc -> rc.getAccessor() == methodSym);
-            }
+            boolean isRecordAccessor = methodOwnerSym.isRecord() && methodOwnerSym.getRecordComponents().stream()
+                .anyMatch(rc -> rc.getAccessor() == methodSym);
+
 
             var names = Names.instance(mctx.ctx().context());
 
@@ -366,7 +365,7 @@ public class ExpressionGen {
                 expr(deep, call.getArguments().get(0));
                 out.write(0, ".__class__");
             } else {
-
+                //+++
                 var shimmedType = mctx.ctx().stdShim().findShimmedType(methodOwnerSym.type);
                 var targetMethod = shimmedType != null
                     ? mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym)
@@ -409,7 +408,7 @@ public class ExpressionGen {
                             expr(deep, prop.getExpression());
                         else
                             expr(deep, prop);
-                        out.write(0, "(");
+                        if (!isRecordAccessor) out.write(0, "(");
                     } else {
                         var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
                         out.write(0, onType.tsym.toString().replace(".", "$"));
@@ -431,21 +430,21 @@ public class ExpressionGen {
                     out.write(0, ", ");
                 }
 
-                for(var i = 0; i < call.getArguments().size(); i++) {
+                for (var i = 0; i < call.getArguments().size(); i++) {
                     var param = targetMethod.isVarArgs() && i >= targetMethod.getParameters().length()
                         ? targetMethod.getParameters().last()
                         : targetMethod.getParameters().get(i);
                     var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
                     var arg = (JCTree.JCExpression) call.getArguments().get(i);
 
-                    if(isReflexive) {
+                    if (isReflexive) {
                         out.write(0, "(() => {\n");
                         out.write(deep + 2, "let __obj = ");
                     }
                     expr(deep, arg);
-                    if(isReflexive) {
+                    if (isReflexive) {
                         out.write(0, ";\n");
-                        if(arg.type.tsym instanceof Symbol.ClassSymbol){
+                        if (arg.type.tsym instanceof Symbol.ClassSymbol) {
                             out.write(deep + 2, "__obj.__class__ = (");
                             reflectWriteClassMembers(deep + 2, arg.type);
                             out.write(0, ")\n");
@@ -453,10 +452,10 @@ public class ExpressionGen {
                         }
                         out.write(deep, "})()");
                     }
-                    if(i != call.getArguments().size() - 1) out.write(0, ", ");
+                    if (i != call.getArguments().size() - 1) out.write(0, ", ");
                 }
 
-                out.write(0, ")");
+                if (!isRecordAccessor) out.write(0, ")");
                 if (info.isAsync()) out.write(0, ")");
             }
         } else if (expr instanceof MemberReferenceTree memberRef) {

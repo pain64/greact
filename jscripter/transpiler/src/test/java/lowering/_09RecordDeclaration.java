@@ -11,7 +11,7 @@ public class _09RecordDeclaration {
         assertCompiled(
                 """
                     package js;
-                    record Test(int x, int y, int z) {}
+                    record Test(int x, int y, int z) {}z
                     """,
                 """
                     class js$Test extends Object {
