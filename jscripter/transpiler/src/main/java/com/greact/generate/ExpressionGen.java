@@ -518,9 +518,7 @@ public class ExpressionGen {
                 default -> eGen -> {
                     eGen.run();
                     out.write(0, " instanceof ");
-                    out.write(0, ofType);
-
-                    // here: Escape class Name
+                    out.write(0, ofType.replace(".", "$"));
                 };
             };
 

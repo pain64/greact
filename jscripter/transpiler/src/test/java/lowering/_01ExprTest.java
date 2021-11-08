@@ -570,7 +570,7 @@ public class _01ExprTest {
                     let y2 = typeof x == 'number';
                     let y3 = typeof x == 'number';
                     let y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                    let y5 = x instanceof js$A
+                    let y5 = x instanceof js$A;
                   }
                 }"""));
         // FIXME(generated for instanceof pattern) => let s;
