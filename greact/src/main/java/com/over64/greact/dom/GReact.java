@@ -1,6 +1,7 @@
 package com.over64.greact.dom;
 
 import com.greact.model.JSExpression;
+import com.greact.model.async;
 
 import java.util.function.Consumer;
 
@@ -29,5 +30,9 @@ public class GReact {
         T newEl = document.createElement(htmlElName);
         element.appendChild(newEl);
         return newEl;
+    }
+
+    public interface AsyncRunnable {
+        @async void run();
     }
 }

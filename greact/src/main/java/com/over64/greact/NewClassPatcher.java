@@ -44,6 +44,7 @@ public class NewClassPatcher {
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clNode = util.lookupClass(com.over64.greact.dom.Node.class);
         Symbol.MethodSymbol mtReplaceChildren = util.lookupMember(clNode, "replaceChildren");
+        Symbol.ClassSymbol clAsyncRunnable = util.lookupClass(GReact.AsyncRunnable.class);
         //Symbol.ClassSymbol clBoolean = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Boolean"));
     }
 
@@ -240,6 +241,7 @@ public class NewClassPatcher {
 
                     return block;
                 }
+
 
                 @Override public void visitNewClass(JCTree.JCNewClass newClass) {
 
