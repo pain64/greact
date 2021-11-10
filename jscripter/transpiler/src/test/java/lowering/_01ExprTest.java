@@ -175,7 +175,10 @@ public class _01ExprTest {
                 public class Test {
                   void baz() {
                     int x0 = 1 * 1;
-                    int x1 = 1 / 1;
+                    int x1 = 1 / 2;
+                    float d1 = 1.0f / 2.0f;
+                    var d2 = 1 / 2;
+                    var d3 = 1.0f / 2.0f;
                     int x2 = 1 % 1;
                     int x3 = 1 + 1;
                     int x4 = 1 - 1;
@@ -203,7 +206,10 @@ public class _01ExprTest {
                   
                   baz() {
                     let x0 = 1 * 1;
-                    let x1 = 1 / 1;
+                    let x1 = Math.floor(1 / 2);
+                    let d1 = 1.0 / 2.0;
+                    let d2 = Math.floor(1 / 2);
+                    let d3 = 1.0 / 2.0;
                     let x2 = 1 % 1;
                     let x3 = 1 + 1;
                     let x4 = 1 - 1;
@@ -531,8 +537,18 @@ public class _01ExprTest {
 
     @Test
     void instanceOfExpr() throws IOException {
-        assertCompiled(
-            """
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    class A {}""",
+                """
+                    class js$A extends Object {
+                      constructor() {
+                        super();
+                      }
+                    }"""),
+            new CompileCase("js.Test", """
                 package js;
                 public class Test {
                   void baz(Object x) {
@@ -540,6 +556,7 @@ public class _01ExprTest {
                     boolean y2 = x instanceof Integer;
                     boolean y3 = x instanceof Long;
                     boolean y4 = x instanceof String s;
+                    boolean y5 = x instanceof A;
                   }
                 }""",
             """
@@ -553,8 +570,9 @@ public class _01ExprTest {
                     let y2 = typeof x == 'number';
                     let y3 = typeof x == 'number';
                     let y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
+                    let y5 = x instanceof js$A;
                   }
-                }""");
+                }"""));
         // FIXME(generated for instanceof pattern) => let s;
     }
 

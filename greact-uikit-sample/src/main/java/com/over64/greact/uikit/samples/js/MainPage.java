@@ -5,6 +5,8 @@ import com.greact.model.JSExpression;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.*;
+import com.over64.greact.uikit.samples.Main;
+
 import java.util.Date;
 @Require("main_page.css")
 public class MainPage implements Component0<div> {
