@@ -90,24 +90,29 @@ public class _04Constructor {
                 }""");
     }
 
-    @Test
-    void constructorOverloaded() throws IOException {
+    @Test void constructorOverloaded() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
                     public class A {
-                      A(int x){}
-                      A(float x){}
+                      A(int x, int y){
+                        var some = x + y;
+                      }
+                      A(float z){
+                        var some = z;
+                      }
                     }""",
                 """
                     class js$A extends Object {
-                      constructor($over, x) {
+                      constructor($over, ...__args) {
                         switch($over) {
                           case 1:
+                            let [x, y] = __args;
                             super();
                             break
                           case 2:
+                            let [z] = __args;
                             super();
                             break
                         }
