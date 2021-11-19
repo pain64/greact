@@ -32,7 +32,6 @@ public class GReact {
         return newEl;
     }
 
-    public interface AsyncRunnable {
-        @async void run();
-    }
+    public interface AsyncRunnable { @async void run(); }
+    public interface AsyncCallable<T> { @async T call(); }
 }

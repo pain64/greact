@@ -31,12 +31,14 @@ public class _04PatchNewClass2Test {
                     
                     @Override public div mount() {
                         return new div() {{
+                            style.color = "#eee";
                             some(new div() {{
                                 new h4();
                             }});
-                            new h1() {{
+                            new h1("hello") {{
                                 for(int i = 0; i < 10; i++)
                                     new h2() {{
+                                        style.color = "#ddd";
                                         new h3();
                                     }};
                             }};
