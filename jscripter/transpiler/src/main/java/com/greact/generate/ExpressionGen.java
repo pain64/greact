@@ -479,7 +479,7 @@ public class ExpressionGen {
                 var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
                 var mSym = TreeInfo.symbol((JCTree) memberRef);
                 var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
-
+                
                 if (info.mode() == Overloads.Mode.STATIC) {
                     var fullClassName = tSym.packge().toString().replace(".", "$") +
                         "$" + memberRef.getQualifierExpression();

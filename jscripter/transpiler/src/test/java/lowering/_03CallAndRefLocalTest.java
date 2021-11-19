@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import util.CompileAssert;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import static util.CompileAssert.assertCompiled;
 import static util.CompileAssert.assertCompiledMany;
@@ -147,11 +148,11 @@ public class _03CallAndRefLocalTest {
                 }""");
     }
 
-    @Test
-    void methodRefLocal() throws IOException {
+    @Test void methodRefLocal() throws IOException {
         assertCompiled(
             """
                 package js;
+                import java.util.function.Function;
                 public class Test {
                   @FunctionalInterface
                   interface HInt {
@@ -166,14 +167,33 @@ public class _03CallAndRefLocalTest {
                   void bar(int x) {}
                   void bar(long x) {}
                   
+                  static class A {
+                    A(int x) {}
+                    A(int y, int z) {}
+                  };
+                  
                   void baz() {
                     HInt m1 = Test::foo;
                     HLong m2 = this::bar;
                     HInt m3 = this::bar;
+                    Function<Integer, A> s = A::new;
                   }
                 }""",
             """
                 class js$Test extends Object {
+                  static A = class extends Object {
+                    constructor($over, y, z) {
+                      switch($over) {
+                        case 1:
+                          super();
+                          break
+                        case 2:
+                          super();
+                          break
+                      }
+                    }
+                  }
+                  
                   constructor() {
                     super();
                   }
@@ -194,6 +214,7 @@ public class _03CallAndRefLocalTest {
                     let m1 = js$Test.foo.bind(js$Test);
                     let m2 = this.bar.bind(this, 1);
                     let m3 = this.bar.bind(this, 0);
+                    let s = ((x) => new js$Test.A(0, x));
                   }
                 }""");
     }
