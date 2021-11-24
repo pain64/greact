@@ -26,11 +26,12 @@ public class _08AsyncAwait {
                     super();
                   }
                   
-                  async foo($over, x) {
+                  async foo($over, ...__args) {
                     switch($over) {
                       case 0:
                         break
                       case 1:
+                        let [x] = __args;
                         break
                     }
                   }
