@@ -32,30 +32,32 @@ public class _04Constructor {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
-                      constructor($over, x, y) {
-                        let __init__ = () => {
-                          this.x = null
-                          this.y = null
-                          this.z = 42
-                          this.f = 0
-                        };
-                        switch($over) {
-                          case 1:
-                            super();
-                            __init__();
-                            this.x = x;
-                            this.y = y;
-                            break
-                          case 2:
-                            super();
-                            __init__();
-                            this.x = x;
-                            this.y = 'hello';
-                            break
-                        }
-                      }
-                    }""");
+                        class js$Test extends Object {
+                          constructor($over, ...__args) {
+                            let __init__ = () => {
+                              this.x = null
+                              this.y = null
+                              this.z = 42
+                              this.f = 0
+                            };
+                            switch($over) {
+                              case 1:
+                                let [x, y] = __args;
+                                super();
+                                __init__();
+                                this.x = x;
+                                this.y = y;
+                                break
+                              case 2:
+                                let [x] = __args;
+                                super();
+                                __init__();
+                                this.x = x;
+                                this.y = 'hello';
+                                break
+                            }
+                          }
+                        }""");
     }
 
     @Test

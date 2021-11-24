@@ -127,25 +127,27 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
-                      constructor() {
-                        super();
-                      }
-                      
-                      bar($over, x) {
-                        switch($over) {
-                          case 0:
-                            break
-                          case 1:
-                            break
-                        }
-                      }
-                      
-                      baz() {
-                        this.bar(0, 42);
-                        this.bar(1, 42);
-                      }
-                    }""");
+                        class js$Test extends Object {
+                          constructor() {
+                            super();
+                          }
+                                                
+                          bar($over, ...__args) {
+                            switch($over) {
+                              case 0:
+                                let [x] = __args;
+                                break
+                              case 1:
+                                let [x] = __args;
+                                break
+                            }
+                          }
+                                                
+                          baz() {
+                            this.bar(0, 42);
+                            this.bar(1, 42);
+                          }
+                        }""");
     }
 
     @Test void methodRefLocal() throws IOException {
@@ -180,43 +182,47 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
-                      static A = class extends Object {
-                        constructor($over, y, z) {
-                          switch($over) {
-                            case 1:
-                              super();
-                              break
-                            case 2:
-                              super();
-                              break
+                        class js$Test extends Object {
+                          static A = class extends Object {
+                            constructor($over, ...__args) {
+                              switch($over) {
+                                case 1:
+                                  let [x] = __args;
+                                  super();
+                                  break
+                                case 2:
+                                  let [y, z] = __args;
+                                  super();
+                                  break
+                              }
+                            }
                           }
-                        }
-                      }
-                      
-                      constructor() {
-                        super();
-                      }
-                      
-                      static foo(x) {
-                      }
-                      
-                      bar($over, x) {
-                        switch($over) {
-                          case 0:
-                            break
-                          case 1:
-                            break
-                        }
-                      }
-                      
-                      baz() {
-                        let m1 = js$Test.foo.bind(js$Test);
-                        let m2 = this.bar.bind(this, 1);
-                        let m3 = this.bar.bind(this, 0);
-                        let s = ((x) => new js$Test.A(0, x));
-                      }
-                    }""");
+                                                
+                          constructor() {
+                            super();
+                          }
+                                                
+                          static foo(x) {
+                          }
+                                                
+                          bar($over, ...__args) {
+                            switch($over) {
+                              case 0:
+                                let [x] = __args;
+                                break
+                              case 1:
+                                let [x] = __args;
+                                break
+                            }
+                          }
+                                                
+                          baz() {
+                            let m1 = js$Test.foo.bind(js$Test);
+                            let m2 = this.bar.bind(this, 1);
+                            let m3 = this.bar.bind(this, 0);
+                            let s = ((x) => new js$Test.A(0, x));
+                          }
+                        }""");
     }
 
     @Test
@@ -264,25 +270,27 @@ public class _03CallAndRefLocalTest {
                               }
                             }""",
                         """
-                            class js$A extends Object {
-                              constructor() {
-                                super();
-                              }
-                              
-                              mA($over, x) {
-                                switch($over) {
-                                  case 0:
-                                    break
-                                  case 1:
-                                    break
-                                }
-                              }
-                              
-                              callB(b) {
-                                b.mB(1, 1);
-                                b.mB(0, 1);
-                              }
-                            }"""),
+                                class js$A extends Object {
+                                  constructor() {
+                                    super();
+                                  }
+                                                            
+                                  mA($over, ...__args) {
+                                    switch($over) {
+                                      case 0:
+                                        let [x] = __args;
+                                        break
+                                      case 1:
+                                        let [x] = __args;
+                                        break
+                                    }
+                                  }
+                                                            
+                                  callB(b) {
+                                    b.mB(1, 1);
+                                    b.mB(0, 1);
+                                  }
+                                }"""),
                 new CompileAssert.CompileCase("js.B",
                         """
                             package js;
@@ -295,25 +303,27 @@ public class _03CallAndRefLocalTest {
                               }
                             }""",
                         """
-                            class js$B extends Object {
-                              constructor() {
-                                super();
-                              }
-                              
-                              mB($over, x) {
-                                switch($over) {
-                                  case 0:
-                                    break
-                                  case 1:
-                                    break
-                                }
-                              }
-                              
-                              callA(a) {
-                                a.mA(1, 1);
-                                a.mA(0, 1);
-                              }
-                            }""")
+                                class js$B extends Object {
+                                  constructor() {
+                                    super();
+                                  }
+                                  
+                                  mB($over, ...__args) {
+                                    switch($over) {
+                                      case 0:
+                                        let [x] = __args;
+                                        break
+                                      case 1:
+                                        let [x] = __args;
+                                        break
+                                    }
+                                  }
+                                  
+                                  callA(a) {
+                                    a.mA(1, 1);
+                                    a.mA(0, 1);
+                                  }
+                                }""")
         );
     }
 }
