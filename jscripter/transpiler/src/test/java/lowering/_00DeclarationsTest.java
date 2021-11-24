@@ -108,28 +108,30 @@ public class _00DeclarationsTest {
                  void bar(long x) {}
                }""",
             """
-                class js$Test extends Object {
-                  constructor() {
-                    super();
-                  }
-                  
-                  baz() {
-                  }
-                  
-                  foo() {
-                  }
-                  
-                  bar($over, x) {
-                    switch($over) {
-                      case 0:
-                        break
-                      case 1:
-                        break
-                      case 2:
-                        break
-                    }
-                  }
-                }""");
+                    class js$Test extends Object {
+                      constructor() {
+                        super();
+                      }
+                                    
+                      baz() {
+                      }
+                                    
+                      foo() {
+                      }
+                                    
+                      bar($over, ...__args) {
+                        switch($over) {
+                          case 0:
+                            break
+                          case 1:
+                            let [x] = __args;
+                            break
+                          case 2:
+                            let [x] = __args;
+                            break
+                        }
+                      }
+                    }""");
 
     }
 
