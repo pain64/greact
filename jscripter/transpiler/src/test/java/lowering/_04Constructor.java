@@ -110,10 +110,12 @@ public class _04Constructor {
                                   case 1:
                                     let [x, y] = __args;
                                     super();
+                                    let some = x + y;
                                     break
                                   case 2:
                                     let [z] = __args;
                                     super();
+                                    let some = z;
                                     break
                                 }
                               }
@@ -128,7 +130,7 @@ public class _04Constructor {
                             class js$B extends Object {
                               constructor() {
                                 super();
-                                new js$A(1, 42);
+                                new js$A(2, 42);
                               }
                             }""")
         );

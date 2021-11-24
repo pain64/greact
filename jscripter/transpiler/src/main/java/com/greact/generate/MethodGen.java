@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.greact.generate.util.CompileException.ERROR.*;
@@ -87,9 +88,8 @@ public class MethodGen {
             .max(Comparator.comparingInt(List::size))
             .orElseThrow(() -> new IllegalStateException("unreachable"));
 
-        var prefix = isOverloaded ? "($over, " : "(";
-        out.mkString(params, param ->
-            out.write(0, param.getName().toString()), prefix, ", ", ") {\n");
+        var prefix = isOverloaded ? "($over, ...__args" : "(";
+        out.write(0, prefix + ") {\n");
 
         // FIXME: PIZDATION END
         this.stmtGen = new StatementGen(out, new MContext(ctx, isAsync));
@@ -151,10 +151,17 @@ public class MethodGen {
                 out.write(0, String.valueOf(m.fst));
                 out.write(0, ":\n");
 
-                // FIXME: args renaming required
-
                 var statements = m.snd.sym.isAbstract() ?
                     com.sun.tools.javac.util.List.<JCTree.JCStatement>nil() : m.snd.body.stats;
+                if (m.snd.params.length() > 0) {
+                    StringBuilder par = new StringBuilder();
+                    for (int i = 0; i < m.snd.params.length(); i++) {
+                        par.append(m.snd.params.get(i).name);
+                        if (i != m.snd.params.length() -1) par.append(", ");
+                    }
+                    out.write(deep + 7,  " let [" + par + "] = __args;" + "\n");
+                }
+
                 if (!statements.isEmpty()) {
                     stmtGen.stmt(deep + 8, statements.get(0));
                     out.write(0, "\n");

@@ -337,7 +337,7 @@ public class ExpressionGen {
                     out.write(deep + 6, "return ");
                     expr(deep + 6, caseResult);
                     out.write(0, "\n");
-                    System.out.println(caseResult);
+                    // System.out.println(caseResult);
                 } else
                     throw new RuntimeException("unknown kind: " + body.getKind());
             });
