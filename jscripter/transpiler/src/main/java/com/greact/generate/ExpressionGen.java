@@ -42,18 +42,18 @@ public class ExpressionGen {
 
     CompileException memberRefUsedIncorrect() {
         return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
-            MemberRef<T> usage:
-              for record fields:
-                record X(long field) {}
-                MemberRef<X, Long> ref = X::field;
-              for class fields:
-                class X { long field; }
-                MemberRef<X, Long> ref = x -> x.field;
-              for nested fields (class or record):
-                record X { long b; }
-                record Y { long a; }
-                MemberRef<Y, Long> ref = y -> y.a.b
-                """);
+                MemberRef<T> usage:
+                  for record fields:
+                    record X(long field) {}
+                    MemberRef<X, Long> ref = X::field;
+                  for class fields:
+                    class X { long field; }
+                    MemberRef<X, Long> ref = x -> x.field;
+                  for nested fields (class or record):
+                    record X { long b; }
+                    record Y { long a; }
+                    MemberRef<Y, Long> ref = y -> y.a.b
+                    """);
     }
 
     List<String> memberRefExtractFields(List<String> acc, JCTree tree) {
@@ -337,7 +337,6 @@ public class ExpressionGen {
                     out.write(deep + 6, "return ");
                     expr(deep + 6, caseResult);
                     out.write(0, "\n");
-                    // System.out.println(caseResult);
                 } else
                     throw new RuntimeException("unknown kind: " + body.getKind());
             });
@@ -383,7 +382,7 @@ public class ExpressionGen {
                     var col = mctx.ctx().cu().getLineMap().getColumnNumber(callTree.pos);
                     throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
                             """
-                                method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
+                                    method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
                 }
 
                 if (info.isAsync()) out.write(0, "(await ");
@@ -405,10 +404,18 @@ public class ExpressionGen {
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
                     if (info.mode() == Overloads.Mode.INSTANCE) {
-                        if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
-                            expr(deep, prop.getExpression());
-                        else
-                            expr(deep, prop);
+                        boolean isNotOverEquals = true;
+                        for (Symbol enclosedElement : methodOwnerSym.getEnclosedElements()) {
+                            if (enclosedElement.name.toString().equals("equals") && !(enclosedElement.getMetadata() == null)) isNotOverEquals = false;
+                        }
+                        if (methodSym.name.toString().equals("equals") && isNotOverEquals) { //?
+                            out.write(0, prop.toString().replace(".equals", " == "));
+                        } else {
+                            if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
+                                expr(deep, prop.getExpression());
+                            else
+                                expr(deep, prop);
+                        }
                         if (!isRecordAccessor) out.write(0, "(");
                     } else {
                         var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
@@ -455,7 +462,6 @@ public class ExpressionGen {
                     }
                     if (i != call.getArguments().size() - 1) out.write(0, ", ");
                 }
-
                 if (!isRecordAccessor) out.write(0, ")");
                 if (info.isAsync()) out.write(0, ")");
             }
@@ -489,15 +495,14 @@ public class ExpressionGen {
                     out.write(0, memberRef.getName().toString());
                     out.write(0, ".bind(");
                     out.write(0, fullClassName);
-                } else if(expr.toString().endsWith("new")) {
+                } else if (expr.toString().endsWith("new")) {
                     StringBuilder stringBuilder = new StringBuilder(tSym.toString().replace(".", "$"));
                     stringBuilder.setCharAt(stringBuilder.lastIndexOf("$"), '.');
                     out.write(0, "((x) => new ");
                     out.write(0, stringBuilder.toString());
                     out.write(0, "(0, x)");
                     flag_new = false;
-                }
-                else {
+                } else {
                     expr(deep, memberRef.getQualifierExpression());
                     out.write(0, ".");
                     out.write(0, memberRef.getName().toString());
