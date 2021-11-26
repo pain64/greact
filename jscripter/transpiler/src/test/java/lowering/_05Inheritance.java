@@ -24,14 +24,17 @@ public class _05Inheritance {
                       constructor() {
                         super();
                       }
-                      
-                      foo($over, x) {
+                    
+                      foo($over, ...__args) {
                         switch($over) {
                           case 0:
+                            let [x] = __args;
                             break
                           case 1:
+                            let [x] = __args;
                             return 1
                           case 2:
+                            let [x] = __args;
                             return 2
                         }
                       }
@@ -45,22 +48,24 @@ public class _05Inheritance {
                       int foo(float x) { return 4; }; 
                     }""",
                 """
-                    class js$B extends js$A {
-                      constructor() {
-                        super();
-                      }
-                      
-                      foo($over, x) {
-                        switch($over) {
-                          case 1:
-                            return 3
-                          case 3:
-                            return 4
-                          default:
-                            return super.foo.apply(this, arguments)
-                        }
-                      }
-                    }"""),
+                        class js$B extends js$A {
+                          constructor() {
+                            super();
+                          }
+                                             
+                          foo($over, ...__args) {
+                            switch($over) {
+                              case 1:
+                                let [x] = __args;
+                                return 3
+                              case 3:
+                                let [x] = __args;
+                                return 4
+                              default:
+                                return super.foo.apply(this, arguments)
+                            }
+                          }
+                        }"""),
             new CompileCase("js.C",
                 """
                     package js;
@@ -69,23 +74,25 @@ public class _05Inheritance {
                       int foo(int x)              { return 5; };
                       int foo(double x, double y) { return 6; };
                     }""",
-                """
-                    class js$C extends js$B {
-                      constructor() {
-                        super();
-                      }
-                      
-                      foo($over, x, y) {
-                        switch($over) {
-                          case 2:
-                            return 5
-                          case 4:
-                            return 6
-                          default:
-                            return super.foo.apply(this, arguments)
-                        }
-                      }
-                    }""")
+                    """
+                            class js$C extends js$B {
+                              constructor() {
+                                super();
+                              }
+                                                  
+                              foo($over, ...__args) {
+                                switch($over) {
+                                  case 2:
+                                    let [x] = __args;
+                                    return 5
+                                  case 4:
+                                    let [x, y] = __args;
+                                    return 6
+                                  default:
+                                    return super.foo.apply(this, arguments)
+                                }
+                              }
+                            }""")
         );
     }
 }

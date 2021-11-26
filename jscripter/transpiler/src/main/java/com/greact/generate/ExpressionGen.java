@@ -42,18 +42,18 @@ public class ExpressionGen {
 
     CompileException memberRefUsedIncorrect() {
         return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
-            MemberRef<T> usage:
-              for record fields:
-                record X(long field) {}
-                MemberRef<X, Long> ref = X::field;
-              for class fields:
-                class X { long field; }
-                MemberRef<X, Long> ref = x -> x.field;
-              for nested fields (class or record):
-                record X { long b; }
-                record Y { long a; }
-                MemberRef<Y, Long> ref = y -> y.a.b
-                """);
+                MemberRef<T> usage:
+                  for record fields:
+                    record X(long field) {}
+                    MemberRef<X, Long> ref = X::field;
+                  for class fields:
+                    class X { long field; }
+                    MemberRef<X, Long> ref = x -> x.field;
+                  for nested fields (class or record):
+                    record X { long b; }
+                    record Y { long a; }
+                    MemberRef<Y, Long> ref = y -> y.a.b
+                    """);
     }
 
     List<String> memberRefExtractFields(List<String> acc, JCTree tree) {
@@ -294,14 +294,14 @@ public class ExpressionGen {
                 out.write(0, "'}");
             } else {
                 var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
-                    .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
-                    .findFirst().get();
+                        .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
+                        .findFirst().get();
 
                 var isAsync = invokeMethod.getAnnotation(async.class) != null;
                 if (isAsync) out.write(0, "async ");
 
                 out.mkString(lambda.getParameters(), (arg) ->
-                    out.write(0, arg.getName().toString()), "(", ", ", ") =>");
+                        out.write(0, arg.getName().toString()), "(", ", ", ") =>");
                 // FIXME: лямбда должна начинать @async контекст для метода, BAD GUY FIX
                 var old = mctx;
                 mctx = new MContext(old.ctx(), isAsync);
@@ -348,32 +348,32 @@ public class ExpressionGen {
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
 
             boolean isRecordAccessor = methodOwnerSym.isRecord() && methodOwnerSym.getRecordComponents().stream()
-                .anyMatch(rc -> rc.getAccessor() == methodSym);
+                    .anyMatch(rc -> rc.getAccessor() == methodSym);
 
 
             var names = Names.instance(mctx.ctx().context());
 
             if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) &&
-                methodSym.name.equals(names.fromString("of"))) {
+                    methodSym.name.equals(names.fromString("of"))) {
 
                 var unescaped = call.getArguments().get(0).toString()
-                    .replace("\\n", "\n")
-                    .replace("\\'", "'");
+                        .replace("\\n", "\n")
+                        .replace("\\'", "'");
                 out.write(0, unescaped.substring(1, unescaped.length() - 1));
             } else if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.ClassRef")) &&
-                methodSym.name.equals(names.fromString("of"))) {
+                    methodSym.name.equals(names.fromString("of"))) {
                 expr(deep, call.getArguments().get(0));
                 out.write(0, ".__class__");
             } else {
                 //+++
                 var shimmedType = mctx.ctx().stdShim().findShimmedType(methodOwnerSym.type);
                 var targetMethod = shimmedType != null
-                    ? mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym)
-                    : methodSym;
+                        ? mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym)
+                        : methodSym;
 
                 var info = shimmedType != null
-                    ? Overloads.methodInfo(mctx.ctx().types(), (TypeElement) shimmedType.tsym, targetMethod)
-                    : Overloads.methodInfo(mctx.ctx().types(), (TypeElement) methodOwnerSym.type.tsym, methodSym);
+                        ? Overloads.methodInfo(mctx.ctx().types(), (TypeElement) shimmedType.tsym, targetMethod)
+                        : Overloads.methodInfo(mctx.ctx().types(), (TypeElement) methodOwnerSym.type.tsym, methodSym);
 
                 var callTree = (JCTree) call;
 
@@ -381,8 +381,8 @@ public class ExpressionGen {
                     var line = mctx.ctx().cu().getLineMap().getLineNumber(callTree.pos);
                     var col = mctx.ctx().cu().getLineMap().getColumnNumber(callTree.pos);
                     throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
-                        """
-                            method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
+                            """
+                                    method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
                 }
 
                 if (info.isAsync()) out.write(0, "(await ");
@@ -404,10 +404,18 @@ public class ExpressionGen {
                     out.write(0, "(");
                 } else if (select instanceof MemberSelectTree prop) {
                     if (info.mode() == Overloads.Mode.INSTANCE) {
-                        if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
-                            expr(deep, prop.getExpression());
-                        else
-                            expr(deep, prop);
+                        boolean isNotOverEquals = true;
+                        for (Symbol enclosedElement : methodOwnerSym.getEnclosedElements()) {
+                            if (enclosedElement.name.toString().equals("equals") && !(enclosedElement.getMetadata() == null)) isNotOverEquals = false;
+                        }
+                        if (methodSym.name.toString().equals("equals") && isNotOverEquals) { //?
+                            out.write(0, prop.toString().replace(".equals", " == "));
+                        } else {
+                            if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
+                                expr(deep, prop.getExpression());
+                            else
+                                expr(deep, prop);
+                        }
                         if (!isRecordAccessor) out.write(0, "(");
                     } else {
                         var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
@@ -432,8 +440,8 @@ public class ExpressionGen {
 
                 for (var i = 0; i < call.getArguments().size(); i++) {
                     var param = targetMethod.isVarArgs() && i >= targetMethod.getParameters().length()
-                        ? targetMethod.getParameters().last()
-                        : targetMethod.getParameters().get(i);
+                            ? targetMethod.getParameters().last()
+                            : targetMethod.getParameters().get(i);
                     var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
                     var arg = (JCTree.JCExpression) call.getArguments().get(i);
 
@@ -454,7 +462,6 @@ public class ExpressionGen {
                     }
                     if (i != call.getArguments().size() - 1) out.write(0, ", ");
                 }
-
                 if (!isRecordAccessor) out.write(0, ")");
                 if (info.isAsync()) out.write(0, ")");
             }
@@ -479,15 +486,22 @@ public class ExpressionGen {
                 var tSym = TreeInfo.symbol((JCTree) memberRef.getQualifierExpression());
                 var mSym = TreeInfo.symbol((JCTree) memberRef);
                 var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
-
+                boolean flag_new = true;
                 if (info.mode() == Overloads.Mode.STATIC) {
                     var fullClassName = tSym.packge().toString().replace(".", "$") +
-                        "$" + memberRef.getQualifierExpression();
+                            "$" + memberRef.getQualifierExpression();
                     out.write(0, fullClassName);
                     out.write(0, ".");
                     out.write(0, memberRef.getName().toString());
                     out.write(0, ".bind(");
                     out.write(0, fullClassName);
+                } else if (expr.toString().endsWith("new")) {
+                    StringBuilder stringBuilder = new StringBuilder(tSym.toString().replace(".", "$"));
+                    stringBuilder.setCharAt(stringBuilder.lastIndexOf("$"), '.');
+                    out.write(0, "((x) => new ");
+                    out.write(0, stringBuilder.toString());
+                    out.write(0, "(0, x)");
+                    flag_new = false;
                 } else {
                     expr(deep, memberRef.getQualifierExpression());
                     out.write(0, ".");
@@ -495,13 +509,13 @@ public class ExpressionGen {
                     out.write(0, ".bind(this");
                 }
 
-                if (info.isOverloaded()) out.write(0, ", " + info.n() + ")");
+                if (flag_new && info.isOverloaded()) out.write(0, ", " + info.n() + ")");
                 else out.write(0, ")");
             }
 
         } else if (expr instanceof InstanceOfTree instanceOf) {
             var ofType = TreeInfo.symbol((JCTree) instanceOf.getType())
-                .getQualifiedName().toString();
+                    .getQualifiedName().toString();
 
             // FIXME: disable for arrays (aka x instanceof String[])
             Consumer<Runnable> checkGen = switch (ofType) {
@@ -545,14 +559,14 @@ public class ExpressionGen {
             var jcNewClass = (JCTree.JCNewClass) newClass;
             out.write(0, "new ");
             var info = Overloads.methodInfo(
-                mctx.ctx().types(),
-                (TypeElement) (((JCTree.JCNewClass) newClass).type.tsym),
-                (ExecutableElement) ((JCTree.JCNewClass) newClass).constructor);
+                    mctx.ctx().types(),
+                    (TypeElement) (((JCTree.JCNewClass) newClass).type.tsym),
+                    (ExecutableElement) ((JCTree.JCNewClass) newClass).constructor);
 
 
             if (jcNewClass.def != null) {
                 var tgen = new TypeGen(out, mctx.ctx().cu(), mctx.ctx().env(), mctx.ctx().context(),
-                    mctx.ctx().stdShim());
+                        mctx.ctx().stdShim());
                 tgen.type(deep, jcNewClass.def);
             } else
                 expr(deep, newClass.getIdentifier());

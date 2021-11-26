@@ -16,6 +16,7 @@ import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 public class RPCPlugin {
     final Context context;
@@ -114,7 +115,7 @@ public class RPCPlugin {
     Pair<List<JCTree.JCExpression>, JCTree.JCBlock> mapLambdaBody(
         Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
 
-        var localVars = new ArrayList<Symbol.VarSymbol>();
+        var localVars = new LinkedHashSet<Symbol.VarSymbol>();
         var diSymbol = lambda.params.get(0).sym;
         localVars.add(diSymbol); // di symbol
         var rpcArgs = new Object() {

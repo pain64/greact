@@ -280,70 +280,70 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
-                  static E1 = class extends java$lang$Exception {
-                    constructor($over, ) {
-                      switch($over) {
-                        case 11:
-                          super(6, );
-                          break
+                    class js$Test extends Object {
+                      static E1 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          switch($over) {
+                            case 11:
+                              super(6, );
+                              break
+                          }
+                        }
                       }
-                    }
-                  }
-                 
-                  static E2 = class extends java$lang$Exception {
-                    constructor($over, ) {
-                      switch($over) {
-                        case 11:
-                          super(6, );
-                          break
+                                     
+                      static E2 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          switch($over) {
+                            case 11:
+                              super(6, );
+                              break
+                          }
+                        }
                       }
-                    }
-                  }
-                 
-                  static E3 = class extends java$lang$Exception {
-                    constructor($over, ) {
-                      switch($over) {
-                        case 11:
-                          super(6, );
-                          break
+                                    
+                      static E3 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          switch($over) {
+                            case 11:
+                              super(6, );
+                              break
+                          }
+                        }
                       }
-                    }
-                  }
-                 
-                  static E4 = class extends java$lang$Exception {
-                    constructor($over, ) {
-                      switch($over) {
-                        case 11:
-                          super(6, );
-                          break
+                                    
+                      static E4 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          switch($over) {
+                            case 11:
+                              super(6, );
+                              break
+                          }
+                        }
                       }
-                    }
-                  }
-                  
-                  constructor() {
-                    super();
-                  }
-                  
-                  foo() {
-                  }
-                  
-                  baz() {
-                    try {
-                      this.foo();
-                    } catch(e) {
-                      if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
-                        let x = e;
-                      } else if(e instanceof js$Test$E3) {
-                        let ee = e
-                        let y = ee;
-                      } else {
-                        throw e
+                                    
+                      constructor() {
+                        super();
                       }
-                    } finally {
-                      let z = 1;
-                    }
-                  }
-                }""");
+                      
+                      foo() {
+                      }
+                                    
+                      baz() {
+                        try {
+                          this.foo();
+                        } catch(e) {
+                          if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
+                            let x = e;
+                          } else if(e instanceof js$Test$E3) {
+                            let ee = e
+                            let y = ee;
+                          } else {
+                            throw e
+                          }
+                        } finally {
+                          let z = 1;
+                        }
+                      }
+                    }""");
     }
 }
