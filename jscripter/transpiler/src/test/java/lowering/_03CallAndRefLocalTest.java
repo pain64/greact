@@ -135,10 +135,10 @@ public class _03CallAndRefLocalTest {
                           bar($over, ...__args) {
                             switch($over) {
                               case 0:
-                                let [x] = __args;
+                                var [x] = __args;
                                 break
                               case 1:
-                                let [x] = __args;
+                                var [x] = __args;
                                 break
                             }
                           }
@@ -187,11 +187,11 @@ public class _03CallAndRefLocalTest {
                             constructor($over, ...__args) {
                               switch($over) {
                                 case 1:
-                                  let [x] = __args;
+                                  var [x] = __args;
                                   super();
                                   break
                                 case 2:
-                                  let [y, z] = __args;
+                                  var [y, z] = __args;
                                   super();
                                   break
                               }
@@ -208,10 +208,10 @@ public class _03CallAndRefLocalTest {
                           bar($over, ...__args) {
                             switch($over) {
                               case 0:
-                                let [x] = __args;
+                                var [x] = __args;
                                 break
                               case 1:
-                                let [x] = __args;
+                                var [x] = __args;
                                 break
                             }
                           }
@@ -278,10 +278,10 @@ public class _03CallAndRefLocalTest {
                                   mA($over, ...__args) {
                                     switch($over) {
                                       case 0:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         break
                                       case 1:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         break
                                     }
                                   }
@@ -311,10 +311,10 @@ public class _03CallAndRefLocalTest {
                                   mB($over, ...__args) {
                                     switch($over) {
                                       case 0:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         break
                                       case 1:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         break
                                     }
                                   }

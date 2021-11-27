@@ -165,7 +165,7 @@ public class MethodGen {
                         par.append(m.snd.params.get(i).name);
                         if (i != m.snd.params.length() - 1) par.append(", ");
                     }
-                    out.write(deep + 7, " let [" + par + "] = __args;" + "\n");
+                    out.write(deep + 7, " var [" + par + "] = __args;" + "\n");
                 }
 
                 if (!statements.isEmpty()) {

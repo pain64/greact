@@ -42,14 +42,14 @@ public class _04Constructor {
                             };
                             switch($over) {
                               case 1:
-                                let [x, y] = __args;
+                                var [x, y] = __args;
                                 super();
                                 __init__();
                                 this.x = x;
                                 this.y = y;
                                 break
                               case 2:
-                                let [x] = __args;
+                                var [x] = __args;
                                 super();
                                 __init__();
                                 this.x = x;
@@ -110,12 +110,12 @@ public class _04Constructor {
                               constructor($over, ...__args) {
                                 switch($over) {
                                   case 1:
-                                    let [x, y] = __args;
+                                    var [x, y] = __args;
                                     super();
                                     let some = x + y;
                                     break
                                   case 2:
-                                    let [z] = __args;
+                                    var [z] = __args;
                                     super();
                                     let some = z;
                                     break
@@ -157,13 +157,13 @@ public class _04Constructor {
                               foo($over, ...__args) {
                                 switch($over) {
                                   case 0:
-                                    let [x] = __args;
+                                    var [x] = __args;
                                     break
                                   case 1:
-                                    let [x] = __args;
+                                    var [x] = __args;
                                     return 1
                                   case 2:
-                                    let [x] = __args;
+                                    var [x] = __args;
                                     return 2
                                 }
                               }
@@ -185,10 +185,10 @@ public class _04Constructor {
                                   foo($over, ...__args) {
                                     switch($over) {
                                       case 1:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 3
                                       case 3:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 4
                                       default:
                                         return super.foo.apply(this, arguments)
@@ -217,10 +217,10 @@ public class _04Constructor {
                                   foo($over, ...__args) {
                                     switch($over) {
                                       case 2:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 5
                                       case 4:
-                                        let [x, y] = __args;
+                                        var [x, y] = __args;
                                         let a = new js$A();
                                         let b = new js$B();
                                         let c = a == (b);
@@ -256,13 +256,13 @@ public class _04Constructor {
                                   foo($over, ...__args) {
                                     switch($over) {
                                       case 0:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         break
                                       case 1:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 1
                                       case 2:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 2
                                     }
                                   }
@@ -288,10 +288,10 @@ public class _04Constructor {
                                   foo($over, ...__args) {
                                     switch($over) {
                                       case 1:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 3
                                       case 3:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 4
                                       default:
                                         return super.foo.apply(this, arguments)
@@ -320,10 +320,10 @@ public class _04Constructor {
                                   foo($over, ...__args) {
                                     switch($over) {
                                       case 2:
-                                        let [x] = __args;
+                                        var [x] = __args;
                                         return 5
                                       case 4:
-                                        let [x, y] = __args;
+                                        var [x, y] = __args;
                                         let a = new js$A();
                                         let b = new js$B();
                                         let c = a.equals(b);

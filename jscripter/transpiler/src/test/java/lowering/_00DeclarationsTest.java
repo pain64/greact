@@ -124,10 +124,10 @@ public class _00DeclarationsTest {
                           case 0:
                             break
                           case 1:
-                            let [x] = __args;
+                            var [x] = __args;
                             break
                           case 2:
-                            let [x] = __args;
+                            var [x] = __args;
                             break
                         }
                       }

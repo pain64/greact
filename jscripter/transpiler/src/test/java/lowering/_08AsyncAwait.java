@@ -31,7 +31,7 @@ public class _08AsyncAwait {
                       case 0:
                         break
                       case 1:
-                        let [x] = __args;
+                        var [x] = __args;
                         break
                     }
                   }

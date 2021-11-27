@@ -28,13 +28,13 @@ public class _05Inheritance {
                       foo($over, ...__args) {
                         switch($over) {
                           case 0:
-                            let [x] = __args;
+                            var [x] = __args;
                             break
                           case 1:
-                            let [x] = __args;
+                            var [x] = __args;
                             return 1
                           case 2:
-                            let [x] = __args;
+                            var [x] = __args;
                             return 2
                         }
                       }
@@ -56,10 +56,10 @@ public class _05Inheritance {
                           foo($over, ...__args) {
                             switch($over) {
                               case 1:
-                                let [x] = __args;
+                                var [x] = __args;
                                 return 3
                               case 3:
-                                let [x] = __args;
+                                var [x] = __args;
                                 return 4
                               default:
                                 return super.foo.apply(this, arguments)
@@ -83,10 +83,10 @@ public class _05Inheritance {
                               foo($over, ...__args) {
                                 switch($over) {
                                   case 2:
-                                    let [x] = __args;
+                                    var [x] = __args;
                                     return 5
                                   case 4:
-                                    let [x, y] = __args;
+                                    var [x, y] = __args;
                                     return 6
                                   default:
                                     return super.foo.apply(this, arguments)
