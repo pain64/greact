@@ -73,11 +73,10 @@ public class Loader {
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
 
-        for(var file: filesWithCode) {
-            var nameAndFile = file.split(" ");
-            all.put("/" + nameAndFile[0], () -> {
+        for(var fileName: filesWithCode) {
+            all.put("/" + fileName, () -> {
                 try {
-                    return Files.readString(Paths.get(nameAndFile[1]));
+                    return new String(Loader.class.getResourceAsStream("/bundle/" + fileName).readAllBytes());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

@@ -23,9 +23,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -322,9 +320,20 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             var bundleFile = bundleDir.resolve(".bundle");
             try {
+
+                for(var res : localResourceOrdered) {
+                    var dest = bundleDir.resolve(res.name);
+                    dest.toFile().mkdirs();
+                    try {
+                        Files.copy(res.data, dest, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
                 Files.write(bundleFile, Stream.of(libModules, localResourceOrdered)
                     .flatMap(Collection::stream)
-                    .map(r -> r.name + " " + r.data)
+                    .map(r -> r.name)
                     .collect(Collectors.joining("\n"))
                     .getBytes());
             } catch (IOException ex) {
