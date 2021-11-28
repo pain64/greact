@@ -2,6 +2,7 @@ package com.over64.greact.dom;
 
 import com.greact.model.JSExpression;
 import com.greact.model.async;
+import com.over64.greact.dom.HTMLNativeElements.Component;
 
 import java.util.function.Consumer;
 
@@ -14,11 +15,26 @@ public class GReact {
         return null;
     }
 
-    public static <T extends HtmlElement> T mount(T dest, HTMLNativeElements.Component<T> newEl, Object... args) {
+    public static <T extends HtmlElement> T mount(T dest, Component<T> newEl, Object... args) {
         element = dest;
         JSExpression.of("newEl instanceof Function ? newEl(...args) : newEl.mount(...args)");
         return null;
     }
+
+    @async static <T extends HtmlElement> T mmountAwaitView(Component<T> comp, Object... args) {
+        return JSExpression.of("""
+            comp instanceof HTMLElement ? comp :
+                comp instanceof Function ? await this.mmountAwaitView(await comp(...args), []) :
+                    await this.mmountAwaitView(await comp.mount(...args), [])
+            """);
+
+    }
+
+    @async public static <T extends HtmlElement> void mmount(T dest, Component<T> newEl, Object... args) {
+        var view = JSExpression.<HtmlElement>of("await this.mmountAwaitView(newEl, args)");
+        dest.appendChild(view);
+    }
+
 
     public static <U extends HtmlElement> void make(HtmlElement parent, String name, Consumer<U> maker) {
         U el = document.createElement(name);
@@ -32,6 +48,6 @@ public class GReact {
         return newEl;
     }
 
-    public interface AsyncRunnable { @async void run(); }
-    public interface AsyncCallable<T> { @async T call(); }
+    @FunctionalInterface public interface AsyncRunnable { @async void run(); }
+    @FunctionalInterface public interface AsyncCallable<T> { @async T call(); }
 }

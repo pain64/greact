@@ -18,7 +18,9 @@ import static util.AnalyzeAssertionsCompiler.withAssert;
 public class _04PatchNewClass2Test {
     static class PatchedLikeAssert extends AnalyzeAssertionsCompiler.CompilerAssertion<String> {
         @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String expected) {
-            new NewClassPatcher2(ctx).patch(cu);
+            var patcher = new NewClassPatcher2(ctx);
+            var classEntries = new EffectCallFinder(ctx).find(cu);
+            classEntries.forEach(patcher::patch);
             assertEquals(cu.toString(), expected);
         }
     }
@@ -27,10 +29,26 @@ public class _04PatchNewClass2Test {
         withAssert(PatchedLikeAssert.class, """
                 import com.over64.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
+                    static class Custom implements Component0<h1> {
+                        final String text;
+                        public Custom(String text) {this.text = text;}
+                        
+                        @Override public h1 mount() {
+                            return new h1(text) {{
+                                new h2(text) {{
+                                    new h3(text);
+                                }};
+                            }};
+                        }
+                    }
+                    
                     void some(div d) {}
+                    
+                    String theText = "hello, world!";
                     
                     @Override public div mount() {
                         return new div() {{
+                            onclick = ev -> effect(theText);
                             style.color = "#eee";
                             some(new div() {{
                                 new h4();
@@ -40,6 +58,7 @@ public class _04PatchNewClass2Test {
                                     new h2() {{
                                         style.color = "#ddd";
                                         new h3();
+                                        new Custom(theText);
                                     }};
                             }};
                         }};

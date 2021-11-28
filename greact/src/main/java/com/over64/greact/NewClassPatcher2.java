@@ -1,6 +1,7 @@
 package com.over64.greact;
 
 import com.greact.model.JSExpression;
+import com.over64.greact.ViewEntryFinder.ClassEntry;
 import com.over64.greact.dom.Document;
 import com.over64.greact.dom.GReact;
 import com.over64.greact.dom.HTMLNativeElements;
@@ -8,16 +9,19 @@ import com.over64.greact.dom.Node;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.over64.greact.EffectCallFinder.*;
 
 public class NewClassPatcher2 {
 
@@ -35,6 +39,7 @@ public class NewClassPatcher2 {
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
         Symbol.MethodSymbol mtGReactEntry = util.lookupMember(clGReact, "entry");
         Symbol.MethodSymbol mtGReactMount = util.lookupMember(clGReact, "mount");
+        Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
         Symbol.MethodSymbol mtGReactMake = util.lookupMember(clGReact, "make");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
         Symbol.MethodSymbol mtRunnableRun = util.lookupMember(clRunnable, "run");
@@ -133,11 +138,116 @@ public class NewClassPatcher2 {
                 com.sun.tools.javac.util.List::appendList);
     }
 
-    public void patch(JCTree classDecl) {
+    int nextViewRenderId = 0;
+
+    public void patch(JCTree.JCClassDecl classDecl, java.util.List<Effect> effects) {
+        var allEffectedVars = effects.stream()
+            .flatMap(ef -> ef.effected().stream())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        var allViewEntries = new ArrayList<JCTree.JCNewClass>();
+        classDecl.accept(new TreeScanner() {
+            @Override public void visitNewClass(JCTree.JCNewClass newClass) {
+                if (!(util.classifyView(newClass.type) instanceof Util.IsNotComponent))
+                    allViewEntries.add(newClass);
+            }
+        });
+
+        var allViewsForUpdate = new ArrayList<JCTree.JCNewClass>();
+        var allViewRenderSymbols = new ArrayList<Symbol.VarSymbol>();
+
+        for (var viewEntry : allViewEntries) {
+            var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars);
+            var nodesForUpdate = effects.stream()
+                .flatMap(ef -> viewUpdateStrategy.findNodesForUpdate(
+                    unconditionalTree, ef.effected()).stream())
+                .collect(Collectors.toCollection(LinkedHashSet::new))
+                .stream().toList();
+            var viewsForUpdate = nodesForUpdate.stream().map(ViewUpdateStrategy.Node::self).toList();
+            allViewsForUpdate.addAll(viewsForUpdate);
+
+            var viewRenderSymbols = nodesForUpdate.stream()
+                .map(node -> {
+                    var viewRendererVar = new Symbol.VarSymbol(Flags.PRIVATE,
+                        names.fromString("_render" + nextViewRenderId++),
+                        symbols.clRunnable.type,
+                        classDecl.sym);
+
+                    classDecl.sym.members_field.enterIfAbsent(viewRendererVar);
+                    classDecl.defs = classDecl.defs
+                        .append(maker.VarDef(viewRendererVar, null));
+
+                    return viewRendererVar;
+                }).toList();
+            allViewRenderSymbols.addAll(viewRenderSymbols);
+
+            for (var i = 0; i < effects.size(); i++) {
+                var effect = effects.get(i);
+                var methodSym = new Symbol.MethodSymbol(
+                    Flags.PRIVATE,
+                    names.fromString("_effect" + i),
+                    new Type.MethodType(
+                        com.sun.tools.javac.util.List.of(symbols.clObject.type),
+                        new Type.JCVoidType(), com.sun.tools.javac.util.List.nil(), classDecl.sym),
+                    classDecl.sym);
+
+                methodSym.params = com.sun.tools.javac.util.List.of(new Symbol.VarSymbol(
+                    0, names.fromString("x0"), symbols.clObject.type, methodSym));
+                classDecl.sym.members_field.enterIfAbsent(methodSym);
+                effect.invocation().meth = maker.Ident(methodSym);
+
+                var effectedNodes = viewUpdateStrategy.findNodesForUpdate
+                    (unconditionalTree, effect.effected());
+                com.sun.tools.javac.util.List<JCTree.JCStatement> renderCalls = effectedNodes.stream()
+                    .map(node -> {
+                        var forRender = viewRenderSymbols.get(nodesForUpdate.indexOf(node));
+                        var checkNotNull = maker.Binary(JCTree.Tag.NE, maker.Ident(forRender), maker.Literal(TypeTag.BOT, null).setType(symtab.botType));
+                        checkNotNull.operator = new Symbol.OperatorSymbol(
+                            names.fromString("!="),
+                            new Type.MethodType(
+                                com.sun.tools.javac.util.List.of(
+                                    symbols.clObject.type, symbols.clObject.type),
+                                new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym),
+                                com.sun.tools.javac.util.List.nil(),
+                                symtab.methodClass.type.tsym
+                            ),
+                            166 /* don't ask why */,
+                            classDecl.sym);
+                        checkNotNull.type = new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym);
+
+                        return maker.If(
+                            maker.Parens(checkNotNull).setType(new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym)),
+                            maker.Exec(
+                                maker.App(
+                                    maker.Select(
+                                        maker.Ident(forRender), symbols.mtRunnableRun))),
+                            null);
+                    }).reduce(
+                        com.sun.tools.javac.util.List.nil(),
+                        com.sun.tools.javac.util.List::append,
+                        com.sun.tools.javac.util.List::appendList);
+
+                var method = maker.MethodDef(methodSym,
+                    maker.Block(Flags.BLOCK, renderCalls));
+
+                method.mods = maker.Modifiers(Flags.PRIVATE);
+                classDecl.defs = classDecl.defs.append(method);
+            }
+        }
+
         classDecl.accept(new TreeTranslator() {
             final Map<JCTree.JCNewClass, Symbol.VarSymbol> parentMap = new HashMap<>();
+            final Set<Symbol.TypeSymbol> mappedNativeElementTypes = new HashSet<>();
             Symbol.VarSymbol current = null;
+            Symbol.MethodSymbol currentMethod = null;
             int nextElNumber = 0;
+
+            @Override public void visitMethodDef(JCTree.JCMethodDecl tree) {
+                var old = currentMethod;
+                currentMethod = tree.sym;
+                super.visitMethodDef(tree);
+                currentMethod = old;
+            }
 
             @Override public void visitExec(JCTree.JCExpressionStatement tree) {
                 if (tree.expr instanceof JCTree.JCNewClass nc)
@@ -195,20 +305,26 @@ public class NewClassPatcher2 {
                 return block;
             }
 
-            @Override public void visitNewClass(JCTree.JCNewClass nc) {
-                var classified = util.classifyView(nc.type);
+            @Override public void visitNewClass(JCTree.JCNewClass newClass) {
+                var classified = util.classifyView(newClass.type);
+                var parent = parentMap.get(newClass);
+
                 if (classified instanceof Util.IsNativeComponent nativeComp) {
-                    var parent = parentMap.get(nc);
-                    System.out.println("<<NEWCLASS>> " + nc);
-                    System.out.println("\t<<PARENT>> " + parent);
+                    mappedNativeElementTypes.add(newClass.type.tsym);
 
                     var htmlElementType = nativeComp.htmlElementType();
                     var nativeComponentName = htmlElementType.tsym.getSimpleName().toString();
 
+                    var defaultConstructor = classDecl.sym.getEnclosedElements().stream()
+                        .filter(Symbol::isConstructor).findAny().get();
+                    var nextElOwner = currentMethod != null ? currentMethod : defaultConstructor;
+
                     var nextElSymbol = new Symbol.VarSymbol(Flags.FINAL,
                         names.fromString("_el" + nextElNumber++),
                         htmlElementType,
-                        nc.type.tsym.owner);
+                        nextElOwner);
+
+                    System.out.println("owner for " + newClass + " is " + nextElOwner);
 
                     var nextEl = parent == null ?
                         maker.VarDef(nextElSymbol,
@@ -221,7 +337,6 @@ public class NewClassPatcher2 {
                                     maker.Literal("document.createElement('" + nativeComponentName + "')").setType(symbols.clString.type)
                                 )))));
 
-
                     var lmbType = parent == null ? symbols.clAsyncCallable.type : symbols.clAsyncRunnable.type;
                     var lmb = maker.Lambda(List.nil(), maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil())).setType(lmbType);
 
@@ -229,26 +344,80 @@ public class NewClassPatcher2 {
                     lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
                     lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
-                    var block = mapNewClassBody(nextElSymbol, htmlElementType, nc);
+                    var updateIndex = allViewsForUpdate.indexOf(newClass);
+                    final JCTree.JCLambda destLambda;
+                    if (updateIndex != -1) {
+                        var viewRenderSymbol = allViewRenderSymbols.get(updateIndex);
+
+                        var renderBody = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
+                        var renderLambda = maker.Lambda(com.sun.tools.javac.util.List.nil(), renderBody)
+                            .setType(symbols.clAsyncRunnable.type);
+
+                        renderLambda.target = symbols.clAsyncRunnable.type;
+                        renderLambda.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
+                        renderLambda.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
+
+                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                            maker.Exec(maker.App(
+                                maker.Select(
+                                    maker.Parens(
+                                        maker.Assign(
+                                            maker.Ident(viewRenderSymbol),
+                                            renderLambda
+                                        )).setType(symbols.clAsyncRunnable.type),
+                                    symbols.mtAsyncRunnableRun)
+                            ))));
+                        renderLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                            maker.Exec(makeCall(nextElSymbol, symbols.mtReplaceChildren, com.sun.tools.javac.util.List.nil()))
+                        ));
+                        destLambda = renderLambda;
+                    } else {
+                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
+                        destLambda = lmb;
+                    }
+
+
+                    var block = mapNewClassBody(nextElSymbol, htmlElementType, newClass);
                     block.stats = block.stats.prepend(nextEl);
 
-                    if(parent == null) {
+                    if (parent == null) {
                         var ret = maker.Return(maker.Ident(nextEl.sym));
                         block.stats = block.stats.append(ret);
                     }
 
-                    lmb.body = block;
+                    destLambda.body = block;
 
-                    result = maker.App(maker.Select(lmb,
-                        parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun),
+                    result = maker.App(maker.Select(maker.Parens(lmb).setType(lmb.type),
+                            parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun),
                         List.nil());
+                } else if (classified instanceof Util.IsCustomComponent custom) {
+                    var ct = (Type.ClassType) newClass.type;
+                    while(mappedNativeElementTypes.contains(ct.getEnclosingType().tsym))
+                        ct.setEnclosingType(ct.getEnclosingType().getEnclosingType());
 
-//                    var old = current;
-//                    current = nc;
-//                    super.visitNewClass(nc);
-//                    current = old;
+                    if (parent == null) {
+                        if (custom instanceof Util.IsSlot) throw new RuntimeException("not implemented");
+                        for(var arg: newClass.args) arg.accept(this);
+                        if(newClass.def != null) newClass.def.accept(this);
+                        this.result = newClass;
+                    } else {
+                        for(var arg: newClass.args) arg.accept(this);
+                        if(newClass.def != null) newClass.def.accept(this);
+
+                        var forMount = custom instanceof Util.IsSlot ? newClass.args.head : newClass;
+                        var mountArgs = custom instanceof Util.IsSlot ? newClass.args.tail
+                            : com.sun.tools.javac.util.List.<JCTree.JCExpression>nil();
+
+                        this.result = makeCall(symbols.clGReact, symbols.mtGReactMMount,
+                            com.sun.tools.javac.util.List.of(
+                                maker.Ident(current),
+                                forMount,
+                                maker.NewArray(maker.Ident(symbols.clObject), com.sun.tools.javac.util.List.nil(),
+                                        mountArgs)
+                                    .setType(types.makeArrayType(symbols.clObject.type))));
+                    }
                 } else
-                    super.visitNewClass(nc);
+                    super.visitNewClass(newClass);
             }
         });
     }

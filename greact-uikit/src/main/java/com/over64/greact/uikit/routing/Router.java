@@ -8,6 +8,8 @@ import com.over64.greact.dom.Window;
 import com.over64.greact.uikit.Array;
 import com.over64.greact.uikit.Dates;
 
+import static com.over64.greact.dom.Globals.document;
+
 public class Router implements Component0<div> {
     final RouterView[] views;
     RouterView view;
@@ -41,16 +43,16 @@ public class Router implements Component0<div> {
 
     @Override
     public div mount() {
-        var root = (div) GReact.element;
+        div root = document.createElement("div");
 
-        Runnable onLocationChange = () -> {
+        GReact.AsyncRunnable onLocationChange = () -> {
             view = findView();
             root.innerHTML = "";
-            GReact.mount(root, view.slot, new Object[]{});
+            GReact.mmount(root, view.slot, new Object[]{});
         };
 
         onLocationChange.run();
         JSExpression.of("window.addEventListener('hashchange', onLocationChange)");
-        return null;
+        return root;
     }
 }

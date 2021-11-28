@@ -52,6 +52,7 @@ public class EffectCallFinder {
                 else {
                     var oldClass = currentClass;
                     currentClass = tree;
+                    result.put(currentClass, new ArrayList<>());
                     super.visitClassDef(tree);
                     currentClass = oldClass;
                 }
@@ -85,7 +86,7 @@ public class EffectCallFinder {
                               effect(x op= expression)""".formatted(tree));
                     };
 
-                    result.computeIfAbsent(currentClass, _cd -> new ArrayList<>())
+                    result.get(currentClass)
                         .add(new Effect(tree, Set.of(fetchVarSymbol.apply(tree.args.get(0)))));
                 }
                 // assert that is class field ???

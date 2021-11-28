@@ -21,6 +21,7 @@ public class MarkupPlugin2 {
     final ViewEntryFinder viewEntryFinder;
     final EffectCallFinder effectCallFinder;
     final NewClassPatcher newClassPatcher;
+    final NewClassPatcher2 newClassPatcher2;
 
 
     public MarkupPlugin2(Context context) {
@@ -34,16 +35,18 @@ public class MarkupPlugin2 {
         this.viewEntryFinder = new ViewEntryFinder(context);
         this.effectCallFinder = new EffectCallFinder(context);
         this.newClassPatcher = new NewClassPatcher(context);
+        this.newClassPatcher2 = new NewClassPatcher2(context);
 
      //   this.symbols = new MarkupPlugin.Symbols();
     }
 
     public void apply(JCTree.JCCompilationUnit cu) {
         var effectMap = effectCallFinder.find(cu);
-        viewEntryFinder.find(cu)
-            .forEach(ce -> {
-                var effectsForClass = effectMap.getOrDefault(ce.classDecl(), new ArrayList<>());
-                newClassPatcher.patch(ce, effectsForClass);
-            });
+        effectMap.forEach(newClassPatcher2::patch);
+//        viewEntryFinder.find(cu)
+//            .forEach(ce -> {
+//                var effectsForClass = effectMap.getOrDefault(ce.classDecl(), new ArrayList<>());
+//                newClassPatcher.patch(ce, effectsForClass);
+//            });
     }
 }

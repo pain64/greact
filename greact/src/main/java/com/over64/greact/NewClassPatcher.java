@@ -213,6 +213,7 @@ public class NewClassPatcher {
 
             vh.target().accept(new TreeTranslator() {
                 Symbol.VarSymbol currentThis;
+                Symbol.MethodSymbol currentMethod;
                 int nextElNumber = 0;
 
                 void atThis(Symbol.VarSymbol newThis, Runnable block) {

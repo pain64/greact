@@ -59,7 +59,7 @@ public class SearchBox implements Component0<div> {
     }
 
     @async void performChangedEffects() {
-        if(canSearch)
+        if (canSearch)
             loaded = loader.load();
 
         effect(controlsWithChildren);
@@ -87,38 +87,39 @@ public class SearchBox implements Component0<div> {
 
     @Override public div mount() {
         checkCanSearch();
-        if(canSearch) {
+        if (canSearch) {
             loaded = loader.load();
             doSearch = true;
         }
 
         return new div() {{
-            new style("""
-                .search-button {
-                  background-color:black;
-                  color: #fff;
-                  border-radius:3px;
-                  border: none;
-                  height:24px;
-                }
-                .active {
-                 cursor:pointer;
-                }
-                .disabled {
-                  background-color: #cbc3c3;
-                }
-                """);
             new div() {{
-                style.marginBottom = "15px";
-                style.display = "flex";
-                //style.justifyContent = "";
-                style.flexWrap = "wrap";
-                style.alignItems = "center";
+                new style("""
+                    .search-button {
+                      background-color:black;
+                      color: #fff;
+                      border-radius:3px;
+                      border: none;
+                      height:24px;
+                    }
+                    .active {
+                     cursor:pointer;
+                    }
+                    .disabled {
+                      background-color: #cbc3c3;
+                    }
+                    """);
+                new div() {{
+                    style.marginBottom = "15px";
+                    style.display = "flex";
+                    //style.justifyContent = "";
+                    style.flexWrap = "wrap";
+                    style.alignItems = "center";
 
-                for (var control : controlsWithChildren)
-                    new slot<div>(control);
+                    for (var control : controlsWithChildren)
+                        new slot<div>(control);
 
-                /* FIXME: make autosearch */
+                    /* FIXME: make autosearch */
 
 //                new button("искать") {{
 //                    style.margin = "2px";
@@ -128,12 +129,13 @@ public class SearchBox implements Component0<div> {
 //                        effect(doSearch = true);
 //                    };
 //                }};
-            }};
+                }};
 
-            if (canSearch) {
-                // doSearch = false;
-                new slot<>(loaded);
-            }
+                if (canSearch) {
+                    // doSearch = false;
+                    new slot<>(loaded);
+                }
+            }};
         }};
     }
 }

@@ -381,8 +381,11 @@ public class ExpressionGen {
                     var line = mctx.ctx().cu().getLineMap().getLineNumber(callTree.pos);
                     var col = mctx.ctx().cu().getLineMap().getColumnNumber(callTree.pos);
                     throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
-                            """
-                                    method which calls @async method must be defined as @async (line:""" + line + ", col:" + col + ")");
+                        """
+                            %s      at %s:%d:%d
+                            method which calls @async method must be defined as @async""".formatted(
+                                callTree, mctx.ctx().cu().sourcefile.getName(), line, col)
+                        );
                 }
 
                 if (info.isAsync()) out.write(0, "(await ");
