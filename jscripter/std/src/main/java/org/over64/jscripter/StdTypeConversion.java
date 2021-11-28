@@ -1,5 +1,4 @@
 package org.over64.jscripter;
-
 import org.over64.jscripter.std.java.lang.Integer;
 import org.over64.jscripter.std.java.lang.String;
 

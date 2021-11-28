@@ -323,7 +323,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
                 for(var res : localResourceOrdered) {
                     var dest = bundleDir.resolve(res.name);
-                    dest.toFile().mkdirs();
+                    var __ = dest.toFile().mkdirs();
                     try {
                         Files.copy(res.data, dest, StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException ex) {

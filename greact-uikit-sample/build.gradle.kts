@@ -53,6 +53,7 @@ val test by tasks.getting(Test::class) {
 
 dependencies {
     implementation(project(":jscripter:transpiler"))
+    implementation(project(":jscripter:std"))
     implementation(project(":greact"))
     implementation(project(":greact-uikit"))
     implementation("com.sparkjava:spark-core:2.9.2")

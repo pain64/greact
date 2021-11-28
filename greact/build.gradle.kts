@@ -50,8 +50,7 @@ val test by tasks.getting(Test::class) {
 
 dependencies {
     implementation(project(":jscripter:transpiler"))
-    implementation("org.antlr:antlr4-runtime:4.8-1")
-    implementation("org.sql2o:sql2o:1.6.0")
+    implementation(project(":jscripter:std"))
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
