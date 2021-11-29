@@ -31,8 +31,8 @@ public class GReact {
     }
 
     @async public static <T extends HtmlElement> void mmount(T dest, Component<T> newEl, Object... args) {
-        var view = JSExpression.<HtmlElement>of("await this.mmountAwaitView(newEl, args)");
-        dest.appendChild(view);
+        var placeholder = dest.appendChild(document.createElement("div"));
+        JSExpression.<HtmlElement>of("this.mmountAwaitView(newEl, args).then(v => dest.replaceChild(v, placeholder))");
     }
 
 
