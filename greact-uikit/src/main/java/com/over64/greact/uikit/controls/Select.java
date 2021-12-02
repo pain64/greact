@@ -4,35 +4,45 @@ import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
+import java.util.function.Function;
+
 public class Select<T> extends Control<T> {
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
     }
 
-    final Indexed<T>[] variants;
-    int valueIdx;
-
-    // FIXME почини, наконец, перегруженные конструкторы!
+    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
+    //  inner классы и record components
     public static <A> MemberRef<A, A> identity() {
         return JSExpression.of("{value: (v) => v}");
     }
 
-    // FIXME: починить перегруженные конструкторы с разным количеством аргументов
-//    public Select(T[] options) {
-//        // FIXME: call another constructor
-//        // this(variants, v -> v, c -> c.toString());
-//        this.variants = new Indexed[options.length];
-//        for (var i = 0; i < variants.length; i++)
-//            this.variants[i] = new Indexed<>(i, options[i], options[i].toString());
-//    }
+    public static <A> MemberRef<A, String> identityToString() {
+        return JSExpression.of("{value: (v) => v.toString()}");
+    }
 
-    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
-    //  inner классы и record components
+    Indexed<T>[] variants;
+    int valueIdx;
+
+    public Select(T[] options) {
+        constructorShared(options, identity(), identityToString());
+    }
+
+    public Select(T[] options, MemberRef<T, String> captions) {
+        constructorShared(options, identity(), captions);
+    }
+
     public <V> Select(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
+        constructorShared(options, values, captions);
+    }
+
+    /* FIXME: починить вызов конструктора из конструктора */
+    <V> void constructorShared(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
         this.variants = new Indexed[options.length];
         for (var i = 0; i < options.length; i++)
             this.variants[i] = new Indexed<>(i, values.value(options[i]), captions.value(options[i]));
-        if(this.variants.length != 0) {
+
+        if (this.variants.length != 0) {
             this.value = this.variants[0].element;
             this.ready = true;
             this.onReadyChanged.run();
@@ -44,7 +54,7 @@ public class Select<T> extends Control<T> {
         return this;
     }
 
-    @Override public Control child() { return null; }
+    @Override public Control child() {return null;}
 
     @Override
     public div mount() {
@@ -55,8 +65,8 @@ public class Select<T> extends Control<T> {
 //        }
 
         return new div() {{
-          //  style.padding = "0px 2px";
-         //   style.margin = "0px 10px";
+            //  style.padding = "0px 2px";
+            //   style.margin = "0px 10px";
 
             new label() {{
                 style.display = "flex";

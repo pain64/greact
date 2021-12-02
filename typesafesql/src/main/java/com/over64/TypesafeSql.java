@@ -96,7 +96,7 @@ public class TypesafeSql {
                 }
             } else
                 while (rs.next())
-                    data.add((T) rs.getObject(0));
+                    data.add((T) rs.getObject(1));
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
         } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
