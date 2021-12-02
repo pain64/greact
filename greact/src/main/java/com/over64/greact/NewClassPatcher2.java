@@ -397,7 +397,7 @@ public class NewClassPatcher2 {
                             maker.Exec(
                                 makeCall(parent, symbols.mtNodeAppendChild, List.of(
                                     maker.Ident(resultElSymbol)))) :
-                            maker.Return(maker.Ident(nextEl.sym)));
+                            maker.Return(maker.Ident(resultElSymbol)));
 
                     if (parent != null) lambdaToBlock.add(lmb);
 

@@ -49,105 +49,103 @@ class GridFilter<T> implements Component0<div> {
     }
 
     @Override public div mount() {
-        return new div() {
-            {
-                new div() {{
+        return new div() {{
+            new div() {{
+                var filterWords = Array.filter(
+                    stringSplit(filterValue, " "),
+                    s -> stringLength(s) != 0);
+
+                T[] filtered = filterWords.length != 0 ?
+                    Array.filter(data, v -> {
+                        for (var col : conf.columns) {
+                            var strVal = Grid.fetchValue(v, col.memberNames);
+                            if (strVal == null) strVal = "";
+                            strVal += ""; // FIXME: cast to string!!!
+                            for (var fVal : filterWords)
+                                if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
+                        }
+                        return false;
+                    }) : data;
+
+                var nPages = calcNPages(filtered, currentSize);
+                var offset = (currentPage - 1) * currentSize;
+                effectUnaffectedMe(() ->
+                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
+
+                new style("""
+                    .page-turn {
+                      display: inline;
+                      cursor: pointer;
+                    }
+                    .page-turn:hover {
+                      background-color: #ffbbc7;
+                      
+                    }""");
+
+                if (filtered.length > pageSizes[0])
                     new div() {{
-                        var filterWords = Array.filter(
-                            stringSplit(filterValue, " "),
-                            s -> stringLength(s) != 0);
+                        style.display = "flex";
+                        style.alignItems = "center";
+                        style.backgroundColor = "#eee";
+                        style.padding = "5px";
+                        style.marginBottom = "15px";
+                        new select() {{
+                            onchange = ev -> {
+                                // FIXME: move to one effect
+                                effect(currentSize = Integer.parseInt(ev.target.value));
+                                effect(currentPage = 1);
+                            };
 
-                        T[] filtered = filterWords.length != 0 ?
-                            Array.filter(data, v -> {
-                                for (var col : conf.columns) {
-                                    var strVal = Grid.fetchValue(v, col.memberNames);
-                                    if (strVal == null) strVal = "";
-                                    for (var fVal : filterWords)
-                                        if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-                                }
-                                return false;
-                            }) : data;
-
-                        var nPages = calcNPages(filtered, currentSize);
-                        var offset = (currentPage - 1) * currentSize;
-                        effectUnaffectedMe(() ->
-                            effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
-
-                        new style("""
-                            .page-turn {
-                              display: inline;
-                              cursor: pointer;
-                            }
-                            .page-turn:hover {
-                              background-color: #ffbbc7;
-                              
-                            }""");
-
-                        if (filtered.length > pageSizes[0])
-                            new div() {{
-                                style.display = "flex";
-                                style.alignItems = "center";
-                                style.backgroundColor = "#eee";
-                                style.padding = "5px";
-                                style.marginBottom = "15px";
-                                new select() {{
-                                    onchange = ev -> {
-                                        // FIXME: move to one effect
-                                        effect(currentSize = Integer.parseInt(ev.target.value));
-                                        effect(currentPage = 1);
-                                    };
-
-                                    for (var size : pageSizes)
-                                        new option("" + size) {{
-                                            value = "" + size;
-                                            selected = size == currentSize;
-                                        }};
-                                    style.marginRight = "10px";
+                            for (var size : pageSizes)
+                                new option("" + size) {{
+                                    value = "" + size;
+                                    selected = size == currentSize;
                                 }};
-                                new span("записей на странице " + currentPage + " из " + nPages);
-                                new div() {{
-                                    style.marginLeft = "auto";
-                                    new div() {{
-                                        innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                            """;
-                                        className = "page-turn";
-                                        onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
-                                    }};
-                                    new div() {{
-                                        innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                            """;
-                                        className = "page-turn";
-                                        onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
-                                    }};
-                                }};
-                            }};
-                    }};
-
-                    if (filterEnabled)
+                            style.marginRight = "10px";
+                        }};
+                        new span("записей на странице " + currentPage + " из " + nPages);
                         new div() {{
-                            style.padding = "5px";
-                            style.backgroundColor = "#eee";
-                            style.marginBottom = "5px";
-                            new input() {{
-//                        value = filterValue; // one wat bindind
-                                placeholder = "фильтр...";
-                                style.width = "100%";
-                                onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
+                            style.marginLeft = "auto";
+                            new div() {{
+                                innerHTML = """
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                    """;
+                                className = "page-turn";
+                                onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
+                            }};
+                            new div() {{
+                                innerHTML = """
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                    """;
+                                className = "page-turn";
+                                onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
                             }};
                         }};
+                    }};
+            }};
 
-
-                    new div() {{
-                        var hint = pageData;
-                        new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
-                            effect(filterEnabled = !filterEnabled);
-                            effect(currentPage = 1);
-                            effect(filterValue = "");
-                        }));
+            if (filterEnabled)
+                new div() {{
+                    style.padding = "5px";
+                    style.backgroundColor = "#eee";
+                    style.marginBottom = "5px";
+                    new input() {{
+//                        value = filterValue; // one wat bindind
+                        placeholder = "фильтр...";
+                        style.width = "100%";
+                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
                 }};
+
+
+            new div() {{
+                var hint = pageData;
+                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
+                    effect(filterEnabled = !filterEnabled);
+                    effect(currentPage = 1);
+                    effect(filterValue = "");
+                }));
             }};
+        }};
     }
 }
