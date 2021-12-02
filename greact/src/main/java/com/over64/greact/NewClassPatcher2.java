@@ -40,7 +40,7 @@ public class NewClassPatcher2 {
         Symbol.MethodSymbol mtGReactEntry = util.lookupMember(clGReact, "entry");
         Symbol.MethodSymbol mtGReactMount = util.lookupMember(clGReact, "mount");
         Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
-        Symbol.MethodSymbol mtGReactMake = util.lookupMember(clGReact, "make");
+        Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
         Symbol.MethodSymbol mtRunnableRun = util.lookupMember(clRunnable, "run");
         Symbol.ClassSymbol clConsumer = util.lookupClass(Consumer.class);
@@ -235,6 +235,8 @@ public class NewClassPatcher2 {
             }
         }
 
+        var lambdaToBlock = new HashSet<JCTree.JCLambda>();
+
         classDecl.accept(new TreeTranslator() {
             final Map<JCTree.JCNewClass, Symbol.VarSymbol> parentMap = new HashMap<>();
             final Set<Symbol.TypeSymbol> mappedNativeElementTypes = new HashSet<>();
@@ -319,36 +321,42 @@ public class NewClassPatcher2 {
                         .filter(Symbol::isConstructor).findAny().get();
                     var nextElOwner = currentMethod != null ? currentMethod : defaultConstructor;
 
+                    var nextNum = nextElNumber++;
                     var nextElSymbol = new Symbol.VarSymbol(Flags.FINAL,
-                        names.fromString("_el" + nextElNumber++),
+                        names.fromString("_el" + nextNum),
                         htmlElementType,
                         nextElOwner);
 
-                    System.out.println("owner for " + newClass + " is " + nextElOwner);
-
-                    var nextEl = parent == null ?
-                        maker.VarDef(nextElSymbol,
-                            makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                                maker.Literal("document.createElement('" + nativeComponentName + "')").setType(symbols.clString.type)
-                            ))) :
-                        maker.VarDef(nextElSymbol,
-                            makeCall(parent, symbols.mtNodeAppendChild, List.of(
-                                makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                                    maker.Literal("document.createElement('" + nativeComponentName + "')").setType(symbols.clString.type)
-                                )))));
+                    var nextEl = maker.VarDef(nextElSymbol,
+                        makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
+                            maker.Literal("document.createElement('" + nativeComponentName + "')").setType(symbols.clString.type))));
 
                     var lmbType = parent == null ? symbols.clAsyncCallable.type : symbols.clAsyncRunnable.type;
+                    var lmbApplyMethod = parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun;
                     var lmb = maker.Lambda(List.nil(), maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil())).setType(lmbType);
 
                     lmb.target = lmbType;
                     lmb.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
                     lmb.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
-                    var updateIndex = allViewsForUpdate.indexOf(newClass);
-                    final JCTree.JCLambda destLambda;
-                    if (updateIndex != -1) {
-                        var viewRenderSymbol = allViewRenderSymbols.get(updateIndex);
+                    var lmbBody = maker.Block(Flags.BLOCK, List.nil());
+                    lmb.body = lmbBody;
 
+                    var classBody = mapNewClassBody(nextElSymbol, htmlElementType, newClass);
+
+                    final Symbol.VarSymbol resultElSymbol;
+                    var updateIndex = allViewsForUpdate.indexOf(newClass);
+
+                    if (updateIndex != -1) { // rerenderable
+                        var elHolderSymbol = new Symbol.VarSymbol(Flags.FINAL,
+                            names.fromString("_holder" + nextNum),
+                            htmlElementType,
+                            nextElOwner);
+
+                        var elHolder = maker.VarDef(elHolderSymbol, maker.Literal(TypeTag.BOT, null).setType(symtab.botType));
+                        lmbBody.stats = lmbBody.stats.append(elHolder);
+
+                        var viewRenderSymbol = allViewRenderSymbols.get(updateIndex);
                         var renderBody = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
                         var renderLambda = maker.Lambda(com.sun.tools.javac.util.List.nil(), renderBody)
                             .setType(symbols.clAsyncRunnable.type);
@@ -357,52 +365,57 @@ public class NewClassPatcher2 {
                         renderLambda.polyKind = JCTree.JCPolyExpression.PolyKind.POLY;
                         renderLambda.paramKind = JCTree.JCLambda.ParameterKind.EXPLICIT;
 
-                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
-                            maker.Exec(maker.App(
-                                maker.Select(
-                                    maker.Parens(
-                                        maker.Assign(
-                                            maker.Ident(viewRenderSymbol),
-                                            renderLambda
-                                        )).setType(symbols.clAsyncRunnable.type),
-                                    symbols.mtAsyncRunnableRun)
-                            ))));
-                        renderLambda.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
-                            maker.Exec(makeCall(nextElSymbol, symbols.mtReplaceChildren, com.sun.tools.javac.util.List.nil()))
-                        ));
-                        destLambda = renderLambda;
+                        lmbBody.stats = lmbBody.stats.append(
+                            maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.of(
+                                maker.Exec(
+                                    maker.App(
+                                        maker.Select(
+                                            maker.Parens(
+                                                maker.Assign(
+                                                    maker.Ident(viewRenderSymbol),
+                                                    renderLambda
+                                                )).setType(symbols.clAsyncRunnable.type),
+                                            symbols.mtAsyncRunnableRun))))));
+
+                        renderLambda.body = maker.Block(Flags.BLOCK, classBody.stats
+                            .prepend(nextEl)
+                            .append(
+                                maker.Exec(maker.Assign(
+                                    maker.Ident(elHolderSymbol),
+                                    makeCall(symbols.clGReact, symbols.mtGReactReplace, List.of(
+                                        maker.Ident(nextElSymbol), maker.Ident(elHolderSymbol)))))));
+
+                        resultElSymbol = elHolderSymbol;
                     } else {
-                        lmb.body = maker.Block(Flags.BLOCK, com.sun.tools.javac.util.List.nil());
-                        destLambda = lmb;
+                        lmbBody.stats = lmbBody.stats.append(nextEl).appendList(classBody.stats);
+                        resultElSymbol = nextElSymbol;
                     }
 
 
-                    var block = mapNewClassBody(nextElSymbol, htmlElementType, newClass);
-                    block.stats = block.stats.prepend(nextEl);
+                    lmbBody.stats = lmbBody.stats.append(
+                        parent != null ?
+                            maker.Exec(
+                                makeCall(parent, symbols.mtNodeAppendChild, List.of(
+                                    maker.Ident(resultElSymbol)))) :
+                            maker.Return(maker.Ident(nextEl.sym)));
 
-                    if (parent == null) {
-                        var ret = maker.Return(maker.Ident(nextEl.sym));
-                        block.stats = block.stats.append(ret);
-                    }
+                    if (parent != null) lambdaToBlock.add(lmb);
 
-                    destLambda.body = block;
-
-                    result = maker.App(maker.Select(maker.Parens(lmb).setType(lmb.type),
-                            parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun),
-                        List.nil());
+                    result = maker.App(
+                        maker.Select(maker.Parens(lmb).setType(lmb.type), lmbApplyMethod), List.nil());
                 } else if (classified instanceof Util.IsCustomComponent custom) {
                     var ct = (Type.ClassType) newClass.type;
-                    while(mappedNativeElementTypes.contains(ct.getEnclosingType().tsym))
+                    while (mappedNativeElementTypes.contains(ct.getEnclosingType().tsym))
                         ct.setEnclosingType(ct.getEnclosingType().getEnclosingType());
 
                     if (parent == null) {
                         if (custom instanceof Util.IsSlot) throw new RuntimeException("not implemented");
-                        for(var arg: newClass.args) arg.accept(this);
-                        if(newClass.def != null) newClass.def.accept(this);
+                        for (var arg : newClass.args) arg.accept(this);
+                        if (newClass.def != null) newClass.def.accept(this);
                         this.result = newClass;
                     } else {
-                        for(var arg: newClass.args) arg.accept(this);
-                        if(newClass.def != null) newClass.def.accept(this);
+                        for (var arg : newClass.args) arg.accept(this);
+                        if (newClass.def != null) newClass.def.accept(this);
 
                         var forMount = custom instanceof Util.IsSlot ? newClass.args.head : newClass;
                         var mountArgs = custom instanceof Util.IsSlot ? newClass.args.tail
@@ -418,6 +431,24 @@ public class NewClassPatcher2 {
                     }
                 } else
                     super.visitNewClass(newClass);
+            }
+        });
+
+        classDecl.accept(new TreeTranslator() {
+            @Override public void visitExec(JCTree.JCExpressionStatement estmt) {
+                if (estmt.expr instanceof JCTree.JCMethodInvocation invoke) {
+                    if (invoke.meth instanceof JCTree.JCFieldAccess fa)
+                        if (fa.selected instanceof JCTree.JCParens parens)
+                            if (parens.expr instanceof JCTree.JCLambda lmb)
+                                if (lambdaToBlock.contains(lmb)) {
+                                    lmb.body.accept(this);
+                                    result = lmb.body;
+                                    return;
+                                }
+                }
+
+
+                result = estmt;
             }
         });
     }

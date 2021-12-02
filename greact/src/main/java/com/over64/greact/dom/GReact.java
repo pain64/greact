@@ -48,6 +48,13 @@ public class GReact {
         return newEl;
     }
 
+    public static <T extends HtmlElement> T replace(T el, HtmlElement holder) {
+        if(holder != null)
+            holder.parentNode.replaceChild(el, holder);
+
+        return el;
+    }
+
     @FunctionalInterface public interface AsyncRunnable { @async void run(); }
     @FunctionalInterface public interface AsyncCallable<T> { @async T call(); }
 }
