@@ -36,7 +36,7 @@ public class CodeViewTest {
                     @Override public div mount() {
                         return new div() {{
                             new h1("example1");
-                            new CodeView(() -> new div() {{new h2("hello");}}, renderer);
+                            new CodeView(() -> new h2("hello"), renderer);
                         }};
                     }
                 }""",
@@ -80,15 +80,7 @@ public class CodeViewTest {
                             }
                             {
                                 new h1("example1");
-                                new CodeView(()->new div(){
-                                   \s
-                                    () {
-                                        super();
-                                    }
-                                    {
-                                        new h2("hello");
-                                    }
-                                }, renderer, "new h2(\\"hello\\");");
+                                new CodeView(()->new h2("hello"), renderer, "new h2(\\"hello\\")");
                             }
                         };
                     }
