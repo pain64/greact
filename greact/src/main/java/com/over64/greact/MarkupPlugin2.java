@@ -20,7 +20,6 @@ public class MarkupPlugin2 {
 
     final ViewEntryFinder viewEntryFinder;
     final EffectCallFinder effectCallFinder;
-    final NewClassPatcher newClassPatcher;
     final NewClassPatcher2 newClassPatcher2;
 
 
@@ -34,10 +33,7 @@ public class MarkupPlugin2 {
 
         this.viewEntryFinder = new ViewEntryFinder(context);
         this.effectCallFinder = new EffectCallFinder(context);
-        this.newClassPatcher = new NewClassPatcher(context);
         this.newClassPatcher2 = new NewClassPatcher2(context);
-
-     //   this.symbols = new MarkupPlugin.Symbols();
     }
 
     public void apply(JCTree.JCCompilationUnit cu) {

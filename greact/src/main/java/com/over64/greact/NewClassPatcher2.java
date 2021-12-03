@@ -30,35 +30,26 @@ public class NewClassPatcher2 {
     final TreeMaker maker;
     final Types types;
     final Util util;
-    final ViewHolderPatcher viewHolderPatcher;
     final ViewUpdateStrategy viewUpdateStrategy;
     final Name rootVarName;
     final Name defaultConstructorMethodName;
 
     class Symbols {
+        Symbol.ClassSymbol clString = util.lookupClass(String.class);
+        Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
-        Symbol.MethodSymbol mtGReactEntry = util.lookupMember(clGReact, "entry");
-        Symbol.MethodSymbol mtGReactMount = util.lookupMember(clGReact, "mount");
         Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
         Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
         Symbol.MethodSymbol mtRunnableRun = util.lookupMember(clRunnable, "run");
-        Symbol.ClassSymbol clConsumer = util.lookupClass(Consumer.class);
-        Symbol.ClassSymbol clString = util.lookupClass(String.class);
-        Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clNode = util.lookupClass(com.over64.greact.dom.Node.class);
         Symbol.MethodSymbol mtNodeAppendChild = util.lookupMember(clNode, "appendChild");
-        Symbol.MethodSymbol mtReplaceChildren = util.lookupMember(clNode, "replaceChildren");
-        //Symbol.ClassSymbol clBoolean = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Boolean"));
-        Symbol.ClassSymbol clDocument = util.lookupClass(Document.class);
-        Symbol.MethodSymbol mtDocumentCreateElement = util.lookupMember(clDocument, "createElement");
         Symbol.ClassSymbol clAsyncRunnable = util.lookupClass(GReact.AsyncRunnable.class);
         Symbol.MethodSymbol mtAsyncRunnableRun = util.lookupMember(clAsyncRunnable, "run");
         Symbol.ClassSymbol clAsyncCallable = util.lookupClass(GReact.AsyncCallable.class);
         Symbol.MethodSymbol mtAsyncCallableCall = util.lookupMember(clAsyncCallable, "call");
         Symbol.ClassSymbol clJSExpression = util.lookupClass(JSExpression.class);
         Symbol.MethodSymbol mtJSExpressionOf = util.lookupMember(clJSExpression, "of");
-
     }
 
     final Symbols symbols;
@@ -69,7 +60,6 @@ public class NewClassPatcher2 {
         this.names = Names.instance(context);
         this.types = Types.instance(context);
         this.util = new Util(context);
-        this.viewHolderPatcher = new ViewHolderPatcher(context);
         this.viewUpdateStrategy = new ViewUpdateStrategy();
         this.symbols = new Symbols();
         this.rootVarName = names.fromString("_root");

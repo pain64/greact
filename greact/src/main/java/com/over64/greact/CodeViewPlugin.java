@@ -49,7 +49,7 @@ public class CodeViewPlugin {
 
                     if (viewCompExpression instanceof JCTree.JCLambda lambda)
                         if (lambda.body instanceof JCTree.JCNewClass compExpr) {
-                            var exprForCode = ((JCTree.JCBlock) compExpr.def.defs.last()).stats.head;
+                            var exprForCode = compExpr;
 
                             try {
                                 var cuCode = cu.getSourceFile().getCharContent(true);

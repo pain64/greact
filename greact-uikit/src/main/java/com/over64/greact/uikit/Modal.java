@@ -2,17 +2,13 @@ package com.over64.greact.uikit;
 
 import com.greact.model.CSS;
 import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HtmlElement;
 
-/**
- * FIXME:
- * Необходимо сделать Generic версию, чтобы не заставлять пользователя вкладывать именно div и делать дополнительный враппер,
- * в случае если он хочет вложить в Modal что-то другое, например h1
- */
-@CSS.Require("modal.css") public class Modal implements Component0<div> {
-    final Component0<button> opener;
-    final Component0<div> content;
+@CSS.Require("modal.css") public class Modal<A extends HtmlElement, B extends HtmlElement> implements Component0<div> {
+    final Component0<A> opener;
+    final Component0<B> content;
 
-    public Modal(Component0<button> opener, Component0<div> content) {
+    public Modal(Component0<A> opener, Component0<B> content) {
         this.opener = opener;
         this.content = content;
     }

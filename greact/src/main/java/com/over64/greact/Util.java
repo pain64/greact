@@ -50,14 +50,12 @@ public class Util {
     /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
     public /* sealed */ interface ViewKind {}
     public record IsNotComponent() implements ViewKind {}
-    public /* sealed */ interface IsComponent extends ViewKind {
-        Type.ClassType htmlElementType();
-    }
+    public /* sealed */ interface IsComponent extends ViewKind {}
     public record IsNativeComponent(Type.ClassType htmlElementType) implements IsComponent {}
     /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
     public /* sealed */ interface IsCustomComponent extends IsComponent {}
-    public record IsSlot(Type.ClassType htmlElementType) implements IsCustomComponent {}
-    public record IsComponent0(Type.ClassType htmlElementType) implements IsCustomComponent {}
+    public record IsSlot() implements IsCustomComponent {}
+    public record IsComponent0() implements IsCustomComponent {}
 
     ViewKind classifyView(Type type) {
         Type realType = type;
@@ -66,7 +64,7 @@ public class Util {
                 realType = classSym.getSuperclass();
 
         if (realType.tsym == symbols.clSlot)
-            return new IsSlot((Type.ClassType) realType.allparams().get(0));
+            return new IsSlot();
 
         var ifaces = types.interfaces(realType);
         return ifaces.stream()
@@ -75,7 +73,7 @@ public class Util {
                 if (iface.tsym == symbols.clNativeElementAsComponent)
                     return new IsNativeComponent((Type.ClassType) params.get(0));
                 else if (iface.tsym == symbols.clComponent0)
-                    return new IsComponent0((Type.ClassType) params.get(0));
+                    return new IsComponent0();
                 else return (ViewKind) null;
             })
             .filter(Objects::nonNull)
