@@ -7,10 +7,10 @@ public class Route implements Component0<a> {
     final String _href;
     final String caption;
 
-    public Route(RouterView[] routes, String href, String caption, Component0<div> view) {
+    public Route(Router router, String href, String caption, Component0<div> view) {
         this._href = href;
         this.caption = caption;
-        Array.push(routes, new RouterView(href, view));
+        Array.push(router.views, new Router.View(href, view));
     }
 
     @Override public a mount() {
