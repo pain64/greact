@@ -10,7 +10,8 @@ public class Link {
     public Link(Router router, String path, HTMLNativeElements.Component1<HTMLNativeElements.div, Long> view) {
         this.path = path;
 
-        Array.push(router.views, new Router.View(path, () -> {
+        // FIXME: string escaping
+        Array.push(router.views, new Router.View(path + "/\\\\d+", () -> {
             String[] hashPaths = JSExpression.of("window.location.hash.split('/')");
             var param = Array.last(hashPaths);
             var lParam = JSExpression.<Long>of("parseInt(param)");

@@ -8,14 +8,14 @@ import static com.over64.greact.dom.Globals.document;
 
 public class Router implements Component0<div> {
     record View(String href, Component0<div> slot){}
-
     final View[] views = new View[]{};
 
     private View findView() {
         String hash = JSExpression.of("window.location.hash"); // FIXME: add api to Globals.window
         for (var view : views)
-            if (view.href == hash) return view;
-        return views[0];
+            // FIXME: fix method shim
+            if (JSExpression.of("hash.match(new RegExp(view.href)) != null")) return view;
+        return null;
     }
 
     @Override
@@ -24,8 +24,9 @@ public class Router implements Component0<div> {
 
         GReact.AsyncRunnable onLocationChange = () -> {
             var view = findView();
+            var element = view != null ? view.slot : new div();
             root.innerHTML = "";
-            GReact.mmount(root, view.slot, new Object[]{});
+            GReact.mmount(root, element, new Object[]{});
         };
 
         onLocationChange.run();
