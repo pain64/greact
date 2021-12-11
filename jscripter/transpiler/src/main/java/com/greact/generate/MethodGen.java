@@ -160,12 +160,12 @@ public class MethodGen {
                 var statements = m.snd.sym.isAbstract() ?
                         com.sun.tools.javac.util.List.<JCTree.JCStatement>nil() : m.snd.body.stats;
                 if (m.snd.params.length() > 0) {
-                    StringBuilder par = new StringBuilder();
+                    out.write(deep + 7, " var [");
                     for (int i = 0; i < m.snd.params.length(); i++) {
-                        par.append(m.snd.params.get(i).name);
-                        if (i != m.snd.params.length() - 1) par.append(", ");
+                        out.write(0, m.snd.params.get(i).name.toString().trim());
+                        if (i != m.snd.params.length() - 1) out.write(0, ", ");
                     }
-                    out.write(deep + 7, " var [" + par + "] = __args;" + "\n");
+                    out.write(0, "] = __args;" + "\n");
                 }
 
                 if (!statements.isEmpty()) {

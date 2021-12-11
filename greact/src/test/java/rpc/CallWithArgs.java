@@ -30,7 +30,6 @@ public class CallWithArgs {
                 """
                     package js;
                                        
-                    import org.over64.jscripter.StdTypeConversion;
                     import com.greact.model.async;
                     import static util.TestServer.server;
                                        

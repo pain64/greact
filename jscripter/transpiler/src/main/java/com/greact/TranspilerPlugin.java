@@ -11,6 +11,7 @@ import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 import org.apache.commons.cli.*;
 
@@ -49,10 +50,12 @@ public class TranspilerPlugin implements Plugin {
         return maker.Import(rec(maker, names, paths, paths.length - 1), false);
     }
 
+    public Symbol.ClassSymbol lookupClass(Class<?> klass, Context context) {
+        return Symtab.instance(context).enterClass(Symtab.instance(context).unnamedModule, Names.instance(context).fromString(klass.getName()));
+    }
 
     @Override
     public void init(JavacTask task, String... args) {
-
         var options = new Options()
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
@@ -80,69 +83,6 @@ public class TranspilerPlugin implements Plugin {
         task.addTaskListener(new TaskListener() {
             @Override
             public void finished(TaskEvent e) {
-                if (e.getKind() == TaskEvent.Kind.PARSE) {
-                    // FIXME: filter before insert imports
-                    var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
-                    var maker = TreeMaker.instance(context);
-                    var names = Names.instance(context);
-
-                    final com.sun.tools.javac.util.List<JCTree> head;
-                    final com.sun.tools.javac.util.List<JCTree> tail;
-
-                    if (cu.defs.head.getTag() == JCTree.Tag.PACKAGEDEF) {
-                        head = com.sun.tools.javac.util.List.of(cu.defs.head);
-                        tail = cu.defs.tail;
-                    } else {
-                        head = com.sun.tools.javac.util.List.nil();
-                        tail = cu.defs;
-                    }
-
-                    var xx = buildImport(maker, names, stdConversionClass);
-//                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
-//                    .jscripter.std.java.lang", "Integer"});
-//                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
-//                    .jscripter.std.java.lang", "String"});
-
-
-                    cu.defs = tail.prepend(xx)/*.prepend(xx2).prepend(xx3)*/.prependList(head);
-//
-//                    cu.accept(new TreeTranslator(){
-//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitiveTypeTree) {
-//                            var x = 1;
-////                            new Type(Symbol.TypeSymbol)
-////                            maker.Type()
-////
-//                            this.result = maker.Ident(names.fromString("Integer"));
-//                        }
-//                        @Override public void visitLiteral(JCTree.JCLiteral tree) {
-//                            this.result = maker.Apply(
-//                                com.sun.tools.javac.util.List.nil(),
-//                                maker.Select(
-//                                    maker.Ident(names.fromString("Fake")),
-//                                    names.fromString("wrap")),
-//                                com.sun.tools.javac.util.List.of(tree));
-//                        }
-//                    });
-
-//                    cu.accept(new TreeScanner() {
-//                        Stack<JCTree> stack = new Stack<>();
-//
-//                        @Override public void scan(JCTree tree) {
-//                            stack.push(tree);
-//                            super.scan(tree);
-//                            stack.pop();
-//                        }
-//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitive) {
-//                            stack.
-//                            var y = 1;
-//                        }
-//                        @Override public void visitLiteral(JCTree.JCLiteral ident) {
-//                            var x = 1;
-//                            //             varDecl.init = maker.Literal(42);
-//                        }
-//                    });
-                }
-
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
 
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
@@ -154,14 +94,8 @@ public class TranspilerPlugin implements Plugin {
                     var pkg = cu.getPackage().getPackageName().toString();
                     if (!pkg.startsWith(jsCodePackage)) return;
 
-                    var shimConversionsClass = cu.defs.stream()
-                        .filter(def -> def.getTag() == JCTree.Tag.IMPORT)
-                        .findFirst()
-                        .map(def -> ((JCTree.JCImport) def).qualid)
-                        .orElseThrow(() -> new RuntimeException("internal compiler error"));
-
                     var shimConversions =
-                        shimConversionsClass.type.tsym.getEnclosedElements().stream()
+                            lookupClass(stdConversionClass.getClass(), context).getEnclosedElements().stream()
                             .filter(el -> el instanceof ExecutableElement && el.getKind() != ElementKind.CONSTRUCTOR)
                             .map(el -> (Symbol.MethodSymbol) el)
                             .collect(Collectors.toMap(

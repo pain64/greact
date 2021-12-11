@@ -365,7 +365,6 @@ public class ExpressionGen {
                 expr(deep, call.getArguments().get(0));
                 out.write(0, ".__class__");
             } else {
-                //+++
                 var shimmedType = mctx.ctx().stdShim().findShimmedType(methodOwnerSym.type);
                 var targetMethod = shimmedType != null
                         ? mctx.ctx().stdShim().findShimmedMethod(shimmedType, methodSym)
