@@ -1,12 +1,16 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.CSS;
+import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.dom.HtmlElement;
 
 @CSS.Require("modal.css") public class Modal<A extends HtmlElement, B extends HtmlElement> implements Component0<div> {
     final Component0<A> opener;
     final Component0<B> content;
+    public String title = "";
+    public int widthPercent = -1;
+    public int heightPercent = -1;
 
     public Modal(Component0<A> opener, Component0<B> content) {
         this.opener = opener;
@@ -16,6 +20,7 @@ import com.over64.greact.dom.HtmlElement;
     boolean opened = false;
 
     @Override public div mount() {
+        var self = this; //FIXME: HTMLElement has title attribute?
         return new div() {{
             if (opened)
                 new div() {{
@@ -24,9 +29,11 @@ import com.over64.greact.dom.HtmlElement;
                         className = "modal-body";
                         new div() {{
                             className = "modal-content";
+                            if(widthPercent > 0) style.width = widthPercent + "%";
+                            if(heightPercent > 0) style.minHeight = heightPercent + "%";
                             new div() {{
                                 className = "modal-header";
-                                new h3("Title") {{
+                                new h3(self.title) {{
                                     className = "modal-title";
                                 }};
                                 new div() {{
@@ -43,6 +50,7 @@ import com.over64.greact.dom.HtmlElement;
                             new slot<>(content);
                         }};
                     }};
+                    onclick = ev -> ev.stopPropagation();
                 }};
 
             new div() {{

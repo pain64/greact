@@ -175,8 +175,8 @@ public class TypesafeSql {
         var meta = Meta.parseClass(klass);
         var fromTable = meta.table();
         var query = " select\n\t%s\n from\n\t%s\n\t%s".formatted(
-            meta.fields().stream().map(f ->
-                    (f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
+            meta.fields().stream()
+                .map(f -> (f.atTable() != null && f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
                 .collect(Collectors.joining(",\n\t")),
             fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
             meta.joins().stream()
@@ -188,11 +188,11 @@ public class TypesafeSql {
                     return kind + tableExpr + " on " + join.onExpr();
                 }).collect(Collectors.joining("\n\t")));
 
-        var exprAndOffsets = mapQueryArgs(expr, args);
+        var exprAndOffsets = mapQueryArgs(query + "\n" + expr, args);
         var offsets = exprAndOffsets.offsets;
 
         try {
-            var destQuery = query + "\n" + exprAndOffsets.newExpr;
+            var destQuery = exprAndOffsets.newExpr;
             System.out.println("### EXEC QUERY:\n" + destQuery);
             var pstmt = conn.prepareStatement(destQuery);
 

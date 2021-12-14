@@ -174,6 +174,7 @@ public abstract class Input<T> extends Control<T> {
             new label() {{
                 style.display = "flex";
                 style.alignItems = "center";
+                style.justifyContent = "center";
                 style.whiteSpace = "nowrap";
 //                if(self instanceof CheckBox)
 //                    style.margin = "3px 0px 0px 0px";
@@ -190,9 +191,11 @@ public abstract class Input<T> extends Control<T> {
                 }};
                 new input() {{
                     //className = "form-check-input";
-                    style.width = "100%";
+                    // FIXME: вот это вот - костыль для CheckBox
+                    if(self.type != "checkbox") style.width = "100%";
                     type = self.type;
                     value = self.value == null ? null : valueToHtmlValue();
+                    onclick = ev -> ev.stopPropagation();
                     // FIXME: вот это вот - костыль для CheckBox
                     checked = (Boolean) self.value;
                     onchange = ev -> {

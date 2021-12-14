@@ -53,7 +53,7 @@ import com.greact.model.async;
 
     @FunctionalInterface
     public interface ChangeHandler<T extends HtmlElement> {
-        void handle(Event<T> ev);
+        @async void handle(Event<T> ev);
     }
 
     @FunctionalInterface

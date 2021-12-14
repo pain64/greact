@@ -2,7 +2,7 @@ package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
-import com.over64.greact.dom.HTMLNativeElements;
+import com.over64.greact.dom.HTMLNativeElements.input;
 import com.over64.greact.dom.HTMLNativeElements.Component1;
 import com.over64.greact.dom.HTMLNativeElements.td;
 import com.over64.greact.uikit.controls.*;
@@ -11,9 +11,9 @@ import java.sql.Date;
 
 public class Column<T, U> {
     public static final Component1<td, String> TEXT_AT_LEFT = value ->
-            new td(value == null ? "" : value) {{
-                style.textAlign = "left";
-            }};
+        new td(value == null ? "" : value) {{
+            style.textAlign = "left";
+        }};
 
     public String _header;
     public String[] memberNames;
@@ -39,6 +39,7 @@ public class Column<T, U> {
         this.memberNames = memberNames;
 
         var editor = switch (className) {
+            case "boolean", "java.lang.Boolean" -> new CheckBox();
             case "long", "java.lang.Long" -> new LongInput();
             case "int", "java.lang.Integer" -> new IntInput();
             case "java.lang.String" -> new StrInput();
@@ -49,6 +50,14 @@ public class Column<T, U> {
 
         this._view = switch (className) {
             case "java.util.Date" -> d -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            case "boolean", "java.lang.Boolean" -> d -> new td() {{
+                // FIXME: fix css - CheckBox и нативные чекбоксы должны выглядеть одинаково?
+                new input() {{
+                    type = "checkbox";
+                    checked = (boolean) d;
+                    readOnly = true;
+                }};
+            }};
             default -> _view;
         };
 

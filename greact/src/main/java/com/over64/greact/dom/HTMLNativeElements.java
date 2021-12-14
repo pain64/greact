@@ -87,6 +87,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class input extends HtmlElement implements NativeElementAsComponent<input> {
         public boolean autofocus = false;
+        public boolean readOnly;
         public enum Autocomplete {OFF, ON}
         public Autocomplete autocomplete;
         public enum InputType {CHECKBOX, TEXT}
@@ -97,6 +98,7 @@ public class HTMLNativeElements {
         public String value;
         public long valueAsNumber;
         public Boolean checked;
+        public MouseEventHandler<input> onclick;
         public ChangeHandler<input> onchange;
         public native void setCustomValidity(String text);
     }
@@ -164,7 +166,7 @@ public class HTMLNativeElements {
     }
 
 
-    @JSNativeAPI public static final class slot<T extends HtmlElement> extends HtmlElement {
+    @JSNativeAPI public static final class slot<T extends HtmlElement> extends HtmlElement implements NativeElementAsComponent<T> {
         public slot(Component0<T> comp) {}
         public <U> slot(Component1<T, U> comp, U u) {}
         public <A1, A2> slot(Component2<T, A1, A2> comp, A1 a1, A2 a2) {}

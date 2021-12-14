@@ -47,12 +47,16 @@ public class Util {
             new RuntimeException("No such member with name " + name + " at type " + from));
     }
 
-    /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
+    /**
+     * Gradle 7.2 cannot analyze sealed classes for incremental recompilation
+     */
     public /* sealed */ interface ViewKind {}
     public record IsNotComponent() implements ViewKind {}
     public /* sealed */ interface IsComponent extends ViewKind {}
     public record IsNativeComponent(Type.ClassType htmlElementType) implements IsComponent {}
-    /** Gradle 7.2 cannot analyze sealed classes for incremental recompilation */
+    /**
+     * Gradle 7.2 cannot analyze sealed classes for incremental recompilation
+     */
     public /* sealed */ interface IsCustomComponent extends IsComponent {}
     public record IsSlot() implements IsCustomComponent {}
     public record IsComponent0() implements IsCustomComponent {}
@@ -66,6 +70,8 @@ public class Util {
         if (realType.tsym == symbols.clSlot)
             return new IsSlot();
 
+        var ttype = type;
+
         var ifaces = types.interfaces(realType);
         return ifaces.stream()
             .map(iface -> {
@@ -77,6 +83,13 @@ public class Util {
                 else return (ViewKind) null;
             })
             .filter(Objects::nonNull)
-            .findFirst().orElse(new IsNotComponent());
+            .findFirst().orElseGet(() -> {
+                if (ttype.tsym instanceof Symbol.ClassSymbol classSym)
+                    if (classSym.getSuperclass() != null)
+                        if (classSym.getSuperclass().tsym != null)
+                            return classifyView(classSym.getSuperclass());
+
+                return new IsNotComponent();
+            });
     }
 }

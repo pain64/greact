@@ -51,6 +51,8 @@ class Meta {
     static FieldFetcher fetcherForFieldType(Class<?> fieldType) {
         if (fieldType == int.class || fieldType == Integer.class) return ResultSet::getInt;
         if (fieldType == long.class || fieldType == Long.class) return ResultSet::getLong;
+        if (fieldType == boolean.class || fieldType == Boolean.class) return ResultSet::getBoolean;
+        if (fieldType == String.class) return ResultSet::getString;
         return ResultSet::getObject;
     }
 
@@ -88,11 +90,7 @@ class Meta {
                     var atValue = atAnn.value();
                     if (atValue.isEmpty())
                         throw new RuntimeException(klass.getName() + ": @At: field name cannot be empty");
-
-                    var tableAliasAndCol = atValue.split("\\.");
-                    var colName = tableAliasAndCol.length == 2 ? tableAliasAndCol[1] : null;
-
-                    return new FieldRef(fieldName, allTables.get(tableAliasAndCol[0]), colName != null ? colName : fieldName, fetcher, isId, accessor, sequence);
+                    return new FieldRef(fieldName, null, atValue, fetcher, isId, accessor, sequence);
                 }
 
                 return new FieldRef(fieldName, tableRef, fieldName, fetcher, isId, accessor, sequence);
