@@ -3,14 +3,17 @@ package com.greact;
 import com.greact.generate.TypeGen;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
-import com.sun.source.util.*;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 import org.apache.commons.cli.*;
 
@@ -36,23 +39,14 @@ public class TranspilerPlugin implements Plugin {
         return NAME;
     }
 
-
-    JCTree.JCFieldAccess rec(TreeMaker maker, Names names, String[] nodes, int i) {
-        var prev = i == 1
-            ? maker.Ident(names.fromString(nodes[i - 1]))
-            : rec(maker, names, nodes, i - 1);
-
-        return maker.Select(prev, names.fromString(nodes[i]));
+    public Symbol.ClassSymbol lookupClass(String className, Context context) {
+        return Symtab.instance(context).enterClass(
+            Symtab.instance(context).unnamedModule,
+            Names.instance(context).fromString(className));
     }
-
-    JCTree.JCImport buildImport(TreeMaker maker, Names names, String[] paths) {
-        return maker.Import(rec(maker, names, paths, paths.length - 1), false);
-    }
-
 
     @Override
     public void init(JavacTask task, String... args) {
-
         var options = new Options()
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
@@ -80,97 +74,21 @@ public class TranspilerPlugin implements Plugin {
         task.addTaskListener(new TaskListener() {
             @Override
             public void finished(TaskEvent e) {
-                if (e.getKind() == TaskEvent.Kind.PARSE) {
-                    // FIXME: filter before insert imports
-                    var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
-                    var maker = TreeMaker.instance(context);
-                    var names = Names.instance(context);
-
-                    final com.sun.tools.javac.util.List<JCTree> head;
-                    final com.sun.tools.javac.util.List<JCTree> tail;
-
-                    if (cu.defs.head.getTag() == JCTree.Tag.PACKAGEDEF) {
-                        head = com.sun.tools.javac.util.List.of(cu.defs.head);
-                        tail = cu.defs.tail;
-                    } else {
-                        head = com.sun.tools.javac.util.List.nil();
-                        tail = cu.defs;
-                    }
-
-                    var xx = buildImport(maker, names, stdConversionClass);
-//                    var xx2 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
-//                    .jscripter.std.java.lang", "Integer"});
-//                    var xx3 = buildImport(maker, names, new String[]{"com", "greact", "shim", "java", "org.over64
-//                    .jscripter.std.java.lang", "String"});
-
-
-                    cu.defs = tail.prepend(xx)/*.prepend(xx2).prepend(xx3)*/.prependList(head);
-//
-//                    cu.accept(new TreeTranslator(){
-//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitiveTypeTree) {
-//                            var x = 1;
-////                            new Type(Symbol.TypeSymbol)
-////                            maker.Type()
-////
-//                            this.result = maker.Ident(names.fromString("Integer"));
-//                        }
-//                        @Override public void visitLiteral(JCTree.JCLiteral tree) {
-//                            this.result = maker.Apply(
-//                                com.sun.tools.javac.util.List.nil(),
-//                                maker.Select(
-//                                    maker.Ident(names.fromString("Fake")),
-//                                    names.fromString("wrap")),
-//                                com.sun.tools.javac.util.List.of(tree));
-//                        }
-//                    });
-
-//                    cu.accept(new TreeScanner() {
-//                        Stack<JCTree> stack = new Stack<>();
-//
-//                        @Override public void scan(JCTree tree) {
-//                            stack.push(tree);
-//                            super.scan(tree);
-//                            stack.pop();
-//                        }
-//                        @Override public void visitTypeIdent(JCTree.JCPrimitiveTypeTree primitive) {
-//                            stack.
-//                            var y = 1;
-//                        }
-//                        @Override public void visitLiteral(JCTree.JCLiteral ident) {
-//                            var x = 1;
-//                            //             varDecl.init = maker.Literal(42);
-//                        }
-//                    });
-                }
-
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
-
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
-                    var trees = Trees.instance(env);
-
 
                     var types = Types.instance(context);
                     // FIXME: NPE
                     var pkg = cu.getPackage().getPackageName().toString();
                     if (!pkg.startsWith(jsCodePackage)) return;
 
-                    var shimConversionsClass = cu.defs.stream()
-                        .filter(def -> def.getTag() == JCTree.Tag.IMPORT)
-                        .findFirst()
-                        .map(def -> ((JCTree.JCImport) def).qualid)
-                        .orElseThrow(() -> new RuntimeException("internal compiler error"));
-
                     var shimConversions =
-                        shimConversionsClass.type.tsym.getEnclosedElements().stream()
+                            lookupClass(String.join(".", stdConversionClass), context).getEnclosedElements().stream()
                             .filter(el -> el instanceof ExecutableElement && el.getKind() != ElementKind.CONSTRUCTOR)
                             .map(el -> (Symbol.MethodSymbol) el)
                             .collect(Collectors.toMap(
                                 m -> ((Symbol.ClassSymbol) m.getParameters().get(0).type.tsym).fullname,
                                 Symbol.MethodSymbol::getReturnType));
-
-                    // Types.instance(context).isSameType(intType.tsym.getEnclosedElements().get(1).type, ((Symbol
-                    // .MethodSymbol) sym).type)
-
 
                     System.out.println("after analyze for: " + e + "cu: " + cu);
 

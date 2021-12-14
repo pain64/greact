@@ -19,28 +19,27 @@ public class CallNoArgs {
                       }
                     }""",
                 """
-                    package js;
-                                       
-                    import org.over64.jscripter.StdTypeConversion;
-                    import com.greact.model.async;
-                    import static util.TestServer.server;
-                                       
-                    class Simple {
-                       \s
-                        @com.greact.model.DoNotTranspile
-                        public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
-                            return 42;
-                        }
-                       \s
-                        Simple() {
-                            super();
-                        }
-                       \s
-                        @async
-                        void simple() {
-                            int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{});
-                        }
-                    }"""));
+                        package js;
+                                            
+                        import com.greact.model.async;
+                        import static util.TestServer.server;
+                                            
+                        class Simple {
+                           \s
+                            @com.greact.model.DoNotTranspile
+                            public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                                return 42;
+                            }
+                           \s
+                            Simple() {
+                                super();
+                            }
+                           \s
+                            @async
+                            void simple() {
+                                int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{});
+                            }
+                        }"""));
 
     }
 }
