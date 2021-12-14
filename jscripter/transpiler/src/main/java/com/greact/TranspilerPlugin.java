@@ -3,14 +3,16 @@ package com.greact;
 import com.greact.generate.TypeGen;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
-import com.sun.source.util.*;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 import org.apache.commons.cli.*;
@@ -35,19 +37,6 @@ public class TranspilerPlugin implements Plugin {
     @Override
     public String getName() {
         return NAME;
-    }
-
-
-    JCTree.JCFieldAccess rec(TreeMaker maker, Names names, String[] nodes, int i) {
-        var prev = i == 1
-            ? maker.Ident(names.fromString(nodes[i - 1]))
-            : rec(maker, names, nodes, i - 1);
-
-        return maker.Select(prev, names.fromString(nodes[i]));
-    }
-
-    JCTree.JCImport buildImport(TreeMaker maker, Names names, String[] paths) {
-        return maker.Import(rec(maker, names, paths, paths.length - 1), false);
     }
 
     public Symbol.ClassSymbol lookupClass(String className, Context context) {
@@ -86,10 +75,7 @@ public class TranspilerPlugin implements Plugin {
             @Override
             public void finished(TaskEvent e) {
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
-
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
-                    var trees = Trees.instance(env);
-
 
                     var types = Types.instance(context);
                     // FIXME: NPE
@@ -103,10 +89,6 @@ public class TranspilerPlugin implements Plugin {
                             .collect(Collectors.toMap(
                                 m -> ((Symbol.ClassSymbol) m.getParameters().get(0).type.tsym).fullname,
                                 Symbol.MethodSymbol::getReturnType));
-
-                    // Types.instance(context).isSameType(intType.tsym.getEnclosedElements().get(1).type, ((Symbol
-                    // .MethodSymbol) sym).type)
-
 
                     System.out.println("after analyze for: " + e + "cu: " + cu);
 
