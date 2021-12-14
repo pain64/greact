@@ -50,8 +50,10 @@ public class TranspilerPlugin implements Plugin {
         return maker.Import(rec(maker, names, paths, paths.length - 1), false);
     }
 
-    public Symbol.ClassSymbol lookupClass(Class<?> klass, Context context) {
-        return Symtab.instance(context).enterClass(Symtab.instance(context).unnamedModule, Names.instance(context).fromString(klass.getName()));
+    public Symbol.ClassSymbol lookupClass(String className, Context context) {
+        return Symtab.instance(context).enterClass(
+            Symtab.instance(context).unnamedModule,
+            Names.instance(context).fromString(className));
     }
 
     @Override
@@ -95,7 +97,7 @@ public class TranspilerPlugin implements Plugin {
                     if (!pkg.startsWith(jsCodePackage)) return;
 
                     var shimConversions =
-                            lookupClass(stdConversionClass.getClass(), context).getEnclosedElements().stream()
+                            lookupClass(String.join(".", stdConversionClass), context).getEnclosedElements().stream()
                             .filter(el -> el instanceof ExecutableElement && el.getKind() != ElementKind.CONSTRUCTOR)
                             .map(el -> (Symbol.MethodSymbol) el)
                             .collect(Collectors.toMap(
