@@ -4,6 +4,7 @@ import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
+import com.greact.model.Static;
 import com.greact.model.async;
 import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Symbol;
@@ -77,8 +78,10 @@ public class MethodGen {
                                 """);
         }
 
+        var isAsStatic = group.stream().anyMatch(m -> m.snd.sym.getAnnotation(Static.class) != null);
+
         out.write(deep + 2, "");
-        if (isStatic) out.write(0, "static ");
+        if (isStatic || isAsStatic) out.write(0, "static ");
         var isAsync = isAsyncInSuper || isAsyncLocal;
         if (isAsync) out.write(0, "async ");
         out.write(0, isConstructor ? "constructor" : name);

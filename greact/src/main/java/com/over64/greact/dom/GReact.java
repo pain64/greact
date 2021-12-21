@@ -21,7 +21,7 @@ public class GReact {
         return null;
     }
 
-    @async static <T extends HtmlElement> T mmountAwaitView(Component<T> comp, Object... args) {
+    @async public static <T extends HtmlElement> T mmountAwaitView(Component<T> comp, Object... args) {
         return JSExpression.of("""
             comp instanceof HTMLElement ? comp :
                 comp instanceof Function ? await this.mmountAwaitView(await comp(...args), []) :

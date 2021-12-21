@@ -343,6 +343,7 @@ public class ExpressionGen {
             out.write(deep + 2, "}\n");
             out.write(deep, "})()");
         } else if (expr instanceof MethodInvocationTree call) {
+            System.out.println("### eval " + call);
             var select = call.getMethodSelect();
             var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
@@ -505,10 +506,17 @@ public class ExpressionGen {
                     out.write(0, "(0, x)");
                     flag_new = false;
                 } else {
-                    expr(deep, memberRef.getQualifierExpression());
-                    out.write(0, ".");
-                    out.write(0, memberRef.getName().toString());
-                    out.write(0, ".bind(this");
+                    if(((JCTree.JCMemberReference) memberRef).expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
+                        out.write(0, "((self) => self.");
+                        out.write(0, memberRef.getName().toString());
+                        out.write(0, "()");
+                    } else {
+                        expr(deep, memberRef.getQualifierExpression());
+                        out.write(0, ".");
+                        out.write(0, memberRef.getName().toString());
+                        out.write(0, ".bind(");
+                        expr(deep, ((JCTree.JCMemberReference) memberRef).expr);
+                    }
                 }
 
                 if (flag_new && info.isOverloaded()) out.write(0, ", " + info.n() + ")");

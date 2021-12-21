@@ -26,10 +26,10 @@ public class HTMLNativeElements {
     }
 
     // FIXME: for remove
-    public interface Component2<T extends HtmlElement, U, V>  extends Component {
+    public interface Component2<T extends HtmlElement, U, V>  extends Component<T> {
         @async Component0<T> mount(U u, V v);
     }
-    public interface Component3<T extends HtmlElement, A1, A2, A3>  extends Component {
+    public interface Component3<T extends HtmlElement, A1, A2, A3>  extends Component<T> {
         @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
 
