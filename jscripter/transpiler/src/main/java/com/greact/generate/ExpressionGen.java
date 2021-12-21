@@ -343,7 +343,6 @@ public class ExpressionGen {
             out.write(deep + 2, "}\n");
             out.write(deep, "})()");
         } else if (expr instanceof MethodInvocationTree call) {
-            System.out.println("### eval " + call);
             var select = call.getMethodSelect();
             var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol((JCTree) select);
             var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
