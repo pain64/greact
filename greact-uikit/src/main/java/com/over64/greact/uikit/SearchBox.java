@@ -1,10 +1,12 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.controls.Control;
 
+@CSS.Require("search_box.css")
 public class SearchBox implements Component0<div> {
     Control[] controls;
     Control[] controlsWithChildren;
@@ -14,17 +16,28 @@ public class SearchBox implements Component0<div> {
     Component0<div> loaded;
     public Object dependsOn;
 
-    @FunctionalInterface public interface AsyncSupplier<T> {
-        @async T load();
+    @FunctionalInterface
+    public interface AsyncSupplier<T> {
+        @async
+        T load();
     }
-    @FunctionalInterface public interface AsyncFunc1<A1, R> {
-        @async R load(A1 a1);
+
+    @FunctionalInterface
+    public interface AsyncFunc1<A1, R> {
+        @async
+        R load(A1 a1);
     }
-    @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
-        @async R load(A1 a1, A2 a2);
+
+    @FunctionalInterface
+    public interface AsyncFunc2<A1, A2, R> {
+        @async
+        R load(A1 a1, A2 a2);
     }
-    @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
-        @async R load(A1 a1, A2 a2, A3 a3);
+
+    @FunctionalInterface
+    public interface AsyncFunc3<A1, A2, A3, R> {
+        @async
+        R load(A1 a1, A2 a2, A3 a3);
     }
 
     <V> void push(V[] array, V value) {
@@ -58,7 +71,8 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this.performChangedEffects()");
     }
 
-    @async void performChangedEffects() {
+    @async
+    void performChangedEffects() {
         if (canSearch)
             loaded = loader.load();
 
@@ -85,7 +99,8 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this.nativeInit(...arguments)");
     }
 
-    @Override public div mount() {
+    @Override
+    public div mount() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();
@@ -94,27 +109,8 @@ public class SearchBox implements Component0<div> {
 
         return new div() {{
             new div() {{
-                new style("""
-                    .search-button {
-                      background-color:black;
-                      color: #fff;
-                      border-radius:3px;
-                      border: none;
-                      height:24px;
-                    }
-                    .active {
-                     cursor:pointer;
-                    }
-                    .disabled {
-                      background-color: #cbc3c3;
-                    }
-                    """);
                 new div() {{
-                    style.marginBottom = "15px";
-                    style.display = "flex";
-                    //style.justifyContent = "";
-                    style.flexWrap = "wrap";
-                    style.alignItems = "center";
+                    className = "search-box";
 
                     for (var control : controlsWithChildren)
                         new slot<div>(control);

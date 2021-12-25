@@ -1,11 +1,13 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.function.Consumer;
 
+@CSS.Require("grid.css")
 class GridFilter<T> implements Component0<div> {
     int[] pageSizes = new int[]{10, 20, 50, 100}; // FIXME: move to config ???
     int currentPage = 1;
@@ -72,24 +74,11 @@ class GridFilter<T> implements Component0<div> {
                 effectUnaffectedMe(() ->
                     effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
 
-                new style("""
-                    .page-turn {
-                      display: inline;
-                      cursor: pointer;
-                    }
-                    .page-turn:hover {
-                      background-color: #ffbbc7;
-                      
-                    }""");
-
                 if (filtered.length > pageSizes[0])
                     new div() {{
-                        style.display = "flex";
-                        style.alignItems = "center";
-                        style.backgroundColor = "#eee";
-                        style.padding = "5px";
-                        style.marginBottom = "15px";
+                        className = "grid-filter";
                         new select() {{
+                            className = "grid-filter-select";
                             onchange = ev -> {
                                 // FIXME: move to one effect
                                 effect(currentSize = Integer.parseInt(ev.target.value));
@@ -101,11 +90,10 @@ class GridFilter<T> implements Component0<div> {
                                     value = "" + size;
                                     selected = size == currentSize;
                                 }};
-                            style.marginRight = "10px";
                         }};
                         new span("записей на странице " + currentPage + " из " + nPages);
                         new div() {{
-                            style.marginLeft = "auto";
+                            className = "grid-filter-pages";
                             new div() {{
                                 innerHTML = """
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
@@ -126,13 +114,11 @@ class GridFilter<T> implements Component0<div> {
 
             if (filterEnabled)
                 new div() {{
-                    style.padding = "5px";
-                    style.backgroundColor = "#eee";
-                    style.marginBottom = "5px";
+                    className = "grid-filter-enabled";
                     new input() {{
+                        className = "grid-filter-input";
 //                        value = filterValue; // one wat bindind
                         placeholder = "фильтр...";
-                        style.width = "100%";
                         onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
                 }};

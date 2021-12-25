@@ -1,0 +1,17 @@
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #eee;
+}
+
+.tabs-content {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.tabs-content-selected {
+  background-color: #eee;
+}
+
+.tabs-body {
+  padding: 15px;
+}

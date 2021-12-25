@@ -74,12 +74,9 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
 
             new div() {{ /* redraw point */
                 if (selectedRow != null && selectedRowData != null) {
-                    style.backgroundColor = "white";
-                    style.display = "flex";
-                    style.padding = "15px";
-                    style.justifyContent = "center";
+                    className = "grid";
                     new div() {{
-                        style.width = "100%";
+                        className = "grid-body";
                         new slot<>(selectedRow, selectedRowData);
                     }};
                 }

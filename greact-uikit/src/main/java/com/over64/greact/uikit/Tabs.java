@@ -1,8 +1,10 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
+@CSS.Require("tabs.css")
 public class Tabs implements Component0<div> {
 
     final Tab[] tabs;
@@ -21,23 +23,21 @@ public class Tabs implements Component0<div> {
             new div() {{
                 dependsOn = rerenderAll;
                 new div() {{
-                    style.display = "flex";
-                    style.borderBottom = "2px solid #eee";
+                    className = "tabs";
                     for (var tab : tabs)
                         new span(tab.caption) {{
-                            style.padding = "5px";
-                            style.cursor = "pointer";
+                            className = "tabs-content";
                             onclick = ev -> {
                                 selected = tab;
                                 effect(rerenderAll);
                             };
 
                             if (selected == tab)
-                                style.backgroundColor = "#eee";
+                                id = "tabs-content-selected";
                         }};
                 }};
                 new div() {{
-                    style.padding = "15px";
+                    className = "tabs-body";
                     new slot<>(selected.view);
                 }};
             }};

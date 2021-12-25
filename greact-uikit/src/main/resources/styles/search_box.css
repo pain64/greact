@@ -1,0 +1,20 @@
+.search-button {
+  background-color:black;
+  color: #fff;
+  border-radius:3px;
+  border: none;
+  height:24px;
+}
+.active {
+  cursor:pointer;
+}
+.disabled {
+  background-color: #cbc3c3;
+}
+
+.search-box {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
