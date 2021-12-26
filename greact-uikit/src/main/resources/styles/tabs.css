@@ -8,7 +8,7 @@
   cursor: pointer;
 }
 
-.tabs-content-selected {
+#tabs-content-selected {
   background-color: #eee;
 }
 
