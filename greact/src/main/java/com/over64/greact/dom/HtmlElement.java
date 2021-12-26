@@ -31,6 +31,8 @@ import com.greact.model.async;
         public String height;
         public String width;
         public String textAlign;
+        public String fontSize;
+        public String fontWeight;
     }
 
     // HTML Global Attributes

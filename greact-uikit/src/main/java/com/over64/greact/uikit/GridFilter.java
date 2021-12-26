@@ -74,40 +74,51 @@ class GridFilter<T> implements Component0<div> {
                 effectUnaffectedMe(() ->
                     effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
 
-                if (filtered.length > pageSizes[0])
+                 if (filtered.length > pageSizes[0] || conf.title != null)
                     new div() {{
                         className = "grid-filter";
-                        new select() {{
-                            className = "grid-filter-select";
-                            onchange = ev -> {
-                                // FIXME: move to one effect
-                                effect(currentSize = Integer.parseInt(ev.target.value));
-                                effect(currentPage = 1);
-                            };
-
-                            for (var size : pageSizes)
-                                new option("" + size) {{
-                                    value = "" + size;
-                                    selected = size == currentSize;
-                                }};
-                        }};
-                        new span("записей на странице " + currentPage + " из " + nPages);
                         new div() {{
-                            className = "grid-filter-pages";
-                            new div() {{
-                                innerHTML = """
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                    """;
-                                className = "page-turn";
-                                onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
-                            }};
-                            new div() {{
-                                innerHTML = """
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                    """;
-                                className = "page-turn";
-                                onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
-                            }};
+                            if (filtered.length > pageSizes[0]) {
+                                new select() {{
+                                    onchange = ev -> {
+                                        // FIXME: move to one effect
+                                        effect(currentSize = Integer.parseInt(ev.target.value));
+                                        effect(currentPage = 1);
+                                    };
+
+                                    for (var size : pageSizes)
+                                        new option("" + size) {{
+                                            value = "" + size;
+                                            selected = size == currentSize;
+                                        }};
+                                }};
+                              
+                                new span("записей на странице " + currentPage + " из " + nPages);
+                            }
+                        }};
+
+                        new span(conf.title) {{
+                            style.fontSize = "15px";
+                            style.fontWeight = "bold";
+                        }};
+
+                        new div() {{
+                            if (filtered.length > pageSizes[0]) {
+                                new div() {{
+                                    innerHTML = """
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                        """;
+                                    className = "page-turn";
+                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
+                                }};
+                                new div() {{
+                                    innerHTML = """
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                        """;
+                                    className = "page-turn";
+                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
+                                }};
+                            }
                         }};
                     }};
             }};

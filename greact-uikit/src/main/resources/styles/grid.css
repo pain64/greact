@@ -14,7 +14,7 @@
 }
 
 .table > tbody > tr {
-  line-height: 40px;
+    line-height: 30px;
 }
 
 .table > tbody > tr > td {
@@ -28,9 +28,10 @@
 }
 
 .table > thead > tr > td {
-  padding: 2px;
-  font-weight: bold;
-  text-align: center;
+    padding: 2px;
+    font-weight: bold;
+    font-size: 15px;
+    text-align: center;
 }
 
 .table-striped > tbody > tr:nth-child(even) {

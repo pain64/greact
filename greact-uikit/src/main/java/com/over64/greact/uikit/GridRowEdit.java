@@ -19,7 +19,8 @@ class GridRowEdit<T> implements Component0<tr> {
         return new tr() {{
             className = "grid-row-edit";
 
-            for (var col : conf.columns)
+            for (var col : conf.columns) {
+                if(col.hidden) continue;
                 if (col._editor != null)
                     new td() {{
                         Grid.setEditorValueFromRowValue(col, data);
@@ -29,6 +30,7 @@ class GridRowEdit<T> implements Component0<tr> {
                     new slot<>(
                         (Component1<td, Object>) col._view,
                         Grid.fetchValue(data, col.memberNames));
+            }
 
             new td() {{ /* toolbox */
                 className = "grid-row-edit-toolbox";
@@ -42,7 +44,7 @@ class GridRowEdit<T> implements Component0<tr> {
                             """;
                         onclick = ev -> {
                             for (var col : conf.columns)
-                                if (col._editor != null)
+                                if (!col.hidden && col._editor != null)
                                     Grid.setValue(data, col.memberNames, col._editor.value);
 
                             conf.onRowChange.handle(data);

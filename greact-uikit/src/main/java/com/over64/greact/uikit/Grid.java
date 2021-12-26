@@ -5,23 +5,67 @@ import com.greact.model.ClassRef;
 import com.greact.model.ClassRef.Reflexive;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
-import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HTMLNativeElements.Component0;
+import com.over64.greact.dom.HTMLNativeElements.div;
+import com.over64.greact.dom.HTMLNativeElements.slot;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @CSS.Require("grid.css")
 public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
-    static <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of("lhs === rhs"); }
+    static <A> boolean strictEqual(A lhs, A rhs) {return JSExpression.of("lhs === rhs");}
 
-    public <U> Column<T, U> adjust(MemberRef<T, U> ref) {
-        for (var col : columns) {
+    public static class Adjuster<T> {
+        final Column<T, ?>[] columns;
+        public Adjuster(Column<T, ?>[] columns) {this.columns = columns;}
+
+        public void each(Consumer<Column<T, ?>> action) {
+            eachIndexed((__, col) -> action.accept(col));
+        }
+
+        public void eachIndexed(BiConsumer<Integer, Column<T, ?>> action) {
+            for (var i = 0; i < columns.length; i++) action.accept(i, columns[i]);
+        }
+    }
+
+    int colIndex(MemberRef<T, ?> ref) {
+        for (var idx = 0; idx < columns.length; idx++) {
+            var col = columns[idx];
             if (col.memberNames.length != ref.memberNames().length) continue;
             for (var i = 0; i < col.memberNames.length; i++) {
                 if (col.memberNames[i] != ref.memberNames()[i]) continue;
-                return (Column<T, U>) col;
+                return idx;
             }
         }
 
-        return null; /* unreachable */
+        // FIXME: throw exception instead
+        return -1; /* unreachable */
+    }
+
+    public <U> Column<T, U> adjust(MemberRef<T, U> ref) {
+        @SuppressWarnings("unchecked")
+        var col = (Column<T, U>) columns[colIndex(ref)];
+        return col;
+    }
+
+    @SafeVarargs public final Adjuster<T> adjustMany(MemberRef<T, ?>... refs) {
+        // FIXME: varargs
+        refs = JSExpression.of("arguments");
+        Column<T, ?>[] dest = new Column[]{};
+        for (var ref : refs)
+            Array.push(dest, adjust(ref));
+
+        return new Adjuster<>(dest);
+    }
+
+    public Adjuster<T> adjustRange(MemberRef<T, ?> from, MemberRef<T, ?> to) {
+        Column<T, ?>[] dest = new Column[]{};
+        for(var i = colIndex(from); i <= colIndex(to); i++)
+            Array.push(dest, columns[i]);
+
+        return new Adjuster<>(dest);
     }
 
     // BEGIN move to column
@@ -65,10 +109,12 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
         });
     }
 
+
     @Override public div mount() {
         var conf = (GridConfig2<T>) this;
 
         return new div() {{
+            style.marginBottom = "15px";
             new GridFilter<>(data, conf, rowData ->
                 effect(selectedRowData = rowData));
 

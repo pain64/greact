@@ -2,12 +2,14 @@ package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
-import com.over64.greact.dom.HTMLNativeElements.input;
 import com.over64.greact.dom.HTMLNativeElements.Component1;
+import com.over64.greact.dom.HTMLNativeElements.Component2;
+import com.over64.greact.dom.HTMLNativeElements.input;
 import com.over64.greact.dom.HTMLNativeElements.td;
 import com.over64.greact.uikit.controls.*;
 
 import java.sql.Date;
+import java.util.function.BiFunction;
 
 public class Column<T, U> {
     public static final Component1<td, String> TEXT_AT_LEFT = value ->
@@ -17,8 +19,10 @@ public class Column<T, U> {
 
     public String _header;
     public String[] memberNames;
+    public boolean hidden = false;
     public Control<U> _editor = null;
-    Component1<td, U> _view = value -> new td(value == null ? "" : value.toString());
+    public BiFunction<U, T, String> backgroundColor = null;
+    public Component2<td, U, T> _view = (value, row) -> new td(value == null ? "" : value.toString());
 
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
@@ -49,8 +53,8 @@ public class Column<T, U> {
         };
 
         this._view = switch (className) {
-            case "java.util.Date" -> d -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
-            case "boolean", "java.lang.Boolean" -> d -> new td() {{
+            case "java.util.Date" -> (d, row) -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            case "boolean", "java.lang.Boolean" -> (d, row) -> new td() {{
                 // FIXME: fix css - CheckBox и нативные чекбоксы должны выглядеть одинаково?
                 new input() {{
                     type = "checkbox";
@@ -79,17 +83,34 @@ public class Column<T, U> {
     }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
-        this._view = value -> new td(mapper.map(value));
+        this._view = (value, row) -> new td(mapper.map(value));
         return this;
     }
 
     public Column<T, U> viewCell(Component1<td, U> newView) {
+        @SuppressWarnings("unchecked")
+        var casted = (Component2<td, U, T>) newView;
+        this._view = casted;
+        return this;
+    }
+
+    public Column<T, U> viewCell(Component2<td, U, T> newView) {
         this._view = newView;
         return this;
     }
 
     public Column<T, U> noedit() {
         this._editor = null;
+        return this;
+    }
+
+    public Column<T, U> hide() {
+        this.hidden = true;
+        return this;
+    }
+
+    public Column<T, U> show() {
+        this.hidden = false;
         return this;
     }
 }

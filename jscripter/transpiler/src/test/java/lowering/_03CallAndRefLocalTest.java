@@ -155,6 +155,7 @@ public class _03CallAndRefLocalTest {
                 """
                     package js;
                     import java.util.function.Function;
+                    import java.util.function.Consumer;
                     public class Test {
                       @FunctionalInterface
                       interface HInt {
@@ -166,12 +167,14 @@ public class _03CallAndRefLocalTest {
                       }
                       @Deprecated
                       static void foo(int x) {}
+                      void fiz () {}
                       void bar(int x) {}
                       void bar(long x) {}
                       
                       static class A {
                         A(int x) {}
                         A(int y, int z) {}
+                        void bar(int x) {};
                       };
                       
                       void baz() {
@@ -179,50 +182,62 @@ public class _03CallAndRefLocalTest {
                         HLong m2 = this::bar;
                         HInt m3 = this::bar;
                         Function<Integer, A> s = A::new;
+                        var a = new A(1);
+                        HInt m4 = a::bar;
+                        Consumer<Test> m5 = Test::fiz;
                       }
                     }""",
                 """
-                        class js$Test extends Object {
-                          static A = class extends Object {
-                            constructor($over, ...__args) {
-                              switch($over) {
-                                case 1:
-                                  var [x] = __args;
-                                  super();
-                                  break
-                                case 2:
-                                  var [y, z] = __args;
-                                  super();
-                                  break
-                              }
-                            }
+                    class js$Test extends Object {
+                      static A = class extends Object {
+                        constructor($over, ...__args) {
+                          switch($over) {
+                            case 1:
+                              var [x] = __args;
+                              super();
+                              break
+                            case 2:
+                              var [y, z] = __args;
+                              super();
+                              break
                           }
-                                                
-                          constructor() {
-                            super();
-                          }
-                                                
-                          static foo(x) {
-                          }
-                                                
-                          bar($over, ...__args) {
-                            switch($over) {
-                              case 0:
-                                var [x] = __args;
-                                break
-                              case 1:
-                                var [x] = __args;
-                                break
-                            }
-                          }
-                                                
-                          baz() {
-                            let m1 = js$Test.foo.bind(js$Test);
-                            let m2 = this.bar.bind(this, 1);
-                            let m3 = this.bar.bind(this, 0);
-                            let s = ((x) => new js$Test.A(0, x));
-                          }
-                        }""");
+                        }
+                        
+                        bar(x) {
+                        }
+                      }
+                                            
+                      constructor() {
+                        super();
+                      }
+                                            
+                      static foo(x) {
+                      }
+                      
+                      fiz() {
+                      }
+                                            
+                      bar($over, ...__args) {
+                        switch($over) {
+                          case 0:
+                            var [x] = __args;
+                            break
+                          case 1:
+                            var [x] = __args;
+                            break
+                        }
+                      }
+                                            
+                      baz() {
+                        let m1 = js$Test.foo.bind(js$Test);
+                        let m2 = this.bar.bind(this, 1);
+                        let m3 = this.bar.bind(this, 0);
+                        let s = ((x) => new js$Test.A(0, x));
+                        let a = new js$Test.A(1, 1);
+                        let m4 = a.bar.bind(a);
+                        let m5 = ((self) => self.fiz());
+                      }
+                    }""");
     }
 
     @Test
