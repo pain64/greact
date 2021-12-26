@@ -22,10 +22,10 @@ public class Tabs implements Component0<div> {
                 dependsOn = rerenderAll;
                 new div() {{
                     style.display = "flex";
-                    style.borderBottom = "2px solid #eee";
+                    style.borderBottom = "1px solid #eee";
                     for (var tab : tabs)
                         new span(tab.caption) {{
-                            style.padding = "5px";
+                            style.padding = "5px 15px";
                             style.cursor = "pointer";
                             onclick = ev -> {
                                 selected = tab;

@@ -85,7 +85,6 @@ class GridFilter<T> implements Component0<div> {
                 if (filtered.length > pageSizes[0] || conf.title != null)
                     new div() {{
                         style.display = "flex";
-                        style.alignItems = "flex-end";
                         style.justifyContent = "space-between";
                         style.backgroundColor = "#eee";
                         style.padding = "5px";
