@@ -7,6 +7,10 @@ import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.uikit.*;
+import com.over64.greact.uikit.controls.Cascade;
+import com.over64.greact.uikit.controls.CheckBox;
+import com.over64.greact.uikit.controls.Control;
+import com.over64.greact.uikit.controls.Radio;
 import com.over64.greact.uikit.routing.Router;
 import com.over64.greact.uikit.samples.Main;
 
@@ -120,6 +124,11 @@ public class MainPage implements Component0<div> {
                     new a("Input") {{
                         className = "menu-item";
                         href = "#input";
+                    }};
+
+                    new a("Check box") {{
+                        className = "menu-item";
+                        href = "#check-box";
                     }};
 
                     new a("Tabs") {{
@@ -371,6 +380,29 @@ public class MainPage implements Component0<div> {
                             new CodeView<>(() ->
                                     new input() {{
                                         style.border = "3px solid #1240AB";
+                                    }}, rendererWithHeight(80));
+                        }};
+                    }};
+
+                    new div() {{
+                        id = "check-box";
+                        className = "example";
+
+                        new h2("Пример использования CheckBox") {{
+                            className = "heading";
+                        }};
+
+                        new div() {{
+                            className = "vision-code";
+
+                            new h3("ПРИМЕР") {{
+                                className = "ex-text";
+                            }};
+
+                            new CodeView<>(() ->
+                                    new div() {{
+                                        new CheckBox() {{
+                                        }};
                                     }}, rendererWithHeight(80));
                         }};
                     }};
