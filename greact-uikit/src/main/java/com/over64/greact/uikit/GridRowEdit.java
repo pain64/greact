@@ -1,7 +1,9 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
+@CSS.Require("grid.css")
 class GridRowEdit<T> implements Component0<tr> {
     final T data;
     final GridConfig2<T> conf;
@@ -15,7 +17,7 @@ class GridRowEdit<T> implements Component0<tr> {
 
     @Override public tr mount() {
         return new tr() {{
-            style.backgroundColor = "#ffacac";
+            className = "grid-row-edit";
 
             for (var col : conf.columns) {
                 if(col.hidden) continue;
@@ -26,16 +28,15 @@ class GridRowEdit<T> implements Component0<tr> {
                     }};
                 else
                     new slot<>(
-                        (Component1<td, Object>) col._view,
-                        Grid.fetchValue(data, col.memberNames));
+                            (Component1<td, Object>) col._view,
+                            Grid.fetchValue(data, col.memberNames));
             }
 
             new td() {{ /* toolbox */
-                style.display = "flex";
-                style.justifyContent = "flex-end";
+                className = "grid-row-edit-toolbox";
                 new div() {{
                     style.display = "flex";
-                    className = "toolbox";
+                    id = "grid-row-edit-toolbox-body";
 
                     new div() {{ /* save changes */
                         innerHTML = """
@@ -45,7 +46,6 @@ class GridRowEdit<T> implements Component0<tr> {
                             for (var col : conf.columns)
                                 if (!col.hidden && col._editor != null)
                                     Grid.setValue(data, col.memberNames, col._editor.value);
-
                             conf.onRowChange.handle(data);
                             onFinishRowEdit.run();
                         };

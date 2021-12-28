@@ -1,10 +1,12 @@
 package com.over64.greact.uikit.controls;
 
+import com.greact.model.CSS;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.Dates;
 
 import java.util.Date;
 
+@CSS.Require("date_input.css")
 public class DateInput extends Control<Date> {
     @Override public Control child() {return null;}
 
@@ -13,15 +15,13 @@ public class DateInput extends Control<Date> {
 
         return new div() {{
             new label() {{
-                style.display = "flex";
-                style.alignItems = "center";
-                style.whiteSpace = "nowrap";
+                className = "date-input";
 
                 new span(_label) {{
-                    style.margin = "0px 5px 0px 0px";
+                    className = "date-input-span";
                 }};
                 new input() {{
-                    style.width = "100%";
+                    className = "date-input-body";
                     type = "date";
                     valueAsNumber = Dates.getTime(self.value);
 

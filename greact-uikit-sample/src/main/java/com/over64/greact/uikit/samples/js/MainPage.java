@@ -7,6 +7,11 @@ import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.dom.HtmlElement;
 import com.over64.greact.uikit.*;
+import com.over64.greact.uikit.controls.Cascade;
+import com.over64.greact.uikit.controls.CheckBox;
+import com.over64.greact.uikit.controls.Control;
+import com.over64.greact.uikit.controls.Radio;
+import com.over64.greact.uikit.routing.Router;
 import com.over64.greact.uikit.samples.Main;
 
 import java.util.Date;
@@ -15,29 +20,26 @@ import java.util.Date;
 public class MainPage implements Component0<div> {
     private <T extends HtmlElement> Component1<div, CodeAndView<T>> rendererWithHeight(int height) {
         return codeAndView ->
-            new div() {{
                 new div() {{
-                    className = "view";
-                    new slot<>(codeAndView.view);
-                }};
+                    new div() {{
+                        className = "view";
+                        new slot<>(codeAndView.view);
+                    }};
 
-                new div() {{
-                    className = "line";
-                }};
+                    new div() {{
+                        className = "line";
+                    }};
 
-                new textarea() {{
-                    innerHTML = codeAndView.code.replaceAll("\n", "&#10").replaceAll(" ", "&nbsp");
-                    className = "code";
-                    style.height = height + "px";
+                    new textarea() {{
+                        innerHTML = codeAndView.code.replaceAll("\n", "&#10").replaceAll(" ", "&nbsp");
+                        className = "code";
+                        style.height = height + "px";
+                    }};
                 }};
-            }};
     }
 
-    private <T extends HtmlElement> Component1<div, CodeAndView<T>> rendererWithCountString(int count, int height) {
-        return rendererWithHeight(count * height);
+    record Data(int x, String y, Date z) {
     }
-
-    record Data(int x, String y, Date z) {}
 
     @Override
     public div mount() {
@@ -124,9 +126,9 @@ public class MainPage implements Component0<div> {
                         href = "#input";
                     }};
 
-                    new a("Div") {{
+                    new a("Check box") {{
                         className = "menu-item";
-                        href = "#div";
+                        href = "#check-box";
                     }};
 
                     new a("Tabs") {{
@@ -160,61 +162,17 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new h1("h1 text") {{
-                                    style.color = "#703191";
-                                }}, rendererWithCountString(3, 20));
-                        }};
-
-                        new div() {{
-                            className = "vision-code";
-
-                            new h3("ПРИМЕР") {{
-                                className = "ex-text";
-                            }};
-
-                            new CodeView<>(() ->
-                                new h2("h2 text") {{
-                                    style.color = "#293133";
-                                }}, rendererWithCountString(3, 20));
-                        }};
-
-                        new div() {{
-                            className = "vision-code";
-
-                            new h3("ПРИМЕР") {{
-                                className = "ex-text";
-                            }};
-
-                            new CodeView<>(() ->
-                                new h3("h3 text") {{
-                                    style.color = "#44944A";
-                                }}, rendererWithCountString(3, 20));
-                        }};
-
-                        new div() {{
-                            className = "vision-code";
-
-                            new h3("ПРИМЕР") {{
-                                className = "ex-text";
-                            }};
-
-                            new CodeView<>(() ->
-                                new h4("h4 text") {{
-                                    style.color = "#B03F35";
-                                }}, rendererWithCountString(3, 20));
-                        }};
-
-                        new div() {{
-                            className = "vision-code";
-
-                            new h3("ПРИМЕР") {{
-                                className = "ex-text";
-                            }};
-
-                            new CodeView<>(() ->
-                                new h5("h5 text") {{
-                                    style.color = "#4285B4";
-                                }}, rendererWithCountString(3, 20));
+                                    new div() {{
+                                        new h1("h1 text") {{
+                                            style.color = "#703191";
+                                        }};
+                                        new h3("h3 text") {{
+                                            style.color = "#44944A";
+                                        }};
+                                        new h5("h5 text") {{
+                                            style.color = "#4285B4";
+                                        }};
+                                    }}, rendererWithHeight(220));
                         }};
                     }};
 
@@ -234,9 +192,9 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new img() {{
-                                    src = "https://clck.ru/YFWWu";
-                                }}, rendererWithCountString(3, 20));
+                                    new img() {{
+                                        src = "https://clck.ru/YFWWu";
+                                    }}, rendererWithHeight(80));
                         }};
                     }};
 
@@ -256,12 +214,12 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new button("Click It!") {{
-                                    style.color = "#a675b3";
-                                    style.width = "150px";
-                                    style.height = "30px";
-                                    style.backgroundColor = "#3b2751";
-                                }}, rendererWithCountString(6, 20));
+                                    new button("Click It!") {{
+                                        style.color = "#a675b3";
+                                        style.width = "150px";
+                                        style.height = "30px";
+                                        style.backgroundColor = "#3b2751";
+                                    }}, rendererWithHeight(120));
                         }};
                     }};
 
@@ -281,10 +239,10 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new a("Link") {{
-                                    href = "#blablabla";
-                                    style.color = "#609123";
-                                }}, rendererWithCountString(4, 20));
+                                    new a("Link") {{
+                                        href = "#blablabla";
+                                        style.color = "#609123";
+                                    }}, rendererWithHeight(80));
                         }};
                     }};
 
@@ -304,25 +262,25 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new table() {{
-                                    style.border = "1px solid grey";
-                                    new tr() {{
-                                        new td("Ячейка 1") {{
-                                            style.border = "1px solid grey";
+                                    new table() {{
+                                        style.border = "1px solid grey";
+                                        new tr() {{
+                                            new td("Ячейка 1") {{
+                                                style.border = "1px solid grey";
+                                            }};
+                                            new td("Ячейка 2") {{
+                                                style.border = "1px solid grey";
+                                            }};
                                         }};
-                                        new td("Ячейка 2") {{
-                                            style.border = "1px solid grey";
+                                        new tr() {{
+                                            new td("Ячейка 3") {{
+                                                style.border = "1px solid grey";
+                                            }};
+                                            new td("Ячейка 4") {{
+                                                style.border = "1px solid grey";
+                                            }};
                                         }};
-                                    }};
-                                    new tr() {{
-                                        new td("Ячейка 3") {{
-                                            style.border = "1px solid grey";
-                                        }};
-                                        new td("Ячейка 4") {{
-                                            style.border = "1px solid grey";
-                                        }};
-                                    }};
-                                }}, rendererWithCountString(18, 20));
+                                    }}, rendererWithHeight(360));
                         }};
                     }};
 
@@ -342,15 +300,15 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new ul() {{
-                                    style.color = "#6e2f8e";
-                                    new li() {{
-                                        innerText = "First";
-                                    }};
-                                    new li() {{
-                                        innerText = "Second";
-                                    }};
-                                }}, rendererWithCountString(9, 20));
+                                    new ul() {{
+                                        style.color = "#6e2f8e";
+                                        new li() {{
+                                            innerText = "First";
+                                        }};
+                                        new li() {{
+                                            innerText = "Second";
+                                        }};
+                                    }}, rendererWithHeight(180));
                         }};
                     }};
 
@@ -370,14 +328,14 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new select() {{
-                                    new option("First") {{
-                                        style.color = "#682887";
-                                    }};
-                                    new option("Second") {{
-                                        style.color = "#682887";
-                                    }};
-                                }}, rendererWithCountString(8, 20));
+                                    new select() {{
+                                        new option("First") {{
+                                            style.color = "#682887";
+                                        }};
+                                        new option("Second") {{
+                                            style.color = "#682887";
+                                        }};
+                                    }}, rendererWithHeight(160));
                         }};
                     }};
 
@@ -397,10 +355,10 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new textarea() {{
-                                    style.backgroundColor = "#fff";
-                                    style.border = "3px solid #682887";
-                                }}, rendererWithCountString(4, 20));
+                                    new textarea() {{
+                                        style.backgroundColor = "#fff";
+                                        style.border = "3px solid #682887";
+                                    }}, rendererWithHeight(80));
                         }};
                     }};
 
@@ -420,18 +378,17 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new input() {{
-                                    style.backgroundColor = "#00CC00";
-                                    style.border = "3px solid #1240AB";
-                                }}, rendererWithCountString(4, 20));
+                                    new input() {{
+                                        style.border = "3px solid #1240AB";
+                                    }}, rendererWithHeight(80));
                         }};
                     }};
 
                     new div() {{
-                        id = "div";
+                        id = "check-box";
                         className = "example";
 
-                        new h2("Пример использования div") {{
+                        new h2("Пример использования CheckBox") {{
                             className = "heading";
                         }};
 
@@ -443,11 +400,10 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new div() {{
-                                    style.backgroundColor = "#682887";
-                                    style.height = "200px";
-                                    style.width = "200px";
-                                }}, rendererWithCountString(5, 20));
+                                    new div() {{
+                                        new CheckBox() {{
+                                        }};
+                                    }}, rendererWithHeight(80));
                         }};
                     }};
 
@@ -467,13 +423,14 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new Tabs(
-                                    new Tab("ex1", new div() {{
-                                        new h1("Hello");
-                                    }}),
-                                    new Tab("ex2", new div() {{
-                                        new h1("World");
-                                    }})), rendererWithCountString(7, 20));
+                                    new Tabs(
+                                            new Tab("ex1", new div() {{
+                                                new h1("Hello");
+                                            }}),
+                                            new Tab("ex2", new div() {{
+                                                new h1("World");
+                                            }})
+                                    ), rendererWithHeight(160));
                         }};
                     }};
 
@@ -493,16 +450,16 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new div() {{
-                                    var data = Array.of(
-                                        new Data(1, "One", Dates.parse("1997-11-23"))
-                                    );
+                                    new div() {{
+                                        var data = Array.of(
+                                                new Data(1, "One", Dates.parse("1997-11-23"))
+                                        );
 
-                                    new Grid<>(data) {{
-                                        adjust(Data::x).name("the X");
-                                        onRowChange = row -> JSExpression.of("console.log(row)");
-                                    }};
-                                }}, rendererWithCountString(9, 20));
+                                        new Grid<>(data) {{
+                                            adjust(Data::x).name("the X");
+                                            onRowChange = row -> JSExpression.of("console.log(row)");
+                                        }};
+                                    }}, rendererWithHeight(200));
                         }};
                     }};
                 }};

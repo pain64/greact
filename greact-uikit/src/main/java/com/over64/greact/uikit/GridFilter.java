@@ -52,43 +52,29 @@ class GridFilter<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 var filterWords = Array.filter(
-                    stringSplit(filterValue, " "),
-                    s -> stringLength(s) != 0);
+                        stringSplit(filterValue, " "),
+                        s -> stringLength(s) != 0);
 
                 T[] filtered = filterWords.length != 0 ?
-                    Array.filter(data, v -> {
-                        for (var col : conf.columns) {
-                            var strVal = Grid.fetchValue(v, col.memberNames);
-                            if (strVal == null) strVal = "";
-                            strVal += ""; // FIXME: cast to string!!!
-                            for (var fVal : filterWords)
-                                if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-                        }
-                        return false;
-                    }) : data;
+                        Array.filter(data, v -> {
+                            for (var col : conf.columns) {
+                                var strVal = Grid.fetchValue(v, col.memberNames);
+                                if (strVal == null) strVal = "";
+                                strVal += ""; // FIXME: cast to string!!!
+                                for (var fVal : filterWords)
+                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
+                            }
+                            return false;
+                        }) : data;
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
                 effectUnaffectedMe(() ->
-                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
-
-                new style("""
-                    .page-turn {
-                      display: inline;
-                      cursor: pointer;
-                    }
-                    .page-turn:hover {
-                      background-color: #ffbbc7;
-                      
-                    }""");
+                        effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
 
                 if (filtered.length > pageSizes[0] || conf.title != null)
                     new div() {{
-                        style.display = "flex";
-                        style.justifyContent = "space-between";
-                        style.backgroundColor = "#eee";
-                        style.padding = "5px";
-                        style.marginBottom = "15px";
+                        className = "grid-filter";
 
                         new div() {{
                             if (filtered.length > pageSizes[0]) {
@@ -104,15 +90,15 @@ class GridFilter<T> implements Component0<div> {
                                             value = "" + size;
                                             selected = size == currentSize;
                                         }};
-                                    style.marginRight = "10px";
+                                    className = "grid-filter-select";
                                 }};
+
                                 new span("записей на странице " + currentPage + " из " + nPages);
                             }
                         }};
 
                         new span(conf.title) {{
-                            style.fontSize = "15px";
-                            style.fontWeight = "bold";
+                            className = "grid-filter-span";
                         }};
 
                         new div() {{
@@ -135,21 +121,16 @@ class GridFilter<T> implements Component0<div> {
                         }};
                     }};
             }};
-
             if (filterEnabled)
                 new div() {{
-                    style.padding = "5px";
-                    style.backgroundColor = "#eee";
-                    style.marginBottom = "5px";
+                    className = "grid-filter-enabled";
                     new input() {{
 //                        value = filterValue; // one wat bindind
                         placeholder = "фильтр...";
-                        style.width = "100%";
+                        className = "grid-filter-input";
                         onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
                 }};
-
-
             new div() {{
                 var hint = pageData;
                 new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {

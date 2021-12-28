@@ -1,0 +1,13 @@
+.select {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.select-span {
+  margin: 0 5px 0 0;
+}
+
+.select-body {
+  width: 100%;
+}

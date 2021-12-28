@@ -1,11 +1,13 @@
 package com.over64.greact.uikit.controls;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.function.Function;
 
+@CSS.Require("select.css")
 public class Select<T> extends Control<T> {
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
@@ -69,16 +71,14 @@ public class Select<T> extends Control<T> {
             //   style.margin = "0px 10px";
 
             new label() {{
-                style.display = "flex";
-                style.alignItems = "center";
-                style.whiteSpace = "nowrap";
+                className = "select";
 
                 new span(_label) {{
-                    style.margin = "0px 5px 0px 0px";
+                    className = "select-span";
                 }};
 
                 new select() {{
-                    style.width = "100%";
+                    id = "select-body";
                     className = "form-control";
                     for (var variant : variants)
                         new option(variant.caption) {{

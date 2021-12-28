@@ -1,11 +1,13 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.GridConfig2.AsyncHandler;
 
 import java.util.function.Consumer;
 
+@CSS.Require("grid.css")
 public class GridRowAdd<T> implements Component0<tr> {
     T data;
     final GridConfig2<T> conf;
@@ -21,7 +23,7 @@ public class GridRowAdd<T> implements Component0<tr> {
 
     @Override public tr mount() {
         return new tr() {{
-            style.backgroundColor = "#ffacac";
+            className = "grid-row-add";
 
             if (conf.customRowAdder != null) {
                 for (var control : conf.customRowAdder.controls)
@@ -42,11 +44,10 @@ public class GridRowAdd<T> implements Component0<tr> {
                             Grid.fetchValue(data, col.memberNames));
 
             new td() {{ /* toolbox */
-                style.display = "flex";
-                style.justifyContent = "flex-end";
+                className = "grid-row-add-toolbox";
+
                 new div() {{
-                    style.width = "54px";
-                    style.display = "flex";
+                    id = "grid-row-add-toolbox-body";
                     className = "toolbox";
 
                     new div() {{ /* confirm create row */

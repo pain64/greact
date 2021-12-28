@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;
 import com.over64.greact.dom.HTMLNativeElements.*;
@@ -8,6 +9,7 @@ import com.over64.greact.dom.HtmlElement;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+@CSS.Require("grid.css")
 class GridTable<T> implements Component0<table> {
     static class RowData<T> {
         final T data;
@@ -28,7 +30,7 @@ class GridTable<T> implements Component0<table> {
 
     void keepSizes() {
         columnSizes = JSExpression.of("[].slice.call(this.theTable.tHead.rows[0].cells).map(e => e" +
-            ".getBoundingClientRect().width)");
+                ".getBoundingClientRect().width)");
     }
     void clearSizes() {
         columnSizes = Array.map(conf.columns, v -> 0);
@@ -54,7 +56,7 @@ class GridTable<T> implements Component0<table> {
             theTable = this;
 
             className = "table table-striped";
-            style.margin = "0px 0px 0px 0px";
+            id = "grid-table";
 
             new thead() {{
                 new tr() {{
@@ -65,15 +67,12 @@ class GridTable<T> implements Component0<table> {
                             new span(colWithSize.a._header);
                         }};
                     new td() {{
-                        style.display = "flex";
-                        style.justifyContent = "flex-end";
+                        className = "grid-table-td";
                         new div() {{
-                            style.width = "54px";
-                            style.display = "flex";
-                            style.justifyContent = "flex-end";
+                            id = "grid-table-td-body";
                             className = "toolbox-header";
                             new div() {{
-                                style.width = "16px";
+                                className = "grid-table-td-content";
                                 innerHTML = """                           
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                                     """;
@@ -81,7 +80,7 @@ class GridTable<T> implements Component0<table> {
                             }};
                             if (conf.onRowAdd != null)
                                 new div() {{
-                                    style.width = "16px";
+                                    className = "grid-table-td-content";
                                     innerHTML = """
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                         """;
@@ -99,17 +98,17 @@ class GridTable<T> implements Component0<table> {
             new tbody() {{
                 if (addNewRowMode)
                     new GridRowAdd<>(conf,
-                        newRowData -> {
-                            var persisted = conf.onRowAdd.supply(newRowData);
-                            var newRow = new RowData<>(persisted);
-                            // add row locally
-                            // add row to filtered data
-                            // add row to grid data
-                            JSExpression.of("this.rows.splice(0, 0, newRow)");
-                            effect(rows);
-                            effect(addNewRowMode = false);
-                        },
-                        () -> effect(addNewRowMode = false));
+                            newRowData -> {
+                                var persisted = conf.onRowAdd.supply(newRowData);
+                                var newRow = new RowData<>(persisted);
+                                // add row locally
+                                // add row to filtered data
+                                // add row to grid data
+                                JSExpression.of("this.rows.splice(0, 0, newRow)");
+                                effect(rows);
+                                effect(addNewRowMode = false);
+                            },
+                            () -> effect(addNewRowMode = false));
 
                 for (var row : rows) {
                     if (row.editing)
@@ -119,9 +118,9 @@ class GridTable<T> implements Component0<table> {
                         });
                     else
                         new tr() {{
-                            style.cursor = "pointer";
+                            className = "grid-table-tbody-tr";
                             if ((conf.selectedRow != null && selectedRow == row) || row.expanded)
-                                style.backgroundColor = "#acea9f";
+                                id = "grid-table-tbody-tr-background";
 
                             onclick = ev -> {
                                 effect(selectedRow = row);
@@ -139,11 +138,9 @@ class GridTable<T> implements Component0<table> {
                                 }
 
                             new td() {{ /* toolbox */
-                                style.display = "flex";
-                                style.justifyContent = "flex-end";
+                                className = "grid-table-toolbox";
                                 new div() {{
-                                    style.width = "54px";
-                                    style.display = "flex";
+                                    id = "grid-table-toolbox-body";
                                     className = "toolbox";
 
                                     if (conf.onRowDelete != null)
@@ -175,19 +172,20 @@ class GridTable<T> implements Component0<table> {
                                     if (conf.expandedRow != null)
                                         new div() {{ /* expand */
                                             innerHTML = row.expanded
-                                                ? """
+                                                    ? """
+
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-minimize-2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                                                 """
-                                                : """
+                                                    : """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize-2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                                                 """;
+
                                             onclick = ev -> {
                                                 ev.stopPropagation();
                                                 row.expanded = !row.expanded;
                                                 effect(row);
                                             };
                                         }};
-
                                 }};
                             }};
                         }};
@@ -196,18 +194,16 @@ class GridTable<T> implements Component0<table> {
                         new tr(); // fake for stripe color save
                         new tr() {{
                             className = "expansion-row";
-                            style.backgroundColor = "white";
+                            id = "grid-table-expansion-f";
 //                            if (selectedRow == row) style.backgroundColor = "#acea9f";
                             new td() {{
                                 colSpan = conf.columns.length + 1;
-                                style.padding = "15px";
-                                style.borderBottom = "1px solid white";
+                                className = "grid-table-expansion-td";
+
                                 new div() {{
-                                    style.backgroundColor = "white";
-                                    style.display = "flex";
-                                    style.justifyContent = "center";
+                                    className = "grid-table-expansion-td-body";
                                     new div() {{
-                                        style.width = "100%";
+                                        className = "grid-table-expansion-td-content";
                                         new slot<>(conf.expandedRow, row.data);
                                     }};
                                 }};

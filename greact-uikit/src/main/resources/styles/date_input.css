@@ -1,0 +1,13 @@
+.date-input {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.date-input-span {
+  margin: 0 5px 0 0;
+}
+
+.date-input-body {
+  width: 100%;
+}
