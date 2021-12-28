@@ -92,6 +92,7 @@ class GridFilter<T> implements Component0<div> {
                                         }};
                                     className = "grid-filter-select";
                                 }};
+
                                 new span("записей на странице " + currentPage + " из " + nPages);
                             }
                         }};

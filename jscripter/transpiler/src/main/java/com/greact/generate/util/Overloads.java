@@ -143,7 +143,7 @@ public class Overloads {
             .filter(entry -> entry.method == method)
             .findFirst()
             .orElseThrow(() ->
-                new IllegalStateException("unreachable"));
+                new IllegalStateException("unreachable: " + klass + ": " + method));
 
         var mode = found.method.getModifiers().contains(Modifier.STATIC) ? Mode.STATIC
             : found.method.getAnnotation(Static.class) != null ? Mode.AS_STATIC

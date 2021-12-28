@@ -16,8 +16,8 @@ public class String {
         return JSExpression.of("this.split(new RegExp(regex))");
     }
 
-    @Static public boolean equals(Object anObject) {
-        return JSExpression.of("this === anObject");
+    @Static public boolean equals(Object other) {
+        return JSExpression.of("this == other");
     }
 
     // FIXME: overloaded args renaming
@@ -39,7 +39,9 @@ public class String {
 //    @Replace("{this}.split(new RegExp({regex}))")
 //    public native java.lang.String[] split(java.lang.String regex);
 //    @Replace("{this}.localeCompare({anotherString}, undefined, { sensitivity: 'accent' })")
-//    public native boolean equalsIgnoreCase(java.lang.String anotherString);
+    @Static public boolean equalsIgnoreCase(java.lang.String another) {
+        return JSExpression.of("this.localeCompare(another, undefined, { sensitivity: 'accent' }) === 0");
+    }
 //    @Replace("{this} > s ? 1 : ({this} < s ? -1 : 0)")
 //    public native int compareTo(java.lang.String s);
 
