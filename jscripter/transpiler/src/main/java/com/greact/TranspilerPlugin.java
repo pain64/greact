@@ -93,7 +93,7 @@ public class TranspilerPlugin implements Plugin {
                                 m -> ((Symbol.ClassSymbol) m.getParameters().get(0).type.tsym).fullname,
                                 Symbol.MethodSymbol::getReturnType));
 
-                    System.out.println("after analyze for: " + e + "cu: " + cu);
+                    //System.out.println("after analyze for: " + e + "cu: " + cu);
 
                     try {
                         var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
