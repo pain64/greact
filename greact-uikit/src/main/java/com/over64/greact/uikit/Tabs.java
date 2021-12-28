@@ -33,7 +33,7 @@ public class Tabs implements Component0<div> {
                             };
 
                             if (selected == tab)
-                                id = "tabs-content-selected";
+                                className = "tabs-content-selected";
                         }};
                 }};
                 new div() {{

@@ -20,6 +20,7 @@
 .table > tbody > tr > td {
   text-align: center;
   padding: 2px;
+  border-radius: 2px;
 }
 
 .table > thead {
@@ -33,8 +34,8 @@
   text-align: center;
 }
 
-.table-striped > tbody > tr:nth-child(even) {
-  background-color: #f2f2f2;
+.table > tbody > tr {
+  border-bottom: 2px solid #fbfbfb;
 }
 
 .table > tbody > tr:hover:not(.expansion-row) {
@@ -78,9 +79,13 @@ tr:hover > td > .toolbox {
   width: 100%;
 }
 
+.grid-main {
+  margin-bottom: 15px;
+}
+
 .grid-filter {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
   background-color: #eee;
   padding: 5px;
   margin-bottom: 15px;
@@ -88,6 +93,11 @@ tr:hover > td > .toolbox {
 
 .grid-filter-select {
   margin-right: 10px;
+}
+
+.grid-filter-span {
+  font-size: 15px;
+  font-weight: bold;
 }
 
 .grid-filter-pages {
@@ -169,11 +179,11 @@ tr:hover > td > .toolbox {
 }
 
 #grid-table-expansion-f {
-  background-color: #acea9f;
+  background-color: #ffffff;
 }
 
 .grid-table-expansion-td {
-  padding: 10px;
+  padding: 15px;
   border-bottom: 1px solid white;
 }
 
