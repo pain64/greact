@@ -12,9 +12,12 @@ import java.util.stream.Collectors;
 
 public class Loader {
     public static Map<String, Supplier<String>> bundle(Class<?> entry) throws IOException {
+
         var bundleFile = Objects.requireNonNull(Loader.class.getResourceAsStream("/bundle/.bundle"));
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
+
+        var livereload = Files.exists(null); // if (!livereload) - hash
 
         var resources = Arrays.stream(filesWithCode)
             .map(res ->res.split(" "))
@@ -41,6 +44,8 @@ public class Loader {
               ws.onmessage = m => document.location.reload();
               setInterval(() => ws.send('heartbeat'), 1000 * 60);
             </script>""";
+
+        if (!livereload) reloadWS = "";
 
         var page = String.format("""
             <!doctype html>

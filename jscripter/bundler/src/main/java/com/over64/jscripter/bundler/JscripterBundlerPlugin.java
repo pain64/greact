@@ -412,35 +412,29 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 mainJs.createNewFile();
                 mainCss.createNewFile();
 
+                StringBuilder jsBuilder = new StringBuilder();
                 for (String file : js) {
-                    Files.writeString(bundleDir.resolve("main.js"), Files.readString(bundleDir.resolve(file)).replaceAll("\s", ""));
+                    jsBuilder.append(Files.readString(bundleDir.resolve(file)));
                 }
+                Files.writeString(bundleDir.resolve("main.js"), jsBuilder);
 
+                StringBuilder cssBuilder = new StringBuilder();
                 for (String file : css) {
-                    Files.writeString(bundleDir.resolve("main.js"), Files.readString(bundleDir.resolve(file)).replaceAll("\s", ""));
+                    cssBuilder.append(Files.readString(bundleDir.resolve(file)));
+                }
+                Files.writeString(bundleDir.resolve("main.css"), cssBuilder);
+
+                for (String file : data) {
+                    bundleDir.resolve(file).toFile().delete();
                 }
 
-//                for (String file : data) {
-//                    bundleDir.resolve(file).toFile().delete();
-//                }
+                bundleFile.toFile().delete();
+                bundleFile.toFile().createNewFile();
+                Files.writeString(bundleFile, "main.css\nmain.js");
 
-                //bundleFile.toFile(); // Переписать bundle файл
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-        }
-    }
-
-    private static void copyFileUsingChannel(File source, File dest) throws IOException {
-        FileChannel sourceChannel = null;
-        FileChannel destChannel = null;
-        try {
-            sourceChannel = new FileInputStream(source).getChannel();
-            destChannel = new FileOutputStream(dest).getChannel();
-            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
-        }finally{
-            sourceChannel.close();
-            destChannel.close();
         }
     }
 
