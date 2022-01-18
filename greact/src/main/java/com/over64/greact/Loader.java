@@ -1,5 +1,6 @@
 package com.over64.greact;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,12 +13,12 @@ import java.util.stream.Collectors;
 
 public class Loader {
     public static Map<String, Supplier<String>> bundle(Class<?> entry) throws IOException {
-
         var bundleFile = Objects.requireNonNull(Loader.class.getResourceAsStream("/bundle/.bundle"));
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
 
-        var livereload = Files.exists(null); // if (!livereload) - hash
+        var livereload = false; // if (!livereload) - hash
+        System.out.println(livereload);
 
         var resources = Arrays.stream(filesWithCode)
             .map(res ->res.split(" "))

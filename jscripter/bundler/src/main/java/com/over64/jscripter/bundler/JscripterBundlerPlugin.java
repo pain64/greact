@@ -287,11 +287,24 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 //                    throw new RuntimeException(ex);
 //                }
 //            }
+            if (!bundleDir.resolve(".livereload").toFile().exists()) {
+                try {
+                    Files.createFile(bundleDir.resolve(".livereload"));
+                    Files.writeString(bundleDir.resolve(".livereload"), "220");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
+            File mainJs = new File(bundleDir.resolve("main.js").toString());
+            File mainCss = new File(bundleDir.resolve("main.css").toString());
+
+            mainJs.delete();
+            mainCss.delete();
 
             if (!bundleDir.toFile().exists())
                 try {
                     Files.createDirectory(bundleDir);
-                    Files.createFile(bundleDir.resolve(".livereload"));
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
