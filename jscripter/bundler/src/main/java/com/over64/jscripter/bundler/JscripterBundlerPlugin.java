@@ -436,9 +436,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 String hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
                 String hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
 
-                bundleDir.resolve("main.css").toFile().renameTo(bundleDir.resolve("main.css?hash=" + hashCss).toFile());
-                bundleDir.resolve("main.js").toFile().renameTo(bundleDir.resolve("main.js?hash=" + hashJs).toFile());
-
                 Files.writeString(bundleFile, "main.css?hash=" + hashCss + "\nmain.js?hash=" + hashJs);
             } catch (IOException | NoSuchAlgorithmException ex) {
                 throw new RuntimeException(ex);

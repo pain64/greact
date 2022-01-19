@@ -86,14 +86,26 @@ public class Loader {
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
 
-        for (var fileName : filesWithCode) {
-            all.put("/" + fileName, () -> {
-                try {
-                    return new String(Loader.class.getResourceAsStream("/bundle/" + fileName).readAllBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        if (livereload) {
+            for (var fileName : filesWithCode) {
+                all.put("/" + fileName, () -> {
+                    try {
+                        return new String(Loader.class.getResourceAsStream("/bundle/" + fileName).readAllBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        } else {
+            for (var fileName : filesWithCode) {
+                all.put("/" + fileName.substring(0, fileName.indexOf("?")), () -> {
+                    try {
+                        return new String(Loader.class.getResourceAsStream("/bundle/" + fileName.substring(0, fileName.indexOf("?"))).readAllBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
         }
 
         return all;
