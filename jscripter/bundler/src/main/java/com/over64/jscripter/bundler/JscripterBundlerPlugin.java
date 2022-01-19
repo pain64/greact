@@ -28,6 +28,8 @@ import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -287,20 +289,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 //                    throw new RuntimeException(ex);
 //                }
 //            }
-            if (!bundleDir.resolve(".livereload").toFile().exists()) {
-                try {
-                    Files.createFile(bundleDir.resolve(".livereload"));
-                    Files.writeString(bundleDir.resolve(".livereload"), "220");
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-
-            File mainJs = new File(bundleDir.resolve("main.js").toString());
-            File mainCss = new File(bundleDir.resolve("main.css").toString());
-
-            mainJs.delete();
-            mainCss.delete();
 
             if (!bundleDir.toFile().exists())
                 try {
@@ -373,6 +361,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                         .map(r -> r.name)
                         .collect(Collectors.joining("\n"))
                         .getBytes());
+                Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -419,9 +408,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             try {
                 File mainJs = new File(bundleDir.resolve("main.js").toString());
                 File mainCss = new File(bundleDir.resolve("main.css").toString());
-                File livereload = new File(bundleDir.resolve(".livereload").toString());
 
-                livereload.delete();
                 mainJs.createNewFile();
                 mainCss.createNewFile();
 
@@ -443,9 +430,17 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
                 bundleFile.toFile().delete();
                 bundleFile.toFile().createNewFile();
-                Files.writeString(bundleFile, "main.css\nmain.js");
 
-            } catch (IOException ex) {
+                MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+
+                String hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
+                String hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
+
+                bundleDir.resolve("main.css").toFile().renameTo(bundleDir.resolve("main.css?hash=" + hashCss).toFile());
+                bundleDir.resolve("main.js").toFile().renameTo(bundleDir.resolve("main.js?hash=" + hashJs).toFile());
+
+                Files.writeString(bundleFile, "main.css?hash=" + hashCss + "\nmain.js?hash=" + hashJs);
+            } catch (IOException | NoSuchAlgorithmException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -459,9 +454,18 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             reload.dependsOn("compileJava", "processResources");
         });
 
-        classes.dependsOn("prodTask");
+        project.getTasks().getByName("build").dependsOn("prodTask");
         project.getTasks().register("prodTask", ProductBuild.class, reload -> {
             reload.dependsOn("compileJava", "processResources");
         });
+    }
+
+    private static String byteArrayToHexString(byte[] b) {
+        String result = "";
+        for (int i = 0; i < b.length; i++) {
+            result +=
+                    Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
     }
 }
