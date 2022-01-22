@@ -386,35 +386,33 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
 
             try {
-                File mainJs = new File(bundleDir.resolve("main.js").toString());
-                File mainCss = new File(bundleDir.resolve("main.css").toString());
+                var mainJs = new File(bundleDir.resolve("main.js").toString());
+                var mainCss = new File(bundleDir.resolve("main.css").toString());
 
-                mainJs.createNewFile();
-                mainCss.createNewFile();
+                var __ = mainJs.createNewFile();
+                __ = mainCss.createNewFile();
 
-                StringBuilder jsBuilder = new StringBuilder();
-                for (String file : js) {
+                var jsBuilder = new StringBuilder();
+                for (String file : js)
                     jsBuilder.append(Files.readString(bundleDir.resolve(file)));
-                }
+
                 Files.writeString(bundleDir.resolve("main.js"), jsBuilder);
 
-                StringBuilder cssBuilder = new StringBuilder();
-                for (String file : css) {
+                var cssBuilder = new StringBuilder();
+                for (String file : css)
                     cssBuilder.append(Files.readString(bundleDir.resolve(file)));
-                }
+
                 Files.writeString(bundleDir.resolve("main.css"), cssBuilder);
 
-                for (String file : data) {
-                    bundleDir.resolve(file).toFile().delete();
-                }
+                for (String file : data)
+                    __ = bundleDir.resolve(file).toFile().delete();
 
-                bundleFile.toFile().delete();
-                bundleFile.toFile().createNewFile();
+                __ = bundleFile.toFile().delete();
+                __ = bundleFile.toFile().createNewFile();
 
-                MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-
-                String hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
-                String hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
+                var sha1 = MessageDigest.getInstance("SHA-1");
+                var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
+                var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
 
                 Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
             } catch (IOException | NoSuchAlgorithmException ex) {
@@ -438,11 +436,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     }
 
     private static String byteArrayToHexString(byte[] b) {
-        String result = "";
-        for (int i = 0; i < b.length; i++) {
-            result +=
-                Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
-        }
-        return result;
+        var result = new StringBuilder();
+        for (byte value : b)
+            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
+
+        return result.toString();
     }
 }
