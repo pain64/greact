@@ -416,7 +416,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 String hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
                 String hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
 
-                Files.writeString(bundleFile, "main.css?hash=" + hashCss + "\nmain.js?hash=" + hashJs);
+                Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
             } catch (IOException | NoSuchAlgorithmException ex) {
                 throw new RuntimeException(ex);
             }
@@ -431,7 +431,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             reload.dependsOn("compileJava", "processResources");
         });
 
-        project.getTasks().getByName("build").dependsOn("prodTask");
+        project.getTasks().getByName("jar").dependsOn("prodTask");
         project.getTasks().register("prodTask", ProductBuild.class, reload -> {
             reload.dependsOn("compileJava", "processResources");
         });

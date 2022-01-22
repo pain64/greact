@@ -17,29 +17,19 @@ public class Loader {
         var livereload = bundle.endsWith("livereload\n");
 
         var resources = Arrays.stream(filesWithCode)
-            .map(res -> res.split(" "))
-            .collect(Collectors.toList());
+            .map(res -> res.split(" ")).toList();
 
         var styles = resources.stream()
             .filter(res -> res[0].endsWith(".css"))
-            .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
+            .map(res -> " <link rel=\"stylesheet\" href=\""
+                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\">")
             .collect(Collectors.joining("\n", "", "\n"));
 
         var scripts = resources.stream()
             .filter(res -> res[0].endsWith(".js"))
-            .map(res -> " <script src=\"" + res[0] + "\"></script>")
+            .map(res -> " <script src=\""
+                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
             .collect(Collectors.joining("\n", "", "\n"));
-
-        if (!livereload) {
-            styles = resources.stream()
-                .filter(res -> res[0].contains(".css?hash="))
-                .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
-                .collect(Collectors.joining("\n", "", "\n"));
-            scripts = resources.stream()
-                .filter(res -> res[0].contains(".js?hash="))
-                .map(res -> " <script src=\"" + res[0] + "\"></script>")
-                .collect(Collectors.joining("\n", "", "\n"));
-        }
 
         var mount = "<script type=\"text/javascript\">\n" +
             "com$over64$greact$dom$GReact.mmount(document.body, new " +
@@ -86,26 +76,14 @@ public class Loader {
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
 
-        if (livereload) {
-            for (var fileName : filesWithCode) {
-                all.put("/" + fileName, () -> {
-                    try {
-                        return new String(Loader.class.getResourceAsStream("/bundle/" + fileName).readAllBytes());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-        } else {
-            for (var fileName : filesWithCode) {
-                all.put("/" + fileName.substring(0, fileName.indexOf("?")), () -> {
-                    try {
-                        return new String(Loader.class.getResourceAsStream("/bundle/" + fileName.substring(0, fileName.indexOf("?"))).readAllBytes());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
+        for (var res : resources) {
+            all.put("/" + res[0], () -> {
+                try {
+                    return new String(Loader.class.getResourceAsStream("/bundle/" + res[0]).readAllBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         return all;
