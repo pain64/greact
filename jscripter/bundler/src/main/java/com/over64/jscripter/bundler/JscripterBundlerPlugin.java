@@ -43,12 +43,10 @@ import java.util.zip.ZipEntry;
 
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
-    public static class WorkServerParams implements WorkParameters {
-    }
+    public static class WorkServerParams implements WorkParameters { }
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
-        @Override
-        public void execute() {
+        @Override public void execute() {
             try {
                 System.out.println("AT EXECUTOR");
                 _execute();
@@ -97,27 +95,23 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
         }
 
-        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
-        }
+        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener { }
 
         public static class ServerHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
             static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
             volatile Session session = null;
 
-            @Override
-            public void onWebSocketConnect(Session ss) {
+            @Override public void onWebSocketConnect(Session ss) {
                 this.session = ss;
                 sessions.add(ss);
             }
 
-            @Override
-            public void onWebSocketClose(int statusCode, String reason) {
+            @Override public void onWebSocketClose(int statusCode, String reason) {
                 var ss = session;
                 if (ss != null) sessions.remove(ss);
             }
 
-            @Override
-            public void onWebSocketText(String message) {
+            @Override public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
                 if (!message.equals("reload")) return;
                 var me = session;
@@ -137,8 +131,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     public static class Livereload extends DefaultTask {
         final WorkerExecutor workerExecutor;
 
-        @Inject
-        public Livereload(WorkerExecutor workerExecutor) {
+        @Inject public Livereload(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
         }
 
@@ -164,15 +157,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 : s;
         }
 
-        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {
-        }
-
-        record RResource<D>(String name, D data) {
-        }
-
+        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) { }
+        record RResource<D>(String name, D data) { }
         record ModuleCode<D>(List<RResource<D>> resources,
-                             Map<String, List<String>> dependencies) {
-        }
+                             Map<String, List<String>> dependencies) { }
 
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream,
@@ -272,8 +260,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             return dest;
         }
 
-        @TaskAction
-        void reload() {
+        @TaskAction void reload() {
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
                 ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
@@ -302,19 +289,13 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 .map(this::walkOverDirectory)
                 .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
                     new ModuleCode<>(
-                        new ArrayList<>(m2.resources) {{
-                            addAll(m2.resources);
-                        }},
-                        new HashMap<>(m1.dependencies) {{
-                            putAll(m2.dependencies);
-                        }}));
+                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
+                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
             var localModule = new ModuleCode<>(
-                new ArrayList<>(localJs.resources) {{
-                    addAll(localCss);
-                }},
+                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
                 localJs.dependencies);
             var localResourceOrdered = buildDependencies(localModule);
 
@@ -368,8 +349,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND!");
 
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {
-            });
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
     }
 
