@@ -17,71 +17,71 @@ public class Loader {
         var livereload = bundle.endsWith("livereload\n");
 
         var resources = Arrays.stream(filesWithCode)
-                .map(res -> res.split(" "))
-                .collect(Collectors.toList());
+            .map(res -> res.split(" "))
+            .collect(Collectors.toList());
 
         var styles = resources.stream()
-                .filter(res -> res[0].endsWith(".css"))
-                .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
-                .collect(Collectors.joining("\n", "", "\n"));
+            .filter(res -> res[0].endsWith(".css"))
+            .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
+            .collect(Collectors.joining("\n", "", "\n"));
 
         var scripts = resources.stream()
-                .filter(res -> res[0].endsWith(".js"))
-                .map(res -> " <script src=\"" + res[0] + "\"></script>")
-                .collect(Collectors.joining("\n", "", "\n"));
+            .filter(res -> res[0].endsWith(".js"))
+            .map(res -> " <script src=\"" + res[0] + "\"></script>")
+            .collect(Collectors.joining("\n", "", "\n"));
 
         if (!livereload) {
             styles = resources.stream()
-                    .filter(res -> res[0].contains(".css?hash="))
-                    .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
-                    .collect(Collectors.joining("\n", "", "\n"));
+                .filter(res -> res[0].contains(".css?hash="))
+                .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
+                .collect(Collectors.joining("\n", "", "\n"));
             scripts = resources.stream()
-                    .filter(res -> res[0].contains(".js?hash="))
-                    .map(res -> " <script src=\"" + res[0] + "\"></script>")
-                    .collect(Collectors.joining("\n", "", "\n"));
+                .filter(res -> res[0].contains(".js?hash="))
+                .map(res -> " <script src=\"" + res[0] + "\"></script>")
+                .collect(Collectors.joining("\n", "", "\n"));
         }
 
         var mount = "<script type=\"text/javascript\">\n" +
-                "com$over64$greact$dom$GReact.mmount(document.body, new " +
-                entry.getName().replace(".", "$") + ", [])" +
-                "</script>";
+            "com$over64$greact$dom$GReact.mmount(document.body, new " +
+            entry.getName().replace(".", "$") + ", [])" +
+            "</script>";
 
         var reloadWS = """
-                <script>
-                  let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
-                  ws.onmessage = m => document.location.reload();
-                  setInterval(() => ws.send('heartbeat'), 1000 * 60);
-                </script>""";
+            <script>
+              let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+              ws.onmessage = m => document.location.reload();
+              setInterval(() => ws.send('heartbeat'), 1000 * 60);
+            </script>""";
 
         if (!livereload) reloadWS = "";
 
         var page = String.format("""
-                <!doctype html>
-                <html lang="en">
-                  <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-                    %s
-                    <style>
-                      html {
-                        box-sizing: border-box;
-                      }
-                      *, *:before, *:after {
-                        box-sizing: inherit;
-                      }
-                      body {
-                        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-                        font-weight:400;
-                        color: #403d3d;
-                      }
-                    </style>
-                  </head>
-                  <body></body>
-                  %s
-                  %s
-                  %s
-                  </html>""", styles, scripts, mount, reloadWS);
+            <!doctype html>
+            <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+                %s
+                <style>
+                  html {
+                    box-sizing: border-box;
+                  }
+                  *, *:before, *:after {
+                    box-sizing: inherit;
+                  }
+                  body {
+                    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+                    font-weight:400;
+                    color: #403d3d;
+                  }
+                </style>
+              </head>
+              <body></body>
+              %s
+              %s
+              %s
+              </html>""", styles, scripts, mount, reloadWS);
 
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
