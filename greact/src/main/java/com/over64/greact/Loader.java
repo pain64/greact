@@ -1,8 +1,6 @@
 package com.over64.greact;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,18 +14,21 @@ public class Loader {
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
 
+        var livereload = bundle.endsWith("livereload\n");
+
         var resources = Arrays.stream(filesWithCode)
-            .map(res ->res.split(" "))
-            .collect(Collectors.toList());
+            .map(res -> res.split(" ")).toList();
 
         var styles = resources.stream()
             .filter(res -> res[0].endsWith(".css"))
-            .map(res -> " <link rel=\"stylesheet\" href=\"" + res[0] + "\">")
+            .map(res -> " <link rel=\"stylesheet\" href=\""
+                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\">")
             .collect(Collectors.joining("\n", "", "\n"));
 
         var scripts = resources.stream()
             .filter(res -> res[0].endsWith(".js"))
-            .map(res -> " <script src=\"" + res[0] + "\"></script>")
+            .map(res -> " <script src=\""
+                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
             .collect(Collectors.joining("\n", "", "\n"));
 
         var mount = "<script type=\"text/javascript\">\n" +
@@ -41,6 +42,8 @@ public class Loader {
               ws.onmessage = m => document.location.reload();
               setInterval(() => ws.send('heartbeat'), 1000 * 60);
             </script>""";
+
+        if (!livereload) reloadWS = "";
 
         var page = String.format("""
             <!doctype html>
@@ -73,10 +76,10 @@ public class Loader {
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
 
-        for(var fileName: filesWithCode) {
-            all.put("/" + fileName, () -> {
+        for (var res : resources) {
+            all.put("/" + res[0], () -> {
                 try {
-                    return new String(Loader.class.getResourceAsStream("/bundle/" + fileName).readAllBytes());
+                    return new String(Loader.class.getResourceAsStream("/bundle/" + res[0]).readAllBytes());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
