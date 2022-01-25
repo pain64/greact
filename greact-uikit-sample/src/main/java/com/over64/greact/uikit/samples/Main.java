@@ -11,6 +11,7 @@ public class Main {
         var resources = Loader.bundle(MainPage.class);
 
         Spark.port(3000);
+
         Spark.get("/*", (req, res) -> {
             var resourceName = req.pathInfo();
             var found = resources.get(resourceName);

@@ -21,9 +21,15 @@ import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.FileAttribute;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +43,8 @@ import java.util.zip.ZipEntry;
 
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
-    public static class WorkServerParams implements WorkParameters {}
+    public static class WorkServerParams implements WorkParameters { }
+
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override public void execute() {
             try {
@@ -88,7 +95,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
         }
 
-        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {}
+        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener { }
 
         public static class ServerHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
             static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
@@ -150,10 +157,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 : s;
         }
 
-        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {}
-        record RResource<D>(String name, D data) {}
+        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) { }
+        record RResource<D>(String name, D data) { }
         record ModuleCode<D>(List<RResource<D>> resources,
-                             Map<String, List<String>> dependencies) {}
+                             Map<String, List<String>> dependencies) { }
 
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream,
@@ -277,19 +284,18 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     throw new RuntimeException(ex);
                 }
 
-
             var localJs = sourceSets.getByName("main")
                 .getOutput().getClassesDirs().getFiles().stream()
                 .map(this::walkOverDirectory)
                 .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
                     new ModuleCode<>(
-                        new ArrayList<>(m2.resources) {{addAll(m2.resources);}},
-                        new HashMap<>(m1.dependencies) {{putAll(m2.dependencies);}}));
+                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
+                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
             var localModule = new ModuleCode<>(
-                new ArrayList<>(localJs.resources) {{addAll(localCss);}},
+                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
                 localJs.dependencies);
             var localResourceOrdered = buildDependencies(localModule);
 
@@ -321,7 +327,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var bundleFile = bundleDir.resolve(".bundle");
             try {
 
-                for(var res : localResourceOrdered) {
+                for (var res : localResourceOrdered) {
                     var dest = bundleDir.resolve(res.name);
                     var __ = dest.toFile().mkdirs();
                     try {
@@ -336,16 +342,84 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     .map(r -> r.name)
                     .collect(Collectors.joining("\n"))
                     .getBytes());
+                Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
             System.out.println("BEFORE WS MESSAGE SEND!");
 
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {});
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
     }
 
+    public static class ProductBuild extends DefaultTask {
+        final WorkerExecutor workerExecutor;
+
+        @Inject
+        public ProductBuild(WorkerExecutor workerExecutor) {
+            this.workerExecutor = workerExecutor;
+        }
+
+        @TaskAction
+        void prod() {
+            var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+
+            var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
+            var bundleDir = resourceDir.toPath().resolve("bundle");
+            var bundleFile = resourceDir.toPath().resolve("bundle").resolve(".bundle");
+            List<String> data;
+
+            try {
+                data = Files.readAllLines(bundleFile);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            List<String> css = new ArrayList<>();
+            List<String> js = new ArrayList<>();
+
+            for (String file : data) {
+                if (file.endsWith("js")) js.add(file);
+                if (file.endsWith("css")) css.add(file);
+            }
+
+            try {
+                var mainJs = new File(bundleDir.resolve("main.js").toString());
+                var mainCss = new File(bundleDir.resolve("main.css").toString());
+
+                var __ = mainJs.createNewFile();
+                __ = mainCss.createNewFile();
+
+                var jsBuilder = new StringBuilder();
+                for (String file : js)
+                    jsBuilder.append(Files.readString(bundleDir.resolve(file)));
+
+                Files.writeString(bundleDir.resolve("main.js"), jsBuilder);
+
+                var cssBuilder = new StringBuilder();
+                for (String file : css)
+                    cssBuilder.append(Files.readString(bundleDir.resolve(file)));
+
+                Files.writeString(bundleDir.resolve("main.css"), cssBuilder);
+
+                for (String file : data)
+                    __ = bundleDir.resolve(file).toFile().delete();
+
+                __ = bundleFile.toFile().delete();
+                __ = bundleFile.toFile().createNewFile();
+
+                var sha1 = MessageDigest.getInstance("SHA-1");
+                var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
+                var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
+
+                Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
+            } catch (IOException | NoSuchAlgorithmException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
 
     public void apply(Project project) {
         project.getPlugins().apply("java");
@@ -354,5 +428,18 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         project.getTasks().register("livereload", Livereload.class, reload -> {
             reload.dependsOn("compileJava", "processResources");
         });
+
+        project.getTasks().getByName("jar").dependsOn("prodTask");
+        project.getTasks().register("prodTask", ProductBuild.class, reload -> {
+            reload.dependsOn("compileJava", "processResources");
+        });
+    }
+
+    private static String byteArrayToHexString(byte[] b) {
+        var result = new StringBuilder();
+        for (byte value : b)
+            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
+
+        return result.toString();
     }
 }
