@@ -23,6 +23,7 @@ public class _14Bundle {
                   constructor() {
                     super();
                   }
-                }""");
+                }
+                """);
     }
 }

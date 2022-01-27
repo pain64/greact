@@ -11,22 +11,47 @@ public class Output {
     final PrintWriter jsDeps;
     final Set<String> dependencies = new HashSet<>();
 
-    int deep = 0;
+    private int deep = 0;
+    private boolean newLine = false;
 
     public Output(PrintWriter jsOut, PrintWriter jsDeps) {
         this.jsOut = jsOut;
         this.jsDeps = jsDeps;
     }
 
+    public void deepIn() { deep += 2; newLine = true; }
+    public void deepOut() { deep -= 2; newLine = true; }
+
     public void write(String code) {
-        for (var i = 0; i < deep; i++)
-            jsOut.print(' ');
+        if (newLine) {
+            for (var i = 0; i < deep; i++)
+                jsOut.print(' ');
+            newLine = false;
+        }
+
         jsOut.write(code);
     }
 
-    public void writeLn(String code) { write(code); jsOut.print("\n"); }
-    public void writeCBOpen() { writeLn("{"); deep += 2; }
-    public void writeCBEnd() { writeLn("}"); deep -= 2; }
+    public void writeLn(String code) {
+        write(code);
+        jsOut.print("\n");
+        newLine = true;
+    }
+
+    public void writeNL() {
+        jsOut.print("\n");
+        newLine = true;
+    }
+
+    public void writeCBOpen(boolean spaceBefore) {
+        if(spaceBefore) write(" ");
+        writeLn("{"); deep += 2;
+    }
+    public void writeCBEnd(boolean newLine) {
+        deep -= 2;
+        if (newLine) writeLn("}");
+        else write("}");
+    }
 
     public void addDependency(String dep) {
         if (!dependencies.add(dep)) jsDeps.println(dep);

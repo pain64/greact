@@ -45,12 +45,11 @@ public class MethodGen {
                List<Pair<Integer, JCTree.JCMethodDecl>> group) {
         if (group.isEmpty()) return;
         if (group.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE))) return;
+        if (group.stream().allMatch(p -> p.snd.sym.isAbstract())) return;
 
         var name = group.get(0).snd.getName().toString();
         var isConstructor = name.equals("<init>");
 
-        if (group.stream().allMatch(p -> p.snd.sym.isAbstract()))
-            return;
 
         if (hasInSuper) {
             if (isAsyncInSuper) {
@@ -88,14 +87,14 @@ public class MethodGen {
 
 
         var params = group.stream()
-                .map(p -> p.snd.getParameters())
-                .max(Comparator.comparingInt(List::size))
-                .orElseThrow(() -> new IllegalStateException("unreachable"));
+            .map(p -> p.snd.getParameters())
+            .max(Comparator.comparingInt(List::size))
+            .orElseThrow(() -> new IllegalStateException("unreachable"));
 
         var prefix = isOverloaded ? "($over, ...__args) {\n" : "(";
         if (!isOverloaded) {
             out.mkString(params, param ->
-                    out.write(0, param.getName().toString()), prefix, ", ", ") {\n");
+                out.write(0, param.getName().toString()), prefix, ", ", ") {\n");
         } else {
             out.write(0, prefix);
         }

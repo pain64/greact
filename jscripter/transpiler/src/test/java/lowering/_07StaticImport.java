@@ -18,12 +18,12 @@ public class _07StaticImport {
                     }""",
                 """
                     class js$A extends Object {
-                      static s = ''
-                      
                       constructor() {
                         super();
                       }
-                    }"""),
+                      static s = '';
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -34,13 +34,14 @@ public class _07StaticImport {
                 """
                     class js$B extends Object {
                       constructor() {
-                        let __init__ = () => {
-                          this.ss = js$A.s + js$A.s
+                        const __init__ = () => {
+                          this.ss = js$A.s + js$A.s;
                         };
                         super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
     }
 
     @Test void callFullQualifiedStatic() throws IOException {
@@ -52,15 +53,15 @@ public class _07StaticImport {
                       String foo() { return "xxx"; }
                     }""",
                 """
-                    class js$A extends Object {                      
+                    class js$A extends Object {                  
                       constructor() {
                         super();
                       }
-                      
                       foo() {
-                        return 'xxx'
+                        return 'xxx';
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.C",
                 """
                     package js;
@@ -70,13 +71,14 @@ public class _07StaticImport {
                 """
                     class js$C extends Object {
                       constructor() {
-                        let __init__ = () => {
-                          this.ss = js$B.a.foo()
+                        const __init__ = () => {
+                          this.ss = js$B.a.foo();
                         };
                         super();
                         __init__();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -85,11 +87,11 @@ public class _07StaticImport {
                     }""",
                 """
                     class js$B extends Object {
-                      static a = new js$A()
-                      
                       constructor() {
                         super();
                       }
-                    }"""));
+                      static a = new js$A();
+                    }
+                    """));
     }
 }

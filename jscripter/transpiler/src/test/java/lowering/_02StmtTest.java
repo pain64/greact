@@ -20,11 +20,11 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
-                    return 42
+                    return 42;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class _02StmtTest {
                     if(false) return 41;
                     
                     if(true) return 42;
-                    else return 41; 
+                    else return 41;
                   }
                 }""",
             """
@@ -45,16 +45,16 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     if(false)
-                      return 41
+                      return 41;
                     if(true)
-                      return 42
+                      return 42;
                     else
-                      return 41
+                      return 41;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class _02StmtTest {
                       if(x > 100)
                         break;
                       y++;
-                    } 
+                    }
                   }
                 }""",
             """
@@ -79,18 +79,18 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x, y) {
                     while(true) {
                       x++;
                       if(x > 10)
-                        continue
+                        continue;
                       if(x > 100)
-                        break
+                        break;
                       y++;
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -111,14 +111,14 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     outer:
                     for(;;)
                       for(;;)
-                        continue outer
+                        continue outer;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -130,7 +130,7 @@ public class _02StmtTest {
                   void baz(int x) {
                     do {
                       x++;
-                    } while(x < 100); 
+                    } while(x < 100);
                   }
                 }""",
             """
@@ -138,13 +138,13 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     do {
                       x++;
-                    } while(x < 100)
+                    } while(x < 100);
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -162,12 +162,12 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     for(let x = 0, y = 0; true; x++, y++) {
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -185,12 +185,12 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(array) {
                     for(let x of array) {
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -216,7 +216,6 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                
                   baz(x, y) {
                     switch(x) {
                       case 0:
@@ -228,7 +227,8 @@ public class _02StmtTest {
                         y = 40;
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -246,11 +246,11 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  
                   foo() {
-                    throw new java$lang$Exception(7, 'xxx')
+                    throw new java$lang$Exception(7, 'xxx');
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -281,53 +281,39 @@ public class _02StmtTest {
                 }""",
             """
                     class js$Test extends Object {
-                      static E1 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                     
-                      static E2 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
-                      static E3 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
-                      static E4 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
                       constructor() {
                         super();
                       }
-                      
+                      static E1 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      static E2 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      static E3 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      static E4 = class extends java$lang$Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
                       foo() {
                       }
-                                    
                       baz() {
                         try {
                           this.foo();
@@ -338,12 +324,13 @@ public class _02StmtTest {
                             let ee = e
                             let y = ee;
                           } else {
-                            throw e
+                            throw e;
                           }
                         } finally {
                           let z = 1;
                         }
                       }
-                    }""");
+                    }
+                    """);
     }
 }

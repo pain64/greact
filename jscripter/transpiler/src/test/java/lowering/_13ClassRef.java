@@ -22,27 +22,19 @@ public class _13ClassRef {
                 """,
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor(x1, x2) {
-                      let __init__ = () => {
-                        this.x1 = 0
-                        this.x2 = 0
-                      };
                       super();
-                      __init__();
                       this.x1 = x1;
                       this.x2 = x2;
                     }
                   }
-                                
-                  constructor() {
-                    super();
-                  }
-                                
                   bar(obj) {
                     let ref = obj.__class__;
                   }
-                                
                   baz() {
                     this.bar((() => {
                       let __obj = new js$Test.A(1, 1);
@@ -72,11 +64,12 @@ public class _13ClassRef {
                             })
                           }
                         ]
-                      })
+                      });
                       return __obj;
                     })());
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void classRefGeneric() throws IOException {
@@ -96,11 +89,9 @@ public class _13ClassRef {
                   constructor() {
                     super();
                   }
-                                
                   bar(obj) {
                     let ref = obj.__class__;
                   }
-                                
                   baz() {
                     this.bar((() => {
                       let __obj = [];
@@ -117,10 +108,11 @@ public class _13ClassRef {
                         ],
                         fields: () => [
                         ]
-                      })
+                      });
                       return __obj;
                     })());
                   }
-                }""");
+                }
+                """);
     }
 }

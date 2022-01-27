@@ -28,15 +28,14 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      
                       bar(x, y) {
                       }
-                      
                       baz() {
                         this.bar(42, 42);
                         this.bar(42, 42);
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test
@@ -53,14 +52,13 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      
                       static bar(x, y) {
                       }
-                      
                       baz() {
                         this.constructor.bar(42, 42);
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test
@@ -79,15 +77,14 @@ public class _03CallAndRefLocalTest {
                               constructor() {
                                 super();
                               }
-                              
                               static bar() {
-                                return 42
+                                return 42;
                               }
-                              
                               static baz() {
-                                return 42
+                                return 42;
                               }
-                            }"""),
+                            }
+                            """),
                 new CompileAssert.CompileCase("js.B",
                         """
                             package js;
@@ -103,12 +100,12 @@ public class _03CallAndRefLocalTest {
                               constructor() {
                                 super();
                               }
-                              
                               fizz() {
                                 js$A.bar();
                                 js$A.baz();
                               }
-                            }""")
+                            }
+                            """)
         );
     }
 
@@ -131,23 +128,19 @@ public class _03CallAndRefLocalTest {
                           constructor() {
                             super();
                           }
-                                                
                           bar($over, ...__args) {
-                            switch($over) {
-                              case 0:
-                                var [x] = __args;
-                                break
-                              case 1:
-                                var [x] = __args;
-                                break
+                            if($over === 0) {
+                              const [x] = __args;
+                            } else if($over === 1) {
+                              const [x] = __args;
                             }
                           }
-                                                
                           baz() {
                             this.bar(0, 42);
                             this.bar(1, 42);
                           }
-                        }""");
+                        }
+                        """);
     }
 
     @Test void methodRefLocal() throws IOException {
@@ -189,55 +182,44 @@ public class _03CallAndRefLocalTest {
                     }""",
                 """
                     class js$Test extends Object {
-                      static A = class extends Object {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 1:
-                              var [x] = __args;
-                              super();
-                              break
-                            case 2:
-                              var [y, z] = __args;
-                              super();
-                              break
-                          }
-                        }
-                        
-                        bar(x) {
-                        }
-                      }
-                                            
                       constructor() {
                         super();
                       }
-                                            
                       static foo(x) {
                       }
-                      
                       fiz() {
                       }
-                                            
                       bar($over, ...__args) {
-                        switch($over) {
-                          case 0:
-                            var [x] = __args;
-                            break
-                          case 1:
-                            var [x] = __args;
-                            break
+                        if($over === 0) {
+                          const [x] = __args;
+                        } else if($over === 1) {
+                          const [x] = __args;
                         }
                       }
-                                            
+                      static A = class extends Object {
+                        constructor($over, ...__args) {
+                          if($over === 1) {
+                            const [x] = __args;
+                            super();
+                          } else if($over === 2) {
+                            const [y, z] = __args;
+                            super();
+                          }
+                        }
+                        bar(x) {
+                        }
+                      }
                       baz() {
                         let m1 = js$Test.foo.bind(js$Test);
                         let m2 = this.bar.bind(this, 1);
                         let m3 = this.bar.bind(this, 0);
-                        let s = ((x) => new js$Test.A(0, x));
+                        let s = ((x) => new js$Test.A(1, x));
                         let a = new js$Test.A(1, 1);
                         let m4 = a.bar.bind(a);
                         let m5 = ((self) => self.fiz());
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test
@@ -261,13 +243,13 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      
                       baz() {
                         let m1 = (x) => {
                         };
                         m1(42);
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test
@@ -289,23 +271,19 @@ public class _03CallAndRefLocalTest {
                                   constructor() {
                                     super();
                                   }
-                                                            
                                   mA($over, ...__args) {
-                                    switch($over) {
-                                      case 0:
-                                        var [x] = __args;
-                                        break
-                                      case 1:
-                                        var [x] = __args;
-                                        break
+                                    if($over === 0) {
+                                      const [x] = __args;
+                                    } else if($over === 1) {
+                                      const [x] = __args;
                                     }
                                   }
-                                                            
                                   callB(b) {
                                     b.mB(1, 1);
                                     b.mB(0, 1);
                                   }
-                                }"""),
+                                }
+                                """),
                 new CompileAssert.CompileCase("js.B",
                         """
                             package js;
@@ -322,23 +300,19 @@ public class _03CallAndRefLocalTest {
                                   constructor() {
                                     super();
                                   }
-                                  
                                   mB($over, ...__args) {
-                                    switch($over) {
-                                      case 0:
-                                        var [x] = __args;
-                                        break
-                                      case 1:
-                                        var [x] = __args;
-                                        break
+                                    if($over === 0) {
+                                      const [x] = __args;
+                                    } else if($over === 1) {
+                                      const [x] = __args;
                                     }
                                   }
-                                  
                                   callA(a) {
                                     a.mA(1, 1);
                                     a.mA(0, 1);
                                   }
-                                }""")
+                                }
+                                """)
         );
     }
 }

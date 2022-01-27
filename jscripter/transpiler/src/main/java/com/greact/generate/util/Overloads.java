@@ -109,7 +109,7 @@ public class Overloads {
     }
 
 
-    public static record OverloadTable(
+    public record OverloadTable(
         boolean isOverloaded,
         boolean hasInSuper,
         boolean isAsyncInSuper,
@@ -132,7 +132,7 @@ public class Overloads {
     }
 
     public enum Mode {INSTANCE, STATIC, AS_STATIC}
-    public static record Info(int n, boolean isOverloaded, Mode mode, boolean isAsync) {
+    public record Info(int n, boolean isOverloaded, Mode mode, boolean isAsync) {
     }
 
     public static Info methodInfo(Types types, TypeElement klass, ExecutableElement method) {
