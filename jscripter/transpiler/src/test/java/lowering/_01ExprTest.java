@@ -34,7 +34,6 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let x0 = true;
                     let x1 = false;
@@ -46,7 +45,8 @@ public class _01ExprTest {
                     let x7 = 'hello';
                     let x8 = null;
                   }
-                }""");
+                }
+                """);
     }
 
 
@@ -66,19 +66,19 @@ public class _01ExprTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.z = 0
+                    const __init__ = () => {
+                      this.z = 0;
                     };
                     super();
                     __init__();
                   }
-                  
                   baz() {
                     let x = null;
                     x = 42;
                     this.z = 42;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -97,12 +97,12 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let x = true;
                     let y = x;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -120,11 +120,11 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   boolToInt() {
                     let x = true ? 1 : 0;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -151,7 +151,6 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let x = 0;
                     let x1 = x++;
@@ -164,7 +163,8 @@ public class _01ExprTest {
                     let y = true;
                     let y1 = !y;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -203,7 +203,6 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let x0 = 1 * 1;
                     let x1 = Math.floor(1 / 2);
@@ -228,7 +227,8 @@ public class _01ExprTest {
                     let b0 = true && false;
                     let b1 = true || false;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -257,13 +257,12 @@ public class _01ExprTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.z = 0
+                    const __init__ = () => {
+                      this.z = 0;
                     };
                     super();
                     __init__();
                   }
-                  
                   baz() {
                     let x = 0;
                     x *= 1;
@@ -279,7 +278,8 @@ public class _01ExprTest {
                     x |= 1;
                     this.z += 1;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -303,14 +303,14 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let x = [];
                     let y = ['hello', 'world'];
                     let x1 = [];
                     let y2 = [['1', '2'], ['3', '4']];
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -329,12 +329,12 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     let y0 = x[0];
                     let y1 = x[0][0];
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -355,27 +355,26 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor() {
-                      let __init__ = () => {
-                        this.field = 0
-                        this.next = null
+                      const __init__ = () => {
+                        this.field = 0;
+                        this.next = null;
                       };
                       super();
                       __init__();
                     }
                   }
-                    
-                  constructor() {
-                    super();
-                  }
-                  
                   baz(a) {
                     let x = a.field;
                     let b = a.next;
                     let y = a.next.field;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -393,11 +392,11 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     let y = x;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -415,11 +414,11 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     let y = ((x));
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -434,7 +433,7 @@ public class _01ExprTest {
                   }
                   void baz() {
                     My lambda = (i) -> {
-                      return i; 
+                      return i;
                     };
                   }
                 }""",
@@ -443,13 +442,13 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz() {
                     let lambda = (i) => {
-                      return i
+                      return i;
                     };
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -476,23 +475,22 @@ public class _01ExprTest {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.xx = 1
+                    const __init__ = () => {
+                      this.xx = 1;
                     };
                     super();
                     __init__();
                   }
-                  
                   foo() {
                   }
-                  
                   baz() {
                     let lambda = () => {
                       let yy = this.xx;
                       this.foo();
                     };
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -517,22 +515,24 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     return (() => {
                       switch(x) {
                         case 1:
                         case 2:
-                          return 41
+                          return 41;
                         case 3:
-                          return 42
+                          return 42;
                         default:
-                          let y = 52;
-                          return y
+                          {
+                            let y = 52;
+                            return y;
+                          }
                       }
-                    })()
+                    })();
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -564,7 +564,6 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  
                   baz(x) {
                     let y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
                     let y2 = typeof x == 'number';
@@ -572,7 +571,8 @@ public class _01ExprTest {
                     let y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
                     let y5 = x instanceof js$A;
                   }
-                }"""));
+                }
+                """));
         // FIXME(generated for instanceof pattern) => let s;
     }
 
@@ -597,11 +597,14 @@ public class _01ExprTest {
                 }""",
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor(x, y) {
-                      let __init__ = () => {
-                        this.x = 0
-                        this.y = 0
+                      const __init__ = () => {
+                        this.x = 0;
+                        this.y = 0;
                       };
                       super();
                       __init__();
@@ -609,15 +612,11 @@ public class _01ExprTest {
                       this.y = y;
                     }
                   }
-                                      
-                  constructor() {
-                    super();
-                  }
-                  
                   newA() {
-                    return new js$Test.A(1, 2)
+                    return new js$Test.A(1, 2);
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -632,7 +631,8 @@ public class _01ExprTest {
                       constructor() {
                         super();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileCase("js.Test",
                 """
                     package js;
@@ -642,12 +642,13 @@ public class _01ExprTest {
                 """
                     class js$Test extends Object {
                       constructor() {
-                        let __init__ = () => {
-                          this.a = new js$A()
+                        const __init__ = () => {
+                          this.a = new js$A();
                         };
                         super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
     }
 }

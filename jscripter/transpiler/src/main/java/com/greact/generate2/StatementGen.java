@@ -1,19 +1,22 @@
 package com.greact.generate2;
 
+import com.sun.source.tree.CaseTree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 
 import java.util.List;
 
 abstract class StatementGen extends ExpressionGen {
     @Override public void visitBlock(JCTree.JCBlock block) {
-        out.writeCBOpen();
+        out.writeCBOpen(false);
         block.stats.forEach(stmt -> stmt.accept(this));
-        out.writeCBEnd();
+        out.writeCBEnd(false);
     }
 
     @Override public void visitReturn(JCTree.JCReturn ret) {
         out.write("return ");
         ret.expr.accept(this);
+        out.writeLn(";");
     }
 
     @Override public void visitBreak(JCTree.JCBreak brk) {
@@ -22,6 +25,7 @@ abstract class StatementGen extends ExpressionGen {
             out.write(" ");
             out.write(brk.label.toString());
         }
+        out.writeLn(";");
     }
 
     @Override public void visitContinue(JCTree.JCContinue cont) {
@@ -30,6 +34,7 @@ abstract class StatementGen extends ExpressionGen {
             out.write(" ");
             out.write(cont.label.toString());
         }
+        out.writeLn(";");
     }
 
     @Override public void visitVarDef(JCTree.JCVariableDecl varDef) {
@@ -39,7 +44,6 @@ abstract class StatementGen extends ExpressionGen {
 
         if (varDef.init != null) varDef.init.accept(this);
         else out.write("null");
-
         out.writeLn(";");
     }
 
@@ -48,28 +52,43 @@ abstract class StatementGen extends ExpressionGen {
         out.writeLn(";");
     }
 
+    void writeStmtBody(JCTree.JCStatement body, boolean blockNewLine) {
+        if(body instanceof JCTree.JCBlock) {
+            out.write(" ");
+            body.accept(this);
+            if(blockNewLine) out.writeNL();
+        } else {
+            out.writeNL();
+            out.deepIn();
+            body.accept(this);
+            out.deepOut();
+        }
+    }
+
     @Override public void visitIf(JCTree.JCIf ifStmt) {
         out.write("if");
         ifStmt.cond.accept(this);
-        ifStmt.thenpart.accept(this);
+        writeStmtBody(ifStmt.thenpart, false);
+
         var elseStmt = ifStmt.elsepart;
         if (elseStmt != null) {
             out.write("else");
-            elseStmt.accept(this);
+            writeStmtBody(elseStmt, true);
         }
     }
 
     @Override public void visitWhileLoop(JCTree.JCWhileLoop whileStmt) {
         out.write("while");
         whileStmt.cond.accept(this);
-        whileStmt.body.accept(this);
+        writeStmtBody(whileStmt.body, true);
     }
 
     @Override public void visitDoLoop(JCTree.JCDoWhileLoop doWhile) {
         out.write("do");
-        doWhile.body.accept(this);
+        writeStmtBody(doWhile.body, false);
         out.write(" while");
         doWhile.cond.accept(this);
+        out.writeLn(";");
     }
 
     @Override public void visitForLoop(JCTree.JCForLoop forStmt) {
@@ -85,7 +104,7 @@ abstract class StatementGen extends ExpressionGen {
                 varDef.init.accept(this);
             }, "(let ", ", ", "; ");
 
-        forStmt.cond.accept(this);
+        if(forStmt.cond != null) forStmt.cond.accept(this);
 
         if (forStmt.init.isEmpty())
             out.write(";)");
@@ -93,7 +112,7 @@ abstract class StatementGen extends ExpressionGen {
             out.mkString(forStmt.step, init ->
                 init.expr.accept(this), "; ", ", ", ")");
 
-        forStmt.body.accept(this);
+        writeStmtBody(forStmt.body, true);
     }
 
     @Override public void visitForeachLoop(JCTree.JCEnhancedForLoop forEach) {
@@ -103,7 +122,7 @@ abstract class StatementGen extends ExpressionGen {
         out.write(" of ");
         forEach.expr.accept(this);
         out.write(")");
-        forEach.body.accept(this);
+        writeStmtBody(forEach.body, true);
     }
 
     @Override public void visitLabelled(JCTree.JCLabeledStatement lStmt) {
@@ -112,40 +131,41 @@ abstract class StatementGen extends ExpressionGen {
         lStmt.body.accept(this);
     }
 
+    @Override public void visitCase(JCTree.JCCase caseStmt) {
+        for (var lbl : caseStmt.labels) {
+            if (lbl instanceof JCTree.JCDefaultCaseLabel) out.write("default");
+            else {
+                out.write("case ");
+                lbl.accept(this);
+            }
+            out.writeLn(":");
+        }
+
+        out.deepIn();
+        for (var stat : caseStmt.stats) {
+            stat.accept(this);
+            if (stat instanceof JCTree.JCBlock) out.writeNL();
+        }
+        out.deepOut();
+    }
     @Override public void visitSwitch(JCTree.JCSwitch swc) {
         out.write("switch");
         swc.selector.accept(this);
-        out.writeCBOpen();
-        swc.cases.forEach(caseStmt -> {
-            if (caseStmt.getExpressions().isEmpty())
-                out.write("default:");
-            else {
-                // FIXME: bug
-                out.write("case");
-                out.mkString(caseStmt.getExpressions(), caseExpr ->
-                    caseExpr.accept(this), " ", ", ", ":");
-            }
-
-            out.writeLn("");
-            // FIXME: accept block directly???
-            caseStmt.getStatements().forEach(blockStmt -> {
-                blockStmt.accept(this);
-                out.writeLn("");
-            });
-
-        });
-
-        out.writeCBEnd();
+        out.writeCBOpen(true);
+        swc.cases.forEach(caseStmt -> caseStmt.accept(this));
+        out.writeCBEnd(true);
     }
 
     @Override public void visitYield(JCTree.JCYield yStmt) {
         out.write("return ");
         yStmt.value.accept(this);
+        out.writeLn(";");
     }
 
     @Override public void visitThrow(JCTree.JCThrow tStmt) {
         out.write("throw ");
         tStmt.expr.accept(this);
+        out.writeLn(";");
     }
 
     @Override public void visitTry(JCTree.JCTry tryStmt) {
@@ -158,7 +178,8 @@ abstract class StatementGen extends ExpressionGen {
             var firstCatchVar = tryStmt.getCatches().get(0)
                 .getParameter().getName().toString();
             out.write(firstCatchVar);
-            out.writeLn(") {");
+            out.write(")");
+            out.writeCBOpen(true);
 
             for (var i = 0; i < catchList.size(); i++) {
                 var ct = catchList.get(i);
@@ -178,7 +199,8 @@ abstract class StatementGen extends ExpressionGen {
                         .replace(".", "$"));
                 }, "", " || ", "");
 
-                out.writeLn(") {");
+                out.write(")");
+                out.writeCBOpen(true);
                 for (var blockStm : ct.getBlock().getStatements()) {
                     if (i != 0) {
                         out.write("let ");
@@ -188,23 +210,24 @@ abstract class StatementGen extends ExpressionGen {
                         out.writeLn("");
                     }
                     blockStm.accept(this);
-                    out.writeLn("");
                 }
-                out.writeCBEnd();
+                out.writeCBEnd(false);
             }
 
-            out.writeLn(" else {");
+            out.write(" else");
+            out.writeCBOpen(true);
             out.write("throw ");
             out.write(firstCatchVar);
-            out.writeLn("");
-            out.writeLn("}");
-            out.write("}");
+            out.writeLn(";");
+            out.writeCBEnd(true);
+            out.writeCBEnd(false);
         }
 
         var finallyBlock = tryStmt.getFinallyBlock();
         if (finallyBlock != null) {
-            out.write(" finally");
+            out.write(" finally ");
             finallyBlock.accept(this);
+            out.writeNL();
         }
     }
 }

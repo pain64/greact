@@ -3,10 +3,8 @@ package com.greact;
 import com.greact.generate.TypeGen;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.Plugin;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import com.greact.generate2.Output;
+import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
@@ -21,6 +19,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.Provider;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -86,7 +85,7 @@ public class TranspilerPlugin implements Plugin {
                     if (!pkg.startsWith(jsCodePackage)) return;
 
                     var shimConversions =
-                            lookupClass(String.join(".", stdConversionClass), context).getEnclosedElements().stream()
+                        lookupClass(String.join(".", stdConversionClass), context).getEnclosedElements().stream()
                             .filter(el -> el instanceof ExecutableElement && el.getKind() != ElementKind.CONSTRUCTOR)
                             .map(el -> (Symbol.MethodSymbol) el)
                             .collect(Collectors.toMap(
@@ -104,18 +103,28 @@ public class TranspilerPlugin implements Plugin {
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js.dep");
 
-                        try (var writer = jsFile.openWriter();
-                             var depWriter = depFile.openWriter()) {
+                        try (var writer = new PrintWriter(jsFile.openWriter());
+                             var depWriter = new PrintWriter(depFile.openWriter())) {
 
-                            for (var typeDecl : cu.getTypeDecls()) {
-                                var out = new JSOut(writer);
-                                new TypeGen(out, cu, env, context, new JavaStdShim(types,
-                                    shimConversions)).type(0, typeDecl);
-                                for (var type : out.dependsOn) {
-                                    depWriter.write(type);
-                                    depWriter.write(10); // \n
-                                }
-                            }
+                            var typeGen = new com.greact.generate2.TypeGen();
+                            typeGen.out = new Output(writer, depWriter);
+                            typeGen.names = Names.instance(context);
+                            typeGen.stdShim = new JavaStdShim(types, shimConversions);
+                            typeGen.types = types;
+                            typeGen.trees = Trees.instance(env);
+                            typeGen.cu = cu;
+
+                            cu.accept(typeGen);
+
+//                            for (var typeDecl : cu.getTypeDecls()) {
+//                                var out = new JSOut(writer);
+//                                new TypeGen(out, cu, env, context, new JavaStdShim(types,
+//                                    shimConversions)).type(0, typeDecl);
+//                                for (var type : out.dependsOn) {
+//                                    depWriter.write(type);
+//                                    depWriter.write(10); // \n
+//                                }
+//                            }
 
                         }
                     } catch (IOException ex) {

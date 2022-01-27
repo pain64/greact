@@ -18,13 +18,14 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.x = std$java$lang$Integer.valueOf('42')
+                    const __init__ = () => {
+                      this.x = std$java$lang$Integer.valueOf('42');
                     };
                     super();
                     __init__();
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void asStaticCall() throws IOException {
@@ -37,13 +38,14 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.x = std$java$lang$String.compareTo.call('x', 'y')
+                    const __init__ = () => {
+                      this.x = std$java$lang$String.compareTo.call('x', 'y');
                     };
                     super();
                     __init__();
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void jsExpression() throws IOException {
@@ -57,13 +59,14 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.x = 1 + 1
+                    const __init__ = () => {
+                      this.x = 1 + 1;
                     };
                     super();
                     __init__();
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void jsExpressionMultiline() throws IOException {
@@ -79,14 +82,15 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
+                    const __init__ = () => {
                       this.x = 1
-                   + 1
+                   + 1;
                     };
                     super();
                     __init__();
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void jsExpressionCheckThatNoCollisionWithMethodNamed__of__() throws IOException {
@@ -101,16 +105,16 @@ public class _06ShimJavaAPI {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
-                      this.x = this.constructor.of()
+                    const __init__ = () => {
+                      this.x = this.constructor.of();
                     };
                     super();
                     __init__();
                   }
-                  
                   static of() {
-                    return 42
+                    return 42;
                   }
-                }""");
+                }
+                """);
     }
 }

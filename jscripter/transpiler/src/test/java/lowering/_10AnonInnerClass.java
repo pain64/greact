@@ -20,7 +20,8 @@ public class _10AnonInnerClass {
                       constructor() {
                         super();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -35,7 +36,6 @@ public class _10AnonInnerClass {
                       constructor() {
                         super();
                       }
-                      
                       foo() {
                         new class extends js$A {
                           constructor() {
@@ -43,6 +43,7 @@ public class _10AnonInnerClass {
                           }
                         }();
                       }
-                    }"""));
+                    }
+                    """));
     }
 }

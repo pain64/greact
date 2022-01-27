@@ -16,18 +16,13 @@ public class _09RecordDeclaration {
                 """
                     class js$Test extends Object {
                       constructor(x, y, z) {
-                        let __init__ = () => {
-                          this.x = 0
-                          this.y = 0
-                          this.z = 0
-                        };
                         super();
-                        __init__();
                         this.x = x;
                         this.y = y;
                         this.z = z;
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test void accessProps() throws IOException {
@@ -46,30 +41,23 @@ public class _09RecordDeclaration {
                 """,
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor(x, y, z) {
-                      let __init__ = () => {
-                        this.x = 0
-                        this.y = 0
-                        this.z = 0
-                      };
                       super();
-                      __init__();
                       this.x = x;
                       this.y = y;
                       this.z = z;
                     }
                   }
-                                
-                  constructor() {
-                    super();
-                  }
-                                
                   some() {
                     let a = new js$Test.A(1, 2, 3);
                     let x = a.x;
                     let y = a.y;
                   }
-                }""");
+                }
+                """);
     }
 }

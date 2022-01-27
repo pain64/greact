@@ -4,6 +4,9 @@ import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.model.ClassRef;
 import com.greact.model.async;
+import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
@@ -62,45 +65,48 @@ abstract class ExpressionGen extends VisitorWithContext {
 
     void reflectWriteClassMembers(Type classType) {
         if (classType.tsym instanceof Symbol.ClassSymbol classSym) {
-            out.writeCBOpen();
+            out.writeCBOpen(false);
             out.write("name: () => '");
             out.write("" + classSym.className());
             out.writeLn("',");
 
             out.writeLn("params: () => [");
+            out.deepIn();
             if (classType instanceof Type.ArrayType arrayType) {
-                out.write("");
                 reflectWriteClassMembers(arrayType.elemtype);
                 out.writeLn("");
             }
+            out.deepOut();
             out.writeLn("],");
 
             out.writeLn("fields: () => [");
+            out.deepIn();
             for (var i = 0; i < classSym.getRecordComponents().length(); i++) {
                 var comp = classSym.getRecordComponents().get(i);
 
-                out.writeLn("{");
-                if (comp.type.tsym instanceof Symbol.ClassSymbol next) {
+                out.writeCBOpen(false);
+                if (comp.type.tsym instanceof Symbol.ClassSymbol) {
                     out.write("name: () => '");
                     out.write(comp.name.toString());
                     out.writeLn("',");
                     out.write("__class__: () => (");
                     reflectWriteClassMembers(comp.type);
-                    out.write(")");
+                    out.writeLn(")");
                 }
-                out.writeCBEnd();
+                out.writeCBEnd(false);
                 if (i != classSym.getRecordComponents().length() - 1)
                     out.write(",");
-                out.writeLn("");
+                out.writeNL();
             }
 
+            out.deepOut();
             out.writeLn("]");
-            out.writeCBEnd();
+            out.writeCBEnd(false);
         }
     }
 
     @Override public void visitLiteral(JCTree.JCLiteral lit) {
-        var value = lit.value;
+        var value = lit.getValue();
         switch (lit.getKind()) {
             case CHAR_LITERAL, STRING_LITERAL -> {
                 out.write("'");
@@ -118,6 +124,28 @@ abstract class ExpressionGen extends VisitorWithContext {
         assign.rhs.accept(this);
     }
 
+    @Override public void visitAssignop(JCTree.JCAssignOp compoundAssign) {
+        compoundAssign.lhs.accept(this);
+        var op = switch (compoundAssign.getKind()) {
+            case MULTIPLY_ASSIGNMENT -> "*";
+            case DIVIDE_ASSIGNMENT -> "/";
+            case REMAINDER_ASSIGNMENT -> "%";
+            case PLUS_ASSIGNMENT -> "+";
+            case MINUS_ASSIGNMENT -> "-";
+            case LEFT_SHIFT_ASSIGNMENT -> "<<";
+            case RIGHT_SHIFT_ASSIGNMENT -> ">>";
+            case UNSIGNED_RIGHT_SHIFT_ASSIGNMENT -> ">>>";
+            case AND_ASSIGNMENT -> "&";
+            case XOR_ASSIGNMENT -> "^";
+            case OR_ASSIGNMENT -> "|";
+            default -> throw new RuntimeException("unknown kind: " + compoundAssign.getKind());
+        };
+        out.write(" ");
+        out.write(op);
+        out.write("= ");
+        compoundAssign.rhs.accept(this);
+    }
+
     @Override public void visitIdent(JCTree.JCIdent id) {
         if (id.sym instanceof Symbol.VarSymbol varSym) {
             if (varSym.owner instanceof Symbol.MethodSymbol)
@@ -130,6 +158,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     var fullName = owner.fullname.toString().replace(".", "$");
                     out.write(fullName);
                     out.write(".");
+                    out.write(id.getName().toString());
                 } else {
                     out.write("this.");
                     out.write(id.getName().toString());
@@ -231,7 +260,7 @@ abstract class ExpressionGen extends VisitorWithContext {
     @Override public void visitIndexed(JCTree.JCArrayAccess access) {
         access.indexed.accept(this);
         out.write("[");
-        access.indexed.accept(this);
+        access.index.accept(this);
         out.write("]");
     }
 
@@ -274,33 +303,24 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (isAsync) out.write("async ");
 
             out.mkString(lmb.params, arg ->
-                out.write(arg.getName().toString()), "(", ", ", ") =>");
+                out.write(arg.getName().toString()), "(", ", ", ") => ");
 
-            withAsyncContext(() -> lmb.body.accept(this));
+            withAsyncContext(isAsync, () -> lmb.body.accept(this));
         }
     }
 
-    @Override public void visitSwitch(JCTree.JCSwitch swc) {
-        out.writeLn("(() => {");
+    @Override public void visitSwitchExpression(JCTree.JCSwitchExpression swe) {
+        out.write("(() =>");
+        out.writeCBOpen(true);
         out.write("switch");
-        swc.selector.accept(this);
-        out.writeCBOpen();
+        swe.selector.accept(this);
+        out.writeCBOpen(true);
 
-        swc.cases.forEach(caseStmt -> {
-            if (caseStmt.getExpressions().isEmpty())
-                out.writeLn("default:");
-            else
-                caseStmt.getExpressions().forEach(caseExpr -> {
-                    out.write("case ");
-                    caseExpr.accept(this);
-                    out.writeLn(":");
-                });
+        swe.cases.forEach(caseStmt -> caseStmt.accept(this));
 
-            caseStmt.accept(this);
-        });
-
-        out.writeCBEnd();
-        out.write("})()");
+        out.writeCBEnd(true);
+        out.writeCBEnd(false);
+        out.write(")()");
     }
 
     @Override public void visitApply(JCTree.JCMethodInvocation call) {
@@ -348,7 +368,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (call.meth instanceof JCTree.JCIdent id) { // call local
                 var name = id.name.toString();
 
-                if (id.sym.isStatic() && id.sym.owner != super.currentType) { // import static call
+                if (id.sym.isStatic() && id.sym.owner != super.classDef.sym) { // import static call
                     out.write(id.sym.owner.toString().replace(".", "$"));
                     out.write(".");
                 } else {
@@ -404,7 +424,8 @@ abstract class ExpressionGen extends VisitorWithContext {
                 var arg = (JCTree.JCExpression) call.getArguments().get(i);
 
                 if (isReflexive) {
-                    out.write("(() => {\n");
+                    out.write("(() =>");
+                    out.writeCBOpen(true);
                     out.write("let __obj = ");
                 }
 
@@ -415,10 +436,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (arg.type.tsym instanceof Symbol.ClassSymbol) {
                         out.write("__obj.__class__ = (");
                         reflectWriteClassMembers(arg.type);
-                        out.writeLn(")");
+                        out.writeLn(");");
                         out.writeLn("return __obj;");
                     }
-                    out.write("})()");
+                    out.writeCBEnd(false);
+                    out.write(")()");
                 }
                 if (i != call.getArguments().size() - 1) out.write(", ");
             }
@@ -457,11 +479,16 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(fullClassName);
             } else if (ref.toString().endsWith("new")) {
                 // FIXME: piece of shit
-//                StringBuilder stringBuilder = new StringBuilder(tSym.toString().replace(".", "$"));
-//                stringBuilder.setCharAt(stringBuilder.lastIndexOf("$"), '.');
-//                out.write(0, "((x) => new ");
-//                out.write(0, stringBuilder.toString());
-//                out.write(0, "(0, x)");
+                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "$"));
+                stringBuilder.setCharAt(stringBuilder.lastIndexOf("$"), '.');
+                out.write("((x) => new ");
+                out.write(stringBuilder.toString());
+                out.write("(");
+                if(info.isOverloaded()) {
+                    out.write(String.valueOf(info.n()));
+                    out.write(", ");
+                }
+                out.write("x)");
                 flagNew = false;
             } else {
                 if (ref.expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
@@ -521,6 +548,10 @@ abstract class ExpressionGen extends VisitorWithContext {
             checkGen.accept(() -> out.write(name));
             out.write(")");
         }
+    }
+
+    @Override public void visitTypeApply(JCTree.JCTypeApply ta) {
+        ta.clazz.accept(this);
     }
 
     @Override public void visitNewClass(JCTree.JCNewClass newClass) {

@@ -25,17 +25,14 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  
                   async foo($over, ...__args) {
-                    switch($over) {
-                      case 0:
-                        break
-                      case 1:
-                        var [x] = __args;
-                        break
+                    if($over === 0) {
+                    } else if($over === 1) {
+                      const [x] = __args;
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void asyncOverloadedSiblingFail() throws IOException {
@@ -70,14 +67,13 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  
                   async foo() {
                   }
-                  
                   async bar() {
                     (await this.foo());
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void callAsyncMethodInNotAsyncFail() throws IOException {
@@ -114,11 +110,11 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  
                   async callee(f) {
                     (await f.foo());
                   }
-                }""");
+                }
+                """);
     }
 
 
@@ -136,10 +132,10 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      
                       async foo() {
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -151,11 +147,11 @@ public class _08AsyncAwait {
                     class js$B extends js$A {
                       constructor() {
                         super();
-                      }
-                      
+                      }  
                       async foo() {
                       }
-                    }"""));
+                    }
+                    """));
     }
 
     @Test void asyncInInterface() throws IOException {
@@ -181,10 +177,10 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      
                       async foo() {
                       }
-                    }"""));
+                    }
+                    """));
     }
 
     @Test void notAsyncInSuperButTriedLocalFail() throws IOException {
@@ -233,16 +229,15 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                                
                   async doo() {
                   }
-                                
                   bar() {
                     let instance = async () => {
                       (await this.doo());
                     };
                   }
-                }""");
+                }
+                """);
     }
 
     @Test void callAsyncLambda() throws IOException {
@@ -259,13 +254,14 @@ public class _08AsyncAwait {
             """
                 class js$Test extends Object {
                   constructor() {
-                    let __init__ = () => {
+                    const __init__ = () => {
                       this.instance = async () => {
-                      }
+                      };
                     };
                     super();
                     __init__();
                   }
-                }""");
+                }
+                """);
     }
 }

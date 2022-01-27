@@ -24,25 +24,24 @@ public class _12InnerClass {
                 """,
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor() {
-                      let __init__ = () => {
-                        this.x = 42
-                        this.y = 15
+                      const __init__ = () => {
+                        this.x = 42;
+                        this.y = 15;
                       };
                       super();
                       __init__();
                     }
-                                
                     add() {
-                      return this.x + this.y
+                      return this.x + this.y;
                     }
                   }
-                    
-                  constructor() {
-                    super();
-                  }
-                }""");
+                }
+                """);
     }
 
     @Test void nestedRecord() throws IOException {
@@ -55,23 +54,18 @@ public class _12InnerClass {
                 """,
             """
                 class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
                   static A = class extends Object {
                     constructor(x, y) {
-                      let __init__ = () => {
-                        this.x = 0
-                        this.y = 0
-                      };
                       super();
-                      __init__();
                       this.x = x;
                       this.y = y;
                     }
                   }
-                    
-                  constructor() {
-                    super();
-                  }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -87,16 +81,16 @@ public class _12InnerClass {
                     """,
                 """
                     class js$A extends Object {
+                      constructor() {
+                        super();
+                      }
                       static B = class extends Object {
                         constructor() {
                           super();
                         }
                       }
-                        
-                      constructor() {
-                        super();
-                      }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.C",
                 """
                     package js;
@@ -108,12 +102,13 @@ public class _12InnerClass {
                 """
                     class js$C extends Object {
                       constructor() {
-                        let __init__ = () => {
-                          this.b = new js$A.B()
+                        const __init__ = () => {
+                          this.b = new js$A.B();
                         };
                         super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
     }
 }
