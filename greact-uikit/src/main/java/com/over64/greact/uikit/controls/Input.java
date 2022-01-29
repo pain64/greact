@@ -1,9 +1,9 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-@CSS.Require("input.css")
+@Require.CSS("input.css")
 public abstract class Input<T> extends Control<T> {
     boolean required = true;
     int maxWidth = 0;

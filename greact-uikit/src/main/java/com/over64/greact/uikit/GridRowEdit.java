@@ -1,9 +1,9 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 class GridRowEdit<T> implements Component0<tr> {
     final T data;
     final GridConfig2<T> conf;

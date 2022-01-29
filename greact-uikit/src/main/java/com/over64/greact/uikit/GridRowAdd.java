@@ -1,11 +1,11 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.GridConfig2.AsyncHandler;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 public class GridRowAdd<T> implements Component0<tr> {
     T data;
     final GridConfig2<T> conf;

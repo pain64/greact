@@ -3,7 +3,7 @@ package com.over64.greact.dom;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
-@JSNativeAPI public class HtmlElement extends Node {
+@JSNativeAPI public class HTMLElement extends Node {
     public static class Style {
         public String color;
         public String borderColor;
@@ -54,16 +54,16 @@ import com.greact.model.async;
     }
 
     @FunctionalInterface
-    public interface ChangeHandler<T extends HtmlElement> {
+    public interface ChangeHandler<T extends HTMLElement> {
         @async void handle(Event<T> ev);
     }
 
     @FunctionalInterface
-    public interface MouseEventHandler<T extends HtmlElement> {
+    public interface MouseEventHandler<T extends HTMLElement> {
         @async void handle(Event<T> ev);
     }
 
-    public static class KeyEvent extends Event<HtmlElement> {
+    public static class KeyEvent extends Event<HTMLElement> {
 
     }
 

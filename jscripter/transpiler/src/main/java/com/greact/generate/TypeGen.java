@@ -68,7 +68,7 @@ public class TypeGen {
         if (!(decl instanceof JCTree.JCClassDecl)) return;
         var typeDecl = (JCTree.JCClassDecl) decl;
 
-        var cssRequire = typeDecl.sym.getAnnotation(CSS.Require.class);
+        var cssRequire = typeDecl.sym.getAnnotation(Require.CSS.class);
         if(cssRequire != null)
             out.dependsOn.addAll(Arrays.asList(cssRequire.value()));
 

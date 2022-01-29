@@ -1,12 +1,12 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
 import com.greact.model.JSExpression;
+import com.greact.model.Require;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.controls.Control;
 
-@CSS.Require("search_box.css")
+@Require.CSS("search_box.css")
 public class SearchBox implements Component0<div> {
     Control[] controls;
     Control[] controlsWithChildren;

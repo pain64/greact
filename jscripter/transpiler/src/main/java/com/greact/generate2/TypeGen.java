@@ -1,8 +1,8 @@
 package com.greact.generate2;
 
-import com.greact.model.CSS;
 import com.greact.model.DoNotTranspile;
 import com.greact.model.JSNativeAPI;
+import com.greact.model.Require;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
@@ -22,7 +22,7 @@ public class TypeGen extends ClassBodyGen {
     }
 
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
-        var cssRequire = classDef.sym.getAnnotation(CSS.Require.class);
+        var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         if (cssRequire != null)
             for (var dep : cssRequire.value())
                 out.addDependency(dep);

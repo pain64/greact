@@ -1,19 +1,19 @@
 package com.over64.greact.uikit.samples.js;
 
-import com.greact.model.CSS.Require;
 import com.greact.model.JSExpression;
+import com.greact.model.Require;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLElement;
 import com.over64.greact.uikit.*;
 import com.over64.greact.uikit.controls.CheckBox;
 
 import java.util.Date;
 
-@Require("main_page.css")
+@Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    private <T extends HtmlElement> Component1<div, CodeAndView<T>> rendererWithHeight(int height) {
+    private <T extends HTMLElement> Component1<div, CodeAndView<T>> rendererWithHeight(int height) {
         return codeAndView ->
                 new div() {{
                     new div() {{

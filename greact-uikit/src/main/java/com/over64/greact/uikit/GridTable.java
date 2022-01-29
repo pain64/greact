@@ -1,15 +1,15 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLElement;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 class GridTable<T> implements Component0<table> {
     static class RowData<T> {
         final T data;
@@ -25,7 +25,7 @@ class GridTable<T> implements Component0<table> {
     boolean addNewRowMode = false;
     RowData<T>[] rows;
     RowData<T> selectedRow = null;
-    HtmlElement theTable;
+    HTMLElement theTable;
     Integer[] columnSizes;
 
     void keepSizes() {
