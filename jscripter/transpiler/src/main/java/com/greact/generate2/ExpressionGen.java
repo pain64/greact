@@ -380,7 +380,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else if (call.meth instanceof JCTree.JCFieldAccess prop) {
                 if (info.mode() == Overloads.Mode.INSTANCE) {
                     boolean isNotOverEquals = true; // FIXME: сделать immutable
-                    for (Symbol enclosedElement : methodOwnerSym.getEnclosedElements()) {
+                    for (var enclosedElement : methodOwnerSym.getEnclosedElements()) {
                         // FIXME: написать нормально
                         if (enclosedElement.name.toString().equals("equals") && !(enclosedElement.getMetadata() == null))
                             isNotOverEquals = false;
@@ -532,7 +532,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             };
         };
 
-        var pattern = instanceOf.pattern;
+        var pattern = instanceOf.getPattern();
         if (pattern == null) checkGen.accept(() -> instanceOf.expr.accept(this));
         else {
             // FIXME:

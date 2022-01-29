@@ -206,6 +206,7 @@ abstract class ClassBodyGen extends StatementGen {
 
     @Override public void visitMethodDef(JCTree.JCMethodDecl methodDef) {
         var group = groups.get(methodDef.getName());
+        if (group == null) return; // @DoNotTranspile method
         if (methodDef != group.get(0)) return;
 
         var table = Overloads.table(types, classDef.sym, methodDef.name);

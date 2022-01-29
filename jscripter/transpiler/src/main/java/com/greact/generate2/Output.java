@@ -54,7 +54,7 @@ public class Output {
     }
 
     public void addDependency(String dep) {
-        if (!dependencies.add(dep)) jsDeps.println(dep);
+        if (dependencies.add(dep)) jsDeps.println(dep);
     }
 
     public <T> void mkString(Iterator<T> iter, Consumer<T> fn, String prefix, String delim, String suffix) {

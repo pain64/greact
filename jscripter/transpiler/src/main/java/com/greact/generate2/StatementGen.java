@@ -1,7 +1,5 @@
 package com.greact.generate2;
 
-import com.sun.source.tree.CaseTree;
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 
 import java.util.List;
