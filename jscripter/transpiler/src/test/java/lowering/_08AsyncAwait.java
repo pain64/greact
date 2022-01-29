@@ -232,7 +232,7 @@ public class _08AsyncAwait {
                   async doo() {
                   }
                   bar() {
-                    let instance = async () => {
+                    const instance = async () => {
                       (await this.doo());
                     };
                   }

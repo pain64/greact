@@ -210,13 +210,13 @@ public class _03CallAndRefLocalTest {
                         }
                       }
                       baz() {
-                        let m1 = js$Test.foo.bind(js$Test);
-                        let m2 = this.bar.bind(this, 1);
-                        let m3 = this.bar.bind(this, 0);
-                        let s = ((x) => new js$Test.A(1, x));
-                        let a = new js$Test.A(1, 1);
-                        let m4 = a.bar.bind(a);
-                        let m5 = ((self) => self.fiz());
+                        const m1 = js$Test.foo.bind(js$Test);
+                        const m2 = this.bar.bind(this, 1);
+                        const m3 = this.bar.bind(this, 0);
+                        const s = ((x) => new js$Test.A(1, x));
+                        const a = new js$Test.A(1, 1);
+                        const m4 = a.bar.bind(a);
+                        const m5 = ((self) => self.fiz());
                       }
                     }
                     """);
@@ -244,7 +244,7 @@ public class _03CallAndRefLocalTest {
                         super();
                       }
                       baz() {
-                        let m1 = (x) => {
+                        const m1 = (x) => {
                         };
                         m1(42);
                       }

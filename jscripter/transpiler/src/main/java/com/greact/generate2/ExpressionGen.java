@@ -426,7 +426,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 if (isReflexive) {
                     out.write("(() =>");
                     out.writeCBOpen(true);
-                    out.write("let __obj = ");
+                    out.write("const __obj = ");
                 }
 
                 arg.accept(this);

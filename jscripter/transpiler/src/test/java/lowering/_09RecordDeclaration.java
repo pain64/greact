@@ -53,9 +53,9 @@ public class _09RecordDeclaration {
                     }
                   }
                   some() {
-                    let a = new js$Test.A(1, 2, 3);
-                    let x = a.x;
-                    let y = a.y;
+                    const a = new js$Test.A(1, 2, 3);
+                    const x = a.x;
+                    const y = a.y;
                   }
                 }
                 """);

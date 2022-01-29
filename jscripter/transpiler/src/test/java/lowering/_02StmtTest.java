@@ -319,15 +319,15 @@ public class _02StmtTest {
                           this.foo();
                         } catch(e) {
                           if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
-                            let x = e;
+                            const x = e;
                           } else if(e instanceof js$Test$E3) {
-                            let ee = e
-                            let y = ee;
+                            const ee = e
+                            const y = ee;
                           } else {
                             throw e;
                           }
                         } finally {
-                          let z = 1;
+                          const z = 1;
                         }
                       }
                     }

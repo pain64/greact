@@ -33,11 +33,11 @@ public class _13ClassRef {
                     }
                   }
                   bar(obj) {
-                    let ref = obj.__class__;
+                    const ref = obj.__class__;
                   }
                   baz() {
                     this.bar((() => {
-                      let __obj = new js$Test.A(1, 1);
+                      const __obj = new js$Test.A(1, 1);
                       __obj.__class__ = ({
                         name: () => 'js.Test.A',
                         params: () => [
@@ -90,11 +90,11 @@ public class _13ClassRef {
                     super();
                   }
                   bar(obj) {
-                    let ref = obj.__class__;
+                    const ref = obj.__class__;
                   }
                   baz() {
                     this.bar((() => {
-                      let __obj = [];
+                      const __obj = [];
                       __obj.__class__ = ({
                         name: () => 'Array',
                         params: () => [
