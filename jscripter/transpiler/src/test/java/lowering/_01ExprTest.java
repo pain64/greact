@@ -35,15 +35,15 @@ public class _01ExprTest {
                     super();
                   }
                   baz() {
-                    let x0 = true;
-                    let x1 = false;
-                    let x2 = 42;
-                    let x3 = 42;
-                    let x4 = 42.0;
-                    let x5 = 42.0;
-                    let x6 = 'A';
-                    let x7 = 'hello';
-                    let x8 = null;
+                    const x0 = true;
+                    const x1 = false;
+                    const x2 = 42;
+                    const x3 = 42;
+                    const x4 = 42.0;
+                    const x5 = 42.0;
+                    const x6 = 'A';
+                    const x7 = 'hello';
+                    const x8 = null;
                   }
                 }
                 """);
@@ -73,7 +73,7 @@ public class _01ExprTest {
                     __init__();
                   }
                   baz() {
-                    let x = null;
+                    const x = null;
                     x = 42;
                     this.z = 42;
                   }
@@ -98,8 +98,8 @@ public class _01ExprTest {
                     super();
                   }
                   baz() {
-                    let x = true;
-                    let y = x;
+                    const x = true;
+                    const y = x;
                   }
                 }
                 """);
@@ -121,7 +121,7 @@ public class _01ExprTest {
                     super();
                   }
                   boolToInt() {
-                    let x = true ? 1 : 0;
+                    const x = true ? 1 : 0;
                   }
                 }
                 """);
@@ -153,15 +153,15 @@ public class _01ExprTest {
                   }
                   baz() {
                     let x = 0;
-                    let x1 = x++;
-                    let x2 = x--;
-                    let x3 = ++x;
-                    let x4 = --x;
-                    let x5 = +1;
-                    let x6 = -1;
-                    let x7 = ~1;
-                    let y = true;
-                    let y1 = !y;
+                    const x1 = x++;
+                    const x2 = x--;
+                    const x3 = ++x;
+                    const x4 = --x;
+                    const x5 = +1;
+                    const x6 = -1;
+                    const x7 = ~1;
+                    const y = true;
+                    const y1 = !y;
                   }
                 }
                 """);
@@ -204,28 +204,28 @@ public class _01ExprTest {
                     super();
                   }
                   baz() {
-                    let x0 = 1 * 1;
-                    let x1 = Math.floor(1 / 2);
-                    let d1 = 1.0 / 2.0;
-                    let d2 = Math.floor(1 / 2);
-                    let d3 = 1.0 / 2.0;
-                    let x2 = 1 % 1;
-                    let x3 = 1 + 1;
-                    let x4 = 1 - 1;
-                    let y0 = 1 << 1;
-                    let y1 = 1 >> 1;
-                    let y2 = 1 >>> 1;
-                    let z0 = 1 < 1;
-                    let z1 = 1 > 1;
-                    let z2 = 1 <= 1;
-                    let z3 = 1 >= 1;
-                    let z4 = 1 == 1;
-                    let z5 = 1 != 1;
-                    let k0 = 1 & 1;
-                    let k1 = 1 ^ 1;
-                    let k2 = 1 | 1;
-                    let b0 = true && false;
-                    let b1 = true || false;
+                    const x0 = 1 * 1;
+                    const x1 = Math.floor(1 / 2);
+                    const d1 = 1.0 / 2.0;
+                    const d2 = Math.floor(1 / 2);
+                    const d3 = 1.0 / 2.0;
+                    const x2 = 1 % 1;
+                    const x3 = 1 + 1;
+                    const x4 = 1 - 1;
+                    const y0 = 1 << 1;
+                    const y1 = 1 >> 1;
+                    const y2 = 1 >>> 1;
+                    const z0 = 1 < 1;
+                    const z1 = 1 > 1;
+                    const z2 = 1 <= 1;
+                    const z3 = 1 >= 1;
+                    const z4 = 1 == 1;
+                    const z5 = 1 != 1;
+                    const k0 = 1 & 1;
+                    const k1 = 1 ^ 1;
+                    const k2 = 1 | 1;
+                    const b0 = true && false;
+                    const b1 = true || false;
                   }
                 }
                 """);
@@ -304,10 +304,10 @@ public class _01ExprTest {
                     super();
                   }
                   baz() {
-                    let x = [];
-                    let y = ['hello', 'world'];
-                    let x1 = [];
-                    let y2 = [['1', '2'], ['3', '4']];
+                    const x = [];
+                    const y = ['hello', 'world'];
+                    const x1 = [];
+                    const y2 = [['1', '2'], ['3', '4']];
                   }
                 }
                 """);
@@ -330,8 +330,8 @@ public class _01ExprTest {
                     super();
                   }
                   baz(x) {
-                    let y0 = x[0];
-                    let y1 = x[0][0];
+                    const y0 = x[0];
+                    const y1 = x[0][0];
                   }
                 }
                 """);
@@ -369,9 +369,9 @@ public class _01ExprTest {
                     }
                   }
                   baz(a) {
-                    let x = a.field;
-                    let b = a.next;
-                    let y = a.next.field;
+                    const x = a.field;
+                    const b = a.next;
+                    const y = a.next.field;
                   }
                 }
                 """);
@@ -393,7 +393,7 @@ public class _01ExprTest {
                     super();
                   }
                   baz(x) {
-                    let y = x;
+                    const y = x;
                   }
                 }
                 """);
@@ -415,7 +415,7 @@ public class _01ExprTest {
                     super();
                   }
                   baz(x) {
-                    let y = ((x));
+                    const y = ((x));
                   }
                 }
                 """);
@@ -443,7 +443,7 @@ public class _01ExprTest {
                     super();
                   }
                   baz() {
-                    let lambda = (i) => {
+                    const lambda = (i) => {
                       return i;
                     };
                   }
@@ -484,8 +484,8 @@ public class _01ExprTest {
                   foo() {
                   }
                   baz() {
-                    let lambda = () => {
-                      let yy = this.xx;
+                    const lambda = () => {
+                      const yy = this.xx;
                       this.foo();
                     };
                   }
@@ -525,7 +525,7 @@ public class _01ExprTest {
                           return 42;
                         default:
                           {
-                            let y = 52;
+                            const y = 52;
                             return y;
                           }
                       }
@@ -566,15 +566,15 @@ public class _01ExprTest {
                     super();
                   }
                   baz(x) {
-                    let y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
-                    let y2 = typeof x == 'number';
-                    let y3 = typeof x == 'number';
-                    let y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                    let y5 = x instanceof js$A;
+                    const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
+                    const y2 = typeof x == 'number';
+                    const y3 = typeof x == 'number';
+                    const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
+                    const y5 = x instanceof js$A;
                   }
                 }
                 """));
-        // FIXME(generated for instanceof pattern) => let s;
+        // FIXME(generated for instanceof pattern) => const s;
     }
 
     @Test

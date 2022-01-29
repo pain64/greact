@@ -138,7 +138,7 @@ public class _00DeclarationsTest {
                     super();
                   }
                   baz() {
-                    let x = null;
+                    const x = null;
                   }
                 }
                 """);

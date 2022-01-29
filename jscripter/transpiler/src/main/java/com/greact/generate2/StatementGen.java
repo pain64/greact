@@ -1,5 +1,6 @@
 package com.greact.generate2;
 
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.tree.JCTree;
 
 import java.util.List;
@@ -36,7 +37,9 @@ abstract class StatementGen extends ExpressionGen {
     }
 
     @Override public void visitVarDef(JCTree.JCVariableDecl varDef) {
-        out.write(varDef.sym.isFinal() ? "const " : "let ");
+        var isConst = varDef.sym.isFinal() ||
+            (varDef.sym.flags_field & Flags.EFFECTIVELY_FINAL) != 0;
+        out.write(isConst ? "const " : "let ");
         out.write(varDef.getName().toString());
         out.write(" = ");
 
@@ -51,10 +54,10 @@ abstract class StatementGen extends ExpressionGen {
     }
 
     void writeStmtBody(JCTree.JCStatement body, boolean blockNewLine) {
-        if(body instanceof JCTree.JCBlock) {
+        if (body instanceof JCTree.JCBlock) {
             out.write(" ");
             body.accept(this);
-            if(blockNewLine) out.writeNL();
+            if (blockNewLine) out.writeNL();
         } else {
             out.writeNL();
             out.deepIn();
@@ -102,7 +105,7 @@ abstract class StatementGen extends ExpressionGen {
                 varDef.init.accept(this);
             }, "(let ", ", ", "; ");
 
-        if(forStmt.cond != null) forStmt.cond.accept(this);
+        if (forStmt.cond != null) forStmt.cond.accept(this);
 
         if (forStmt.init.isEmpty())
             out.write(";)");
@@ -201,7 +204,7 @@ abstract class StatementGen extends ExpressionGen {
                 out.writeCBOpen(true);
                 for (var blockStm : ct.getBlock().getStatements()) {
                     if (i != 0) {
-                        out.write("let ");
+                        out.write("const ");
                         out.write(catchVar);
                         out.write(" = ");
                         out.write(firstCatchVar);

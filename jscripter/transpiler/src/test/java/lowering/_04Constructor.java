@@ -110,11 +110,11 @@ public class _04Constructor {
                         if($over === 1) {
                           const [x, y] = __args;
                           super();
-                          let some = x + y;
+                          const some = x + y;
                         } else if($over === 2) {
                           const [z] = __args;
                           super();
-                          let some = z;
+                          const some = z;
                         }
                       }
                     }

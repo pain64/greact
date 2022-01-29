@@ -37,8 +37,8 @@ public class Column<T, U> {
     @SuppressWarnings("unchecked")
     void applyDefaultSettings(String[] memberNames, String className) {
         var columnName = memberNames[memberNames.length - 1];
-        JSExpression.of("columnName = columnName.replace('_', ' ')");
-        JSExpression.of("columnName = columnName.charAt(0).toUpperCase() + columnName.slice(1)");
+        columnName = JSExpression.of("columnName.replace('_', ' ')");
+        columnName = JSExpression.of("columnName.charAt(0).toUpperCase() + columnName.slice(1)");
         this._header = columnName;
         this.memberNames = memberNames;
 
