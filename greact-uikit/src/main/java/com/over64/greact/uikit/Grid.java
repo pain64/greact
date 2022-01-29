@@ -1,6 +1,6 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.ClassRef;
 import com.greact.model.ClassRef.Reflexive;
 import com.greact.model.JSExpression;
@@ -12,7 +12,7 @@ import com.over64.greact.dom.HTMLNativeElements.slot;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
     static <A> boolean strictEqual(A lhs, A rhs) {return JSExpression.of("lhs === rhs");}

@@ -1,11 +1,11 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-@CSS.Require("select.css")
+@Require.CSS("select.css")
 public class Select<T> extends Control<T> {
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);

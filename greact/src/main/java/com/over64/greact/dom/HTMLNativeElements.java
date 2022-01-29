@@ -4,7 +4,7 @@ import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
 public class HTMLNativeElements {
-    public interface Component<T extends HtmlElement> {
+    public interface Component<T extends HTMLElement> {
         default void effect(Object expression) {}
     }
 
@@ -18,18 +18,18 @@ public class HTMLNativeElements {
         }
     };
 
-    public interface Component0<T extends HtmlElement> extends Component<T> {
+    public interface Component0<T extends HTMLElement> extends Component<T> {
         @async Component0<T> mount();
     }
-    public interface Component1<T extends HtmlElement, U> extends Component<T> {
+    public interface Component1<T extends HTMLElement, U> extends Component<T> {
         @async Component0<T> mount(U u);
     }
 
     // FIXME: for remove
-    public interface Component2<T extends HtmlElement, U, V>  extends Component<T> {
+    public interface Component2<T extends HTMLElement, U, V>  extends Component<T> {
         @async Component0<T> mount(U u, V v);
     }
-    public interface Component3<T extends HtmlElement, A1, A2, A3>  extends Component<T> {
+    public interface Component3<T extends HTMLElement, A1, A2, A3>  extends Component<T> {
         @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
 
@@ -37,38 +37,38 @@ public class HTMLNativeElements {
         String value();
     }
 
-    public interface NativeElementAsComponent<T extends HtmlElement> extends Component0<T> {
+    public interface NativeElementAsComponent<T extends HTMLElement> extends Component0<T> {
         @Override default Component0<T> mount() { return null; }
     }
 
-    @JSNativeAPI public static class h1 extends HtmlElement implements NativeElementAsComponent<h1>{
+    @JSNativeAPI public static class h1 extends HTMLElement implements NativeElementAsComponent<h1>{
         public h1() {};
         public h1(@DomProperty("innerText") String innerText) { }
     }
-    @JSNativeAPI public static class h2 extends HtmlElement implements NativeElementAsComponent<h2> {
+    @JSNativeAPI public static class h2 extends HTMLElement implements NativeElementAsComponent<h2> {
         public h2() {};
         public h2(@DomProperty("innerText") String innerText) { }
     }
 
-    @JSNativeAPI public static class h3 extends HtmlElement implements NativeElementAsComponent<h3> {
+    @JSNativeAPI public static class h3 extends HTMLElement implements NativeElementAsComponent<h3> {
         public h3() {};
         public h3(@DomProperty("innerText") String innerText) {
         }
     }
 
-    @JSNativeAPI public static class h4 extends HtmlElement implements NativeElementAsComponent<h4> {
+    @JSNativeAPI public static class h4 extends HTMLElement implements NativeElementAsComponent<h4> {
         public h4() {};
         public h4(@DomProperty("innerText") String innerText) {
         }
     }
 
-    @JSNativeAPI public static class h5 extends HtmlElement implements NativeElementAsComponent<h5> {
+    @JSNativeAPI public static class h5 extends HTMLElement implements NativeElementAsComponent<h5> {
         public h5() {};
         public h5(@DomProperty("innerText") String innerText) {
         }
     }
 
-    @JSNativeAPI public static  class button extends HtmlElement implements NativeElementAsComponent<button> {
+    @JSNativeAPI public static  class button extends HTMLElement implements NativeElementAsComponent<button> {
         public MouseEventHandler<button> onclick;
         public MouseEventHandler<button> ondblclick;
         public MouseEventHandler<button> onblur;
@@ -76,16 +76,16 @@ public class HTMLNativeElements {
         public button(@DomProperty("innerText") String innerText) { }
     }
 
-    @JSNativeAPI public static class body extends HtmlElement implements NativeElementAsComponent<body> { }
-    @JSNativeAPI public static class div extends HtmlElement implements NativeElementAsComponent<div> {
+    @JSNativeAPI public static class body extends HTMLElement implements NativeElementAsComponent<body> { }
+    @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
         public MouseEventHandler<div> onclick;
     }
-    @JSNativeAPI public static class nav extends HtmlElement implements NativeElementAsComponent<nav> {}
-    @JSNativeAPI public static class section extends HtmlElement implements NativeElementAsComponent<section> { }
-    @JSNativeAPI public static class header extends HtmlElement implements NativeElementAsComponent<header> { }
+    @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}
+    @JSNativeAPI public static class section extends HTMLElement implements NativeElementAsComponent<section> { }
+    @JSNativeAPI public static class header extends HTMLElement implements NativeElementAsComponent<header> { }
 
 
-    @JSNativeAPI public static class input extends HtmlElement implements NativeElementAsComponent<input> {
+    @JSNativeAPI public static class input extends HTMLElement implements NativeElementAsComponent<input> {
         public boolean autofocus = false;
         public boolean readOnly;
         public enum Autocomplete {OFF, ON}
@@ -103,34 +103,34 @@ public class HTMLNativeElements {
         public native void setCustomValidity(String text);
     }
 
-    @JSNativeAPI public static class select extends HtmlElement implements NativeElementAsComponent<select> {
+    @JSNativeAPI public static class select extends HTMLElement implements NativeElementAsComponent<select> {
         public String value;
         public ChangeHandler<select> onchange;
     }
-    @JSNativeAPI public static class option extends HtmlElement implements NativeElementAsComponent<option> {
+    @JSNativeAPI public static class option extends HTMLElement implements NativeElementAsComponent<option> {
         public boolean selected;
         public String value;
         public option(@DomProperty("innerText") String innerText){}
     }
 
-    @JSNativeAPI public static class ul extends HtmlElement implements NativeElementAsComponent<ul> {}
-    @JSNativeAPI public static class li extends HtmlElement implements NativeElementAsComponent<li> {}
-    @JSNativeAPI public static class footer extends HtmlElement implements NativeElementAsComponent<footer> {}
-    @JSNativeAPI public static class span extends HtmlElement implements NativeElementAsComponent<span> {
+    @JSNativeAPI public static class ul extends HTMLElement implements NativeElementAsComponent<ul> {}
+    @JSNativeAPI public static class li extends HTMLElement implements NativeElementAsComponent<li> {}
+    @JSNativeAPI public static class footer extends HTMLElement implements NativeElementAsComponent<footer> {}
+    @JSNativeAPI public static class span extends HTMLElement implements NativeElementAsComponent<span> {
         public span() {}
         public span(@DomProperty("innerText") String innerText) {}
         public MouseEventHandler<tbody> onclick;
     }
-    @JSNativeAPI public static class strong extends HtmlElement implements NativeElementAsComponent<strong> {
+    @JSNativeAPI public static class strong extends HTMLElement implements NativeElementAsComponent<strong> {
         public strong() {}
         public strong(@DomProperty("innerText") String innerText) {}
     }
-    @JSNativeAPI public static class label extends HtmlElement implements NativeElementAsComponent<label> {
+    @JSNativeAPI public static class label extends HTMLElement implements NativeElementAsComponent<label> {
         public label() { }
         public label(@DomProperty("innerText") String innerText) {}
         public String _for;
     }
-    @JSNativeAPI public static class a extends HtmlElement implements NativeElementAsComponent<a> {
+    @JSNativeAPI public static class a extends HTMLElement implements NativeElementAsComponent<a> {
         public String href;
         public a() {}
         public MouseEventHandler<a> onmouseover;
@@ -139,15 +139,15 @@ public class HTMLNativeElements {
         public a(@DomProperty("innerText") String innerText) {}
     }
 
-    @JSNativeAPI public static class table extends HtmlElement implements NativeElementAsComponent<table> {
+    @JSNativeAPI public static class table extends HTMLElement implements NativeElementAsComponent<table> {
         public table() {}
     }
-    @JSNativeAPI public static class thead extends HtmlElement implements NativeElementAsComponent<thead> { }
-    @JSNativeAPI public static class tbody extends HtmlElement implements NativeElementAsComponent<tbody> {
+    @JSNativeAPI public static class thead extends HTMLElement implements NativeElementAsComponent<thead> { }
+    @JSNativeAPI public static class tbody extends HTMLElement implements NativeElementAsComponent<tbody> {
         public MouseEventHandler<tbody> onclick;
     }
 
-    @JSNativeAPI public static class td extends HtmlElement implements NativeElementAsComponent<td> {
+    @JSNativeAPI public static class td extends HTMLElement implements NativeElementAsComponent<td> {
         public int colSpan;
         public int rowSpan;
         public MouseEventHandler<tr> onclick;
@@ -155,41 +155,41 @@ public class HTMLNativeElements {
         public td(@DomProperty("innerText") String innerText) {}
     }
 
-    @JSNativeAPI public static class tr extends HtmlElement implements NativeElementAsComponent<tr> {
+    @JSNativeAPI public static class tr extends HTMLElement implements NativeElementAsComponent<tr> {
         public MouseEventHandler<tr> onclick;
         public tr() {}
-        public tr(HtmlElement child) {}
+        public tr(HTMLElement child) {}
         public tr(td... childs) {}
     }
-    @JSNativeAPI public static class many<T extends HtmlElement> extends HtmlElement {
+    @JSNativeAPI public static class many<T extends HTMLElement> extends HTMLElement {
         public many(T... elements){}
     }
 
 
-    @JSNativeAPI public static final class slot<T extends HtmlElement> extends HtmlElement implements NativeElementAsComponent<T> {
+    @JSNativeAPI public static final class slot<T extends HTMLElement> extends HTMLElement implements NativeElementAsComponent<T> {
         public slot(Component0<T> comp) {}
         public <U> slot(Component1<T, U> comp, U u) {}
         public <A1, A2> slot(Component2<T, A1, A2> comp, A1 a1, A2 a2) {}
         public <A1, A2, A3> slot(Component3<T, A1, A2, A3> comp, A1 a1, A2 a2, A3 a3) {}
     }
-    @JSNativeAPI public static class style extends HtmlElement implements NativeElementAsComponent<style> {
+    @JSNativeAPI public static class style extends HTMLElement implements NativeElementAsComponent<style> {
         public static String id(String prefix) { return  prefix; }
         public style(@DomProperty("innerText") String innerText) {}
     }
-    @JSNativeAPI public static class cssclass extends HtmlElement{
+    @JSNativeAPI public static class cssclass extends HTMLElement {
         public cssclass(String name, String css) {}
         public static String localClass(String name) {return name; }
     }
 
-    @JSNativeAPI public static class cssmedia extends HtmlElement{
+    @JSNativeAPI public static class cssmedia extends HTMLElement {
         public cssmedia(String selector, cssclass... classes) {}
     }
 
-    @JSNativeAPI public static class img extends HtmlElement implements NativeElementAsComponent<img> {
+    @JSNativeAPI public static class img extends HTMLElement implements NativeElementAsComponent<img> {
         public String src;
     }
 
-    @JSNativeAPI public static class textarea extends HtmlElement implements NativeElementAsComponent<textarea> {
+    @JSNativeAPI public static class textarea extends HTMLElement implements NativeElementAsComponent<textarea> {
     }
 
 }

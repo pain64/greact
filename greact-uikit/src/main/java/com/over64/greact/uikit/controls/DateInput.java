@@ -1,12 +1,12 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.Dates;
 
 import java.util.Date;
 
-@CSS.Require("date_input.css")
+@Require.CSS("date_input.css")
 public class DateInput extends Control<Date> {
     @Override public Control child() {return null;}
 

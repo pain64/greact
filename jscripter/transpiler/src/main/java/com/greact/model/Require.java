@@ -1,7 +1,7 @@
 package com.greact.model;
 
-public @interface CSS {
-    @interface Require {
+public interface Require {
+    @interface CSS {
         String[] value();
     }
 }
