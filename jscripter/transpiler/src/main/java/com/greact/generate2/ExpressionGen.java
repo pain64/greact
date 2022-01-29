@@ -156,7 +156,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     out.write("this");
                 else if (id.sym.getModifiers().contains(Modifier.STATIC)) {
                     var owner = (Symbol.ClassSymbol) id.sym.owner;
-                    var fullName = owner.fullname.toString().replace(".", "$");
+                    var fullName = owner.fullname.toString().replace(".", "_");
                     out.write(fullName);
                     out.write(".");
                     out.write(id.getName().toString());
@@ -168,17 +168,17 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (id.sym instanceof Symbol.ClassSymbol) {
             var owner = id.sym.owner;
             if (owner != null) {
-                out.write(owner.toString().replace(".", "$"));
-                var delim = id.sym.isStatic() ? "." : "$";
+                out.write(owner.toString().replace(".", "_"));
+                var delim = id.sym.isStatic() ? "." : "_";
                 out.write(delim);
                 out.write(id.name.toString());
             } else
-                out.write(id.sym.toString().replace(".", "$"));
+                out.write(id.sym.toString().replace(".", "_"));
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             if (id.name.toString().equals("super")) out.write("super");
             else if (id.sym.isStatic()) {
                 if (id.sym.owner != super.classDef.sym) { // import static symbol
-                    out.write(id.sym.owner.toString().replace(".", "$"));
+                    out.write(id.sym.owner.toString().replace(".", "_"));
                     out.write("._");
                 } else
                     out.write("this.constructor._");
@@ -272,7 +272,7 @@ abstract class ExpressionGen extends VisitorWithContext {
 
     @Override public void visitSelect(JCTree.JCFieldAccess select) {
         select.selected.accept(this);
-        out.write(select.selected.type instanceof Type.PackageType ? "$" : ".");
+        out.write(select.selected.type instanceof Type.PackageType ? "_" : ".");
         out.write(select.name.toString());
     }
 
@@ -401,7 +401,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (!isRecordAccessor) out.write("(");
                 } else {
                     var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
-                    out.write(onType.tsym.toString().replace(".", "$"));
+                    out.write(onType.tsym.toString().replace(".", "_"));
                     out.write("._");
                     out.write(prop.name.toString());
 
@@ -474,8 +474,8 @@ abstract class ExpressionGen extends VisitorWithContext {
             boolean flagNew = true; // FIXME: сделать иммутабельным
 
             if (info.mode() == Overloads.Mode.STATIC) {
-                var fullClassName = tSym.packge().toString().replace(".", "$") +
-                    "$" + ref.expr;
+                var fullClassName = tSym.packge().toString().replace(".", "_") +
+                    "_" + ref.expr;
                 out.write(fullClassName);
                 out.write("._");
                 out.write(ref.name.toString());
@@ -483,8 +483,8 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(fullClassName);
             } else if (ref.toString().endsWith("new")) {
                 // FIXME: piece of shit
-                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "$"));
-                stringBuilder.setCharAt(stringBuilder.lastIndexOf("$"), '.');
+                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "_"));
+                stringBuilder.setCharAt(stringBuilder.lastIndexOf("_"), '.');
                 out.write("((x) => new ");
                 out.write(stringBuilder.toString());
                 out.write("(");
@@ -532,7 +532,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             default -> eGen -> {
                 eGen.run();
                 out.write(" instanceof ");
-                out.write(ofType.replace(".", "$"));
+                out.write(ofType.replace(".", "_"));
             };
         };
 

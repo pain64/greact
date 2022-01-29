@@ -14,7 +14,7 @@ public class _00DeclarationsTest {
                 package js;
                 public class Test {}""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -30,7 +30,7 @@ public class _00DeclarationsTest {
                     public class A<T> {
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -42,7 +42,7 @@ public class _00DeclarationsTest {
                     public class B extends A<String> {
                     }""",
                 """
-                    class js$B extends js$A {
+                    class js_B extends js_A {
                       constructor() {
                         super();
                       }
@@ -61,7 +61,7 @@ public class _00DeclarationsTest {
                   private void foobar() {}
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -83,7 +83,7 @@ public class _00DeclarationsTest {
                   abstract void bar();
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -103,7 +103,7 @@ public class _00DeclarationsTest {
                   void bar(long x) {}
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -133,7 +133,7 @@ public class _00DeclarationsTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }

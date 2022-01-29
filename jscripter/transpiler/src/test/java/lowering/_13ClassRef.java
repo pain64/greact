@@ -21,7 +21,7 @@ public class _13ClassRef {
                 }
                 """,
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -37,7 +37,7 @@ public class _13ClassRef {
                   }
                   _baz() {
                     this._bar((() => {
-                      const __obj = new js$Test.A(1, 1);
+                      const __obj = new js_Test.A(1, 1);
                       __obj.__class__ = ({
                         _name: () => 'js.Test.A',
                         _params: () => [
@@ -85,7 +85,7 @@ public class _13ClassRef {
                 }
                 """,
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }

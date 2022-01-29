@@ -16,10 +16,10 @@ public class _06ShimJavaAPI {
                   int x = Integer.valueOf("42");
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
-                      this.x = std$java$lang$Integer._valueOf('42');
+                      this.x = std_java_lang_Integer._valueOf('42');
                     };
                     super();
                     __init__();
@@ -36,10 +36,10 @@ public class _06ShimJavaAPI {
                   int x = "x".compareTo("y");
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
-                      this.x = std$java$lang$String._compareTo.call('x', 'y');
+                      this.x = std_java_lang_String._compareTo.call('x', 'y');
                     };
                     super();
                     __init__();
@@ -57,7 +57,7 @@ public class _06ShimJavaAPI {
                   int x = JSExpression.of("1 + 1");
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.x = 1 + 1;
@@ -80,7 +80,7 @@ public class _06ShimJavaAPI {
                         + 1""\");
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.x = 1
@@ -103,7 +103,7 @@ public class _06ShimJavaAPI {
                   int x = of();
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.x = this.constructor._of();

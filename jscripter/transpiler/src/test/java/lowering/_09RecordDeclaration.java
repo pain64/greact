@@ -14,7 +14,7 @@ public class _09RecordDeclaration {
                     record Test(int x, int y, int z) {}
                     """,
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor(x, y, z) {
                         super();
                         this.x = x;
@@ -40,7 +40,7 @@ public class _09RecordDeclaration {
                 }
                 """,
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -53,7 +53,7 @@ public class _09RecordDeclaration {
                     }
                   }
                   _some() {
-                    const a = new js$Test.A(1, 2, 3);
+                    const a = new js_Test.A(1, 2, 3);
                     const x = a.x;
                     const y = a.y;
                   }

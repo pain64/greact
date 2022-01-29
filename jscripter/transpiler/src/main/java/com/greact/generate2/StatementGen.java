@@ -197,7 +197,7 @@ abstract class StatementGen extends ExpressionGen {
                     out.write(firstCatchVar);
                     out.write(" instanceof ");
                     out.write(alt.type.tsym.getQualifiedName().toString()
-                        .replace(".", "$"));
+                        .replace(".", "_"));
                 }, "", " || ", "");
 
                 out.write(")");

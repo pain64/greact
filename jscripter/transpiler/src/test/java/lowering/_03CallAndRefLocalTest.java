@@ -23,7 +23,7 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         super();
                       }
@@ -46,7 +46,7 @@ public class _03CallAndRefLocalTest {
                       void baz() { bar(42, 42); }
                     }""",
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         super();
                       }
@@ -69,7 +69,7 @@ public class _03CallAndRefLocalTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -92,7 +92,7 @@ public class _03CallAndRefLocalTest {
                               
                             }""",
                         """
-                            class js$A extends Object {
+                            class js_A extends Object {
                               constructor() {
                                 super();
                               }
@@ -115,13 +115,13 @@ public class _03CallAndRefLocalTest {
                               }
                             }""",
                         """
-                            class js$B extends Object {
+                            class js_B extends Object {
                               constructor() {
                                 super();
                               }
                               _fizz() {
-                                js$A._bar();
-                                js$A._baz();
+                                js_A._bar();
+                                js_A._baz();
                               }
                             }
                             """)
@@ -143,7 +143,7 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                        class js$Test extends Object {
+                        class js_Test extends Object {
                           constructor() {
                             super();
                           }
@@ -200,7 +200,7 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         super();
                       }
@@ -229,11 +229,11 @@ public class _03CallAndRefLocalTest {
                         }
                       }
                       _baz() {
-                        const m1 = js$Test._foo.bind(js$Test);
+                        const m1 = js_Test._foo.bind(js_Test);
                         const m2 = this._bar.bind(this, 1);
                         const m3 = this._bar.bind(this, 0);
-                        const s = ((x) => new js$Test.A(1, x));
-                        const a = new js$Test.A(1, 1);
+                        const s = ((x) => new js_Test.A(1, x));
+                        const a = new js_Test.A(1, 1);
                         const m4 = a._bar.bind(a);
                         const m5 = ((self) => self._fiz());
                       }
@@ -258,7 +258,7 @@ public class _03CallAndRefLocalTest {
                       }
                     }""",
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         super();
                       }
@@ -286,7 +286,7 @@ public class _03CallAndRefLocalTest {
                               }
                             }""",
                         """
-                                class js$A extends Object {
+                                class js_A extends Object {
                                   constructor() {
                                     super();
                                   }
@@ -315,7 +315,7 @@ public class _03CallAndRefLocalTest {
                               }
                             }""",
                         """
-                                class js$B extends Object {
+                                class js_B extends Object {
                                   constructor() {
                                     super();
                                   }

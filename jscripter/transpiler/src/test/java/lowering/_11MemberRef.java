@@ -17,7 +17,7 @@ public class _11MemberRef {
                     public record A(long age){}
                     """,
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor(age) {
                         super();
                         this.age = age;
@@ -33,7 +33,7 @@ public class _11MemberRef {
                       MemberRef<A, Long> ref3 = a -> a.age();
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         const __init__ = () => {
                           this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
@@ -54,7 +54,7 @@ public class _11MemberRef {
                     public class A { long age; }
                     """,
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         const __init__ = () => {
                           this.age = 0;
@@ -70,7 +70,7 @@ public class _11MemberRef {
                     public class B { A a; }
                     """,
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         const __init__ = () => {
                           this.a = null;
@@ -89,7 +89,7 @@ public class _11MemberRef {
                       MemberRef<B, Long> ref2 = b -> b.a.age;
                     }""",
                 """
-                    class js$C extends Object {
+                    class js_C extends Object {
                       constructor() {
                         const __init__ = () => {
                           this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};

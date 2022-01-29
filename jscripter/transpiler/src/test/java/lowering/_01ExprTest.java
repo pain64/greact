@@ -30,7 +30,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -64,7 +64,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.z = 0;
@@ -93,7 +93,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -116,7 +116,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -147,7 +147,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -199,7 +199,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -255,7 +255,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.z = 0;
@@ -299,7 +299,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -325,7 +325,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -354,7 +354,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -388,7 +388,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -410,7 +410,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -438,7 +438,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -473,7 +473,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.xx = 1;
@@ -511,7 +511,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -543,7 +543,7 @@ public class _01ExprTest {
                     package js;
                     class A {}""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -561,7 +561,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -570,7 +570,7 @@ public class _01ExprTest {
                     const y2 = typeof x == 'number';
                     const y3 = typeof x == 'number';
                     const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                    const y5 = x instanceof js$A;
+                    const y5 = x instanceof js_A;
                   }
                 }
                 """));
@@ -597,7 +597,7 @@ public class _01ExprTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -614,7 +614,7 @@ public class _01ExprTest {
                     }
                   }
                   _newA() {
-                    return new js$Test.A(1, 2);
+                    return new js_Test.A(1, 2);
                   }
                 }
                 """);
@@ -628,7 +628,7 @@ public class _01ExprTest {
                     package js;
                     public class A<T> {}""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -641,10 +641,10 @@ public class _01ExprTest {
                       A a = new A<String>();
                     }""",
                 """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.a = new js$A();
+                          this.a = new js_A();
                         };
                         super();
                         __init__();
