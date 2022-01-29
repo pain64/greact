@@ -51,7 +51,7 @@ public class _02EffectsTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _holder0 = null;
+                            com.over64.greact.dom.HTMLNativeElements.div _holder0 = null;
                             {
                                 (_render0 = ()->{
                                     final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");

@@ -72,12 +72,11 @@ public class TypeGen extends ClassBodyGen {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
 
-        withClass(classDef, groups, () -> {
+        withClass(classDef, groups, () ->
             classDef.defs.stream()
                 .filter(d -> !(d instanceof JCTree.JCBlock))
-                .forEach(d -> d.accept(this));
-        });
+                .forEach(d -> d.accept(this)));
 
-        out.writeCBEnd(true);
+        out.writeCBEnd(!classDef.sym.isAnonymous());
     }
 }

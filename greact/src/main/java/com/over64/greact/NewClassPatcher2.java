@@ -338,7 +338,7 @@ public class NewClassPatcher2 {
                     var updateIndex = allViewsForUpdate.indexOf(newClass);
 
                     if (updateIndex != -1) { // rerenderable
-                        var elHolderSymbol = new Symbol.VarSymbol(Flags.FINAL,
+                        var elHolderSymbol = new Symbol.VarSymbol(Flags.HASINIT,
                             names.fromString("_holder" + nextNum),
                             htmlElementType,
                             nextElOwner);

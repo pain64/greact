@@ -547,7 +547,8 @@ public class _01ExprTest {
                       constructor() {
                         super();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileCase("js.Test", """
                 package js;
                 public class Test {
