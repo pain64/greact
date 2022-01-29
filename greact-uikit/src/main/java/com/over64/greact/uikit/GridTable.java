@@ -64,7 +64,7 @@ class GridTable<T> implements Component0<table> {
                         new td() {{
                             if (colWithSize.b != 0)
                                 style.width = colWithSize.b + "px";
-                            new span(colWithSize.a._header);
+                            new span(colWithSize.a.header);
                         }};
                     new td() {{
                         className = "grid-table-td";
@@ -130,7 +130,7 @@ class GridTable<T> implements Component0<table> {
                             for (var col : conf.columns)
                                 if (!col.hidden) {
                                     var colValue = Grid.fetchValue(row.data, col.memberNames);
-                                    var nativeEl = GReact.mmountAwaitView(col._view, new Object[]{colValue, row.data});
+                                    var nativeEl = GReact.mmountAwaitView(col.view, new Object[]{colValue, row.data});
                                     var bgColor = col.backgroundColor;
                                     if (bgColor != null)
                                         nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);

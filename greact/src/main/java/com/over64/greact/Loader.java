@@ -32,7 +32,7 @@ public class Loader {
             .collect(Collectors.joining("\n", "", "\n"));
 
         var mount = "<script type=\"text/javascript\">\n" +
-            "com$over64$greact$dom$GReact.mmount(document.body, new " +
+            "com$over64$greact$dom$GReact._mmount(document.body, new " +
             entry.getName().replace(".", "$") + ", [])" +
             "</script>";
 

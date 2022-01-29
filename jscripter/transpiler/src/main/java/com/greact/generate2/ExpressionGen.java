@@ -7,6 +7,7 @@ import com.greact.model.async;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.StatementTree;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
@@ -66,11 +67,11 @@ abstract class ExpressionGen extends VisitorWithContext {
     void reflectWriteClassMembers(Type classType) {
         if (classType.tsym instanceof Symbol.ClassSymbol classSym) {
             out.writeCBOpen(false);
-            out.write("name: () => '");
+            out.write("_name: () => '");
             out.write("" + classSym.className());
             out.writeLn("',");
 
-            out.writeLn("params: () => [");
+            out.writeLn("_params: () => [");
             out.deepIn();
             if (classType instanceof Type.ArrayType arrayType) {
                 reflectWriteClassMembers(arrayType.elemtype);
@@ -79,17 +80,17 @@ abstract class ExpressionGen extends VisitorWithContext {
             out.deepOut();
             out.writeLn("],");
 
-            out.writeLn("fields: () => [");
+            out.writeLn("_fields: () => [");
             out.deepIn();
             for (var i = 0; i < classSym.getRecordComponents().length(); i++) {
                 var comp = classSym.getRecordComponents().get(i);
 
                 out.writeCBOpen(false);
                 if (comp.type.tsym instanceof Symbol.ClassSymbol) {
-                    out.write("name: () => '");
+                    out.write("_name: () => '");
                     out.write(comp.name.toString());
                     out.writeLn("',");
-                    out.write("__class__: () => (");
+                    out.write("___class__: () => (");
                     reflectWriteClassMembers(comp.type);
                     out.writeLn(")");
                 }
@@ -173,17 +174,22 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(id.name.toString());
             } else
                 out.write(id.sym.toString().replace(".", "$"));
-        } else {
-            // FIXME: это в каком случае???
-            if (id.sym.getModifiers().contains(Modifier.STATIC)) {
-                var owner = (Symbol.ClassSymbol) id.sym.owner;
-                var fullName = owner.fullname.toString().replace(".", "$");
-                out.write(fullName);
-                out.write(".");
+        } else if (id.sym instanceof Symbol.MethodSymbol) {
+            if (id.name.toString().equals("super")) out.write("super");
+            else if (id.sym.isStatic()) {
+                if (id.sym.owner != super.classDef.sym) { // import static symbol
+                    out.write(id.sym.owner.toString().replace(".", "$"));
+                    out.write("._");
+                } else
+                    out.write("this.constructor._");
+                out.write(id.name.toString());
+            } else {
+                out.write("this.");
+                if ((id.sym.flags_field & Flags.NATIVE) == 0) out.write("_");
+                out.write(id.name.toString());
             }
-
-            out.write(id.getName().toString());
-        }
+        } else
+            out.write(id.name.toString());
     }
 
     @Override public void visitConditional(JCTree.JCConditional ternary) {
@@ -285,13 +291,13 @@ abstract class ExpressionGen extends VisitorWithContext {
             var fields = memberRefExtractFields(new ArrayList<>(), lmb.body);
             Collections.reverse(fields);
 
-            out.write("{memberNames: () => ");
+            out.write("{_memberNames: () => ");
             // FIXME: use mkString
             out.write(fields.stream().map(f -> "'" + f + "'").collect(Collectors.joining(", ", "[", "]")));
-            out.write(", value: (v) => v.");
+            out.write(", _value: (v) => v.");
             // FIXME: use mkString
             out.write(String.join(".", fields));
-            out.write(", className: () => '");
+            out.write(", _className: () => '");
             out.write(((Symbol.ClassSymbol) lmb.type.allparams().get(1).tsym).className());
             out.write("'}");
         } else {
@@ -365,17 +371,8 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (info.isAsync()) out.write("(await ");
 
             // FIXME: on-demand static import, foreign module call
-            if (call.meth instanceof JCTree.JCIdent id) { // call local
-                var name = id.name.toString();
-
-                if (id.sym.isStatic() && id.sym.owner != super.classDef.sym) { // import static call
-                    out.write(id.sym.owner.toString().replace(".", "$"));
-                    out.write(".");
-                } else {
-                    if (!name.equals("super")) out.write("this.");
-                    if (info.mode() == Overloads.Mode.STATIC) out.write("constructor.");
-                }
-                out.write(name);
+            if (call.meth instanceof JCTree.JCIdent id) { // call local or static import
+                id.accept(this);
                 out.write("(");
             } else if (call.meth instanceof JCTree.JCFieldAccess prop) {
                 if (info.mode() == Overloads.Mode.INSTANCE) {
@@ -388,17 +385,24 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (methodSym.name.toString().equals("equals") && isNotOverEquals)
                         out.write(prop.toString().replace(".equals", " == "));
                     else {
-                        if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null)
+                        if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null) {
                             prop.selected.accept(this);
-                        else
-                            prop.accept(this);
+                        } else {
+                            prop.selected.accept(this);
+                            out.write(".");
+                            if (!isRecordAccessor &&
+                                (prop.sym.flags_field & Flags.NATIVE) == 0 &&
+                                !prop.sym.owner.toString().equals("java.lang.Object")
+                            ) out.write("_");
+
+                            out.write(prop.name.toString());
+                        }
                     }
-                    // FIXME: это тоже странно
                     if (!isRecordAccessor) out.write("(");
                 } else {
                     var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
                     out.write(onType.tsym.toString().replace(".", "$"));
-                    out.write(".");
+                    out.write("._");
                     out.write(prop.name.toString());
 
                     if (info.mode() == Overloads.Mode.AS_STATIC) {
@@ -456,11 +460,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                 //    if (!clSymbol.isRecord()) throw memberRefUsedIncorrect();
             } else throw memberRefUsedIncorrect();
 
-            out.write("{memberNames: () => ['");
+            out.write("{_memberNames: () => ['");
             out.write(ref.name.toString());
-            out.write("'], value: (v) => v.");
+            out.write("'], _value: (v) => v.");
             out.write(ref.name.toString());
-            out.write(", className: () => '");
+            out.write(", _className: () => '");
             out.write(((Symbol.ClassSymbol) ref.type.allparams().get(1).tsym).className());
             out.write("'}");
         } else {
@@ -473,7 +477,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 var fullClassName = tSym.packge().toString().replace(".", "$") +
                     "$" + ref.expr;
                 out.write(fullClassName);
-                out.write(".");
+                out.write("._");
                 out.write(ref.name.toString());
                 out.write(".bind(");
                 out.write(fullClassName);
@@ -484,7 +488,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write("((x) => new ");
                 out.write(stringBuilder.toString());
                 out.write("(");
-                if(info.isOverloaded()) {
+                if (info.isOverloaded()) {
                     out.write(String.valueOf(info.n()));
                     out.write(", ");
                 }
@@ -492,12 +496,12 @@ abstract class ExpressionGen extends VisitorWithContext {
                 flagNew = false;
             } else {
                 if (ref.expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
-                    out.write("((self) => self.");
+                    out.write("((self) => self._");
                     out.write(ref.name.toString());
                     out.write("()");
                 } else {
                     ref.expr.accept(this);
-                    out.write(".");
+                    out.write("._");
                     out.write(ref.name.toString());
                     out.write(".bind(");
                     ref.expr.accept(this);

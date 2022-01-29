@@ -38,7 +38,7 @@ public abstract class Input<T> extends Control<T> {
 
 //                style.height = "100%";
 
-                new span(_label) {{
+                new span(label) {{
 //                    style.display = "inline-flex";
 //                    style.alignItems = "center";
 //                    style.whiteSpace = "nowrap";
@@ -55,7 +55,7 @@ public abstract class Input<T> extends Control<T> {
                     checked = (Boolean) self.value;
                     onchange = ev -> {
                         self.value = parseValueOpt(ev.target);
-                        self.ready = self._optional || self.value != null;
+                        self.ready = self.optional || self.value != null;
                         self.onReadyChanged.run();
                     };
                 }};

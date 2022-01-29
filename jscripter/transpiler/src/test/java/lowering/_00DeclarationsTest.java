@@ -65,11 +65,11 @@ public class _00DeclarationsTest {
                   constructor() {
                     super();
                   }
-                  static bar() {
+                  static _bar() {
                   }
-                  foo(x, y) {
+                  _foo(x, y) {
                   }
-                  foobar() {
+                  _foobar() {
                   }
                 }
                 """);
@@ -107,11 +107,11 @@ public class _00DeclarationsTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                   }
-                  foo() {
+                  _foo() {
                   }
-                  bar($over, ...__args) {
+                  _bar($over, ...__args) {
                     if($over === 0) {
                     } else if($over === 1) {
                       const [x] = __args;
@@ -137,7 +137,7 @@ public class _00DeclarationsTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const x = null;
                   }
                 }

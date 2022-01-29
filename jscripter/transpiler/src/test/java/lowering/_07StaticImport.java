@@ -57,7 +57,7 @@ public class _07StaticImport {
                       constructor() {
                         super();
                       }
-                      foo() {
+                      _foo() {
                         return 'xxx';
                       }
                     }
@@ -72,7 +72,7 @@ public class _07StaticImport {
                     class js$C extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.ss = js$B.a.foo();
+                          this.ss = js$B.a._foo();
                         };
                         super();
                         __init__();

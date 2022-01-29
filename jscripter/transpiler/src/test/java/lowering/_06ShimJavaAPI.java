@@ -19,7 +19,7 @@ public class _06ShimJavaAPI {
                 class js$Test extends Object {
                   constructor() {
                     const __init__ = () => {
-                      this.x = std$java$lang$Integer.valueOf('42');
+                      this.x = std$java$lang$Integer._valueOf('42');
                     };
                     super();
                     __init__();
@@ -39,7 +39,7 @@ public class _06ShimJavaAPI {
                 class js$Test extends Object {
                   constructor() {
                     const __init__ = () => {
-                      this.x = std$java$lang$String.compareTo.call('x', 'y');
+                      this.x = std$java$lang$String._compareTo.call('x', 'y');
                     };
                     super();
                     __init__();
@@ -106,12 +106,12 @@ public class _06ShimJavaAPI {
                 class js$Test extends Object {
                   constructor() {
                     const __init__ = () => {
-                      this.x = this.constructor.of();
+                      this.x = this.constructor._of();
                     };
                     super();
                     __init__();
                   }
-                  static of() {
+                  static _of() {
                     return 42;
                   }
                 }

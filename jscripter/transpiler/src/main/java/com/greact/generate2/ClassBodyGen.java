@@ -118,7 +118,13 @@ abstract class ClassBodyGen extends StatementGen {
         if (isStatic || isAsStatic) out.write("static ");
         var isAsync = table.isAsyncInSuper() || table.isAsyncLocal();
         if (isAsync) out.write("async ");
-        out.write(isConstructor ? "constructor" : name);
+
+        if (isConstructor)
+            out.write("constructor");
+        else {
+            out.write("_");
+            out.write(name);
+        }
 
         var params = methods.stream()
             .map(m -> m.snd.getParameters())
@@ -184,7 +190,7 @@ abstract class ClassBodyGen extends StatementGen {
             if (!isConstructor && table.hasInSuper()) {
                 out.writeLn(" else");
                 out.deepIn();
-                out.write("return super.");
+                out.write("return super._");
                 out.write(name);
                 out.writeLn(".apply(this, arguments);");
                 out.deepOut();

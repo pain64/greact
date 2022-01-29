@@ -36,7 +36,7 @@ public class _12InnerClass {
                       super();
                       __init__();
                     }
-                    add() {
+                    _add() {
                       return this.x + this.y;
                     }
                   }

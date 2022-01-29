@@ -34,7 +34,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const x0 = true;
                     const x1 = false;
                     const x2 = 42;
@@ -72,7 +72,7 @@ public class _01ExprTest {
                     super();
                     __init__();
                   }
-                  baz() {
+                  _baz() {
                     const x = null;
                     x = 42;
                     this.z = 42;
@@ -97,7 +97,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const x = true;
                     const y = x;
                   }
@@ -120,7 +120,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  boolToInt() {
+                  _boolToInt() {
                     const x = true ? 1 : 0;
                   }
                 }
@@ -151,7 +151,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     let x = 0;
                     const x1 = x++;
                     const x2 = x--;
@@ -203,7 +203,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const x0 = 1 * 1;
                     const x1 = Math.floor(1 / 2);
                     const d1 = 1.0 / 2.0;
@@ -263,7 +263,7 @@ public class _01ExprTest {
                     super();
                     __init__();
                   }
-                  baz() {
+                  _baz() {
                     let x = 0;
                     x *= 1;
                     x /= 1;
@@ -303,7 +303,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const x = [];
                     const y = ['hello', 'world'];
                     const x1 = [];
@@ -329,7 +329,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     const y0 = x[0];
                     const y1 = x[0][0];
                   }
@@ -368,7 +368,7 @@ public class _01ExprTest {
                       __init__();
                     }
                   }
-                  baz(a) {
+                  _baz(a) {
                     const x = a.field;
                     const b = a.next;
                     const y = a.next.field;
@@ -392,7 +392,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     const y = x;
                   }
                 }
@@ -414,7 +414,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     const y = ((x));
                   }
                 }
@@ -442,7 +442,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     const lambda = (i) => {
                       return i;
                     };
@@ -481,12 +481,12 @@ public class _01ExprTest {
                     super();
                     __init__();
                   }
-                  foo() {
+                  _foo() {
                   }
-                  baz() {
+                  _baz() {
                     const lambda = () => {
                       const yy = this.xx;
-                      this.foo();
+                      this._foo();
                     };
                   }
                 }
@@ -515,7 +515,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     return (() => {
                       switch(x) {
                         case 1:
@@ -565,7 +565,7 @@ public class _01ExprTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
                     const y2 = typeof x == 'number';
                     const y3 = typeof x == 'number';
@@ -613,7 +613,7 @@ public class _01ExprTest {
                       this.y = y;
                     }
                   }
-                  newA() {
+                  _newA() {
                     return new js$Test.A(1, 2);
                   }
                 }

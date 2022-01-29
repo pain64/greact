@@ -79,7 +79,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     static <T> void setEditorValueFromRowValue(Column<T, ?> col, T rowData) {
         @SuppressWarnings("unchecked")
         var _col = (Column<T, Object>) col;
-        _col._editor.value = JSExpression.of("this.fetchValue(rowData, col.memberNames)");
+        _col.editor.value = JSExpression.of("this._fetchValue(rowData, col.memberNames)");
     }
 
     static <T> void setValue(T rowData, String[] memberNames, Object value) {

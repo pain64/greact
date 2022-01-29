@@ -17,7 +17,7 @@ public class DateInput extends Control<Date> {
             new label() {{
                 className = "date-input";
 
-                new span(_label) {{
+                new span(label) {{
                     className = "date-input-span";
                 }};
                 new input() {{
@@ -28,7 +28,7 @@ public class DateInput extends Control<Date> {
 
                     onchange = ev -> {
                         value = ev.target.value;
-                        ready = _optional || value != null;
+                        ready = optional || value != null;
                         onReadyChanged.run();
 
                         self.value = Dates.fromUnixTime(ev.target.valueAsNumber);
