@@ -42,8 +42,8 @@ public class TypeGen extends ClassBodyGen {
         } else {
             out.write("class ");
             if (!classDef.type.tsym.isAnonymous()) {
-                out.write(cu.getPackage().getPackageName().toString().replace(".", "$"));
-                out.write("$");
+                out.write(cu.getPackage().getPackageName().toString().replace(".", "_"));
+                out.write("_");
                 out.write(classDef.getSimpleName().toString());
                 out.write(" ");
             }
@@ -52,7 +52,7 @@ public class TypeGen extends ClassBodyGen {
         var extendClause = classDef.extending;
         var superClass = "Object";
         if (extendClause != null) {
-            superClass = extendClause.type.tsym.toString().replace(".", "$");
+            superClass = extendClause.type.tsym.toString().replace(".", "_");
             out.addDependency(extendClause.type.tsym.toString() + ".js");
         }
         out.write("extends ");

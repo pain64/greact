@@ -21,7 +21,7 @@ public class _08AsyncAwait {
                   @async void foo(int x) {}
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -63,7 +63,7 @@ public class _08AsyncAwait {
                   @async void bar() { foo(); }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -106,7 +106,7 @@ public class _08AsyncAwait {
                   @async void callee(Foo f) { f.foo(); }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -128,7 +128,7 @@ public class _08AsyncAwait {
                       @async void foo() {}
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -144,7 +144,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js$B extends js$A {
+                    class js_B extends js_A {
                       constructor() {
                         super();
                       }
@@ -173,7 +173,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         super();
                       }
@@ -225,7 +225,7 @@ public class _08AsyncAwait {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -252,7 +252,7 @@ public class _08AsyncAwait {
                   Foo instance = () -> {};
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     const __init__ = () => {
                       this.instance = async () => {

@@ -17,7 +17,7 @@ public class _07StaticImport {
                       static String s = "";
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -32,10 +32,10 @@ public class _07StaticImport {
                       String ss = s + s;
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.ss = js$A.s + js$A.s;
+                          this.ss = js_A.s + js_A.s;
                         };
                         super();
                         __init__();
@@ -53,7 +53,7 @@ public class _07StaticImport {
                       String foo() { return "xxx"; }
                     }""",
                 """
-                    class js$A extends Object {                  
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -69,10 +69,10 @@ public class _07StaticImport {
                       String ss = js.B.a.foo();
                     }""",
                 """
-                    class js$C extends Object {
+                    class js_C extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.ss = js$B.a._foo();
+                          this.ss = js_B.a._foo();
                         };
                         super();
                         __init__();
@@ -86,11 +86,11 @@ public class _07StaticImport {
                       static A a = new A();
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         super();
                       }
-                      static a = new js$A();
+                      static a = new js_A();
                     }
                     """));
     }

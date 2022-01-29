@@ -16,7 +16,7 @@ public class _10AnonInnerClass {
                     public class A {
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -32,12 +32,12 @@ public class _10AnonInnerClass {
                       }
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B extends Object {
                       constructor() {
                         super();
                       }
                       _foo() {
-                        new class extends js$A {
+                        new class extends js_A {
                           constructor() {
                             super();
                           }

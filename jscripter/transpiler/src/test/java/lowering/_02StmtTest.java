@@ -16,7 +16,7 @@ public class _02StmtTest {
                   int baz() { return 42; }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -41,7 +41,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -75,7 +75,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -107,7 +107,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -134,7 +134,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -158,7 +158,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -181,7 +181,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -212,7 +212,7 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -242,12 +242,12 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
                   _foo() {
-                    throw new java$lang$Exception(7, 'xxx');
+                    throw new java_lang_Exception(7, 'xxx');
                   }
                 }
                 """);
@@ -280,32 +280,32 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                    class js$Test extends Object {
+                    class js_Test extends Object {
                       constructor() {
                         super();
                       }
-                      static E1 = class extends java$lang$Exception {
+                      static E1 = class extends java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
                             super(6, );
                           }
                         }
                       }
-                      static E2 = class extends java$lang$Exception {
+                      static E2 = class extends java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
                             super(6, );
                           }
                         }
                       }
-                      static E3 = class extends java$lang$Exception {
+                      static E3 = class extends java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
                             super(6, );
                           }
                         }
                       }
-                      static E4 = class extends java$lang$Exception {
+                      static E4 = class extends java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
                             super(6, );
@@ -318,9 +318,9 @@ public class _02StmtTest {
                         try {
                           this._foo();
                         } catch(e) {
-                          if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
+                          if(e instanceof js_Test_E1 || e instanceof js_Test_E2) {
                             const x = e;
-                          } else if(e instanceof js$Test$E3) {
+                          } else if(e instanceof js_Test_E3) {
                             const ee = e
                             const y = ee;
                           } else {

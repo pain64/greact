@@ -23,7 +23,7 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -53,7 +53,7 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js$Test extends Object {
+                class js_Test extends Object {
                   constructor() {
                     super();
                   }
@@ -80,7 +80,7 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -100,10 +100,10 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js$C extends Object {
+                    class js_C extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.b = new js$A.B();
+                          this.b = new js_A.B();
                         };
                         super();
                         __init__();

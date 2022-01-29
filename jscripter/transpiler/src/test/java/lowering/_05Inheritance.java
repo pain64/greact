@@ -20,7 +20,7 @@ public class _05Inheritance {
                       int  foo(int x)     { return 2;    };
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A extends Object {
                       constructor() {
                         super();
                       }
@@ -46,7 +46,7 @@ public class _05Inheritance {
                       int foo(float x) { return 4; }; 
                     }""",
                 """
-                    class js$B extends js$A {
+                    class js_B extends js_A {
                       constructor() {
                         super();
                       }
@@ -71,7 +71,7 @@ public class _05Inheritance {
                       int foo(double x, double y) { return 6; };
                     }""",
                 """
-                    class js$C extends js$B {
+                    class js_C extends js_B {
                       constructor() {
                         super();
                       }
