@@ -11,8 +11,7 @@ import static util.CompileAssert.assertCompiledMany;
 
 public class _03CallAndRefLocalTest {
 
-    @Test
-    void call() throws IOException {
+    @Test void call() throws IOException {
         assertCompiled(
                 """
                     package js;
@@ -28,23 +27,22 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      bar(x, y) {
+                      _bar(x, y) {
                       }
-                      baz() {
-                        this.bar(42, 42);
-                        this.bar(42, 42);
+                      _baz() {
+                        this._bar(42, 42);
+                        this._bar(42, 42);
                       }
                     }
                     """);
     }
 
-    @Test
-    void callStatic() throws IOException {
+    @Test void callStatic() throws IOException {
         assertCompiled(
                 """
                     package js;
                     public class Test {
-                      static void bar(int x, int y) {} 
+                      static void bar(int x, int y) {}
                       void baz() { bar(42, 42); }
                     }""",
                 """
@@ -52,13 +50,34 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      static bar(x, y) {
+                      static _bar(x, y) {
                       }
-                      baz() {
-                        this.constructor.bar(42, 42);
+                      _baz() {
+                        this.constructor._bar(42, 42);
                       }
                     }
                     """);
+    }
+
+    @Test void callFromObject() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  void baz() {
+                    ((Object) 42).toString();
+                  }
+                }""",
+            """
+                class js$Test extends Object {
+                  constructor() {
+                    super();
+                  }
+                  _baz() {
+                    (42).toString();
+                  }
+                }
+                """);
     }
 
     @Test
@@ -77,10 +96,10 @@ public class _03CallAndRefLocalTest {
                               constructor() {
                                 super();
                               }
-                              static bar() {
+                              static _bar() {
                                 return 42;
                               }
-                              static baz() {
+                              static _baz() {
                                 return 42;
                               }
                             }
@@ -100,9 +119,9 @@ public class _03CallAndRefLocalTest {
                               constructor() {
                                 super();
                               }
-                              fizz() {
-                                js$A.bar();
-                                js$A.baz();
+                              _fizz() {
+                                js$A._bar();
+                                js$A._baz();
                               }
                             }
                             """)
@@ -128,16 +147,16 @@ public class _03CallAndRefLocalTest {
                           constructor() {
                             super();
                           }
-                          bar($over, ...__args) {
+                          _bar($over, ...__args) {
                             if($over === 0) {
                               const [x] = __args;
                             } else if($over === 1) {
                               const [x] = __args;
                             }
                           }
-                          baz() {
-                            this.bar(0, 42);
-                            this.bar(1, 42);
+                          _baz() {
+                            this._bar(0, 42);
+                            this._bar(1, 42);
                           }
                         }
                         """);
@@ -185,11 +204,11 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      static foo(x) {
+                      static _foo(x) {
                       }
-                      fiz() {
+                      _fiz() {
                       }
-                      bar($over, ...__args) {
+                      _bar($over, ...__args) {
                         if($over === 0) {
                           const [x] = __args;
                         } else if($over === 1) {
@@ -206,17 +225,17 @@ public class _03CallAndRefLocalTest {
                             super();
                           }
                         }
-                        bar(x) {
+                        _bar(x) {
                         }
                       }
-                      baz() {
-                        const m1 = js$Test.foo.bind(js$Test);
-                        const m2 = this.bar.bind(this, 1);
-                        const m3 = this.bar.bind(this, 0);
+                      _baz() {
+                        const m1 = js$Test._foo.bind(js$Test);
+                        const m2 = this._bar.bind(this, 1);
+                        const m3 = this._bar.bind(this, 0);
                         const s = ((x) => new js$Test.A(1, x));
                         const a = new js$Test.A(1, 1);
-                        const m4 = a.bar.bind(a);
-                        const m5 = ((self) => self.fiz());
+                        const m4 = a._bar.bind(a);
+                        const m5 = ((self) => self._fiz());
                       }
                     }
                     """);
@@ -243,7 +262,7 @@ public class _03CallAndRefLocalTest {
                       constructor() {
                         super();
                       }
-                      baz() {
+                      _baz() {
                         const m1 = (x) => {
                         };
                         m1(42);
@@ -271,16 +290,16 @@ public class _03CallAndRefLocalTest {
                                   constructor() {
                                     super();
                                   }
-                                  mA($over, ...__args) {
+                                  _mA($over, ...__args) {
                                     if($over === 0) {
                                       const [x] = __args;
                                     } else if($over === 1) {
                                       const [x] = __args;
                                     }
                                   }
-                                  callB(b) {
-                                    b.mB(1, 1);
-                                    b.mB(0, 1);
+                                  _callB(b) {
+                                    b._mB(1, 1);
+                                    b._mB(0, 1);
                                   }
                                 }
                                 """),
@@ -300,16 +319,16 @@ public class _03CallAndRefLocalTest {
                                   constructor() {
                                     super();
                                   }
-                                  mB($over, ...__args) {
+                                  _mB($over, ...__args) {
                                     if($over === 0) {
                                       const [x] = __args;
                                     } else if($over === 1) {
                                       const [x] = __args;
                                     }
                                   }
-                                  callA(a) {
-                                    a.mA(1, 1);
-                                    a.mA(0, 1);
+                                  _callA(a) {
+                                    a._mA(1, 1);
+                                    a._mA(0, 1);
                                   }
                                 }
                                 """)

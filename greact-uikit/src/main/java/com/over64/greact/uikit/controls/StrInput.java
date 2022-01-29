@@ -7,12 +7,12 @@ public class StrInput extends Input<String> {
     public StrInput() {super("text");}
 
     public StrInput label(String lbl) {
-        this._label = lbl;
+        this.label = lbl;
         return this;
     }
 
     public StrInput optional() {
-        this._optional = true;
+        this.optional = true;
         this.ready = true;
         return this;
     }

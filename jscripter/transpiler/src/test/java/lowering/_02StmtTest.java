@@ -20,7 +20,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     return 42;
                   }
                 }
@@ -45,7 +45,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     if(false)
                       return 41;
                     if(true)
@@ -79,7 +79,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz(x, y) {
+                  _baz(x, y) {
                     while(true) {
                       x++;
                       if(x > 10)
@@ -111,7 +111,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     outer:
                     for(;;)
                       for(;;)
@@ -138,7 +138,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz(x) {
+                  _baz(x) {
                     do {
                       x++;
                     } while(x < 100);
@@ -162,7 +162,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz() {
+                  _baz() {
                     for(let x = 0, y = 0; true; x++, y++) {
                     }
                   }
@@ -185,7 +185,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz(array) {
+                  _baz(array) {
                     for(let x of array) {
                     }
                   }
@@ -216,7 +216,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  baz(x, y) {
+                  _baz(x, y) {
                     switch(x) {
                       case 0:
                         y = 42;
@@ -246,7 +246,7 @@ public class _02StmtTest {
                   constructor() {
                     super();
                   }
-                  foo() {
+                  _foo() {
                     throw new java$lang$Exception(7, 'xxx');
                   }
                 }
@@ -312,11 +312,11 @@ public class _02StmtTest {
                           }
                         }
                       }
-                      foo() {
+                      _foo() {
                       }
-                      baz() {
+                      _baz() {
                         try {
-                          this.foo();
+                          this._foo();
                         } catch(e) {
                           if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
                             const x = e;

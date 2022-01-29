@@ -9,7 +9,7 @@ public class Radio<T> extends Control<T> {
     final Variant<T>[] variants;
 
     @SafeVarargs public Radio(String label, Variant<T>... variants) {
-        this._label = label;
+        this.label = label;
         this.variants = JSExpression.of("Array.from(arguments).slice(1)");
         if(this.variants.length > 0) {
             this.value = this.variants[0].value;
@@ -24,7 +24,7 @@ public class Radio<T> extends Control<T> {
         var self = this;
 
         return new div() {{
-            new span(_label + " ");
+            new span(label + " ");
             for (var variant : variants) {
                 new label() {{
                     new input() {{

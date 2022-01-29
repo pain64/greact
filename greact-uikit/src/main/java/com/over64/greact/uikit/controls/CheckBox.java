@@ -8,7 +8,7 @@ public class CheckBox extends Input<Boolean> {
     public CheckBox() { super("checkbox"); }
 
     public CheckBox label(String lbl) {
-        this._label = lbl;
+        this.label = lbl;
         return this;
     }
 

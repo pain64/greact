@@ -14,7 +14,6 @@ public class SearchBox implements Component0<div> {
     boolean doSearch = false;
     AsyncSupplier<Component0<div>> loader;
     Component0<div> loaded;
-    public Object dependsOn;
 
     @FunctionalInterface
     public interface AsyncSupplier<T> {
@@ -68,11 +67,10 @@ public class SearchBox implements Component0<div> {
     void onReadyChanged() {
         checkCanSearch();
         calcChildren();
-        JSExpression.of("this.performChangedEffects()");
+        JSExpression.of("this._performChangedEffects()");
     }
 
-    @async
-    void performChangedEffects() {
+    @async void performChangedEffects() {
         if (canSearch)
             loaded = loader.load();
 
@@ -88,15 +86,15 @@ public class SearchBox implements Component0<div> {
     }
 
     public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, Component0<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
     public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, Component<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
     public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, Component0<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
     @Override

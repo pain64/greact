@@ -52,7 +52,7 @@ public class _09RecordDeclaration {
                       this.z = z;
                     }
                   }
-                  some() {
+                  _some() {
                     const a = new js$Test.A(1, 2, 3);
                     const x = a.x;
                     const y = a.y;

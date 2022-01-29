@@ -36,7 +36,7 @@ public class _10AnonInnerClass {
                       constructor() {
                         super();
                       }
-                      foo() {
+                      _foo() {
                         new class extends js$A {
                           constructor() {
                             super();

@@ -36,8 +36,8 @@ public class _11MemberRef {
                     class js$B extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'};
-                          this.ref3 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'};
+                          this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
+                          this.ref3 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
                         };
                         super();
                         __init__();
@@ -92,8 +92,8 @@ public class _11MemberRef {
                     class js$C extends Object {
                       constructor() {
                         const __init__ = () => {
-                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'};
-                          this.ref2 = {memberNames: () => ['a', 'age'], value: (v) => v.a.age, className: () => 'java.lang.Long'};
+                          this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
+                          this.ref2 = {_memberNames: () => ['a', 'age'], _value: (v) => v.a.age, _className: () => 'java.lang.Long'};
                         };
                         super();
                         __init__();

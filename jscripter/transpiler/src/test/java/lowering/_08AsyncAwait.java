@@ -25,7 +25,7 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  async foo($over, ...__args) {
+                  async _foo($over, ...__args) {
                     if($over === 0) {
                     } else if($over === 1) {
                       const [x] = __args;
@@ -67,10 +67,10 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  async foo() {
+                  async _foo() {
                   }
-                  async bar() {
-                    (await this.foo());
+                  async _bar() {
+                    (await this._foo());
                   }
                 }
                 """);
@@ -110,8 +110,8 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  async callee(f) {
-                    (await f.foo());
+                  async _callee(f) {
+                    (await f._foo());
                   }
                 }
                 """);
@@ -132,7 +132,7 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      async foo() {
+                      async _foo() {
                       }
                     }
                     """),
@@ -147,8 +147,8 @@ public class _08AsyncAwait {
                     class js$B extends js$A {
                       constructor() {
                         super();
-                      }  
-                      async foo() {
+                      }
+                      async _foo() {
                       }
                     }
                     """));
@@ -177,7 +177,7 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      async foo() {
+                      async _foo() {
                       }
                     }
                     """));
@@ -229,11 +229,11 @@ public class _08AsyncAwait {
                   constructor() {
                     super();
                   }
-                  async doo() {
+                  async _doo() {
                   }
-                  bar() {
+                  _bar() {
                     const instance = async () => {
-                      (await this.doo());
+                      (await this._doo());
                     };
                   }
                 }

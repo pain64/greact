@@ -23,8 +23,8 @@ public class _05Inheritance {
                     class js$A extends Object {
                       constructor() {
                         super();
-                      }                    
-                      foo($over, ...__args) {
+                      }
+                      _foo($over, ...__args) {
                         if($over === 0) {
                           const [x] = __args;
                         } else if($over === 1) {
@@ -50,7 +50,7 @@ public class _05Inheritance {
                       constructor() {
                         super();
                       }
-                      foo($over, ...__args) {
+                      _foo($over, ...__args) {
                         if($over === 1) {
                           const [x] = __args;
                           return 3;
@@ -58,7 +58,7 @@ public class _05Inheritance {
                           const [x] = __args;
                           return 4;
                         } else
-                          return super.foo.apply(this, arguments);
+                          return super._foo.apply(this, arguments);
                       }
                     }
                     """),
@@ -75,7 +75,7 @@ public class _05Inheritance {
                       constructor() {
                         super();
                       }
-                      foo($over, ...__args) {
+                      _foo($over, ...__args) {
                         if($over === 2) {
                           const [x] = __args;
                           return 5;
@@ -83,7 +83,7 @@ public class _05Inheritance {
                           const [x, y] = __args;
                           return 6;
                         } else
-                          return super.foo.apply(this, arguments);
+                          return super._foo.apply(this, arguments);
                       }
                     }
                     """)

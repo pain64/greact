@@ -5,8 +5,6 @@ import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-import java.util.function.Function;
-
 @CSS.Require("select.css")
 public class Select<T> extends Control<T> {
     @FunctionalInterface public interface Mapper<V, U> {
@@ -16,11 +14,11 @@ public class Select<T> extends Control<T> {
     // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
     //  inner классы и record components
     public static <A> MemberRef<A, A> identity() {
-        return JSExpression.of("{value: (v) => v}");
+        return JSExpression.of("{_value: (v) => v}");
     }
 
     public static <A> MemberRef<A, String> identityToString() {
-        return JSExpression.of("{value: (v) => v.toString()}");
+        return JSExpression.of("{_value: (v) => v.toString()}");
     }
 
     Indexed<T>[] variants;
@@ -52,7 +50,7 @@ public class Select<T> extends Control<T> {
     }
 
     public Select<T> label(String lbl) {
-        this._label = lbl;
+        this.label = lbl;
         return this;
     }
 
@@ -73,7 +71,7 @@ public class Select<T> extends Control<T> {
             new label() {{
                 className = "select";
 
-                new span(_label) {{
+                new span(label) {{
                     className = "select-span";
                 }};
 
@@ -97,7 +95,7 @@ public class Select<T> extends Control<T> {
     }
 
     public Select<T> slots(int n) {
-        _slots = n;
+        slots = n;
         return this;
     }
 }

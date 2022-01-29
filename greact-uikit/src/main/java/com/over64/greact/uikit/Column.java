@@ -17,12 +17,12 @@ public class Column<T, U> {
             style.textAlign = "left";
         }};
 
-    public String _header;
+    public String header;
     public String[] memberNames;
     public boolean hidden = false;
-    public Control<U> _editor = null;
+    public Control<U> editor = null;
     public BiFunction<U, T, String> backgroundColor = null;
-    public Component2<td, U, T> _view = (value, row) -> new td(value == null ? "" : value.toString());
+    public Component2<td, U, T> view = (value, row) -> new td(value == null ? "" : value.toString());
 
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
@@ -39,7 +39,7 @@ public class Column<T, U> {
         var columnName = memberNames[memberNames.length - 1];
         columnName = JSExpression.of("columnName.replace('_', ' ')");
         columnName = JSExpression.of("columnName.charAt(0).toUpperCase() + columnName.slice(1)");
-        this._header = columnName;
+        this.header = columnName;
         this.memberNames = memberNames;
 
         var editor = switch (className) {
@@ -52,7 +52,7 @@ public class Column<T, U> {
             default -> null;
         };
 
-        this._view = switch (className) {
+        this.view = switch (className) {
             case "java.util.Date" -> (d, row) -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
             case "boolean", "java.lang.Boolean" -> (d, row) -> new td() {{
                 // FIXME: fix css - CheckBox и нативные чекбоксы должны выглядеть одинаково?
@@ -62,10 +62,10 @@ public class Column<T, U> {
                     readOnly = true;
                 }};
             }};
-            default -> _view;
+            default -> view;
         };
 
-        this._editor = (Control<U>) editor;
+        this.editor = (Control<U>) editor;
     }
 
     public Column(MemberRef<T, U> ref) {
@@ -73,34 +73,34 @@ public class Column<T, U> {
     }
 
     public Column<T, U> editor(Control<U> editor) {
-        this._editor = editor;
+        this.editor = editor;
         return this;
     }
 
     public Column<T, U> name(String theHeader) {
-        this._header = theHeader;
+        this.header = theHeader;
         return this;
     }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
-        this._view = (value, row) -> new td(mapper.map(value));
+        this.view = (value, row) -> new td(mapper.map(value));
         return this;
     }
 
     public Column<T, U> viewCell(Component1<td, U> newView) {
         @SuppressWarnings("unchecked")
         var casted = (Component2<td, U, T>) newView;
-        this._view = casted;
+        this.view = casted;
         return this;
     }
 
     public Column<T, U> viewCell(Component2<td, U, T> newView) {
-        this._view = newView;
+        this.view = newView;
         return this;
     }
 
     public Column<T, U> noedit() {
-        this._editor = null;
+        this.editor = null;
         return this;
     }
 

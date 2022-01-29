@@ -32,34 +32,34 @@ public class _13ClassRef {
                       this.x2 = x2;
                     }
                   }
-                  bar(obj) {
+                  _bar(obj) {
                     const ref = obj.__class__;
                   }
-                  baz() {
-                    this.bar((() => {
+                  _baz() {
+                    this._bar((() => {
                       const __obj = new js$Test.A(1, 1);
                       __obj.__class__ = ({
-                        name: () => 'js.Test.A',
-                        params: () => [
+                        _name: () => 'js.Test.A',
+                        _params: () => [
                         ],
-                        fields: () => [
+                        _fields: () => [
                           {
-                            name: () => 'x1',
-                            __class__: () => ({
-                              name: () => 'long',
-                              params: () => [
+                            _name: () => 'x1',
+                            ___class__: () => ({
+                              _name: () => 'long',
+                              _params: () => [
                               ],
-                              fields: () => [
+                              _fields: () => [
                               ]
                             })
                           },
                           {
-                            name: () => 'x2',
-                            __class__: () => ({
-                              name: () => 'int',
-                              params: () => [
+                            _name: () => 'x2',
+                            ___class__: () => ({
+                              _name: () => 'int',
+                              _params: () => [
                               ],
-                              fields: () => [
+                              _fields: () => [
                               ]
                             })
                           }
@@ -89,24 +89,24 @@ public class _13ClassRef {
                   constructor() {
                     super();
                   }
-                  bar(obj) {
+                  _bar(obj) {
                     const ref = obj.__class__;
                   }
-                  baz() {
-                    this.bar((() => {
+                  _baz() {
+                    this._bar((() => {
                       const __obj = [];
                       __obj.__class__ = ({
-                        name: () => 'Array',
-                        params: () => [
+                        _name: () => 'Array',
+                        _params: () => [
                           {
-                            name: () => 'java.lang.Integer',
-                            params: () => [
+                            _name: () => 'java.lang.Integer',
+                            _params: () => [
                             ],
-                            fields: () => [
+                            _fields: () => [
                             ]
                           }
                         ],
-                        fields: () => [
+                        _fields: () => [
                         ]
                       });
                       return __obj;
