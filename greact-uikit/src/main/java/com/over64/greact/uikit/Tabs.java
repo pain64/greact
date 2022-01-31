@@ -17,8 +17,7 @@ public class Tabs implements Component0<div> {
             this.selected = this.tabs[0];
     }
 
-    @Override
-    public div mount() {
+    @Override public div mount() {
         return new div() {{
             new div() {{
                 dependsOn = rerenderAll;

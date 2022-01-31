@@ -1,6 +1,7 @@
 package com.over64.greact.uikit.controls;
 
 import com.greact.model.Require;
+import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 @Require.CSS("input.css")

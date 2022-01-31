@@ -4,9 +4,6 @@ import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.model.ClassRef;
 import com.greact.model.async;
-import com.sun.source.tree.BlockTree;
-import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.StatementTree;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -306,11 +303,14 @@ abstract class ExpressionGen extends VisitorWithContext {
                 .findFirst().get(); // FIXME
 
             var isAsync = invokeMethod.getAnnotation(async.class) != null;
-            if (isAsync) out.write("async ");
+            var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+            lmb.body.accept(visitor);
+            if (isAsync && visitor.hasAsyncCalls) out.write("async ");
 
             out.mkString(lmb.params, arg ->
                 out.write(arg.getName().toString()), "(", ", ", ") => ");
 
+            super.lambdaAsyncInference.put(lmb, visitor.hasAsyncCalls);
             withAsyncContext(isAsync, () -> lmb.body.accept(this));
         }
     }
@@ -336,8 +336,20 @@ abstract class ExpressionGen extends VisitorWithContext {
         boolean isRecordAccessor = methodOwnerSym.isRecord() && methodOwnerSym.getRecordComponents().stream()
             .anyMatch(rc -> rc.getAccessor() == methodSym);
 
-        if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression")) &&
-            methodSym.name.equals(names.fromString("of"))) {
+        if (methodOwnerSym.fullname.equals(names.fromString("com.greact.model.JSExpression"))) {
+            if (methodSym.name.equals(names.fromString("ofAsync")) && !isAsyncContext) {
+                var line = super.cu.getLineMap().getLineNumber(call.pos);
+                var col = super.cu.getLineMap().getColumnNumber(call.pos);
+                throw new CompileException(CompileException.ERROR.ASYNC_INVOCATION_NOT_ALLOWED,
+                    """
+                        At %s:%d:%d
+                        cannot invoke async method in this context due to:
+                        - enclosing method does not declared as @async (OR)
+                        - enclosing lambda interface does not declared as @async (OR)
+                        - class init block (OR)
+                        """.formatted(super.cu.sourcefile.getName(), line, col)
+                );
+            }
 
             var unescaped = call.getArguments().get(0).toString()
                 .replace("\\n", "\n")
@@ -348,6 +360,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             call.args.head.accept(this);
             out.write(".__class__");
         } else {
+            // FIXME: одинаковый код с HasAsyncCallsVisitor
             var shimmedType = super.stdShim.findShimmedType(methodOwnerSym.type);
             var targetMethod = shimmedType != null
                 ? super.stdShim.findShimmedMethod(shimmedType, methodSym)
@@ -357,20 +370,38 @@ abstract class ExpressionGen extends VisitorWithContext {
                 ? Overloads.methodInfo(super.types, (TypeElement) shimmedType.tsym, targetMethod)
                 : Overloads.methodInfo(super.types, (TypeElement) methodOwnerSym.type.tsym, methodSym);
 
-            if (info.isAsync() && !isAsyncContext) {
+            final boolean isAsync;
+            if (call.meth instanceof JCTree.JCFieldAccess fa &&
+                fa.selected instanceof JCTree.JCParens parens) {
+
+                if (parens.expr instanceof JCTree.JCLambda lmb) {
+                    var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+                    lmb.body.accept(visitor);
+                    isAsync = visitor.hasAsyncCalls;
+                } else if (parens.expr instanceof JCTree.JCAssign assign &&
+                    assign.rhs instanceof JCTree.JCLambda lmb) {
+                    var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+                    lmb.body.accept(visitor);
+                    isAsync = visitor.hasAsyncCalls;
+                } else isAsync = info.isAsync();
+            } else isAsync = info.isAsync();
+
+            if (isAsync && !isAsyncContext) {
                 var line = super.cu.getLineMap().getLineNumber(call.pos);
                 var col = super.cu.getLineMap().getColumnNumber(call.pos);
-                throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
+                throw new CompileException(CompileException.ERROR.ASYNC_INVOCATION_NOT_ALLOWED,
                     """
-                        %s      at %s:%d:%d
-                        method which calls @async method must be defined as @async""".formatted(
-                        call, super.cu.sourcefile.getName(), line, col)
+                        At %s:%d:%d for %s
+                        cannot invoke async method in this context due to:
+                        - enclosing method does not declared as @async (OR)
+                        - enclosing lambda interface does not declared as @async (OR)
+                        - class init block (OR)
+                        """.formatted(super.cu.sourcefile.getName(), line, col, call.toString())
                 );
             }
 
-            if (info.isAsync()) out.write("(await ");
+            if (isAsync) out.write("(await ");
 
-            // FIXME: on-demand static import, foreign module call
             if (call.meth instanceof JCTree.JCIdent id) { // call local or static import
                 id.accept(this);
                 out.write("(");
@@ -450,7 +481,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             }
 
             if (!isRecordAccessor) out.write(")");
-            if (info.isAsync()) out.write(")");
+            if (isAsync) out.write(")");
         }
     }
 

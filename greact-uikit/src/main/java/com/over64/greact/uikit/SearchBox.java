@@ -15,28 +15,20 @@ public class SearchBox implements Component0<div> {
     AsyncSupplier<Component0<div>> loader;
     Component0<div> loaded;
 
-    @FunctionalInterface
-    public interface AsyncSupplier<T> {
-        @async
-        T load();
+    @FunctionalInterface public interface AsyncSupplier<T> {
+        @async T load();
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc1<A1, R> {
-        @async
-        R load(A1 a1);
+    @FunctionalInterface public interface AsyncFunc1<A1, R> {
+        @async R load(A1 a1);
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc2<A1, A2, R> {
-        @async
-        R load(A1 a1, A2 a2);
+    @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
+        @async R load(A1 a1, A2 a2);
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc3<A1, A2, A3, R> {
-        @async
-        R load(A1 a1, A2 a2, A3 a3);
+    @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
+        @async R load(A1 a1, A2 a2, A3 a3);
     }
 
     <V> void push(V[] array, V value) {
@@ -97,8 +89,7 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    @Override
-    public div mount() {
+    @Override @async public div mount() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();

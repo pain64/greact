@@ -18,11 +18,10 @@ public class Router implements Component0<div> {
         return null;
     }
 
-    @Override
-    public div mount() {
+    @Override public div mount() {
         div root = document.createElement("div");
 
-        GReact.AsyncRunnable onLocationChange = () -> {
+        Runnable onLocationChange = () -> {
             var view = findView();
             var element = view != null ? view.slot : new div();
             root.innerHTML = "";

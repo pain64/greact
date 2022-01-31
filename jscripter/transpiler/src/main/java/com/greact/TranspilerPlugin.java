@@ -93,6 +93,7 @@ public class TranspilerPlugin implements Plugin {
                                 Symbol.MethodSymbol::getReturnType));
 
                     //System.out.println("after analyze for: " + e + "cu: " + cu);
+                    var startTime = System.currentTimeMillis();
 
                     try {
                         var jsFile = env.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
@@ -130,6 +131,10 @@ public class TranspilerPlugin implements Plugin {
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
+
+                    var endTime = System.currentTimeMillis();
+                    System.out.println("JS compilation for " + cu.getSourceFile().toString()
+                        + "took " + (endTime - startTime) + "ms");
                 }
             }
 

@@ -8,6 +8,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Names;
 
 import javax.lang.model.element.Name;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ abstract class VisitorWithContext extends JCTree.Visitor {
     public Trees trees;
     public JCTree.JCCompilationUnit cu;
 
-    boolean isAsyncContext = false;
+    Map<JCTree.JCLambda, Boolean> lambdaAsyncInference = new HashMap<>();
 
     JCTree.JCClassDecl classDef = null;
     Map<Name, List<JCTree.JCMethodDecl>> groups = null;
@@ -36,10 +37,11 @@ abstract class VisitorWithContext extends JCTree.Visitor {
         this.classDef = oldClass;
     }
 
-    void withAsyncContext(boolean isAsync, Runnable block) {
-        var old = isAsyncContext;
-        isAsyncContext = isAsync;
+    boolean isAsyncContext = false;
+    void withAsyncContext(boolean isAsyncContext, Runnable block) {
+        var old = this.isAsyncContext;
+        this.isAsyncContext = isAsyncContext;
         block.run();
-        isAsyncContext = old;
+        this.isAsyncContext = old;
     }
 }

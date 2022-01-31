@@ -53,6 +53,93 @@ public class _01PatchNewClassTest {
                 }""");
     }
 
+    @Test void map_as_local_expression() {
+        withAssert(PatchedLikeAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    @Override public div mount() {
+                        var b = new button("lol");
+                        return new div();
+                    }
+                }""",
+            """    
+                
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                                 
+                class A implements Component0<div> {
+                   \s
+                    A() {
+                        super();
+                    }
+                   \s
+                    @Override
+                    public div mount() {
+                        com.over64.greact.dom.HTMLNativeElements.button b = (()->{
+                            final com.over64.greact.dom.HTMLNativeElements.button _el0 = com.greact.model.JSExpression.of("document.createElement(\\'button\\')");
+                            _el0.innerText = "lol";
+                            return _el0;
+                        }).call();
+                        return (()->{
+                            final com.over64.greact.dom.HTMLNativeElements.div _el1 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            return _el1;
+                        }).call();
+                    }
+                }""");
+    }
+
+    @Test void map_as_new_class_argument() {
+        withAssert(PatchedLikeAssert.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    static class B implements Component0<div> {
+                        final h1 some;
+                        B(h1 some) {this.some = some;}
+                        
+                        @Override public div mount() {
+                            return new div();
+                        }
+                    }
+                    @Override public B mount() {
+                        return new B(new h1());
+                    }
+                }""",
+            """    
+                                      
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                                 
+                class A implements Component0<div> {
+                   \s
+                    A() {
+                        super();
+                    }
+                   \s
+                    static class B implements Component0<div> {
+                        final h1 some;
+                       \s
+                        B(h1 some) {
+                            super();
+                            this.some = some;
+                        }
+                       \s
+                        @Override
+                        public div mount() {
+                            return (()->{
+                                final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                                return _el0;
+                            }).call();
+                        }
+                    }
+                   \s
+                    @Override
+                    public B mount() {
+                        return new B((()->{
+                            final com.over64.greact.dom.HTMLNativeElements.h1 _el1 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                            return _el1;
+                        }).call());
+                    }
+                }""");
+    }
+
     @Test void map_new_html_element_this_to_element_name() {
         withAssert(PatchedLikeAssert.class, """
                 import com.over64.greact.dom.HTMLNativeElements.*;

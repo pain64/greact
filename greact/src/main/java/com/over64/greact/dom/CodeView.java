@@ -1,5 +1,6 @@
 package com.over64.greact.dom;
 
+import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.Component0;
 import com.over64.greact.dom.HTMLNativeElements.Component1;
 import com.over64.greact.dom.HTMLNativeElements.div;
@@ -32,7 +33,7 @@ public class CodeView<T extends HTMLElement> implements Component0<div> {
         this.renderer = renderer;
         this.code = code;
     }
-    @Override public Component0<div> mount() {
+    @Override @async public Component0<div> mount() {
         // FIXME: fix varargs
         return GReact.mmountAwaitView(renderer, new Object[]{new CodeAndView<>(code, view)});
     }

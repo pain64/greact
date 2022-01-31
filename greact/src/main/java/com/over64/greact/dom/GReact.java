@@ -22,7 +22,7 @@ public class GReact {
     }
 
     @async public static <T extends HTMLElement> T mmountAwaitView(Component<T> comp, Object... args) {
-        return JSExpression.of("""
+        return JSExpression.ofAsync("""
             comp instanceof HTMLElement ? comp :
                 comp instanceof Function ? await this._mmountAwaitView(await comp(...args), []) :
                     await this._mmountAwaitView(await comp._mount(...args), [])
@@ -30,9 +30,14 @@ public class GReact {
 
     }
 
-    @async public static <T extends HTMLElement> void mmount(T dest, Component<T> newEl, Object... args) {
+    public static <T extends HTMLElement> void mmount(T dest, Component<T> newEl, Object... args) {
         var placeholder = dest.appendChild(document.createElement("div"));
         JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, args).then(v => dest.replaceChild(v, placeholder))");
+    }
+
+    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(U dest, Component<T> newEl, Consumer<T> before, Object... args) {
+        var placeholder = dest.appendChild(document.createElement("div"));
+        JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, args).then(v => { before(v); dest.replaceChild(v, placeholder); })");
     }
 
 

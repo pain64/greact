@@ -28,7 +28,7 @@ public class Overloads {
         }
     }
 
-    static record Section(TypeElement klass,
+    record Section(TypeElement klass,
                           List<Entry> entries) {
     }
 
