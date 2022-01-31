@@ -68,8 +68,7 @@ public class _12InnerClass {
                 """);
     }
 
-    @Test
-    void newInstanceCreate() throws IOException {
+    @Test void newInstanceCreate() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.A",
                 """
