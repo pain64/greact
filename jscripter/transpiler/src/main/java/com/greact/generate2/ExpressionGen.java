@@ -158,7 +158,17 @@ abstract class ExpressionGen extends VisitorWithContext {
                     out.write(".");
                     out.write(id.getName().toString());
                 } else {
-                    out.write("this.");
+                    var index = -1;
+                    for (var i = classDefs.size() - 1; i >= 0; i--)
+                        if (classDefs.get(i).sym == id.sym.owner) {
+                            index = i;
+                            break;
+                        }
+
+                    out.write("this");
+                    if (index != classDefs.size() - 1 && index != -1)
+                        out.write(String.valueOf(index));
+                    out.write(".");
                     out.write(id.getName().toString());
                 }
             }
@@ -174,7 +184,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             if (id.name.toString().equals("super")) out.write("super");
             else if (id.sym.isStatic()) {
-                if (id.sym.owner != super.classDef.sym) { // import static symbol
+                if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
                     out.write(id.sym.owner.toString().replace(".", "_"));
                     out.write("._");
                 } else
@@ -590,6 +600,14 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitNewClass(JCTree.JCNewClass newClass) {
+        if (newClass.def != null) {
+            out.write("(this");
+            out.write(String.valueOf(classDefs.size() - 1));
+            out.write(" =>");
+            out.writeCBOpen(true);
+            out.write("return ");
+        }
+
         out.write("new ");
         var info = Overloads.methodInfo(
             super.types,
@@ -607,5 +625,11 @@ abstract class ExpressionGen extends VisitorWithContext {
         }
 
         out.mkString(newClass.args, arg -> arg.accept(this), "", ", ", ")");
+
+        if(newClass.def != null) {
+            out.writeNL();
+            out.writeCBEnd(false);
+            out.write(")(this)");
+        }
     }
 }

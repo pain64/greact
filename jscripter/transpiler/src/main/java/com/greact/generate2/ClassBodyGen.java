@@ -139,17 +139,18 @@ abstract class ClassBodyGen extends StatementGen {
 
         final boolean hasInit;
         if (isConstructor) {
-            var fields = classDef.sym.getEnclosedElements().stream()
+            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
                 .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
 
-            var initBlock = classDef.defs.stream()
+            var initBlock = classDefs.lastElement().defs.stream()
                 .filter(def -> def instanceof JCTree.JCBlock)
                 .map(def -> (JCTree.JCBlock) def)
                 .findFirst();
 
-            hasInit = (fields.hasNext() && !classDef.sym.isRecord()) || initBlock.isPresent();
+            hasInit = (fields.hasNext() && !classDefs.lastElement().sym.isRecord())
+                || initBlock.isPresent();
 
             if (hasInit) {
                 withAsyncContext(false, () -> { // constructor cannot be async in JS
@@ -214,7 +215,7 @@ abstract class ClassBodyGen extends StatementGen {
         if (group == null) return; // @DoNotTranspile method
         if (methodDef != group.get(0)) return;
 
-        var table = Overloads.table(types, classDef.sym, methodDef.name);
+        var table = Overloads.table(types, classDefs.lastElement().sym, methodDef.name);
         var nonStaticMethods = mapMethods(group, table.methods());
         var staticMethods = mapMethods(group, table.staticMethods());
 

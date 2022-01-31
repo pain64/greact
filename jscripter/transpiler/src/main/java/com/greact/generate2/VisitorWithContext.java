@@ -11,6 +11,7 @@ import javax.lang.model.element.Name;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 abstract class VisitorWithContext extends JCTree.Visitor {
     public Output out;
@@ -22,19 +23,18 @@ abstract class VisitorWithContext extends JCTree.Visitor {
 
     Map<JCTree.JCLambda, Boolean> lambdaAsyncInference = new HashMap<>();
 
-    JCTree.JCClassDecl classDef = null;
+    Stack<JCTree.JCClassDecl> classDefs = new Stack<>();
     Map<Name, List<JCTree.JCMethodDecl>> groups = null;
 
     void withClass(JCTree.JCClassDecl classDef,
                    Map<Name, List<JCTree.JCMethodDecl>> groups,
                    Runnable action) {
         var oldGroups = this.groups;
-        var oldClass = this.classDef;
+        classDefs.push(classDef);
         this.groups = groups;
-        this.classDef = classDef;
         action.run();
         this.groups = oldGroups;
-        this.classDef = oldClass;
+        classDefs.pop();
     }
 
     boolean isAsyncContext = false;

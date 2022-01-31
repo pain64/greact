@@ -5,6 +5,7 @@ import util.CompileAssert;
 
 import java.io.IOException;
 
+import static util.CompileAssert.assertCompiled;
 import static util.CompileAssert.assertCompiledMany;
 
 public class _10AnonInnerClass {
@@ -37,13 +38,68 @@ public class _10AnonInnerClass {
                         super();
                       }
                       _foo() {
-                        new class extends js_A {
-                          constructor() {
-                            super();
-                          }
-                        }();
+                        (this0 => {
+                          return new class extends js_A {
+                            constructor() {
+                              super();
+                            }
+                          }()
+                        })(this);
                       }
                     }
                     """));
+    }
+
+    @Test void withClosure() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                class Test {
+                  static class A {
+                    int y;
+                  }
+                  int x = 42;
+                  void foo() {
+                    new A() {{
+                      y = x;
+                      var z = x;
+                    }};
+                  }
+                }
+                """,
+            """
+                class js_Test extends Object {
+                  constructor() {
+                    const __init__ = () => {
+                      this.x = 42;
+                    };
+                    super();
+                    __init__();
+                  }
+                  static A = class extends Object {
+                    constructor() {
+                      const __init__ = () => {
+                        this.y = 0;
+                      };
+                      super();
+                      __init__();
+                    }
+                  }
+                  _foo() {
+                    (this0 => {
+                      return new class extends js_Test_A {
+                        constructor() {
+                          const __init__ = () => {
+                            this.y = this0.x;
+                            const z = this0.x;
+                          };
+                          super();
+                          __init__();
+                        }
+                      }()
+                    })(this);
+                  }
+                }
+                """);
     }
 }
