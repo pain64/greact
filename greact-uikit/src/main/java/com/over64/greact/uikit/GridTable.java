@@ -130,11 +130,11 @@ class GridTable<T> implements Component0<table> {
                             for (var col : conf.columns)
                                 if (!col.hidden) {
                                     var colValue = Grid.fetchValue(row.data, col.memberNames);
-                                    var nativeEl = GReact.mmountAwaitView(col.view, new Object[]{colValue, row.data});
-                                    var bgColor = col.backgroundColor;
-                                    if (bgColor != null)
-                                        nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);
-                                    this.appendChild(nativeEl);
+                                    GReact.mmountWith(this, col.view, nativeEl -> {
+                                        var bgColor = col.backgroundColor;
+                                        if (bgColor != null)
+                                            nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);
+                                    }, new Object[]{colValue, row.data});
                                 }
 
                             new td() {{ /* toolbox */

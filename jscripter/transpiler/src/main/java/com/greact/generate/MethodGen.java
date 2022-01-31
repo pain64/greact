@@ -13,13 +13,10 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.*;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.greact.generate.util.CompileException.ERROR.*;
@@ -71,7 +68,7 @@ public class MethodGen {
             if (isAsyncLocal)
                 for (var pair : group)
                     if (pair.snd.sym.getAnnotation(async.class) == null)
-                        throw new CompileException(MUST_BE_DECLARED_AS_ASYNC, """
+                        throw new CompileException(ASYNC_INVOCATION_NOT_ALLOWED, """
                                 method must be declared as @async due to:
                                   - has overloaded siblings declared as @async
                                 """);

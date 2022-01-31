@@ -16,9 +16,10 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
-                public class Test {
-                  @async void foo() {}
-                  @async void foo(int x) {}
+                public abstract class Test {
+                  @async abstract void bar();
+                  void foo() {}
+                  @async void foo(int x) { bar(); }
                 }""",
             """
                 class js_Test extends Object {
@@ -29,6 +30,7 @@ public class _08AsyncAwait {
                     if($over === 0) {
                     } else if($over === 1) {
                       const [x] = __args;
+                      (await this._bar());
                     }
                   }
                 }
@@ -41,15 +43,33 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
-                    public class Test {
+                    public abstract class Test {
+                      @async abstract void bar();
                       @async void foo() {}
-                      void foo(int x) {}
+                      @async void foo(int x) { bar(); }
                     }""",
                 """
                     """);
         } catch (Exception ex) {
             var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(ce.error, CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC);
+            Assertions.assertSame(CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC, ce.error);
+        }
+    }
+
+    @Test void asyncConstructorFail() throws IOException {
+        try {
+            assertCompiled(
+                """
+                    package js;
+                    import com.greact.model.async;
+                    public class Test {
+                      @async Test() {}
+                    }""",
+                """
+                    """);
+        } catch (Exception ex) {
+            var ce = (CompileException) ex.getCause();
+            Assertions.assertSame(CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC, ce.error);
         }
     }
 
@@ -58,16 +78,14 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
-                public class Test {
-                  @async void foo() {}
+                public abstract class Test {
+                  @async abstract void foo();
                   @async void bar() { foo(); }
                 }""",
             """
                 class js_Test extends Object {
                   constructor() {
                     super();
-                  }
-                  async _foo() {
                   }
                   async _bar() {
                     (await this._foo());
@@ -82,15 +100,15 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
-                    public class Test {
-                      @async void foo() {}
+                    public abstract class Test {
+                      @async abstract void foo();
                       void bar() { foo(); }
                     }""",
                 """
                     """);
         } catch (Exception ex) {
             var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(ce.error, CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC);
+            Assertions.assertSame(CompileException.ERROR.ASYNC_INVOCATION_NOT_ALLOWED, ce.error);
         }
     }
 
@@ -124,22 +142,20 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
-                    public class A {
-                      @async void foo() {}
+                    public abstract class A {
+                      @async abstract void foo();
                     }""",
                 """
                     class js_A extends Object {
                       constructor() {
                         super();
                       }
-                      async _foo() {
-                      }
                     }
                     """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
-                    class B extends A{
+                    class B extends A {
                       @Override void foo() {
                       }
                     }""",
@@ -148,7 +164,7 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      async _foo() {
+                      _foo() {
                       }
                     }
                     """));
@@ -177,7 +193,7 @@ public class _08AsyncAwait {
                       constructor() {
                         super();
                       }
-                      async _foo() {
+                      _foo() {
                       }
                     }
                     """));
@@ -215,21 +231,19 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
-                public class Test {
+                public abstract class Test {
                   interface Foo {
                     @async void foo();
                   }
-                  @async void doo() {};
+                  @async abstract void doo();
                   void bar() {
-                    Foo instance = () -> { doo(); }; 
+                    Foo instance = () -> { doo(); };
                   }
                 }""",
             """
                 class js_Test extends Object {
                   constructor() {
                     super();
-                  }
-                  async _doo() {
                   }
                   _bar() {
                     const instance = async () => {
@@ -240,7 +254,41 @@ public class _08AsyncAwait {
                 """);
     }
 
-    @Test void callAsyncLambda() throws IOException {
+    @Test void asyncClassInitFail() throws IOException {
+        try {
+            assertCompiled(
+                """
+                    package js;
+                    import com.greact.model.async;
+                    public class Test {
+                      interface Foo {
+                        @async void foo();
+                      }
+                      Foo instance = () -> {};
+                      {
+                        instance.foo();
+                      }
+                    }""",
+                """
+                    class js_Test extends Object {
+                      constructor() {
+                        const __init__ = () => {
+                          this.instance = async () => {
+                          };
+                        };
+                        super();
+                        __init__();
+                      }
+                    }
+                    """);
+        } catch (Exception ex) {
+            var ce = (CompileException) ex.getCause();
+            Assertions.assertSame(ce.error, CompileException.ERROR.ASYNC_INVOCATION_NOT_ALLOWED);
+        }
+    }
+
+    @Test void asyncLambdaExpressionOptimization() throws IOException {
+        // FIXME: ((Foo) () -> { doo(); }).foo();
         assertCompiled(
             """
                 package js;
@@ -249,17 +297,24 @@ public class _08AsyncAwait {
                   interface Foo {
                     @async void foo();
                   }
-                  Foo instance = () -> {};
+                  void doo() {};
+                  void bar() {
+                    Foo x;
+                    (x = () -> { doo(); }).foo();
+                  }
                 }""",
             """
                 class js_Test extends Object {
                   constructor() {
-                    const __init__ = () => {
-                      this.instance = async () => {
-                      };
-                    };
                     super();
-                    __init__();
+                  }
+                  _doo() {
+                  }
+                  _bar() {
+                    const x = null;
+                    (x = () => {
+                      this._doo();
+                    })._foo();
                   }
                 }
                 """);

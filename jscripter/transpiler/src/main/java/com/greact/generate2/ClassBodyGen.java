@@ -17,7 +17,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import static com.greact.generate.util.CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC;
-import static com.greact.generate.util.CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC;
 
 abstract class ClassBodyGen extends StatementGen {
     @Override public void visitVarDef(JCTree.JCVariableDecl varDef) {
@@ -60,12 +59,12 @@ abstract class ClassBodyGen extends StatementGen {
             });
     }
 
-    void writeMethodStatements(JCTree.JCMethodDecl method, boolean hasInit, boolean isAsync) {
+    void writeMethodStatements(JCTree.JCMethodDecl method, boolean hasInit) {
         var statements = method.sym.isAbstract()
             ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
             : method.body.stats;
 
-        withAsyncContext(isAsync, () -> {
+        withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
             if (!statements.isEmpty()) // super constructor invocation
                 statements.get(0).accept(this);
 
@@ -87,37 +86,37 @@ abstract class ClassBodyGen extends StatementGen {
         var name = methods.get(0).snd.name.toString();
         var isConstructor = name.equals("<init>");
         var isAsStatic = methods.stream().anyMatch(m -> m.snd.sym.getAnnotation(Static.class) != null);
+        if (isStatic || isAsStatic) out.write("static ");
 
-        if (table.hasInSuper()) {
-            if (table.isAsyncInSuper()) {
-                for (var pair : methods)
-                    if (pair.snd.sym.getAnnotation(async.class) != null)
-                        throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
-                            method already declared as @async in supertype or interface
-                            """);
-            } else {
-                if (table.isAsyncLocal())
-                    for (var pair : methods)
-                        if (pair.snd.sym.getAnnotation(async.class) != null)
-                            throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
-                                method cannot be declared as @async due to:
-                                  - NOT declared as @async in supertype or interface
-                                """);
+        var anyMethodHasAsyncCalls = false;
+        for (var method : methods) {
+            var isAsync = method.snd.sym.getAnnotation(async.class) != null;
+            if(isAsync && isConstructor) {
+                var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
+                var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
+                throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
+                    At %s:%d:%d
+                    constructor cannot be declared as @async"""
+                    .formatted(super.cu.sourcefile.getName(), line, col));
             }
-        } else {
-            if (table.isAsyncLocal())
-                for (var pair : methods)
-                    if (pair.snd.sym.getAnnotation(async.class) == null)
-                        throw new CompileException(MUST_BE_DECLARED_AS_ASYNC, """
-                            method must be declared as @async due to:
-                              - has overloaded siblings declared as @async
-                            """);
+
+            var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+            method.snd.body.accept(visitor);
+            if (!visitor.hasAsyncCalls && isAsync) {
+                var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
+                var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
+                throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
+                    At %s:%d:%d
+                    method cannot be declared as @async due to:
+                    - is not abstract or interface or native (OR)
+                    - does not makes async calls"""
+                    .formatted(super.cu.sourcefile.getName(), line, col));
+            }
+            if (visitor.hasAsyncCalls) anyMethodHasAsyncCalls = true;
         }
 
+        if (anyMethodHasAsyncCalls) out.write("async ");
 
-        if (isStatic || isAsStatic) out.write("static ");
-        var isAsync = table.isAsyncInSuper() || table.isAsyncLocal();
-        if (isAsync) out.write("async ");
 
         if (isConstructor)
             out.write("constructor");
@@ -183,7 +182,7 @@ abstract class ClassBodyGen extends StatementGen {
                         "const [", ", ", "] = __args;");
                     out.writeNL();
                 }
-                writeMethodStatements(m.snd, hasInit, isAsync);
+                writeMethodStatements(m.snd, hasInit);
                 out.writeCBEnd(false);
             }
 
@@ -196,7 +195,7 @@ abstract class ClassBodyGen extends StatementGen {
                 out.deepOut();
             } else out.writeNL();
         } else
-            writeMethodStatements(methods.get(0).snd, hasInit, isAsync);
+            writeMethodStatements(methods.get(0).snd, hasInit);
 
         out.writeCBEnd(true);
     }

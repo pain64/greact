@@ -1,7 +1,6 @@
 package com.greact.generate;
 
 import com.greact.generate.MethodGen.MContext;
-import com.greact.generate.TypeGen.TContext;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.JSOut;
 import com.greact.generate.util.Overloads;
@@ -22,12 +21,8 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.greact.generate.util.Overloads.Mode.*;
 
 public class ExpressionGen {
     final JSOut out;
@@ -379,7 +374,7 @@ public class ExpressionGen {
                 if (info.isAsync() && !mctx.isAsync()) {
                     var line = mctx.ctx().cu().getLineMap().getLineNumber(callTree.pos);
                     var col = mctx.ctx().cu().getLineMap().getColumnNumber(callTree.pos);
-                    throw new CompileException(CompileException.ERROR.MUST_BE_DECLARED_AS_ASYNC,
+                    throw new CompileException(CompileException.ERROR.ASYNC_INVOCATION_NOT_ALLOWED,
                         """
                             %s      at %s:%d:%d
                             method which calls @async method must be defined as @async""".formatted(
