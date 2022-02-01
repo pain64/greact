@@ -38,26 +38,16 @@ public class TypeGen extends ClassBodyGen {
 
             out.write("static ");
             out.write(classDef.getSimpleName().toString());
-            out.write(" = class ");
+            out.write(" = class");
         } else {
-            out.write("class ");
+            out.write("class");
             if (!classDef.type.tsym.isAnonymous()) {
+                out.write(" ");
                 out.write(cu.getPackage().getPackageName().toString().replace(".", "_"));
                 out.write("_");
                 out.write(classDef.getSimpleName().toString());
-                out.write(" ");
             }
         }
-
-        var extendClause = classDef.extending;
-        var superClass = "Object";
-        if (extendClause != null) {
-            superClass = extendClause.type.tsym.toString().replace(".", "_");
-            out.addDependency(extendClause.type.tsym.toString() + ".js");
-        }
-        out.write("extends ");
-        out.write(superClass);
-        out.writeCBOpen(true);
 
         var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
         classDef.defs.forEach(def -> def.accept(new TreeScanner() {
@@ -71,6 +61,24 @@ public class TypeGen extends ClassBodyGen {
 
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
+
+        var extendClause = classDef.extending;
+        if (extendClause != null) {
+            var superClass = extendClause.type.tsym.toString().replace(".", "_");
+            out.addDependency(extendClause.type.tsym.toString() + ".js");
+            out.write(" extends ");
+            out.write(superClass);
+        } else {
+            var constructors = groups.get(names.fromString("<init>"));
+            if(constructors != null) {
+                var visitor = new HasSuperConstructorCallVisitor(super.names);
+                for (var method : constructors) method.accept(visitor);
+                if (visitor.hasSuperConstructorCall) out.write(" extends Object");
+            }
+        }
+
+        out.writeCBOpen(true);
+
 
         withClass(classDef, groups, () ->
             classDef.defs.stream()

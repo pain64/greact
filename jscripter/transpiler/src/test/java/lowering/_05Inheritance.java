@@ -20,9 +20,8 @@ public class _05Inheritance {
                       int  foo(int x)     { return 2;    };
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
                       _foo($over, ...__args) {
                         if($over === 0) {

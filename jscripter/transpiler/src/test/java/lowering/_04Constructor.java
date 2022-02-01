@@ -32,7 +32,7 @@ public class _04Constructor {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor($over, ...__args) {
                     const __init__ = () => {
                       this.x = null;
@@ -42,13 +42,11 @@ public class _04Constructor {
                     };
                     if($over === 1) {
                       const [x, y] = __args;
-                      super();
                       __init__();
                       this.x = x;
                       this.y = y;
                     } else if($over === 2) {
                       const [x] = __args;
-                      super();
                       __init__();
                       this.x = x;
                       this.y = 'hello';
@@ -76,14 +74,13 @@ public class _04Constructor {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor(y) {
                     const __init__ = () => {
                       this.x = null;
                       this.y = null;
                       this.x = 'hello';
                     };
-                    super();
                     __init__();
                     this.y = y;
                   }
@@ -105,15 +102,13 @@ public class _04Constructor {
                       }
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor($over, ...__args) {
                         if($over === 1) {
                           const [x, y] = __args;
-                          super();
                           const some = x + y;
                         } else if($over === 2) {
                           const [z] = __args;
-                          super();
                           const some = z;
                         }
                       }
@@ -126,9 +121,8 @@ public class _04Constructor {
                       B() { new A(42); }
                     }""",
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
-                        super();
                         new js_A(2, 42);
                       }
                     }

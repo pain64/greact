@@ -46,26 +46,30 @@ import com.greact.model.async;
 
     public Object dependsOn;
 
+    public MouseEventHandler onclick;
+    public MouseEventHandler ondblclick;
+    public MouseEventHandler onblur;
+    public ChangeHandler onchange;
+    public MouseEventHandler onmouseout;
+    public MouseEventHandler onmouseover;
+
+
 
     // HTML Event Attributes
-    public static class Event<T> {
+    public static class Event {
         public native void stopPropagation();
-        public T target;
+        public HTMLElement target;
     }
 
-    @FunctionalInterface
-    public interface ChangeHandler<T extends HTMLElement> {
-        @async void handle(Event<T> ev);
+    @FunctionalInterface public interface ChangeHandler {
+        @async void handle(Event ev);
     }
 
-    @FunctionalInterface
-    public interface MouseEventHandler<T extends HTMLElement> {
-        @async void handle(Event<T> ev);
+    @FunctionalInterface public interface MouseEventHandler {
+        @async void handle(Event ev);
     }
 
-    public static class KeyEvent extends Event<HTMLElement> {
-
-    }
+    public static class KeyEvent extends Event { }
 
     public interface KeyHandler {
         void handle(KeyEvent event);

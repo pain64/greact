@@ -17,9 +17,8 @@ public class _10AnonInnerClass {
                     public class A {
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
                     }
                     """),
@@ -33,9 +32,8 @@ public class _10AnonInnerClass {
                       }
                     }""",
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
-                        super();
                       }
                       _foo() {
                         (this0 => {
@@ -68,20 +66,18 @@ public class _10AnonInnerClass {
                 }
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = 42;
                     };
-                    super();
                     __init__();
                   }
-                  static A = class extends Object {
+                  static A = class {
                     constructor() {
                       const __init__ = () => {
                         this.y = 0;
                       };
-                      super();
                       __init__();
                     }
                   }

@@ -49,6 +49,13 @@ abstract class StatementGen extends ExpressionGen {
     }
 
     @Override public void visitExec(JCTree.JCExpressionStatement eStmt) {
+        if (eStmt.expr instanceof JCTree.JCMethodInvocation call &&
+            call.meth instanceof JCTree.JCIdent id &&
+            id.name.equals(names.fromString("super")) &&
+            (id.sym.owner.flatName().equals(names.fromString("java.lang.Object")) ||
+                id.sym.owner.flatName().equals(names.fromString("java.lang.Record"))))
+            return;
+
         eStmt.expr.accept(this);
         out.writeLn(";");
     }

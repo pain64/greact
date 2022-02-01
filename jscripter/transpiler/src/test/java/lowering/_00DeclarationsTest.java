@@ -14,9 +14,8 @@ public class _00DeclarationsTest {
                 package js;
                 public class Test {}""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                 }
                 """);
@@ -30,9 +29,8 @@ public class _00DeclarationsTest {
                     public class A<T> {
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
                     }
                     """),
@@ -61,9 +59,8 @@ public class _00DeclarationsTest {
                   private void foobar() {}
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   static _bar() {
                   }
@@ -83,9 +80,8 @@ public class _00DeclarationsTest {
                   abstract void bar();
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                 }
                 """);
@@ -103,9 +99,8 @@ public class _00DeclarationsTest {
                   void bar(long x) {}
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                   }
@@ -133,9 +128,8 @@ public class _00DeclarationsTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                     const x = null;

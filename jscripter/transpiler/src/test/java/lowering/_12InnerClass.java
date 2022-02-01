@@ -23,17 +23,15 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  static A = class extends Object {
+                  static A = class {
                     constructor() {
                       const __init__ = () => {
                         this.x = 42;
                         this.y = 15;
                       };
-                      super();
                       __init__();
                     }
                     _add() {
@@ -53,13 +51,11 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  static A = class extends Object {
+                  static A = class {
                     constructor(x, y) {
-                      super();
                       this.x = x;
                       this.y = y;
                     }
@@ -79,13 +75,11 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
-                      static B = class extends Object {
+                      static B = class {
                         constructor() {
-                          super();
                         }
                       }
                     }
@@ -99,12 +93,11 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js_C extends Object {
+                    class js_C {
                       constructor() {
                         const __init__ = () => {
                           this.b = new js_A.B();
                         };
-                        super();
                         __init__();
                       }
                     }
