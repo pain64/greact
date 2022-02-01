@@ -16,9 +16,8 @@ public class _02StmtTest {
                   int baz() { return 42; }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                     return 42;
@@ -41,9 +40,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                     if(false)
@@ -75,9 +73,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz(x, y) {
                     while(true) {
@@ -107,9 +104,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                     outer:
@@ -134,9 +130,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz(x) {
                     do {
@@ -154,13 +149,12 @@ public class _02StmtTest {
                 package js;
                 public class Test {
                   void baz() {
-                    for(int x = 0, y = 0; true; x++, y++) {} 
+                    for(int x = 0, y = 0; true; x++, y++) {}
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz() {
                     for(let x = 0, y = 0; true; x++, y++) {
@@ -181,9 +175,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz(array) {
                     for(let x of array) {
@@ -212,9 +205,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _baz(x, y) {
                     switch(x) {
@@ -242,9 +234,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _foo() {
                     throw new java_lang_Exception(7, 'xxx');
@@ -280,9 +271,8 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                    class js_Test extends Object {
+                    class js_Test {
                       constructor() {
-                        super();
                       }
                       static E1 = class extends java_lang_Exception {
                         constructor($over, ...__args) {

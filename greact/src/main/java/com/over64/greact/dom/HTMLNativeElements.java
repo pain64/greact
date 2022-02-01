@@ -69,16 +69,12 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static  class button extends HTMLElement implements NativeElementAsComponent<button> {
-        public MouseEventHandler<button> onclick;
-        public MouseEventHandler<button> ondblclick;
-        public MouseEventHandler<button> onblur;
         public button() {}
         public button(@DomProperty("innerText") String innerText) { }
     }
 
     @JSNativeAPI public static class body extends HTMLElement implements NativeElementAsComponent<body> { }
     @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
-        public MouseEventHandler<div> onclick;
     }
     @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}
     @JSNativeAPI public static class section extends HTMLElement implements NativeElementAsComponent<section> { }
@@ -98,14 +94,11 @@ public class HTMLNativeElements {
         public String value;
         public long valueAsNumber;
         public Boolean checked;
-        public MouseEventHandler<input> onclick;
-        public ChangeHandler<input> onchange;
         public native void setCustomValidity(String text);
     }
 
     @JSNativeAPI public static class select extends HTMLElement implements NativeElementAsComponent<select> {
         public String value;
-        public ChangeHandler<select> onchange;
     }
     @JSNativeAPI public static class option extends HTMLElement implements NativeElementAsComponent<option> {
         public boolean selected;
@@ -119,7 +112,6 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class span extends HTMLElement implements NativeElementAsComponent<span> {
         public span() {}
         public span(@DomProperty("innerText") String innerText) {}
-        public MouseEventHandler<tbody> onclick;
     }
     @JSNativeAPI public static class strong extends HTMLElement implements NativeElementAsComponent<strong> {
         public strong() {}
@@ -133,9 +125,6 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class a extends HTMLElement implements NativeElementAsComponent<a> {
         public String href;
         public a() {}
-        public MouseEventHandler<a> onmouseover;
-        public MouseEventHandler<a> onmouseout;
-
         public a(@DomProperty("innerText") String innerText) {}
     }
 
@@ -143,20 +132,16 @@ public class HTMLNativeElements {
         public table() {}
     }
     @JSNativeAPI public static class thead extends HTMLElement implements NativeElementAsComponent<thead> { }
-    @JSNativeAPI public static class tbody extends HTMLElement implements NativeElementAsComponent<tbody> {
-        public MouseEventHandler<tbody> onclick;
-    }
+    @JSNativeAPI public static class tbody extends HTMLElement implements NativeElementAsComponent<tbody> { }
 
     @JSNativeAPI public static class td extends HTMLElement implements NativeElementAsComponent<td> {
         public int colSpan;
         public int rowSpan;
-        public MouseEventHandler<tr> onclick;
         public td() {}
         public td(@DomProperty("innerText") String innerText) {}
     }
 
     @JSNativeAPI public static class tr extends HTMLElement implements NativeElementAsComponent<tr> {
-        public MouseEventHandler<tr> onclick;
         public tr() {}
         public tr(HTMLElement child) {}
         public tr(td... childs) {}
@@ -191,5 +176,4 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class textarea extends HTMLElement implements NativeElementAsComponent<textarea> {
     }
-
 }

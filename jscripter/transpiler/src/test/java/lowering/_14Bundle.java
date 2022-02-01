@@ -19,9 +19,8 @@ public class _14Bundle {
                 @Require.CSS({"test.css"}) class Test {}
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                 }
                 """);

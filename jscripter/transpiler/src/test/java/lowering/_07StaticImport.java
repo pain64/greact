@@ -17,9 +17,8 @@ public class _07StaticImport {
                       static String s = "";
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
                       static s = '';
                     }
@@ -32,12 +31,11 @@ public class _07StaticImport {
                       String ss = s + s;
                     }""",
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
                         const __init__ = () => {
                           this.ss = js_A.s + js_A.s;
                         };
-                        super();
                         __init__();
                       }
                     }
@@ -53,9 +51,8 @@ public class _07StaticImport {
                       String foo() { return "xxx"; }
                     }""",
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
                       _foo() {
                         return 'xxx';
@@ -69,12 +66,11 @@ public class _07StaticImport {
                       String ss = js.B.a.foo();
                     }""",
                 """
-                    class js_C extends Object {
+                    class js_C {
                       constructor() {
                         const __init__ = () => {
                           this.ss = js_B.a._foo();
                         };
-                        super();
                         __init__();
                       }
                     }
@@ -86,9 +82,8 @@ public class _07StaticImport {
                       static A a = new A();
                     }""",
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
-                        super();
                       }
                       static a = new js_A();
                     }

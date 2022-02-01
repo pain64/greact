@@ -16,12 +16,11 @@ public class _06ShimJavaAPI {
                   int x = Integer.valueOf("42");
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = std_java_lang_Integer._valueOf('42');
                     };
-                    super();
                     __init__();
                   }
                 }
@@ -36,12 +35,11 @@ public class _06ShimJavaAPI {
                   int x = "x".compareTo("y");
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = std_java_lang_String._compareTo.call('x', 'y');
                     };
-                    super();
                     __init__();
                   }
                 }
@@ -57,12 +55,11 @@ public class _06ShimJavaAPI {
                   int x = JSExpression.of("1 + 1");
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = 1 + 1;
                     };
-                    super();
                     __init__();
                   }
                 }
@@ -80,13 +77,12 @@ public class _06ShimJavaAPI {
                         + 1""\");
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = 1
                    + 1;
                     };
-                    super();
                     __init__();
                   }
                 }
@@ -103,12 +99,11 @@ public class _06ShimJavaAPI {
                   int x = of();
                 }""",
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
                     const __init__ = () => {
                       this.x = this.constructor._of();
                     };
-                    super();
                     __init__();
                   }
                   static _of() {

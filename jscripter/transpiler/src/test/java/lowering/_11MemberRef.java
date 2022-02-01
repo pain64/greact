@@ -17,9 +17,8 @@ public class _11MemberRef {
                     public record A(long age){}
                     """,
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor(age) {
-                        super();
                         this.age = age;
                       }
                     }
@@ -33,13 +32,12 @@ public class _11MemberRef {
                       MemberRef<A, Long> ref3 = a -> a.age();
                     }""",
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
                         const __init__ = () => {
                           this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
                           this.ref3 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
                         };
-                        super();
                         __init__();
                       }
                     }
@@ -54,12 +52,11 @@ public class _11MemberRef {
                     public class A { long age; }
                     """,
                 """
-                    class js_A extends Object {
+                    class js_A {
                       constructor() {
                         const __init__ = () => {
                           this.age = 0;
                         };
-                        super();
                         __init__();
                       }
                     }
@@ -70,12 +67,11 @@ public class _11MemberRef {
                     public class B { A a; }
                     """,
                 """
-                    class js_B extends Object {
+                    class js_B {
                       constructor() {
                         const __init__ = () => {
                           this.a = null;
                         };
-                        super();
                         __init__();
                       }
                     }
@@ -89,13 +85,12 @@ public class _11MemberRef {
                       MemberRef<B, Long> ref2 = b -> b.a.age;
                     }""",
                 """
-                    class js_C extends Object {
+                    class js_C {
                       constructor() {
                         const __init__ = () => {
                           this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
                           this.ref2 = {_memberNames: () => ['a', 'age'], _value: (v) => v.a.age, _className: () => 'java.lang.Long'};
                         };
-                        super();
                         __init__();
                       }
                     }

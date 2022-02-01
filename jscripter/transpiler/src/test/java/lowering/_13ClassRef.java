@@ -21,13 +21,11 @@ public class _13ClassRef {
                 }
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  static A = class extends Object {
+                  static A = class {
                     constructor(x1, x2) {
-                      super();
                       this.x1 = x1;
                       this.x2 = x2;
                     }
@@ -85,9 +83,8 @@ public class _13ClassRef {
                 }
                 """,
             """
-                class js_Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
                   _bar(obj) {
                     const ref = obj.__class__;

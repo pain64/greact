@@ -81,7 +81,8 @@ class GridFilter<T> implements Component0<div> {
                                 new select() {{
                                     onchange = ev -> {
                                         // FIXME: move to one effect
-                                        effect(currentSize = Integer.parseInt(ev.target.value));
+                                        effect(currentSize = Integer.parseInt(
+                                            ((select) ev.target).value));
                                         effect(currentPage = 1);
                                     };
 

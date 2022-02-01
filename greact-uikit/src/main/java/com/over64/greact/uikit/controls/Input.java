@@ -55,7 +55,7 @@ public abstract class Input<T> extends Control<T> {
                     // FIXME: вот это вот - костыль для CheckBox
                     checked = (Boolean) self.value;
                     onchange = ev -> {
-                        self.value = parseValueOpt(ev.target);
+                        self.value = parseValueOpt((input) ev.target);
                         self.ready = self.optional || self.value != null;
                         self.onReadyChanged.run();
                     };

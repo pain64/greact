@@ -27,11 +27,11 @@ public class DateInput extends Control<Date> {
 
 
                     onchange = ev -> {
-                        value = ev.target.value;
+                        value = ((input) ev.target).value;
                         ready = optional || value != null;
                         onReadyChanged.run();
 
-                        self.value = Dates.fromUnixTime(ev.target.valueAsNumber);
+                        self.value = Dates.fromUnixTime(((input) ev.target).valueAsNumber);
                     };
                 }};
             }};
