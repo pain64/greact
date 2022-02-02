@@ -414,7 +414,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (isAsync) out.write("(await ");
 
             if (call.meth instanceof JCTree.JCIdent id) { // call local or static import
-                if(id.name.equals(names.fromString("this"))) {
+                if (id.name.equals(names.fromString("this"))) {
                     out.write("$over = ");
                     out.write(String.valueOf(info.n()));
                     out.writeLn(";");
@@ -452,7 +452,14 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (!isRecordAccessor) out.write("(");
                 } else {
                     var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
-                    out.write(onType.tsym.toString().replace(".", "_"));
+                    if (onType.tsym.isStatic() &&
+                        onType.tsym.owner instanceof Symbol.ClassSymbol owner) {
+                        // static inner class
+                        out.write(owner.toString().replace(".", "_"));
+                        out.write(".");
+                        out.write(onType.tsym.name.toString());
+                    } else
+                        out.write(onType.tsym.toString().replace(".", "_"));
                     out.write("._");
                     out.write(prop.name.toString());
 
@@ -636,7 +643,7 @@ abstract class ExpressionGen extends VisitorWithContext {
 
         out.mkString(newClass.args, arg -> arg.accept(this), "", ", ", ")");
 
-        if(newClass.def != null) {
+        if (newClass.def != null) {
             out.writeNL();
             out.writeCBEnd(false);
             out.write(")(this)");
