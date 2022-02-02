@@ -1,5 +1,6 @@
 package com.greact.generate2;
 
+import com.greact.generate2.lookahead.HasSuperConstructorCall;
 import com.greact.model.DoNotTranspile;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.Require;
@@ -71,7 +72,7 @@ public class TypeGen extends ClassBodyGen {
         } else {
             var constructors = groups.get(names.fromString("<init>"));
             if(constructors != null) {
-                var visitor = new HasSuperConstructorCallVisitor(super.names);
+                var visitor = new HasSuperConstructorCall(super.names);
                 for (var method : constructors) method.accept(visitor);
                 if (visitor.hasSuperConstructorCall) out.write(" extends Object");
             }

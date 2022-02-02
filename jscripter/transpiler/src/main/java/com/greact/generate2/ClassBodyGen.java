@@ -3,6 +3,8 @@ package com.greact.generate2;
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.generate.util.Overloads.OverloadTable;
+import com.greact.generate2.lookahead.HasAsyncCalls;
+import com.greact.generate2.lookahead.HasSelfConstructorCall;
 import com.greact.model.Static;
 import com.greact.model.async;
 import com.sun.tools.javac.code.Symbol;
@@ -91,7 +93,7 @@ abstract class ClassBodyGen extends StatementGen {
         var anyMethodHasAsyncCalls = false;
         for (var method : methods) {
             var isAsync = method.snd.sym.getAnnotation(async.class) != null;
-            if(isAsync && isConstructor) {
+            if (isAsync && isConstructor) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
                 throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
@@ -100,7 +102,7 @@ abstract class ClassBodyGen extends StatementGen {
                     .formatted(super.cu.sourcefile.getName(), line, col));
             }
 
-            var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+            var visitor = new HasAsyncCalls(super.stdShim, super.types);
             method.snd.body.accept(visitor);
             if (!visitor.hasAsyncCalls && isAsync) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
@@ -137,8 +139,20 @@ abstract class ClassBodyGen extends StatementGen {
 
         out.writeCBOpen(true);
 
+        final boolean hasConstructorSelfCall;
+        if (isConstructor) {
+            var visitor = new HasSelfConstructorCall(super.names);
+            for (var method : methods) method.snd.accept(visitor);
+            hasConstructorSelfCall = visitor.hasSelfConstructorCall;
+        } else hasConstructorSelfCall = false;
+
         final boolean hasInit;
         if (isConstructor) {
+            if (hasConstructorSelfCall) {
+                out.write("__cons: while(1)");
+                out.writeCBOpen(true);
+            }
+
             var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
@@ -198,6 +212,10 @@ abstract class ClassBodyGen extends StatementGen {
         } else
             writeMethodStatements(methods.get(0).snd, hasInit);
 
+        if(hasConstructorSelfCall) {
+            out.writeLn("break;");
+            out.writeCBEnd(true);
+        }
         out.writeCBEnd(true);
     }
 
