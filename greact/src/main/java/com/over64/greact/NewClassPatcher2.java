@@ -38,6 +38,7 @@ public class NewClassPatcher2 {
         Symbol.ClassSymbol clString = util.lookupClass(String.class);
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
+        Symbol.ClassSymbol clSlot = util.lookupClass(HTMLNativeElements.slot.class);
         Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
         Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
@@ -148,7 +149,8 @@ public class NewClassPatcher2 {
         var allViewRenderSymbols = new ArrayList<Symbol.VarSymbol>();
 
         for (var viewEntry : allViewEntries) {
-            var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars);
+            var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars,
+                symbols.clSlot);
             var nodesForUpdate = effects.stream()
                 .flatMap(ef -> viewUpdateStrategy.findNodesForUpdate(
                     unconditionalTree, ef.effected()).stream())

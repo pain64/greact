@@ -114,7 +114,6 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
         var conf = (GridConfig2<T>) this;
 
         return new div() {{
-
             className = "grid-main";
 
             new GridFilter<>(data, conf, rowData ->
