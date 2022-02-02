@@ -1,8 +1,10 @@
 package ui.analyze;
 
 import com.over64.greact.EffectCallFinder;
+import com.over64.greact.Util;
 import com.over64.greact.ViewEntryFinder;
 import com.over64.greact.ViewUpdateStrategy;
+import com.over64.greact.dom.HTMLNativeElements;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
@@ -40,6 +42,7 @@ public class ViewUpdateStrategyTest {
 
     static class AssertNodeTree extends CompilerAssertion<TNode> {
         @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, TNode tRoot) {
+            var util = new Util(ctx);
             var view = new ViewEntryFinder(ctx).find(cu)
                 .get(0).viewHolders().get(0).view();
             var effectsMap = new EffectCallFinder(ctx).find(cu);
@@ -48,7 +51,8 @@ public class ViewUpdateStrategyTest {
                 .flatMap(ef -> ef.effected().stream())
                 .collect(Collectors.toSet());
             var strategy = new ViewUpdateStrategy();
-            var root = strategy.buildTree(view, effectedVars);
+            var root = strategy.buildTree(view, effectedVars,
+                util.lookupClass(HTMLNativeElements.slot.class));
 
             Assertions.assertEquals(
                 tRoot.toString(),
@@ -60,6 +64,7 @@ public class ViewUpdateStrategyTest {
 
     static class AssertNodesForUpdate extends CompilerAssertion<NodesForVars[]> {
         @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, NodesForVars[] cases) {
+            var util = new Util(ctx);
             var view = new ViewEntryFinder(ctx).find(cu)
                 .get(0).viewHolders().get(0).view();
 
@@ -69,7 +74,8 @@ public class ViewUpdateStrategyTest {
                 .flatMap(ef -> ef.effected().stream())
                 .collect(Collectors.toSet());
             var strategy = new ViewUpdateStrategy();
-            var root = strategy.buildTree(view, effectedVars);
+            var root = strategy.buildTree(view, effectedVars,
+                util.lookupClass(HTMLNativeElements.slot.class));
 
             for (var tc : cases) {
                 var changed = effectedVars.stream()
@@ -213,6 +219,28 @@ public class ViewUpdateStrategyTest {
                 new NodesForVars(List.of("eD"), List.of("h2")),
                 new NodesForVars(List.of("eB", "eC"), List.of("h2")),
                 new NodesForVars(List.of("eA", "eB", "eC", "eD"), List.of("div")),
+            });
+    }
+
+    @Test void find_view_for_update_slot() {
+        withAssert(AssertNodesForUpdate.class, """
+                import com.over64.greact.dom.HTMLNativeElements.*;
+                class A implements Component0<div> {
+                    String text = "hello";
+                    Component1<div, String> slotValue = null;
+
+                    @Override public div mount() {
+                        return new div() {{
+                           new slot<>(slotValue, text);
+
+                           onclick = ev -> {
+                             effect(text);
+                           };
+                        }};
+                    }
+                }""",
+            new NodesForVars[] {
+                new NodesForVars(List.of("text"), List.of("div")),
             });
     }
 

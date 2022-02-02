@@ -9,7 +9,6 @@ public class Tabs implements Component0<div> {
 
     final Tab[] tabs;
     private Tab selected;
-    private boolean rerenderAll;
 
     public Tabs(Tab... tabs) {
         this.tabs = JSExpression.of("Array.from(arguments)"); // FIXME: fix varargs in JScripter
@@ -17,22 +16,19 @@ public class Tabs implements Component0<div> {
             this.selected = this.tabs[0];
     }
 
+
     @Override public div mount() {
         return new div() {{
             new div() {{
-                dependsOn = rerenderAll;
                 new div() {{
                     className = "tabs";
                     for (var tab : tabs)
                         new span(tab.caption) {{
                             className = "tabs-content";
-                            onclick = ev -> {
-                                selected = tab;
-                                effect(rerenderAll);
-                            };
+                            onclick = ev -> effect(selected = tab);
 
                             if (selected == tab)
-                                className = "tabs-content-selected";
+                                className += " tabs-content-selected";
                         }};
                 }};
                 new div() {{

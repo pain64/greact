@@ -1,6 +1,5 @@
 @supports (-webkit-appearance: none) or (-moz-appearance: none) {
-  input[type=checkbox],
-  input[type=radio] {
+  input[type=checkbox] {
     --active: black;
     --active-inner: #fff;
     --focus: 2px rgba(39, 94, 254, .3);

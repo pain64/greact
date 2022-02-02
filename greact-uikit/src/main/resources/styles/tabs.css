@@ -1,6 +1,6 @@
 .tabs {
   display: flex;
-  border-bottom: 1px solid #eee;
+  border-bottom: 2px solid #eee;
 }
 
 .tabs-content {
@@ -8,7 +8,7 @@
   cursor: pointer;
 }
 
-#tabs-content-selected {
+.tabs-content-selected {
   background-color: #eee;
 }
 

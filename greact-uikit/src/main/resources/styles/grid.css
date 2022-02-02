@@ -90,6 +90,7 @@ tr:hover > td > .toolbox {
   background-color: #eee;
   padding: 5px;
   margin-bottom: 15px;
+  align-items: center;
 }
 
 .grid-filter-select {
