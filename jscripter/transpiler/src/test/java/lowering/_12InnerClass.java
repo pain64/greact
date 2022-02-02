@@ -103,4 +103,34 @@ public class _12InnerClass {
                     }
                     """));
     }
+
+    @Test void callStaticFromStaticInnerClass() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                class Test {
+                  static class A {
+                    static int foo() { return 42; }
+                  }
+                  int x = A.foo();
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                    const __init__ = () => {
+                      this.x = js_Test.A._foo();
+                    };
+                    __init__();
+                  }
+                  static A = class {
+                    constructor() {
+                    }
+                    static _foo() {
+                      return 42;
+                    }
+                  }
+                }
+                """);
+    }
 }
