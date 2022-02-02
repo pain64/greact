@@ -1,4 +1,4 @@
-package com.greact.generate2;
+package com.greact.generate2.lookahead;
 
 import com.greact.generate.util.JavaStdShim;
 import com.greact.generate.util.Overloads;
@@ -10,12 +10,12 @@ import com.sun.tools.javac.tree.TreeScanner;
 
 import javax.lang.model.element.TypeElement;
 
-class HasAsyncCallsVisitor extends TreeScanner {
+public class HasAsyncCalls extends TreeScanner {
     final JavaStdShim stdShim;
     final Types types;
-    boolean hasAsyncCalls = false;
+    public boolean hasAsyncCalls = false;
 
-    HasAsyncCallsVisitor(JavaStdShim stdShim, Types types) {
+    public HasAsyncCalls(JavaStdShim stdShim, Types types) {
         this.stdShim = stdShim;
         this.types = types;
     }
@@ -39,12 +39,12 @@ class HasAsyncCallsVisitor extends TreeScanner {
             fa.selected instanceof JCTree.JCParens parens) {
 
             if (parens.expr instanceof JCTree.JCLambda lmb) {
-                var visitor = new HasAsyncCallsVisitor(stdShim, types);
+                var visitor = new HasAsyncCalls(stdShim, types);
                 lmb.body.accept(visitor);
                 isAsync = visitor.hasAsyncCalls;
             } else if (parens.expr instanceof JCTree.JCAssign assign &&
                 assign.rhs instanceof JCTree.JCLambda lmb) {
-                var visitor = new HasAsyncCallsVisitor(stdShim, types);
+                var visitor = new HasAsyncCalls(stdShim, types);
                 lmb.body.accept(visitor);
                 isAsync = visitor.hasAsyncCalls;
             } else isAsync = info.isAsync();

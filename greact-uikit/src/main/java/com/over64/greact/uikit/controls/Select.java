@@ -11,33 +11,23 @@ public class Select<T> extends Control<T> {
         U map(V kv);
     }
 
-    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
-    //  inner классы и record components
-    public static <A> MemberRef<A, A> identity() {
-        return JSExpression.of("{_value: (v) => v}");
-    }
-
-    public static <A> MemberRef<A, String> identityToString() {
-        return JSExpression.of("{_value: (v) => v.toString()}");
-    }
-
     Indexed<T>[] variants;
     int valueIdx;
 
+
     public Select(T[] options) {
-        constructorShared(options, identity(), identityToString());
+        this(options,
+            JSExpression.of("{_value: (v) => v}"),
+            JSExpression.of("{_value: (v) => v.toString()}"));
     }
 
+    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
+    //  inner классы и record components
     public Select(T[] options, MemberRef<T, String> captions) {
-        constructorShared(options, identity(), captions);
+        this(options, JSExpression.of("{_value: (v) => v}"), captions);
     }
 
     public <V> Select(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
-        constructorShared(options, values, captions);
-    }
-
-    /* FIXME: починить вызов конструктора из конструктора */
-    <V> void constructorShared(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
         this.variants = new Indexed[options.length];
         for (var i = 0; i < options.length; i++)
             this.variants[i] = new Indexed<>(i, values.value(options[i]), captions.value(options[i]));
@@ -54,7 +44,7 @@ public class Select<T> extends Control<T> {
         return this;
     }
 
-    @Override public Control child() {return null;}
+    @Override public Control<?> child() { return null; }
 
     @Override
     public div mount() {

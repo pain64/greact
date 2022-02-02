@@ -1,4 +1,4 @@
-package com.greact.generate2;
+package com.greact.generate2.lookahead;
 
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeScanner;
@@ -6,13 +6,13 @@ import com.sun.tools.javac.util.Names;
 
 import javax.lang.model.element.Name;
 
-public class HasSuperConstructorCallVisitor extends TreeScanner {
+public class HasSuperConstructorCall extends TreeScanner {
     final Name superName;
     final Name objectName;
     final Name recordName;
-    boolean hasSuperConstructorCall = false;
+    public boolean hasSuperConstructorCall = false;
 
-    public HasSuperConstructorCallVisitor(Names names) {
+    public HasSuperConstructorCall(Names names) {
         superName = names.fromString("super");
         objectName = names.fromString("java.lang.Object");
         recordName = names.fromString("java.lang.Record");

@@ -129,4 +129,36 @@ public class _04Constructor {
                     """)
         );
     }
+
+    @Test void constructorOverloadedDelegate() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    public class A {
+                      A(int x, int y) {
+                      }
+                      A(int z) {
+                        this(z, 1);
+                      }
+                    }""",
+                """
+                    class js_A {
+                      constructor($over, ...__args) {
+                        __cons: while(1) {
+                          if($over === 1) {
+                            const [x, y] = __args;
+                          } else if($over === 2) {
+                            const [z] = __args;
+                            $over = 1;
+                            __args = [z, 1];
+                            continue __cons;
+                          }
+                          break;
+                        }
+                      }
+                    }
+                    """)
+        );
+    }
 }

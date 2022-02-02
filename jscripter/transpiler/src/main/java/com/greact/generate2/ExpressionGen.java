@@ -2,6 +2,7 @@ package com.greact.generate2;
 
 import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
+import com.greact.generate2.lookahead.HasAsyncCalls;
 import com.greact.model.ClassRef;
 import com.greact.model.async;
 import com.sun.tools.javac.code.Flags;
@@ -313,7 +314,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 .findFirst().get(); // FIXME
 
             var isAsync = invokeMethod.getAnnotation(async.class) != null;
-            var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+            var visitor = new HasAsyncCalls(super.stdShim, super.types);
             lmb.body.accept(visitor);
             if (isAsync && visitor.hasAsyncCalls) out.write("async ");
 
@@ -385,12 +386,12 @@ abstract class ExpressionGen extends VisitorWithContext {
                 fa.selected instanceof JCTree.JCParens parens) {
 
                 if (parens.expr instanceof JCTree.JCLambda lmb) {
-                    var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+                    var visitor = new HasAsyncCalls(super.stdShim, super.types);
                     lmb.body.accept(visitor);
                     isAsync = visitor.hasAsyncCalls;
                 } else if (parens.expr instanceof JCTree.JCAssign assign &&
                     assign.rhs instanceof JCTree.JCLambda lmb) {
-                    var visitor = new HasAsyncCallsVisitor(super.stdShim, super.types);
+                    var visitor = new HasAsyncCalls(super.stdShim, super.types);
                     lmb.body.accept(visitor);
                     isAsync = visitor.hasAsyncCalls;
                 } else isAsync = info.isAsync();
@@ -413,7 +414,16 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (isAsync) out.write("(await ");
 
             if (call.meth instanceof JCTree.JCIdent id) { // call local or static import
-                id.accept(this);
+                if(id.name.equals(names.fromString("this"))) {
+                    out.write("$over = ");
+                    out.write(String.valueOf(info.n()));
+                    out.writeLn(";");
+                    out.mkString(call.args, arg -> arg.accept(this), "__args = [", ", ", "]");
+                    out.writeLn(";");
+                    out.write("continue __cons");
+                    return;
+                } else
+                    id.accept(this);
                 out.write("(");
             } else if (call.meth instanceof JCTree.JCFieldAccess prop) {
                 if (info.mode() == Overloads.Mode.INSTANCE) {
