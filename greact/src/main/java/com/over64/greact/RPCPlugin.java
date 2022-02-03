@@ -238,21 +238,18 @@ public class RPCPlugin {
                                     (JCTree.JCLambda) invoke.args.get(0));
 
                                 invoke.meth = buildStatic(symbols.mtDoRemoteCall);
+                                invoke.varargsElement = symbols.clObject.type;
+
                                 invoke.args = List.of(
                                     maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
-                                    maker.Literal(fullQualified).setType(symbols.clString.type),
-                                    maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                            argsAndBlock.fst)
-                                        .setType(types.makeArrayType(symbols.clObject.type)));
+                                    maker.Literal(fullQualified).setType(symbols.clString.type));
+                                invoke.args = invoke.args.appendList(argsAndBlock.fst);
 
                                 // generate new static class
 
 
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
-
-
-                                var zz = 1;
                             }
                         }
                     }

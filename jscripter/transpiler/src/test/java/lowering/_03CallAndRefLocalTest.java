@@ -123,8 +123,7 @@ public class _03CallAndRefLocalTest {
         );
     }
 
-    @Test
-    void callOverloaded() throws IOException {
+    @Test void callOverloaded() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -151,6 +150,65 @@ public class _03CallAndRefLocalTest {
                   _baz() {
                     this._bar(0, 42);
                     this._bar(1, 42);
+                  }
+                }
+                """);
+    }
+
+    @Test void callVararg() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  int bar(int acc, int ...args) {
+                    for(var arg: args) acc += arg;
+                    return acc;
+                  }
+                  
+                  void baz() {
+                    bar(42, 1, 2, 3);
+                  }
+                }""",
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  _bar(acc, ...args) {
+                    for(let arg of args)
+                      acc += arg;
+                    return acc;
+                  }
+                  _baz() {
+                    this._bar(42, 1, 2, 3);
+                  }
+                }
+                """);
+    }
+
+    @Test void varargOverloaded() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                public class Test {
+                  int bar(int acc, int ...args) {
+                    return 0;
+                  }
+                  int bar(float acc, float init, int ...args) {
+                    return 0;
+                  }
+                }""",
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  _bar($over, ...__args) {
+                    if($over === 0) {
+                      const [acc, ...args] = __args;
+                      return 0;
+                    } else if($over === 1) {
+                      const [acc, init, ...args] = __args;
+                      return 0;
+                    }
                   }
                 }
                 """);

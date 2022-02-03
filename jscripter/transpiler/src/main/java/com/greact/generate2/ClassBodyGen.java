@@ -7,6 +7,7 @@ import com.greact.generate2.lookahead.HasAsyncCalls;
 import com.greact.generate2.lookahead.HasSelfConstructorCall;
 import com.greact.model.Static;
 import com.greact.model.async;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Pair;
@@ -133,7 +134,11 @@ abstract class ClassBodyGen extends StatementGen {
             .orElseThrow(() -> new IllegalStateException("unreachable"));
 
         if (!table.isOverloaded())
-            out.mkString(params, param -> out.write(param.getName().toString()), "(", ", ", ")");
+            out.mkString(params, param -> {
+                if ((param.sym.flags_field & Flags.VARARGS) != 0)
+                    out.write("...");
+                out.write(param.name.toString());
+            }, "(", ", ", ")");
         else
             out.write("($over, ...__args)");
 
@@ -193,8 +198,11 @@ abstract class ClassBodyGen extends StatementGen {
                 out.writeCBOpen(true);
 
                 if (!m.snd.params.isEmpty()) {
-                    out.mkString(m.snd.params, varDef -> out.write(varDef.name.toString()),
-                        "const [", ", ", "] = __args;");
+                    out.mkString(m.snd.params, varDef -> {
+                        if ((varDef.sym.flags_field & Flags.VARARGS) != 0)
+                            out.write("...");
+                        out.write(varDef.name.toString());
+                    }, "const [", ", ", "] = __args;");
                     out.writeNL();
                 }
                 writeMethodStatements(m.snd, hasInit);
@@ -212,7 +220,7 @@ abstract class ClassBodyGen extends StatementGen {
         } else
             writeMethodStatements(methods.get(0).snd, hasInit);
 
-        if(hasConstructorSelfCall) {
+        if (hasConstructorSelfCall) {
             out.writeLn("break;");
             out.writeCBEnd(true);
         }

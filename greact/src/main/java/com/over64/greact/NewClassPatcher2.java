@@ -414,13 +414,12 @@ public class NewClassPatcher2 {
                         var mountArgs = custom instanceof Util.IsSlot ? newClass.args.tail
                             : com.sun.tools.javac.util.List.<JCTree.JCExpression>nil();
 
-                        this.result = makeCall(symbols.clGReact, symbols.mtGReactMMount,
-                            com.sun.tools.javac.util.List.of(
-                                maker.Ident(current),
-                                forMount,
-                                maker.NewArray(maker.Ident(symbols.clObject), com.sun.tools.javac.util.List.nil(),
-                                        mountArgs)
-                                    .setType(types.makeArrayType(symbols.clObject.type))));
+                        List<JCTree.JCExpression> args = com.sun.tools.javac.util.List.of(
+                            maker.Ident(current), forMount);
+                        args = args.appendList(mountArgs);
+                        var invoke = makeCall(symbols.clGReact, symbols.mtGReactMMount, args);
+                        invoke.varargsElement = symbols.clObject.type;
+                        this.result = invoke;
                     }
                 } else
                     super.visitNewClass(newClass);

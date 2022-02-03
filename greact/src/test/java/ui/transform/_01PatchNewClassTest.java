@@ -133,8 +133,8 @@ public class _01PatchNewClassTest {
                     @Override
                     public B mount() {
                         return new B((()->{
-                            final com.over64.greact.dom.HTMLNativeElements.h1 _el1 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
-                            return _el1;
+                            final com.over64.greact.dom.HTMLNativeElements.h1 _el0 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                            return _el0;
                         }).call());
                     }
                 }""");
@@ -346,7 +346,7 @@ public class _01PatchNewClassTest {
                                 {
                                     final com.over64.greact.dom.HTMLNativeElements.div _el2 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
                                     _el2.style.border = "1px green solid";
-                                    com.over64.greact.dom.GReact.mmount(_el2, forDecorate, new Object[]{s});
+                                    com.over64.greact.dom.GReact.mmount(_el2, forDecorate, s);
                                     _el1.appendChild(_el2);
                                 }
                             }
