@@ -51,8 +51,6 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     }
 
     @SafeVarargs public final Adjuster<T> adjustMany(MemberRef<T, ?>... refs) {
-        // FIXME: varargs
-        refs = JSExpression.of("arguments");
         Column<T, ?>[] dest = new Column[]{};
         for (var ref : refs)
             Array.push(dest, adjust(ref));

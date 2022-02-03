@@ -37,7 +37,7 @@ public class CallNoArgs {
                            \s
                             @async
                             void simple() {
-                                int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{});
+                                int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
                             }
                         }"""));
 

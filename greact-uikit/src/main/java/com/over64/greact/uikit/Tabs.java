@@ -1,7 +1,6 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.Require;
-import com.greact.model.JSExpression;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 @Require.CSS("tabs.css")
@@ -11,7 +10,7 @@ public class Tabs implements Component0<div> {
     private Tab selected;
 
     public Tabs(Tab... tabs) {
-        this.tabs = JSExpression.of("Array.from(arguments)"); // FIXME: fix varargs in JScripter
+        this.tabs = tabs;
         if (this.tabs.length != 0)
             this.selected = this.tabs[0];
     }

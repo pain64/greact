@@ -38,7 +38,7 @@ class GridTable<T> implements Component0<table> {
 
     GridTable(T[] data, GridConfig2<T> conf,
               Consumer<T> onRowSelect, Runnable onFilterEnableDisable) {
-        this.rows = Array.map(data, d -> new RowData<>(d)); /* FIXME: support method reference to new */
+        this.rows = Array.map(data, RowData::new);
         this.conf = conf;
         this.onRowSelect = onRowSelect;
         this.onFilterEnableDisable = onFilterEnableDisable;
@@ -134,7 +134,7 @@ class GridTable<T> implements Component0<table> {
                                         var bgColor = col.backgroundColor;
                                         if (bgColor != null)
                                             nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);
-                                    }, new Object[]{colValue, row.data});
+                                    }, colValue, row.data);
                                 }
 
                             new td() {{ /* toolbox */
