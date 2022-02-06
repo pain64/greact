@@ -18,7 +18,7 @@ public class MainPage implements Component0<div> {
     public div mount() {
         server(db -> db.select(StudyForm.class, "order by ид desc"));
         return new div() {{
-            new h1("1yy23");
+            new h1("1yyj23");
         }};
     }
 }

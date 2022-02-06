@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greact.model.DoNotTranspile;
 import com.over64.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -15,7 +16,9 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
+import javax.lang.model.element.ElementVisitor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 public class RPCPlugin {
@@ -177,7 +180,6 @@ public class RPCPlugin {
 
     void apply(JCTree.JCCompilationUnit cu) {
         var idx = new IdxHolder();
-        //System.out.println(cu);
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
@@ -196,10 +198,10 @@ public class RPCPlugin {
 
             @Override
             public void visitMethodDef(JCTree.JCMethodDecl methodDecl) {
+                // methodDecl.sym.getMetadata().setAttributes(new SymbolMetadata(symtab.annotationType.tsym));
                 methodDecl.accept(new TreeScanner() {
                     @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
                         super.visitApply(invoke);
-
                         if (invoke.meth instanceof JCTree.JCIdent id) {
                             var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
                             if (epAnnotation != null) {
@@ -211,7 +213,6 @@ public class RPCPlugin {
                                     classDecl.type, List.of(symbols.clJsonNode.type),
                                     symbols.clList);
 
-
                                 var endpointSymbol = new Symbol.MethodSymbol(
                                     Flags.STATIC | Flags.PUBLIC,
                                     names.fromString(nextEndpointName),
@@ -219,6 +220,7 @@ public class RPCPlugin {
                                         List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
                                         symbols.clObject.type, List.nil(), classDecl.type.tsym),
                                     classDecl.sym);
+
                                 endpointSymbol.prependAttributes(
                                     List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
                                 );
@@ -250,7 +252,6 @@ public class RPCPlugin {
 
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
-
 
                                 var zz = 1;
                             }
