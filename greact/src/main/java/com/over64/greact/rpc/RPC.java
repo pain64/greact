@@ -4,10 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.sound.midi.Patch;
 import java.io.File;
 import java.io.Reader;
+import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,11 +32,14 @@ public class RPC<T> {
 
     private final String appBasePackage;
     private final URL[] urls;
+    private final boolean isRelease;
 
     public RPC(String appBasePackage) {
         this.appBasePackage = appBasePackage;
 
         var files = System.getProperty("java.class.path").split(":");
+        this.isRelease = new File(Arrays.stream(files).filter(n -> n.endsWith("resources/main")).findFirst().get()).toPath().resolve("bundle/.release").toFile().exists();
+
         urls = Arrays.stream(files).map(p -> {
             try {
                 return new File(p).toURI().toURL();
@@ -49,13 +56,15 @@ public class RPC<T> {
         var methodNamePos = req.endpoint.lastIndexOf(".");
         var className = req.endpoint.substring(0, methodNamePos);
         var methodName = req.endpoint.substring(methodNamePos + 1);
+        if (!className.endsWith(appBasePackage)) throw new RuntimeException("unreachable");
 
-        var classLoader = new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage);
+        var classLoader = !isRelease ? new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage) : new URLClassLoader(urls);
         var klass = classLoader.loadClass(className);
         //var klass = Class.forName(className);
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
+                if (Arrays.stream(method.getAnnotations()).noneMatch(n -> n.toString().equals("ApprovalAnnotation"))) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 return mapper.writeValueAsString(result);

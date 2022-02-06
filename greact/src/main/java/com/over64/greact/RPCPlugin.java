@@ -177,7 +177,7 @@ public class RPCPlugin {
 
     void apply(JCTree.JCCompilationUnit cu) {
         var idx = new IdxHolder();
-
+        //System.out.println(cu);
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
