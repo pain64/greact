@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greact.model.DoNotTranspile;
 import com.over64.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
-import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -198,7 +197,6 @@ public class RPCPlugin {
 
             @Override
             public void visitMethodDef(JCTree.JCMethodDecl methodDecl) {
-                // methodDecl.sym.getMetadata().setAttributes(new SymbolMetadata(symtab.annotationType.tsym));
                 methodDecl.accept(new TreeScanner() {
                     @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
                         super.visitApply(invoke);
@@ -249,8 +247,8 @@ public class RPCPlugin {
 
                                 // generate new static class
 
-
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
+                                endpoint.sym.getMetadata().setAttributes(new SymbolMetadata(symtab.enterClass(symtab.unnamedModule, names.fromString("com.over64.greact.rpc.RPC.ApprovalAnnotation"))));
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
 
                                 var zz = 1;

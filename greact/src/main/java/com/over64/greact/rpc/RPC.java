@@ -8,6 +8,8 @@ import javax.sound.midi.Patch;
 import java.io.File;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -20,6 +22,9 @@ public class RPC<T> {
     public @interface RPCEntryPoint {
         String value();
     }
+
+    @Target(ElementType.METHOD)
+    public @interface ApprovalAnnotation { }
 
     public interface Endpoint<T> {
         Object handle(T di, ObjectMapper mapper, List<JsonNode> args);
@@ -64,7 +69,7 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                // if (Arrays.stream(method.getAnnotations()).noneMatch(n -> n.toString().equals("ApprovalAnnotation"))) throw new RuntimeException("unreachable");
+                if (Arrays.stream(method.getAnnotations()).noneMatch(n -> n.toString().equals("@com.over64.greact.rpc.RPC.ApprovalAnnotation"))) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 return mapper.writeValueAsString(result);
