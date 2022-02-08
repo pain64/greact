@@ -15,9 +15,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
-import javax.lang.model.element.ElementVisitor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 public class RPCPlugin {
@@ -248,7 +246,6 @@ public class RPCPlugin {
                                 // generate new static class
 
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
-                                endpoint.sym.getMetadata().setAttributes(new SymbolMetadata(symtab.enterClass(symtab.unnamedModule, names.fromString("com.over64.greact.rpc.RPC.ApprovalAnnotation"))));
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
 
                                 var zz = 1;

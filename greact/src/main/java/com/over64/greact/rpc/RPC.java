@@ -3,22 +3,23 @@ package com.over64.greact.rpc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.greact.model.DoNotTranspile;
 
-import javax.sound.midi.Patch;
 import java.io.File;
 import java.io.Reader;
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 public class RPC<T> {
 
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface RPCEntryPoint {
         String value();
     }
@@ -61,7 +62,7 @@ public class RPC<T> {
         var methodNamePos = req.endpoint.lastIndexOf(".");
         var className = req.endpoint.substring(0, methodNamePos);
         var methodName = req.endpoint.substring(methodNamePos + 1);
-        if (!className.endsWith(appBasePackage)) throw new RuntimeException("unreachable");
+        if (!className.startsWith(appBasePackage)) throw new RuntimeException("unreachable");
 
         var classLoader = !isRelease ? new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage) : new URLClassLoader(urls);
         var klass = classLoader.loadClass(className);
@@ -69,7 +70,7 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                if (Arrays.stream(method.getAnnotations()).noneMatch(n -> n.toString().equals("@com.over64.greact.rpc.RPC.ApprovalAnnotation"))) throw new RuntimeException("unreachable");
+                if (method.getAnnotation(DoNotTranspile.class) == null) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 return mapper.writeValueAsString(result);
