@@ -34,9 +34,9 @@ public class RPCPlugin {
         <T extends Symbol> T lookupMember(Symbol.ClassSymbol from, String name) {
             @SuppressWarnings("unchecked")
             var res = (T) from.getEnclosedElements().stream()
-                .filter(el -> el.name.equals(names.fromString(name)))
-                .findFirst().orElseThrow(() ->
-                    new RuntimeException("oops"));
+                    .filter(el -> el.name.equals(names.fromString(name)))
+                    .findFirst().orElseThrow(() ->
+                            new RuntimeException("oops"));
             return res;
         }
 
@@ -72,8 +72,8 @@ public class RPCPlugin {
 
     JCTree.JCExpression buildStatic(Symbol sym) {
         return sym.owner instanceof Symbol.RootPackageSymbol
-            ? maker.Ident(sym)
-            : maker.Select(buildStatic(sym.owner), sym);
+                ? maker.Ident(sym)
+                : maker.Select(buildStatic(sym.owner), sym);
     }
 
     static class IdxHolder {
@@ -84,15 +84,15 @@ public class RPCPlugin {
     JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData,
                                  int idx, Type argType) {
         var paramReadExpr = maker.App(
-            maker.Select(maker.Ident(argData), symbols.mtListGet)
-                .setType(new Type.MethodType(
-                    List.of(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt)),
-                    symbols.clJsonNode.type,
-                    List.nil(),
-                    method.owner.type.tsym
-                )),
-            List.of(maker.Literal(TypeTag.INT, idx)
-                .setType(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt))));
+                maker.Select(maker.Ident(argData), symbols.mtListGet)
+                        .setType(new Type.MethodType(
+                                List.of(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt)),
+                                symbols.clJsonNode.type,
+                                List.nil(),
+                                method.owner.type.tsym
+                        )),
+                List.of(maker.Literal(TypeTag.INT, idx)
+                        .setType(new Type.JCPrimitiveType(TypeTag.INT, symbols.clInt))));
 
 
         final Type argTypeWithPrimitive;
@@ -109,11 +109,11 @@ public class RPCPlugin {
             argTypeWithPrimitive = argType;
 
         return maker.App(maker.Select(maker.Ident(argGson), symbols.mtObjectMapperTreeToValue),
-            List.of(paramReadExpr, maker.ClassLiteral(argTypeWithPrimitive)));
+                List.of(paramReadExpr, maker.ClassLiteral(argTypeWithPrimitive)));
     }
 
     Pair<List<JCTree.JCExpression>, JCTree.JCBlock> mapLambdaBody(
-        Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
+            Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
 
         var localVars = new LinkedHashSet<Symbol.VarSymbol>();
         var diSymbol = lambda.params.get(0).sym;
@@ -149,8 +149,8 @@ public class RPCPlugin {
 
                     rpcArgs.list = rpcArgs.list.append(maker.Ident(varSym));
                     var parsedArg = new Symbol.VarSymbol(Flags.FINAL,
-                        names.fromString("$closure" + parsedArgs.size()),
-                        varSym.type, method);
+                            names.fromString("$closure" + parsedArgs.size()),
+                            varSym.type, method);
 
                     parsedArgs.add(parsedArg);
                     this.result = maker.Ident(parsedArg);
@@ -163,13 +163,13 @@ public class RPCPlugin {
         final JCTree.JCBlock block;
         if (lambda.body instanceof JCTree.JCBlock bl) block = bl;
         else block = maker.Block(Flags.BLOCK, List.of(maker.Return(
-            (JCTree.JCExpression) lambda.body)));
+                (JCTree.JCExpression) lambda.body)));
 
         for (var i = 0; i < parsedArgs.size(); i++) {
             var parsedArg = parsedArgs.get(i);
             block.stats = block.stats.prepend(
-                maker.VarDef(parsedArg, readJson(method,
-                    endpoint.params.get(1), endpoint.params.get(2), i, parsedArg.type)));
+                    maker.VarDef(parsedArg, readJson(method,
+                            endpoint.params.get(1), endpoint.params.get(2), i, parsedArg.type)));
         }
 
         return new Pair<>(rpcArgs.list, block);
@@ -177,6 +177,7 @@ public class RPCPlugin {
 
     void apply(JCTree.JCCompilationUnit cu) {
         var idx = new IdxHolder();
+
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
@@ -198,55 +199,58 @@ public class RPCPlugin {
                 methodDecl.accept(new TreeScanner() {
                     @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
                         super.visitApply(invoke);
+
                         if (invoke.meth instanceof JCTree.JCIdent id) {
                             var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
                             if (epAnnotation != null) {
                                 var nextEndpointName = "$endpoint" + idx.inc();
                                 var fullQualified = classDecl.sym.flatname + "." + nextEndpointName;
                                 var diType =
-                                    ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
+                                        ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
                                 var typeListOfJsonElement = new Type.ClassType(
-                                    classDecl.type, List.of(symbols.clJsonNode.type),
-                                    symbols.clList);
+                                        classDecl.type, List.of(symbols.clJsonNode.type),
+                                        symbols.clList);
+
 
                                 var endpointSymbol = new Symbol.MethodSymbol(
-                                    Flags.STATIC | Flags.PUBLIC,
-                                    names.fromString(nextEndpointName),
-                                    new Type.MethodType(
-                                        List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
-                                        symbols.clObject.type, List.nil(), classDecl.type.tsym),
-                                    classDecl.sym);
-
+                                        Flags.STATIC | Flags.PUBLIC,
+                                        names.fromString(nextEndpointName),
+                                        new Type.MethodType(
+                                                List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
+                                                symbols.clObject.type, List.nil(), classDecl.type.tsym),
+                                        classDecl.sym);
                                 endpointSymbol.prependAttributes(
-                                    List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
+                                        List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
                                 );
 
                                 endpointSymbol.params = List.<Symbol.VarSymbol>nil()
-                                    .append(new Symbol.ParamSymbol(0, names.fromString("x0"),
-                                        diType, endpointSymbol))
-                                    .append(new Symbol.ParamSymbol(0, names.fromString("x1"),
-                                        symbols.clObjectMapper.type, endpointSymbol))
-                                    .append(new Symbol.ParamSymbol(0, names.fromString("x2"),
-                                        typeListOfJsonElement, endpointSymbol));
+                                        .append(new Symbol.ParamSymbol(0, names.fromString("x0"),
+                                                diType, endpointSymbol))
+                                        .append(new Symbol.ParamSymbol(0, names.fromString("x1"),
+                                                symbols.clObjectMapper.type, endpointSymbol))
+                                        .append(new Symbol.ParamSymbol(0, names.fromString("x2"),
+                                                typeListOfJsonElement, endpointSymbol));
 
                                 classDecl.sym.members_field.enterIfAbsent(endpointSymbol);
 
 
                                 var argsAndBlock = mapLambdaBody(methodDecl.sym, endpointSymbol,
-                                    (JCTree.JCLambda) invoke.args.get(0));
+                                        (JCTree.JCLambda) invoke.args.get(0));
 
                                 invoke.meth = buildStatic(symbols.mtDoRemoteCall);
                                 invoke.args = List.of(
-                                    maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
-                                    maker.Literal(fullQualified).setType(symbols.clString.type),
-                                    maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
-                                            argsAndBlock.fst)
-                                        .setType(types.makeArrayType(symbols.clObject.type)));
+                                        maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
+                                        maker.Literal(fullQualified).setType(symbols.clString.type),
+                                        maker.NewArray(maker.Ident(symbols.clObject), List.nil(),
+                                                        argsAndBlock.fst)
+                                                .setType(types.makeArrayType(symbols.clObject.type)));
 
                                 // generate new static class
 
+
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
+
 
                                 var zz = 1;
                             }

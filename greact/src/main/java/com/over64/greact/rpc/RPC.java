@@ -7,10 +7,8 @@ import com.greact.model.DoNotTranspile;
 
 import java.io.File;
 import java.io.Reader;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -23,9 +21,6 @@ public class RPC<T> {
     public @interface RPCEntryPoint {
         String value();
     }
-
-    @Target(ElementType.METHOD)
-    public @interface ApprovalAnnotation { }
 
     public interface Endpoint<T> {
         Object handle(T di, ObjectMapper mapper, List<JsonNode> args);
