@@ -277,6 +277,20 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 //                }
 //            }
 
+            try {
+                if (bundleDir.resolve("main.js").toFile().exists()) {
+                    Files.delete(bundleDir.resolve("main.js"));
+                }
+                if (bundleDir.resolve("main.css").toFile().exists()) {
+                    Files.delete(bundleDir.resolve("main.css"));
+                }
+                if (bundleDir.resolve(".release").toFile().exists()) {
+                    Files.delete(bundleDir.resolve(".release"));
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
             if (!bundleDir.toFile().exists())
                 try {
                     Files.createDirectory(bundleDir);
@@ -373,6 +387,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             try {
                 data = Files.readAllLines(bundleFile);
+                if (!bundleDir.resolve(".release").toFile().exists()) {
+                    Files.createFile(bundleDir.resolve(".release"));
+                }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

@@ -177,7 +177,6 @@ public class RPCPlugin {
 
     void apply(JCTree.JCCompilationUnit cu) {
         var idx = new IdxHolder();
-
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
@@ -199,7 +198,6 @@ public class RPCPlugin {
                 methodDecl.accept(new TreeScanner() {
                     @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
                         super.visitApply(invoke);
-
                         if (invoke.meth instanceof JCTree.JCIdent id) {
                             var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
                             if (epAnnotation != null) {
@@ -211,7 +209,6 @@ public class RPCPlugin {
                                     classDecl.type, List.of(symbols.clJsonNode.type),
                                     symbols.clList);
 
-
                                 var endpointSymbol = new Symbol.MethodSymbol(
                                     Flags.STATIC | Flags.PUBLIC,
                                     names.fromString(nextEndpointName),
@@ -219,6 +216,7 @@ public class RPCPlugin {
                                         List.of(diType, symbols.clObjectMapper.type, typeListOfJsonElement),
                                         symbols.clObject.type, List.nil(), classDecl.type.tsym),
                                     classDecl.sym);
+
                                 endpointSymbol.prependAttributes(
                                     List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
                                 );
@@ -247,10 +245,8 @@ public class RPCPlugin {
 
                                 // generate new static class
 
-
                                 var endpoint = maker.MethodDef(endpointSymbol, argsAndBlock.snd);
                                 classDecl.defs = classDecl.defs.prepend(endpoint);
-
 
                                 var zz = 1;
                             }

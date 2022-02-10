@@ -54,8 +54,10 @@ val test by tasks.getting(Test::class) {
 dependencies {
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
+    implementation(project(":typesafesql"))
     implementation(project(":greact"))
     implementation(project(":greact-uikit"))
+    implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("com.sparkjava:spark-core:2.9.2")
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")

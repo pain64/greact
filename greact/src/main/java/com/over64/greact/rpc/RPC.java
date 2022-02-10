@@ -3,16 +3,23 @@ package com.over64.greact.rpc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.greact.model.DoNotTranspile;
 
 import java.io.File;
 import java.io.Reader;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RPC<T> {
 
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface RPCEntryPoint {
         String value();
     }
@@ -28,11 +35,14 @@ public class RPC<T> {
 
     private final String appBasePackage;
     private final URL[] urls;
+    private final boolean isRelease;
+    private final ConcurrentHashMap<String, Method> cache;
 
     public RPC(String appBasePackage) {
         this.appBasePackage = appBasePackage;
-
+        this.cache = new ConcurrentHashMap<>();
         var files = System.getProperty("java.class.path").split(":");
+        this.isRelease = getClass().getResourceAsStream("/bundle/.release") != null;
         urls = Arrays.stream(files).map(p -> {
             try {
                 return new File(p).toURI().toURL();
@@ -49,15 +59,26 @@ public class RPC<T> {
         var methodNamePos = req.endpoint.lastIndexOf(".");
         var className = req.endpoint.substring(0, methodNamePos);
         var methodName = req.endpoint.substring(methodNamePos + 1);
+        var fullName = className + "." + methodName;
+        if (!className.startsWith(appBasePackage)) throw new RuntimeException("unreachable");
 
-        var classLoader = new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage);
+        if (isRelease && cache.containsKey(fullName)) {
+            var method = cache.get(fullName);
+            method.setAccessible(true);
+            var result = method.invoke(null, di, mapper, req.args);
+            return mapper.writeValueAsString(result);
+        }
+        var classLoader = !isRelease ? new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage) : new URLClassLoader(urls);
         var klass = classLoader.loadClass(className);
         //var klass = Class.forName(className);
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
+                if (method.getAnnotation(DoNotTranspile.class) == null) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
+                if (isRelease) cache.put(fullName, method);
+
                 return mapper.writeValueAsString(result);
             }
 
