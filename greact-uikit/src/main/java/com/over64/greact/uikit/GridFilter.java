@@ -50,21 +50,110 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
-    // public enum LexemeTypes {OP_AND, OP_OR, B_OPEN, B_CLOSE, SYMBOL, ERROR}
-    public static class lex {
-        public ArrayList<String> arr;
+    @Override
+    public div mount() {
+        return new div() {{
+            new div() {{
+                var filterWords = Array.filter(
+                        stringSplit(filterValue, " "),
+                        s -> stringLength(s) != 0);
 
-        lex() {
-            arr = new ArrayList<>();
-            arr.add("OP_AND");
-            arr.add("OP_OR");
-            arr.add("B_OPEN");
-            arr.add("B_CLOSE");
-            arr.add("SYMBOL");
-            arr.add("ERROR");
-        }
+                T[] filtered = filterWords.length != 0 ?
+                        Array.filter(data, v -> {
+                            for (var col : conf.columns) {
+                                var strVal = Grid.fetchValue(v, col.memberNames);
+                                if (strVal == null) strVal = "";
+                                strVal += ""; // FIXME: cast to string!!!
+                                for (var fVal : filterWords)
+                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
+                            }
+                            return false;
+                        }) : data;
+
+                var nPages = calcNPages(filtered, currentSize);
+                var offset = (currentPage - 1) * currentSize;
+                effectUnaffectedMe(() ->
+                        effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
+
+                if (filtered.length > pageSizes[0] || conf.title != null)
+                    new div() {{
+                        className = "grid-filter";
+
+                        new div() {{
+                            if (filtered.length > pageSizes[0]) {
+                                new select() {{
+                                    onchange = ev -> {
+                                        // FIXME: move to one effect
+                                        effect(currentSize = Integer.parseInt(ev.target.value));
+                                        effect(currentPage = 1);
+                                    };
+
+                                    for (var size : pageSizes)
+                                        new option("" + size) {{
+                                            value = "" + size;
+                                            selected = size == currentSize;
+                                        }};
+                                    className = "grid-filter-select";
+                                }};
+
+                                new span("записей на странице " + currentPage + " из " + nPages);
+                            }
+                        }};
+
+                        new span(conf.title) {{
+                            className = "grid-filter-span";
+                        }};
+
+                        new div() {{
+                            if (filtered.length > pageSizes[0]) {
+                                new div() {{
+                                    innerHTML = """
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                            """;
+                                    className = "page-turn";
+                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
+                                }};
+                                new div() {{
+                                    innerHTML = """
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                            """;
+                                    className = "page-turn";
+                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
+                                }};
+                            }
+                        }};
+                    }};
+            }};
+            if (filterEnabled)
+                new div() {{
+                    className = "grid-filter-enabled";
+                    new input() {{
+//                        value = filterValue; // one wat bindind
+                        placeholder = "фильтр...";
+                        className = "grid-filter-input";
+                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
+                    }};
+                }};
+            new div() {{
+                String reg = filterValue;
+                JSExpression.of("reg = reg.replace('\\', '\\')");
+                flag_ = checkValid(reg);
+                if (!flag_ && filterEnabled && !filterValue.equals("")) {
+                    new div() {{
+                        new h5(errorText) {{
+                            this.style.color = "red";
+                        }};
+                    }};
+                }
+                var hint = pageData;
+                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
+                    effect(filterEnabled = !filterEnabled);
+                    effect(currentPage = 1);
+                    effect(filterValue = "");
+                }));
+            }};
+        }};
     }
-
 
     public static class Lexeme {
         String lexeme;
@@ -178,10 +267,10 @@ class GridFilter<T> implements Component0<div> {
                 }
             }
         }
-        return t; // TODO: write sort
+        return t;
     }
 
-    public static class StringBuilder { // TODO: refactor StringBuilder
+    public static class StringBuilder {
         String value;
 
         public StringBuilder(String value) {
@@ -237,117 +326,7 @@ class GridFilter<T> implements Component0<div> {
 
     static boolean flag_ = true;
     static String errorText = "";
-    static  int errorPos = 0;
-
-    @Override
-    public div mount() {
-        return new div() {{
-            new div() {{
-
-                var filterWords = Array.filter(
-                        stringSplit(filterValue, " "),
-                        s -> stringLength(s) != 0);
-
-                T[] filtered = filterWords.length != 0 ?
-                        Array.filter(data, v -> {
-                            for (var col : conf.columns) {
-                                var strVal = Grid.fetchValue(v, col.memberNames);
-                                if (strVal == null) strVal = "";
-                                strVal += ""; // FIXME: cast to string!!!
-                                for (var fVal : filterWords)
-                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-                            }
-                            return false;
-                        }) : data;
-
-                var nPages = calcNPages(filtered, currentSize);
-                var offset = (currentPage - 1) * currentSize;
-                effectUnaffectedMe(() ->
-                        effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
-
-                if (filtered.length > pageSizes[0] || conf.title != null)
-                    new div() {{
-                        className = "grid-filter";
-
-                        new div() {{
-                            if (filtered.length > pageSizes[0]) {
-                                new select() {{
-                                    onchange = ev -> {
-                                        // FIXME: move to one effect
-                                        effect(currentSize = Integer.parseInt(ev.target.value));
-                                        effect(currentPage = 1);
-                                    };
-
-                                    for (var size : pageSizes)
-                                        new option("" + size) {{
-                                            value = "" + size;
-                                            selected = size == currentSize;
-                                        }};
-                                    className = "grid-filter-select";
-                                }};
-
-                                new span("записей на странице " + currentPage + " из " + nPages);
-                            }
-                        }};
-
-                        new span(conf.title) {{
-                            className = "grid-filter-span";
-                        }};
-
-                        new div() {{
-                            if (filtered.length > pageSizes[0]) {
-                                new div() {{
-                                    innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                            """;
-                                    className = "page-turn";
-                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
-                                }};
-                                new div() {{
-                                    innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                            """;
-                                    className = "page-turn";
-                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
-                                }};
-                            }
-                        }};
-                    }};
-            }};
-            if (filterEnabled)
-                new div() {{
-                    className = "grid-filter-enabled";
-                    new input() {{
-//                        value = filterValue; // one wat bindind
-                        placeholder = "фильтр...";
-                        className = "grid-filter-input";
-                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
-                    }};
-                }};
-            new div() {{
-                String reg = filterValue;
-                JSExpression.of("reg = reg.replace('\\', '\\')");
-                flag_ = checkValid(reg);
-                if (!flag_ && filterEnabled && !filterValue.equals("")) {
-                    new div() {{
-                        new h5(errorText) {{
-                            this.style.color = "red";
-                        }};
-                    }};
-                }
-                var hint = pageData;
-                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
-                    effect(filterEnabled = !filterEnabled);
-                    effect(currentPage = 1);
-                    effect(filterValue = "");
-                }));
-            }};
-        }};
-    }
-
-    // Написать свой ArrayList
-    // Написать свой StringBuilder
-    // Написать свой Stack
+    static int errorPos = 0;
 
     public static ArrayList<Lexeme> OPZ;
 
@@ -482,7 +461,7 @@ class GridFilter<T> implements Component0<div> {
                     }
                 }
             } else if (lex.lexeme.equals("ERROR")) {
-                printError("Запрос не должен начинаться с пробела", 0);
+                printError(lex.value, 0);
                 return false;
             } else {
                 printError("Неизвестный тип", lex.pos);
@@ -633,6 +612,11 @@ class GridFilter<T> implements Component0<div> {
             return result;
         }
         if (textExpr.length() == 1) {
+            if (textExpr.equals("%") || textExpr.equals(")") || textExpr.equals("(") || textExpr.equals("&") ||
+                    textExpr.equals("|")) {
+                result.add(new Lexeme("ERROR", "Этот символ не ожидался", 0));
+                return result;
+            }
             result.add(new Lexeme("SYMBOL", textExpr, 0));
             return result;
         }
