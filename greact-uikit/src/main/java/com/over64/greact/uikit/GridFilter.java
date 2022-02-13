@@ -50,25 +50,31 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
+    public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) {
+        //                        Array.filter(data, v -> {
+        //                            for (var col : conf.columns) {
+        //                                var strVal = Grid.fetchValue(v, col.memberNames);
+        //                                if (strVal == null) strVal = "";
+        //                                strVal += "";
+        //                                for (var fVal : filterWords)
+        //                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
+        //                            }
+        //                            return false;
+        //                        })
+
+        return data;
+    }
+
     @Override
     public div mount() {
         return new div() {{
             new div() {{
-                var filterWords = Array.filter(
-                        stringSplit(filterValue, " "),
-                        s -> stringLength(s) != 0);
+                String reg = filterValue;
+                JSExpression.of("reg = reg.replace('\\', '\\')");
+                flag_ = checkValid(reg);
 
-                T[] filtered = filterWords.length != 0 ?
-                        Array.filter(data, v -> {
-                            for (var col : conf.columns) {
-                                var strVal = Grid.fetchValue(v, col.memberNames);
-                                if (strVal == null) strVal = "";
-                                strVal += ""; // FIXME: cast to string!!!
-                                for (var fVal : filterWords)
-                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-                            }
-                            return false;
-                        }) : data;
+                T[] filtered = !filterValue.isEmpty() && flag_ ?
+                        getFilteredData(data, OPZ) : data;
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
@@ -135,9 +141,6 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }};
             new div() {{
-                String reg = filterValue;
-                JSExpression.of("reg = reg.replace('\\', '\\')");
-                flag_ = checkValid(reg);
                 if (!flag_ && filterEnabled && !filterValue.equals("")) {
                     new div() {{
                         new h5(errorText) {{
@@ -324,7 +327,7 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    static boolean flag_ = true;
+    static boolean flag_ = false;
     static String errorText = "";
     static int errorPos = 0;
 
@@ -552,7 +555,6 @@ class GridFilter<T> implements Component0<div> {
                 return false;
             }
         }
-        JSExpression.of("console.log(com$over64$greact$uikit$GridFilter.OPZ.array)");
         return true;
     }
 
@@ -607,7 +609,7 @@ class GridFilter<T> implements Component0<div> {
         var exprBuilder = new StringBuilder(textExpr);
         var result = new ArrayList<Lexeme>();
         if (textExpr.isEmpty()) return result; // Ошибка в этом случае будет бесить
-        if (textExpr.startsWith(" ")) {
+        if (String.valueOf(textExpr.charAt(0)).equals(" ")) {
             result.add(new Lexeme("ERROR", "Текст не должен начинаться с пробела", 0));
             return result;
         }
