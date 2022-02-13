@@ -9,7 +9,6 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) throws IOException {
         var resources = Loader.bundle(MainPage.class);
-
         Spark.port(3000);
 
         Spark.get("/*", (req, res) -> {

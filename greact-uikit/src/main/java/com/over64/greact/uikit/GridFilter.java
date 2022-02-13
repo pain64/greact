@@ -1,7 +1,6 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
-import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.*;
@@ -41,6 +40,7 @@ class GridFilter<T> implements Component0<div> {
     String[] stringSplit(String str, String delim) {
         return JSExpression.of("str.split(delim)");
     }
+
     int stringLength(String str) {
         return JSExpression.of("str.length");
     }
@@ -49,11 +49,194 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
-    @Override public div mount() {
+    // public enum LexemeTypes {OP_AND, OP_OR, B_OPEN, B_CLOSE, SYMBOL, ERROR}
+    public static class lex{
+        public ArrayList<String> arr;
+        lex() {
+            arr = new ArrayList<>();
+            arr.add("OP_AND");
+            arr.add("OP_OR");
+            arr.add("B_OPEN");
+            arr.add("B_CLOSE");
+            arr.add("SYMBOL");
+            arr.add("ERROR");
+        }
+    }
+
+
+    public static class Lexeme {
+        String lexeme;
+        String value;
+        Integer pos;
+
+        Lexeme(String lexeme, String value, Integer pos) {
+            this.lexeme = lexeme;
+            this.value = value;
+            this.pos = pos;
+        }
+
+        Lexeme(String lexeme, Character value, Integer pos) {
+            this.lexeme = lexeme;
+            this.value = value.toString();
+            this.pos = pos;
+        }
+
+        @Override
+        public String toString() {
+            return this.lexeme + " : " + this.value;
+        }
+    }
+
+    public static class ArrayList<T> {
+        private final int INIT_SIZE = 16;
+        private final int CUT_RATE = 4;
+        private Object[] array = new Object[INIT_SIZE];
+        private int pointer = 0;
+
+        /*
+        Добавляет новый элемент в список. При достижении размера внутреннего
+        массива происходит его увеличение в два раза.
+        */
+        public void add(T item) {
+            if (pointer == array.length - 1)
+                resize(array.length * 2); // увеличу в 2 раза, если достигли границ
+            array[pointer++] = item;
+        }
+
+        /*
+        Возвращает элемент списка по индексу.
+        */
+        public T get(int index) {
+            return (T) array[index];
+        }
+
+        /*
+        Удаляет элемент списка по индексу. Все элементы справа от удаляемого
+        перемещаются на шаг налево. Если после удаления элемента количество
+        элементов стало в CUT_RATE раз меньше чем размер внутреннего массива,
+        то внутренний массив уменьшается в два раза, для экономии занимаемого
+        места.
+        */
+        public void remove(int index) {
+            for (int i = index; i < pointer; i++)
+                array[i] = array[i + 1];
+            array[pointer] = null;
+            pointer--;
+            if (array.length > INIT_SIZE && pointer < array.length / CUT_RATE)
+                resize(array.length / 2); // если элементов в CUT_RATE раз меньше чем
+            // длина массива, то уменьшу в два раза
+        }
+
+        /*Возвращает количество элементов в списке*/
+        public int size() {
+            return pointer;
+        }
+
+        /*Вспомогательный метод для масштабирования.*/
+        private void resize(int newLength) {
+            Object[] newArray = new Object[newLength];
+            System.arraycopy(array, 0, newArray, 0, pointer);
+            array = newArray;
+        }
+
+        public boolean isEmpty() {
+            return size() == 0;
+        }
+
+        public boolean contains(T pattern) {
+            for (int i = 0; i < this.size(); i++) {
+                if (this.get(i).equals(pattern)) return true;
+            }
+            return false;
+        }
+
+        public void addAll(ArrayList<T> terms) {
+            for (int i = 0; i < terms.size(); i++) {
+                this.add(terms.get(i));
+            }
+        }
+
+        public void swap(int i1, int i2) {
+            Object temp = array[i1];
+            array[i1] = array[i2];
+            array[i2] = temp;
+        }
+    }
+
+    public ArrayList<Lexeme> sortByLexemeId(ArrayList<Lexeme> t) {
+        var sorted = false;
+        while (!sorted) {
+            sorted = true;
+            for (int i = 0; i < t.size() - 1; i++) {
+                if (t.get(i).pos > t.get(i + 1).pos) {
+                    t.swap(i, i + 1);
+                    sorted = false;
+                }
+            }
+        }
+        return null; // TODO: write sort
+    }
+
+    public static class StringBuilder { // TODO: refactor StringBuilder
+        String value;
+
+        public StringBuilder(String value) {
+            this.value = value;
+        }
+
+        public StringBuilder() {
+            this.value = "";
+        }
+
+        public int indexOf(String like) { // for one symbol
+            for (int i = 0; i < value.length(); i++) {
+                if (String.valueOf(value.charAt(i)).equals(like)) return i;
+            }
+            return -1;
+        }
+
+        public int length() {
+            return value.length();
+        }
+
+        public boolean isEmpty() {
+            return value.length() == 0;
+        }
+
+        public char charAt(int i) {
+            return value.charAt(i);
+        }
+
+        public void append(char charAt) {
+            value += charAt;
+        }
+
+        public void deleteCharAt(int i) {
+            var s1 = new StringBuilder(value).subSequence(0, i).toString();
+            var s2 = new StringBuilder(value).subSequence(i + 1, value.length()).toString();
+            value = s1 + s2;
+        }
+
+        public StringBuilder subSequence(int i, int i1) {
+            var newVal = "";
+            for (int j = i; j < i1; j++) {
+                newVal += value.charAt(i);
+            }
+            return new StringBuilder(newVal);
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
+
+    @Override
+    public div mount() {
         return new div() {{
             new div() {{
-                var flag_ = checkValid(filterValue);
-                JSExpression.of("console.log(flag)");
+                var flag_ = checkValid("a");
+                JSExpression.of("console.log(flag_)");
                 var filterWords = Array.filter(
                         stringSplit(filterValue, " "),
                         s -> stringLength(s) != 0);
@@ -108,15 +291,15 @@ class GridFilter<T> implements Component0<div> {
                             if (filtered.length > pageSizes[0]) {
                                 new div() {{
                                     innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                        """;
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                            """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
                                 }};
                                 new div() {{
                                     innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                        """;
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                            """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
                                 }};
@@ -149,22 +332,22 @@ class GridFilter<T> implements Component0<div> {
     // Написать свой StringBuilder
     // Написать свой Stack
 
-    private ArrayList<Lexeme> OPZ;
+    public ArrayList<Lexeme> OPZ;
 
-    private void printError(String text, Integer pos) {
-
+    public void printError(String text, Integer pos) {
+        JSExpression.of("console.log(text)");
     }
 
-    private class Pattern {
-        LexemeTypes el1;
-        LexemeTypes el2;
+    public static class Pattern {
+        String el1;
+        String el2;
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Pattern pattern = (Pattern) o;
-            return el1 == pattern.el1 && el2 == pattern.el2;
+            return Objects.equals(el1, pattern.el1) && Objects.equals(el2, pattern.el2);
         }
 
         @Override
@@ -172,32 +355,59 @@ class GridFilter<T> implements Component0<div> {
             return Objects.hash(el1, el2);
         }
 
-        public Pattern(LexemeTypes el1, LexemeTypes el2) {
+        public Pattern(String el1, String el2) {
             this.el1 = el1;
             this.el2 = el2;
         }
     }
 
-    private boolean checkValid(String expr) {
+    public static class StackLexeme {
+        public ArrayList<Lexeme> stack;
+
+        StackLexeme() {
+            stack = new ArrayList<>();
+        }
+
+        public boolean isEmpty() {
+            return stack.size() == 0;
+        }
+
+        public void add(Lexeme lexeme) {
+            stack.add(lexeme);
+        }
+
+        public Lexeme peek() {
+            return stack.get(stack.size() - 1);
+        }
+
+        public Lexeme pop() {
+            var temp = peek();
+            stack.remove(stack.size() - 1);
+            return temp;
+        }
+    }
+
+    public boolean checkValid(String expr) {
         var data = lexAnalyze(expr);
         if (data.isEmpty()) return false;
 
         // express check ----
         var patternsArr = new ArrayList<Pattern>();
-        patternsArr.add(new Pattern(LexemeTypes.OP_AND, LexemeTypes.B_CLOSE));
-        patternsArr.add(new Pattern(LexemeTypes.OP_OR, LexemeTypes.B_CLOSE));
-        patternsArr.add(new Pattern(LexemeTypes.B_OPEN, LexemeTypes.B_CLOSE));
-        patternsArr.add(new Pattern(LexemeTypes.B_CLOSE, LexemeTypes.B_OPEN));
-        patternsArr.add(new Pattern(LexemeTypes.B_OPEN, LexemeTypes.OP_AND));
-        patternsArr.add(new Pattern(LexemeTypes.B_OPEN, LexemeTypes.OP_OR));
-        patternsArr.add(new Pattern(LexemeTypes.OP_OR, LexemeTypes.OP_OR));
-        patternsArr.add(new Pattern(LexemeTypes.OP_OR, LexemeTypes.OP_AND));
-        patternsArr.add(new Pattern(LexemeTypes.OP_AND, LexemeTypes.OP_AND));
-        patternsArr.add(new Pattern(LexemeTypes.OP_AND, LexemeTypes.OP_OR));
-        patternsArr.add(new Pattern(LexemeTypes.SYMBOL, LexemeTypes.SYMBOL));
+        patternsArr.add(new Pattern("OP_AND", "B_CLOSE"));
+        patternsArr.add(new Pattern("OP_OR", "B_CLOSE"));
+        patternsArr.add(new Pattern("B_OPEN", "B_CLOSE"));
+        patternsArr.add(new Pattern("B_CLOSE", "B_OPEN"));
+        patternsArr.add(new Pattern("B_OPEN", "OP_AND"));
+        patternsArr.add(new Pattern("B_OPEN", "OP_OR"));
+        patternsArr.add(new Pattern("OP_OR", "OP_OR"));
+        patternsArr.add(new Pattern("OP_OR", "OP_AND"));
+        patternsArr.add(new Pattern("OP_AND", "OP_AND"));
+        patternsArr.add(new Pattern("OP_AND", "OP_OR"));
+        patternsArr.add(new Pattern("SYMBOL", "SYMBOL"));
 
         Lexeme old = null;
-        for (Lexeme lex : data) {
+        for (int i = 0; i < data.size(); i++) {
+            Lexeme lex = data.get(i);
             if (old != null) {
                 if (patternsArr.contains(new Pattern(old.lexeme, lex.lexeme))) {
                     printError("Ошибка синтаксиса", lex.pos);
@@ -208,28 +418,29 @@ class GridFilter<T> implements Component0<div> {
         }
         // -------------
 
-        for (Lexeme lex : data) {
-            if (lex.lexeme == LexemeTypes.OP_AND) {
+        for (int i = 0; i < data.size(); i++) {
+            Lexeme lex = data.get(i);
+            if (lex.lexeme.equals("OP_AND")) {
                 if (!"&".equals(lex.value)) {
                     printError("Ожидалось '&', а имеем " + lex.value, lex.pos);
                     return false;
                 }
-            } else if (lex.lexeme == LexemeTypes.OP_OR) {
+            } else if (lex.lexeme.equals("OP_OR")) {
                 if (!"|".equals(lex.value)) {
                     printError("Ожидалось |, а имеем " + lex.value, lex.pos);
                     return false;
                 }
-            } else if (lex.lexeme == LexemeTypes.B_OPEN) {
+            } else if (lex.lexeme.equals("B_OPEN")) {
                 if (!"(".equals(lex.value)) {
                     printError("Ожидалось (, а имеем " + lex.value, lex.pos);
                     return false;
                 }
-            } else if (lex.lexeme == LexemeTypes.B_CLOSE) {
+            } else if (lex.lexeme.equals("B_CLOSE")) {
                 if (!")".equals(lex.value)) {
                     printError("Ожидалось ), а имеем " + lex.value, lex.pos);
                     return false;
                 }
-            } else if (lex.lexeme == LexemeTypes.SYMBOL) {
+            } else if (lex.lexeme.equals("SYMBOL")) {
                 var like = "%";
                 if (new StringBuilder(lex.value).indexOf(like) != -1) { // BAD
                     if (lex.value.length() == 1) {
@@ -252,7 +463,7 @@ class GridFilter<T> implements Component0<div> {
                         return false;
                     }
                 }
-            } else if (lex.lexeme == LexemeTypes.ERROR) {
+            } else if (lex.lexeme.equals("ERROR")) {
                 printError("Запрос не должен начинаться с пробела", 0);
                 return false;
             } else {
@@ -263,22 +474,23 @@ class GridFilter<T> implements Component0<div> {
 
 // Здесь мы знаем, что все <term> and <some_op> валидны, осталось проверить саму последовательность
 
-        var calStack = new Stack<Lexeme>();
+        var calStack = new StackLexeme();
         OPZ = new ArrayList<>();
 
-        for (Lexeme lexeme : data) {
-            if (lexeme.lexeme == LexemeTypes.SYMBOL) {
+        for (int i = 0; i < data.size(); i++) {
+            Lexeme lexeme = data.get(i);
+            if (lexeme.lexeme.equals("SYMBOL")) {
                 OPZ.add(lexeme);
-            } else if (lexeme.lexeme == LexemeTypes.OP_AND) {
+            } else if (lexeme.lexeme.equals("OP_AND")) {
                 calStack.add(lexeme);
-            } else if (lexeme.lexeme == LexemeTypes.OP_OR) {
-                if (calStack.isEmpty() || calStack.peek().lexeme == LexemeTypes.B_OPEN || calStack.peek().lexeme == LexemeTypes.OP_OR)
+            } else if (lexeme.lexeme.equals("OP_OR")) {
+                if (calStack.isEmpty() || calStack.peek().lexeme.equals("B_OPEN") || calStack.peek().lexeme.equals("OP_OR"))
                     calStack.add(lexeme);
                 else {
                     while (true) {
                         if (calStack.isEmpty()) break;
                         var nextLex = calStack.peek();
-                        if (nextLex.lexeme == LexemeTypes.OP_AND) {
+                        if (nextLex.lexeme.equals("OP_AND")) {
                             OPZ.add(calStack.pop());
                         } else {
                             break;
@@ -286,9 +498,9 @@ class GridFilter<T> implements Component0<div> {
                     }
                     calStack.add(lexeme);
                 }
-            } else if (lexeme.lexeme == LexemeTypes.B_OPEN) {
+            } else if (lexeme.lexeme.equals("B_OPEN")) {
                 calStack.add(lexeme);
-            } else if (lexeme.lexeme == LexemeTypes.B_CLOSE) {
+            } else if (lexeme.lexeme.equals("B_CLOSE")) {
                 // Выталкиваем все операции, пока не встретим откр. скобку
                 while (true) {
                     if (calStack.isEmpty()) {
@@ -296,7 +508,7 @@ class GridFilter<T> implements Component0<div> {
                         return false;
                     }
                     var lexEl = calStack.pop();
-                    if (lexEl.lexeme == LexemeTypes.B_OPEN) break;
+                    if (lexEl.lexeme.equals("B_OPEN")) break;
                     OPZ.add(lexEl);
                 }
             } else {
@@ -306,7 +518,7 @@ class GridFilter<T> implements Component0<div> {
         }
 
         while (!calStack.isEmpty()) {
-            if (calStack.peek().lexeme == LexemeTypes.B_CLOSE || calStack.peek().lexeme == LexemeTypes.B_OPEN) {
+            if (calStack.peek().lexeme.equals("B_CLOSE") || calStack.peek().lexeme.equals("B_OPEN")) {
                 printError("Неверно расположены скобки", 0);
                 return false;
             }
@@ -314,7 +526,7 @@ class GridFilter<T> implements Component0<div> {
         }
 
         // Check OPZ ---
-        if (OPZ.size() == 1 && OPZ.get(0).lexeme != LexemeTypes.SYMBOL) {
+        if (OPZ.size() == 1 && !OPZ.get(0).lexeme.equals("SYMBOL")) {
             printError("Ожидалось высказывание", OPZ.get(0).pos);
             return false;
         } else if (OPZ.size() == 2 || OPZ.size() == 0) {
@@ -338,7 +550,7 @@ class GridFilter<T> implements Component0<div> {
                 }
             }
 
-            if (newOpz.getSize() != 1 || newOpz.get(0).lexeme != LexemeTypes.SYMBOL) {
+            if (newOpz.getSize() != 1 || !newOpz.get(0).lexeme.equals("SYMBOL")) {
                 printError("Ошибка операторов", 0);
                 return false;
             }
@@ -347,12 +559,13 @@ class GridFilter<T> implements Component0<div> {
         return true;
     }
 
-    private class OPZSave {
+    public static class OPZSave {
         ArrayList<Lexeme> data;
 
         public OPZSave(ArrayList<Lexeme> data) {
             this.data = new ArrayList<>();
-            for (Lexeme lexeme : data) {
+            for (int i = 0; i < data.size(); i++) {
+                var lexeme = data.get(i);
                 this.data.add(new Lexeme(lexeme.lexeme, lexeme.value, 0));
             }
         }
@@ -366,7 +579,7 @@ class GridFilter<T> implements Component0<div> {
         }
 
         boolean checkById(int a1, int a2, int a3) {
-            return get(a1).lexeme == LexemeTypes.SYMBOL && get(a2).lexeme == LexemeTypes.SYMBOL && (get(a3).lexeme == LexemeTypes.OP_AND) || get(a3).lexeme == LexemeTypes.OP_OR;
+            return get(a1).lexeme.equals("SYMBOL") && get(a2).lexeme.equals("SYMBOL") && (get(a3).lexeme.equals("OP_AND")) || get(a3).lexeme.equals("OP_OR");
         }
 
         int getSize() {
@@ -374,7 +587,7 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    private ArrayList<Integer> getLikePos(String val) {
+    public ArrayList<Integer> getLikePos(String val) {
         var value = new StringBuilder(val);
         var res = new ArrayList<Integer>();
         if (value.charAt(0) == '%') res.add(0);
@@ -387,64 +600,35 @@ class GridFilter<T> implements Component0<div> {
         return res;
     }
 
-    private enum LexemeTypes {
-        OP_AND,
-        OP_OR,
-        B_OPEN,
-        B_CLOSE,
-        SYMBOL,
-        ERROR
-    }
-
-    private class Lexeme {
-        LexemeTypes lexeme;
-        String value;
-        Integer pos;
-
-        Lexeme(LexemeTypes lexeme, String value, Integer pos) {
-            this.lexeme = lexeme;
-            this.value = value;
-            this.pos = pos;
-        }
-
-        Lexeme(LexemeTypes lexeme, Character value, Integer pos) {
-            this.lexeme = lexeme;
-            this.value = value.toString();
-            this.pos = pos;
-        }
-
-        @Override
-        public String toString() {
-            return this.lexeme.toString() + " : " + this.value;
-        }
-    }
-
-    private List<Lexeme> lexAnalyze(String textExpr) {
+    public ArrayList<Lexeme> lexAnalyze(String textExpr) {
+        if (textExpr == null) return new ArrayList<>();
         var exprBuilder = new StringBuilder(textExpr);
         var result = new ArrayList<Lexeme>();
         if (textExpr.isEmpty()) return result; // Ошибка в этом случае будет бесить
         if (textExpr.startsWith(" ")) {
-            result.add(new Lexeme(LexemeTypes.ERROR, "Текст не должен начинаться с пробела", 0));
+            result.add(new Lexeme("ERROR", "Текст не должен начинаться с пробела", 0));
             return result;
         }
         if (textExpr.length() == 1) {
-            result.add(new Lexeme(LexemeTypes.SYMBOL, textExpr, 0));
+            result.add(new Lexeme("SYMBOL", textExpr, 0));
             return result;
         }
 
         var spaceArr = new ArrayList<Integer>();
         for (int pos = 0; pos < exprBuilder.length(); pos++) {
-            if (exprBuilder.charAt(pos) == ' ' && !((exprBuilder.charAt(pos - 1) + "" + exprBuilder.charAt(pos)).equals("\\ "))) spaceArr.add(pos);
+            if (exprBuilder.charAt(pos) == ' ' && !((exprBuilder.charAt(pos - 1) + "" + exprBuilder.charAt(pos)).equals("\\ ")))
+                spaceArr.add(pos);
         }
 
         var pos = 0;
-        for (Integer space : spaceArr) {
+        for (int i = 0; i < spaceArr.size(); i++) {
+            var space = spaceArr.get(i);
             exprBuilder.deleteCharAt(space - pos);
             pos++;
         }
         // На этот момент мы удалили все неэкранированные пробелы знаем что в нашем запросе минимум 2 символа
 
-        var specialSym = new ArrayList<>(findAllWithLengthTwo(exprBuilder, "\\&", "\\|", "\\(", "\\)", "\\ "));
+        var specialSym = findAllWithLengthTwo(exprBuilder, "\\&", "\\|", "\\(", "\\)", "\\ ");
         // Теперь мы знаем индексы всех спецсимволов
 
         var splitTermInd = new ArrayList<Integer>();
@@ -452,30 +636,30 @@ class GridFilter<T> implements Component0<div> {
             if (!specialSym.contains(i)) {
                 if (exprBuilder.charAt(i) == '&') {
                     splitTermInd.add(i);
-                    result.add(new Lexeme(LexemeTypes.OP_AND, '&', i));
+                    result.add(new Lexeme("OP_AND", '&', i));
                 } else if (exprBuilder.charAt(i) == '|') {
                     splitTermInd.add(i);
-                    result.add(new Lexeme(LexemeTypes.OP_OR, '|', i));
+                    result.add(new Lexeme("OP_OR", '|', i));
                 } else if (exprBuilder.charAt(i) == '(') {
                     splitTermInd.add(i);
-                    result.add(new Lexeme(LexemeTypes.B_OPEN, '(', i));
+                    result.add(new Lexeme("B_OPEN", '(', i));
                 } else if (exprBuilder.charAt(i) == ')') {
                     splitTermInd.add(i);
-                    result.add(new Lexeme(LexemeTypes.B_CLOSE, ')', i));
+                    result.add(new Lexeme("B_CLOSE", ')', i));
                 }
             }
         }
         // splitTermInd - индексы, разделив по которым мы получим термы
         result.addAll(getTerms(exprBuilder, splitTermInd));
-        result.sort(Comparator.comparingInt(a -> a.pos));
+        result = sortByLexemeId(result); // по позиции
 
         return result;
     }
 
-    private ArrayList<Lexeme> getTerms(StringBuilder exprBuilder, ArrayList<Integer> splitTermInd) {
+    public ArrayList<Lexeme> getTerms(StringBuilder exprBuilder, ArrayList<Integer> splitTermInd) {
         var res = new ArrayList<Lexeme>();
         if (splitTermInd.size() == 0) {
-            res.add(new Lexeme(LexemeTypes.SYMBOL, exprBuilder.toString(), 1));
+            res.add(new Lexeme("SYMBOL", exprBuilder.toString(), 1));
             return res;
         }
 
@@ -483,19 +667,19 @@ class GridFilter<T> implements Component0<div> {
         for (int i = 0; i < exprBuilder.length(); i++) {
             if (!splitTermInd.contains(i)) local.append(exprBuilder.charAt(i));
             else {
-                if (!local.isEmpty()) {
-                    res.add(new Lexeme(LexemeTypes.SYMBOL, local.toString(), i - 1));
+                if (local.isEmpty()) {
+                    res.add(new Lexeme("SYMBOL", local.toString(), i - 1));
                     local = new StringBuilder();
                 }
             }
         }
 
-        if (!local.isEmpty()) res.add(new Lexeme(LexemeTypes.SYMBOL, local.toString(), exprBuilder.length() - 1));
+        if (local.isEmpty()) res.add(new Lexeme("SYMBOL", local.toString(), exprBuilder.length() - 1));
 
         return res;
     }
 
-    private Collection<Integer> findAllWithLengthTwo(StringBuilder exprBuilder, String... s) {
+    private ArrayList<Integer> findAllWithLengthTwo(StringBuilder exprBuilder, String... s) {
         var res = new ArrayList<Integer>();
         for (int i = 1; i < exprBuilder.length(); i++) {
             if (equalsWithOne(exprBuilder.subSequence(i - 1, i + 1).toString(), s)) res.add(i);
