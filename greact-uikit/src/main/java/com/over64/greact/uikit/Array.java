@@ -18,6 +18,9 @@ public class Array<T> {
     public static <T> void push(T[] array, T value) {
         JSExpression.of("array.push(value)");
     }
+    public static <T> void unshift(T[] array, T value) {
+        JSExpression.of("array.unshift(value)");
+    }
 
     public static <A, B> B[] map(A[] from, Function<A, B> mapper) {
         return JSExpression.of("from.map(mapper)");
@@ -42,5 +45,13 @@ public class Array<T> {
 
     public static <T> T last(T[] array) {
         return array.length == 0 ? null : array[array.length - 1];
+    }
+
+    public static <T> T[] unique(T[] src) {
+        return JSExpression.of("Array.from(new Set(src))");
+    }
+
+    public static <T> Array<T> from(Set<T> set) {
+        return JSExpression.of("Array.from(set)");
     }
 }

@@ -213,8 +213,8 @@ public class _01ExprTest {
                     const z1 = 1 > 1;
                     const z2 = 1 <= 1;
                     const z3 = 1 >= 1;
-                    const z4 = 1 == 1;
-                    const z5 = 1 != 1;
+                    const z4 = 1 === 1;
+                    const z5 = 1 !== 1;
                     const k0 = 1 & 1;
                     const k1 = 1 ^ 1;
                     const k2 = 1 | 1;

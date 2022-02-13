@@ -8,16 +8,6 @@ public class HTMLNativeElements {
         default void effect(Object expression) {}
     }
 
-    public static class View {
-        public static void remount(View view) {}
-        public static Caused causedBy(Object... changes) {
-            return new Caused();
-        }
-        public static class Caused {
-            public void remount(View... views) { }
-        }
-    };
-
     public interface Component0<T extends HTMLElement> extends Component<T> {
         @async Component0<T> mount();
     }
@@ -128,6 +118,11 @@ public class HTMLNativeElements {
         public a(@DomProperty("innerText") String innerText) {}
     }
 
+    @JSNativeAPI public static class p extends HTMLElement implements NativeElementAsComponent<a> {
+        public p() {}
+        public p(@DomProperty("innerText") String innerText) {}
+    }
+
     @JSNativeAPI public static class table extends HTMLElement implements NativeElementAsComponent<table> {
         public table() {}
     }
@@ -175,5 +170,13 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class textarea extends HTMLElement implements NativeElementAsComponent<textarea> {
+    }
+
+    @JSNativeAPI public static class iframe extends HTMLElement implements NativeElementAsComponent<iframe> {
+        public String src;
+    }
+    @JSNativeAPI public static class html extends HTMLElement implements NativeElementAsComponent<html> {
+    }
+    @JSNativeAPI public static class br extends HTMLElement implements NativeElementAsComponent<html> {
     }
 }
