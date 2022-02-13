@@ -1,6 +1,7 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
+import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.*;
@@ -50,8 +51,9 @@ class GridFilter<T> implements Component0<div> {
     }
 
     // public enum LexemeTypes {OP_AND, OP_OR, B_OPEN, B_CLOSE, SYMBOL, ERROR}
-    public static class lex{
+    public static class lex {
         public ArrayList<String> arr;
+
         lex() {
             arr = new ArrayList<>();
             arr.add("OP_AND");
@@ -222,7 +224,7 @@ class GridFilter<T> implements Component0<div> {
         public StringBuilder subSequence(int i, int i1) {
             var newVal = "";
             for (int j = i; j < i1; j++) {
-                newVal += value.charAt(i);
+                newVal += value.charAt(j);
             }
             return new StringBuilder(newVal);
         }
@@ -233,13 +235,15 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
+    static boolean flag_ = true;
+    static String errorText = "";
+    static  int errorPos = 0;
+
     @Override
     public div mount() {
         return new div() {{
             new div() {{
-                // В функцию нужно передавать ввод с удалёнными неэкранированными пробелами
-                var flag_ = checkValid(filterValue);
-                JSExpression.of("console.log(flag_)");
+
                 var filterWords = Array.filter(
                         stringSplit(filterValue, " "),
                         s -> stringLength(s) != 0);
@@ -321,6 +325,16 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }};
             new div() {{
+                String reg = filterValue;
+                JSExpression.of("reg = reg.replace('\\', '\\')");
+                flag_ = checkValid(reg);
+                if (!flag_ && filterEnabled && !filterValue.equals("")) {
+                    new div() {{
+                        new h5(errorText) {{
+                            this.style.color = "red";
+                        }};
+                    }};
+                }
                 var hint = pageData;
                 new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
                     effect(filterEnabled = !filterEnabled);
@@ -335,10 +349,11 @@ class GridFilter<T> implements Component0<div> {
     // Написать свой StringBuilder
     // Написать свой Stack
 
-    public ArrayList<Lexeme> OPZ;
+    public static ArrayList<Lexeme> OPZ;
 
     public void printError(String text, Integer pos) {
-        JSExpression.of("console.log(text)");
+        errorText = text;
+        errorPos = pos;
     }
 
     public static class Pattern {
@@ -558,7 +573,7 @@ class GridFilter<T> implements Component0<div> {
                 return false;
             }
         }
-
+        JSExpression.of("console.log(com$over64$greact$uikit$GridFilter.OPZ.array)");
         return true;
     }
 
@@ -602,7 +617,7 @@ class GridFilter<T> implements Component0<div> {
 
         for (int i = 1; i < value.length(); i++) {
 
-            if (value.charAt(i) == '%' && !(value.charAt(i - 1) + "" + value.charAt(i)).equals("\\%")) res.add(i);
+            if (value.charAt(i) == '%' && !(value.charAt(i - 1) + "" + value.charAt(i)).equals("\\\\%")) res.add(i);
         }
 
         return res;
@@ -624,7 +639,7 @@ class GridFilter<T> implements Component0<div> {
 
         var spaceArr = new ArrayList<Integer>();
         for (int pos = 0; pos < exprBuilder.length(); pos++) {
-            if (exprBuilder.charAt(pos) == ' ' && !((exprBuilder.charAt(pos - 1) + "" + exprBuilder.charAt(pos)).equals("\\ ")))
+            if (exprBuilder.charAt(pos) == ' ' && !((exprBuilder.charAt(pos - 1) + "" + exprBuilder.charAt(pos)).equals("\\\\ ")))
                 spaceArr.add(pos);
         }
 
@@ -635,8 +650,13 @@ class GridFilter<T> implements Component0<div> {
             pos++;
         }
         // На этот момент мы удалили все неэкранированные пробелы знаем что в нашем запросе минимум 2 символа
-
-        var specialSym = findAllWithLengthTwo(exprBuilder, "\\&", "\\|", "\\(", "\\)", "\\ ");
+        var rest = new ArrayList<String>();
+        rest.add("\\\\&");
+        rest.add("\\\\|");
+        rest.add("\\\\(");
+        rest.add("\\\\)");
+        rest.add("\\\\ ");
+        var specialSym = findAllWithLengthTwo(exprBuilder, rest);
         // Теперь мы знаем индексы всех спецсимволов
 
         var splitTermInd = new ArrayList<Integer>();
@@ -687,16 +707,17 @@ class GridFilter<T> implements Component0<div> {
         return res;
     }
 
-    private ArrayList<Integer> findAllWithLengthTwo(StringBuilder exprBuilder, String... s) {
+    private ArrayList<Integer> findAllWithLengthTwo(StringBuilder exprBuilder, ArrayList<String> data) {
         var res = new ArrayList<Integer>();
         for (int i = 1; i < exprBuilder.length(); i++) {
-            if (equalsWithOne(exprBuilder.subSequence(i - 1, i + 1).toString(), s)) res.add(i);
+            if (equalsWithOne(exprBuilder.subSequence(i - 1, i + 1).toString(), data)) res.add(i);
         }
         return res;
     }
 
-    private boolean equalsWithOne(String toString, String[] s) {
-        for (String s1 : s) {
+    private boolean equalsWithOne(String toString, ArrayList<String> s) {
+        for (int i = 0; i < s.size(); i++) {
+            var s1 = s.get(i);
             if (s1.equals(toString)) return true;
         }
         return false;
