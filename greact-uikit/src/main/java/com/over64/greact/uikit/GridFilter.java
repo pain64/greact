@@ -135,7 +135,9 @@ class GridFilter<T> implements Component0<div> {
         /*Вспомогательный метод для масштабирования.*/
         private void resize(int newLength) {
             Object[] newArray = new Object[newLength];
-            System.arraycopy(array, 0, newArray, 0, pointer);
+            for (int i = 0; i < pointer; i++) {
+                newArray[i] = array[i];
+            }
             array = newArray;
         }
 
@@ -174,7 +176,7 @@ class GridFilter<T> implements Component0<div> {
                 }
             }
         }
-        return null; // TODO: write sort
+        return t; // TODO: write sort
     }
 
     public static class StringBuilder { // TODO: refactor StringBuilder
@@ -235,7 +237,8 @@ class GridFilter<T> implements Component0<div> {
     public div mount() {
         return new div() {{
             new div() {{
-                var flag_ = checkValid("a");
+                // В функцию нужно передавать ввод с удалёнными неэкранированными пробелами
+                var flag_ = checkValid(filterValue);
                 JSExpression.of("console.log(flag_)");
                 var filterWords = Array.filter(
                         stringSplit(filterValue, " "),
@@ -454,7 +457,7 @@ class GridFilter<T> implements Component0<div> {
                             printError("Операторы like не могут стоять подряд", 0);
                             return false;
                         }
-                        if (Math.abs(likePos.get(0) - likePos.get(1)) != lex.value.length() - 1) {
+                        if (abs(likePos.get(0) - likePos.get(1)) != lex.value.length() - 1) {
                             printError("Неверное расположение операторов like", likePos.get(0));
                             return false;
                         }
@@ -557,6 +560,11 @@ class GridFilter<T> implements Component0<div> {
         }
 
         return true;
+    }
+
+    private int abs(int i) {
+        if (i >= 0) return i;
+        return -1 * i;
     }
 
     public static class OPZSave {
@@ -667,14 +675,14 @@ class GridFilter<T> implements Component0<div> {
         for (int i = 0; i < exprBuilder.length(); i++) {
             if (!splitTermInd.contains(i)) local.append(exprBuilder.charAt(i));
             else {
-                if (local.isEmpty()) {
+                if (!local.isEmpty()) {
                     res.add(new Lexeme("SYMBOL", local.toString(), i - 1));
                     local = new StringBuilder();
                 }
             }
         }
 
-        if (local.isEmpty()) res.add(new Lexeme("SYMBOL", local.toString(), exprBuilder.length() - 1));
+        if (!local.isEmpty()) res.add(new Lexeme("SYMBOL", local.toString(), exprBuilder.length() - 1));
 
         return res;
     }
