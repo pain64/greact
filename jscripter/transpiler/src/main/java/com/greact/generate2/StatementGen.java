@@ -13,8 +13,11 @@ abstract class StatementGen extends ExpressionGen {
     }
 
     @Override public void visitReturn(JCTree.JCReturn ret) {
-        out.write("return ");
-        ret.expr.accept(this);
+        out.write("return");
+        if (ret.expr != null) {
+            out.write(" ");
+            ret.expr.accept(this);
+        }
         out.writeLn(";");
     }
 

@@ -206,8 +206,8 @@ public class ExpressionGen {
                 case GREATER_THAN -> ">";
                 case LESS_THAN_EQUAL -> "<=";
                 case GREATER_THAN_EQUAL -> ">=";
-                case EQUAL_TO -> "==";
-                case NOT_EQUAL_TO -> "!=";
+                case EQUAL_TO -> "===";
+                case NOT_EQUAL_TO -> "!==";
                 case AND -> "&";
                 case XOR -> "^";
                 case OR -> "|";

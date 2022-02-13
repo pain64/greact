@@ -6,11 +6,14 @@ import com.greact.model.async;
 @JSNativeAPI public class HTMLElement extends Node {
     public static class Style {
         public String color;
-        public String borderColor;
         public String backgroundColor;
         public String border;
-        public String borderRadius;
+        public String borderLeft;
+        public String borderRight;
+        public String borderTop;
         public String borderBottom;
+        public String borderRadius;
+        public String borderColor;
         public String padding;
         public String margin;
         public String marginBottom;

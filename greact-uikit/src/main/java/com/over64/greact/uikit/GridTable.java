@@ -9,8 +9,7 @@ import com.over64.greact.dom.HTMLElement;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-@Require.CSS("grid.css")
-class GridTable<T> implements Component0<table> {
+@Require.CSS("grid.css") class GridTable<T> implements Component0<table> {
     static class RowData<T> {
         final T data;
         boolean expanded = false;

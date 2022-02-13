@@ -14,6 +14,7 @@ public class _02StmtTest {
                 package js;
                 public class Test {
                   int baz() { return 42; }
+                  void bar() { return; }
                 }""",
             """
                 class js_Test {
@@ -21,6 +22,9 @@ public class _02StmtTest {
                   }
                   _baz() {
                     return 42;
+                  }
+                  _bar() {
+                    return;
                   }
                 }
                 """);
