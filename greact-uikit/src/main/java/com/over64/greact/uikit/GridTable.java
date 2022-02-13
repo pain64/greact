@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.async;
 import com.greact.model.CSS;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;
@@ -78,6 +79,28 @@ class GridTable<T> implements Component0<table> {
                                     """;
                                 onclick = ev -> onFilterEnableDisable.run();
                             }};
+                            new Modal<>(() -> new div() {{
+
+                                className = "grid-table-td-content";
+                                innerHTML = """                           
+                                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+                                        width="16" height="16"
+                                        viewBox="0 0 24 24"
+                                        style=" fill:#000000;"><path d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z" opacity=".3"></path><path d="M13,17h-2v-6h2V17z M13,9h-2V7h2V9z"></path><path fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2" d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z"></path></svg>
+                                        """;
+                            }}, () -> new div() {{
+                                new h3("Правила использования фильтра") {{style.color = "#000";}};
+                                new h5("1. Слово матчим полностью: если ищем слово abc, то ищем полное совпадение: не abcd") {{style.textAlign="left";}};
+                                new h5("2. Работаем с like: abc% или %abc или %abc% или abc%abc") {{style.textAlign="left";}};
+                                new h5("3. Поддерживаем приоритет через скобки: a & (b | (c | d))") {{style.textAlign="left";}};
+                                new h5("4. Операторы: & и |") {{style.textAlign="left";}};
+                                new h5("5. Экранирование спецсимволов: \\\\(, \\\\), \\\\&, \\\\|, \\\\%, \\\\\\\\  и \\\\пробел") {{style.textAlign="left";}};
+                                new h5("6. Неэкранированные пробелы внутри выражений удаляются: ab c <=> abc") {{style.textAlign="left";}};
+                                new h5("7. Ошибки парсинга выражения отображаются ниже фильтра") {{style.textAlign="left";}};
+                            }}){{
+
+                            }};
+
                             if (conf.onRowAdd != null)
                                 new div() {{
                                     className = "grid-table-td-content";
