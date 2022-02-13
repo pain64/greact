@@ -51,16 +51,17 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) {
-        //                        Array.filter(data, v -> {
-        //                            for (var col : conf.columns) {
-        //                                var strVal = Grid.fetchValue(v, col.memberNames);
-        //                                if (strVal == null) strVal = "";
-        //                                strVal += "";
-        //                                for (var fVal : filterWords)
-        //                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-        //                            }
-        //                            return false;
-        //                        })
+        data = Array.filter(data, v -> {
+            for (var col : conf.columns) {
+                var strVal = Grid.fetchValue(v, col.memberNames);
+                if (strVal == null) strVal = "";
+                strVal += "";
+                var word = "some";
+                JSExpression.of("console.log(strVal + '111')");
+                if (JSExpression.<Boolean>of("strVal.indexOf(word) != -1")) return true;
+            }
+            return false;
+        });
 
         return data;
     }
@@ -344,10 +345,8 @@ class GridFilter<T> implements Component0<div> {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
             Pattern pattern = (Pattern) o;
-            return Objects.equals(el1, pattern.el1) && Objects.equals(el2, pattern.el2);
+            return el1.equals(pattern.el1) && el2.equals(pattern.el2);
         }
 
         @Override
@@ -409,7 +408,14 @@ class GridFilter<T> implements Component0<div> {
         for (int i = 0; i < data.size(); i++) {
             Lexeme lex = data.get(i);
             if (old != null) {
-                if (patternsArr.contains(new Pattern(old.lexeme, lex.lexeme))) {
+                var flag = false;
+                for (int j = 0; j < patternsArr.size(); j++) {
+                    if (patternsArr.get(j).equals(new Pattern(old.lexeme, lex.lexeme))) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag) {
                     printError("Ошибка синтаксиса", lex.pos);
                     return false;
                 }
