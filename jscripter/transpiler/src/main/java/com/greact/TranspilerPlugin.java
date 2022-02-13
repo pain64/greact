@@ -1,7 +1,5 @@
 package com.greact;
 
-import com.greact.generate.TypeGen;
-import com.greact.generate.util.JSOut;
 import com.greact.generate.util.JavaStdShim;
 import com.greact.generate2.Output;
 import com.sun.source.util.*;
@@ -20,10 +18,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.Provider;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
