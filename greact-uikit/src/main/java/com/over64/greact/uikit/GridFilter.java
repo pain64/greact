@@ -119,32 +119,32 @@ class GridFilter<T> implements Component0<div> {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) { // eval(ifSt)
-                                            return true;
+                                            flag1 = true;
                                         }
                                     } else if (type == 2) {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) { // eval(ifSt)
-                                            return true;
+                                            flag1 = true;
                                         }
                                     } else if (type == 3) {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.includes(val1)")) { // eval(ifSt)
-                                            return true;
+                                            flag1 = true;
                                         }
                                     } else if (type == 4) {
                                         JSExpression.of("var expr1 = val1.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
-                                        JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, expr.length)");
+                                        JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val1.length)");
                                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
                                         JSExpression.of("expr2 = expr2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) { // eval(ifSt)
-                                            return true;
+                                            flag1 = true;
                                         }
                                     } else {
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal == val1")) { // eval(ifSt)
-                                            return true;
+                                            flag1 = true;
                                         }
                                     }
                                 }
@@ -163,32 +163,32 @@ class GridFilter<T> implements Component0<div> {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.startsWith(val2)")) { // eval(ifSt)
-                                            return true;
+                                            flag2 = true;
                                         }
                                     } else if (type == 2) {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.endsWith(val2)")) { // eval(ifSt)
-                                            return true;
+                                            flag2 = true;
                                         }
                                     } else if (type == 3) {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.includes(val2)")) { // eval(ifSt)
-                                            return true;
+                                            flag2 = true;
                                         }
                                     } else if (type == 4) {
                                         JSExpression.of("var expr1 = val2.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
-                                        JSExpression.of("var expr2 = val2.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, expr.length)");
+                                        JSExpression.of("var expr2 = val2.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val2.length)");
                                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
                                         JSExpression.of("expr2 = expr2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) { // eval(ifSt)
-                                            return true;
+                                            flag2 = true;
                                         }
                                     } else {
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
                                         if (JSExpression.<Boolean>of("strVal == val2")) { // eval(ifSt)
-                                            return true;
+                                            flag2 = true;
                                         }
                                     }
                                 }
@@ -200,7 +200,7 @@ class GridFilter<T> implements Component0<div> {
 
                             newOpz.deleteById(i);
                             newOpz.deleteById(i - 1);
-                            newOpz.get(i - 2).pos = flagEnd ? -1 : -2; // or -2
+                            newOpz.get(i - 2).pos = flagEnd ? -1 : -2;
                             break;
                         }
                     }
