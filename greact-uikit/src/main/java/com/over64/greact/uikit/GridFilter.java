@@ -332,6 +332,7 @@ class GridFilter<T> implements Component0<div> {
                 if (!flag_ && filterEnabled && !filterValue.equals("")) {
                     new div() {{
                         new h5(errorText) {{
+                            this.className = "error";
                             this.style.color = "red";
                         }};
                     }};
