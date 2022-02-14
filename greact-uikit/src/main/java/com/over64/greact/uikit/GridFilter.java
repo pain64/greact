@@ -59,12 +59,29 @@ class GridFilter<T> implements Component0<div> {
             }
             if (newOpz.getSize() == 1) {
                 var expr = newOpz.get(0).value;
+                var type = getLikeType(expr);
                 for (var col : conf.columns) {
                     var strVal = Grid.fetchValue(v, col.memberNames);
                     if (strVal == null) strVal = "";
                     strVal += "";
-                    if (JSExpression.<Boolean>of("strVal == expr")) { // eval(ifSt)
-                        return true;
+                    if (type == 1) {
+                        if (JSExpression.<Boolean>of("strVal.startsWith(expr)")) { // eval(ifSt)
+                            return true;
+                        }
+                    }else if (type == 2) {
+                        if (JSExpression.<Boolean>of("strVal.endsWith(expr)")) { // eval(ifSt)
+                            return true;
+                        }
+                    }else if (type == 3) {
+                        if (JSExpression.<Boolean>of("strVal.includes(expr)")) { // eval(ifSt)
+                            return true;
+                        }
+                    }else if (type == 4) {
+                        // FUCK
+                    }else{
+                        if (JSExpression.<Boolean>of("strVal == expr")) { // eval(ifSt)
+                            return true;
+                        }
                     }
                 }
                 return false;
@@ -117,6 +134,17 @@ class GridFilter<T> implements Component0<div> {
         });
 
         return data;
+    }
+
+    private int getLikeType(String expr) {
+        if (expr.charAt(0) == '%' && expr.length() >= 2 && expr.charAt(expr.length() - 1) == '%' && !String.valueOf(expr.charAt(expr.length() - 2)).equals("\\\\")) {
+            return 3;
+        }
+        if (expr.charAt(0) == '%') return 2;
+        if (expr.length() >= 2 && expr.charAt(expr.length() - 1) == '%' && !String.valueOf(expr.charAt(expr.length() - 2)).equals("\\\\")) {
+            return 1;
+        }
+        return 0;
     }
 
     public static String deleteEcr(String value) {
@@ -471,7 +499,6 @@ class GridFilter<T> implements Component0<div> {
                         controlSym--;
                     }
                 }
-                JSExpression.of("console.log(controlSym)");
                 if (controlSym != 0 && String.valueOf(data.get(i).value.charAt(data.get(i).value.length() - 1)).equals("\\\\")) {
                     printError("Ошибка в выражении с обратным слешем", 0);
                     return false;
