@@ -449,7 +449,7 @@ public class MainPage implements Component0<div> {
                                     new div() {{
                                         var data = Array.of(
                                                 new Data(1, "One"),
-                                                new Data(2, "Two"),
+                                                new Data(2, "Tw%o"),
                                                 new Data(3, "T\\\\hree"),
                                                 new Data(451, "Dog cat"),
                                                 new Data(79, "Bell&kar"),
