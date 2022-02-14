@@ -51,20 +51,28 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) {
+        var newOpz = new OPZSave(opz);
+        var ifSt = getIf(newOpz, "strVal");
+
         data = Array.filter(data, v -> {
-            for (var col : conf.columns) {
-                var strVal = Grid.fetchValue(v, col.memberNames);
-                if (strVal == null) strVal = "";
-                strVal += "";
-                var word = "some";
-                JSExpression.of("console.log(strVal + '111')");
-                if (JSExpression.<Boolean>of("strVal.indexOf(word) != -1")) return true;
-            }
-            return false;
-        });
+                for (var col : conf.columns) {
+                    var strVal = Grid.fetchValue(v, col.memberNames);
+                    if (strVal == null) strVal = "";
+                    strVal += "";
+                    if (JSExpression.<Boolean>of("eval(ifSt)")) {
+                        return true;
+                    }
+                }
+                return false;
+            });
 
         return data;
     }
+
+    public static String getIf(OPZSave opzSave, String nameVal) {
+        return "false";
+    }
+
 
     @Override
     public div mount() {
@@ -589,7 +597,7 @@ class GridFilter<T> implements Component0<div> {
         }
 
         boolean checkById(int a1, int a2, int a3) {
-            return get(a1).lexeme.equals("SYMBOL") && get(a2).lexeme.equals("SYMBOL") && (get(a3).lexeme.equals("OP_AND")) || get(a3).lexeme.equals("OP_OR");
+            return get(a1).lexeme.equals("SYMBOL") && get(a2).lexeme.equals("SYMBOL") && (get(a3).lexeme.equals("OP_AND") || get(a3).lexeme.equals("OP_OR"));
         }
 
         int getSize() {
