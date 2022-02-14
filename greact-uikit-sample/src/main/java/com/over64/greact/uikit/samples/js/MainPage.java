@@ -450,7 +450,10 @@ public class MainPage implements Component0<div> {
                                         var data = Array.of(
                                                 new Data(1, "One"),
                                                 new Data(2, "Two"),
-                                                new Data(3, "Three")
+                                                new Data(3, "T\\\\hree"),
+                                                new Data(451, "Dog cat"),
+                                                new Data(79, "Bell&kar"),
+                                                new Data(91, "(sam)")
                                         );
 
                                         new Grid<>(data) {{

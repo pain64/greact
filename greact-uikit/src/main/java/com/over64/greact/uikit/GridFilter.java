@@ -1,10 +1,9 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
-import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 class GridFilter<T> implements Component0<div> {
@@ -50,29 +49,85 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
-    public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) {
-        var newOpz = new OPZSave(opz);
-        var ifSt = getIf(newOpz, "strVal");
-
+    public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) { // without %
         data = Array.filter(data, v -> {
+            var newOpz = new OPZSave(opz);
+            for (int i = 0; i < newOpz.getSize(); i++) {
+                if (newOpz.get(i).lexeme.equals("SYMBOL")) {
+                    newOpz.get(i).value = deleteEcr(newOpz.get(i).value);
+                }
+            }
+            if (newOpz.getSize() == 1) {
+                var expr = newOpz.get(0).value;
                 for (var col : conf.columns) {
                     var strVal = Grid.fetchValue(v, col.memberNames);
                     if (strVal == null) strVal = "";
                     strVal += "";
-                    if (JSExpression.<Boolean>of("eval(ifSt)")) {
+                    if (JSExpression.<Boolean>of("strVal == expr")) { // eval(ifSt)
                         return true;
                     }
                 }
                 return false;
-            });
+            } else {
+                while (newOpz.getSize() != 1) {
+                    for (int i = 2; i < newOpz.getSize(); i++) {
+                        if (newOpz.checkById(i - 2, i - 1, i)) {
+                            var flag1 = false;
+                            var val1 = newOpz.get(i - 2).value;
+                            if (newOpz.get(i - 2).pos == -1) flag1 = true;
+                            else if (newOpz.get(i - 2).pos == -2) flag1 = false;
+                            else {
+                                for (var col : conf.columns) {
+                                    var strVal = Grid.fetchValue(v, col.memberNames);
+                                    if (strVal == null) strVal = "";
+                                    strVal += "";
+                                    if (JSExpression.<Boolean>of("strVal == val1")) { // eval(ifSt)
+                                        flag1 = true;
+                                    }
+                                }
+                            }
+                            var flag2 = false;
+                            var val2 = newOpz.get(i - 1).value;
+                            if (newOpz.get(i - 1).pos == -1) flag2 = true;
+                            else if (newOpz.get(i - 1).pos == -2) flag2 = false;
+                            else {
+                                for (var col : conf.columns) {
+                                    var strVal = Grid.fetchValue(v, col.memberNames);
+                                    if (strVal == null) strVal = "";
+                                    strVal += "";
+                                    if (JSExpression.<Boolean>of("strVal == val2")) { // eval(ifSt)
+                                        flag2 = true;
+                                    }
+                                }
+                            }
+
+                            var flagEnd = true;
+                            if (newOpz.get(i).value.equals("&")) flagEnd = flag1 && flag2;
+                            else flagEnd = flag1 || flag2;
+
+                            newOpz.deleteById(i);
+                            newOpz.deleteById(i - 1);
+                            newOpz.get(i - 2).pos = flagEnd ? -1 : -2; // or -2
+                            break;
+                        }
+                    }
+                }
+                return newOpz.get(0).pos == -1;
+            }
+        });
 
         return data;
     }
 
-    public static String getIf(OPZSave opzSave, String nameVal) {
-        return "false";
+    public static String deleteEcr(String value) {
+        JSExpression.of("value = value.replace('\\&', '&')");
+        JSExpression.of("value = value.replace('\\(', '(')");
+        JSExpression.of("value = value.replace('\\)', ')')");
+        JSExpression.of("value = value.replace('\\|', '|')");
+        JSExpression.of("value = value.replace('\\ ', ' ')");
+        JSExpression.of("value = value.replace('\\\\', '\\')");
+        return value;
     }
-
 
     @Override
     public div mount() {
@@ -170,7 +225,7 @@ class GridFilter<T> implements Component0<div> {
     public static class Lexeme {
         String lexeme;
         String value;
-        Integer pos;
+        public Integer pos;
 
         Lexeme(String lexeme, String value, Integer pos) {
             this.lexeme = lexeme;
@@ -399,6 +454,45 @@ class GridFilter<T> implements Component0<div> {
         if (data.isEmpty()) return false;
 
         // express check ----
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).lexeme.equals("SYMBOL")) {
+                var controlSym = data.get(i).value.length();
+                for (int j = 0; j < data.get(i).value.length() - 1; ) {
+                    if (String.valueOf(data.get(i).value.charAt(j)).equals("\\\\")) {
+                        var char_ = String.valueOf(data.get(i).value.charAt(j + 1));
+                        if (!char_.equals(" ") && !char_.equals("&") && !char_.equals("|") && !char_.equals("(") && !char_.equals(")") && !char_.equals("%") && !char_.equals("\\\\")) {
+                            printError("Ошибка в выражении с обратным слешем", 0);
+                            return false;
+                        }
+                        j += 2;
+                        controlSym -= 2;
+                    } else {
+                        j++;
+                        controlSym--;
+                    }
+                }
+                JSExpression.of("console.log(controlSym)");
+                if (controlSym != 0 && String.valueOf(data.get(i).value.charAt(data.get(i).value.length() - 1)).equals("\\\\")) {
+                    printError("Ошибка в выражении с обратным слешем", 0);
+                    return false;
+                }
+
+                if (data.get(i).value.length() >= 2) {
+                    if (String.valueOf(data.get(i).value.charAt(data.get(i).value.length() - 1)).equals("\\\\")) {
+                        var char_ = String.valueOf(data.get(i).value.charAt(data.get(i).value.length() - 2));
+                        if (!char_.equals(" ") && !char_.equals("&") && !char_.equals("|") && !char_.equals("(") && !char_.equals(")") && !char_.equals("%") && !char_.equals("\\\\")) {
+                            printError("В конце объявлен лишний обратный слеш", 0);
+                            return false;
+                        }
+                    }
+                }
+
+                if (data.get(i).value.equals("\\\\")) {
+                    printError("Выражение не может состоять из обратного слеша", 0);
+                    return false;
+                }
+            }
+        } // back slash check
         var patternsArr = new ArrayList<Pattern>();
         patternsArr.add(new Pattern("OP_AND", "B_CLOSE"));
         patternsArr.add(new Pattern("OP_OR", "B_CLOSE"));
