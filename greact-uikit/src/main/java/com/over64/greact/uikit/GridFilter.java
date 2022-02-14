@@ -585,7 +585,7 @@ class GridFilter<T> implements Component0<div> {
                     if (String.valueOf(data.get(i).value.charAt(j)).equals("\\\\")) {
                         var char_ = String.valueOf(data.get(i).value.charAt(j + 1));
                         if (!char_.equals(" ") && !char_.equals("&") && !char_.equals("|") && !char_.equals("(") && !char_.equals(")") && !char_.equals("%") && !char_.equals("\\\\")) {
-                            printError("Ошибка в выражении с обратным слешем", 0);
+                            printError("Ошибка в выражении с обратным слешем - видимо этот символ нельзя экранировать", 0);
                             return false;
                         }
                         j += 2;
@@ -596,7 +596,7 @@ class GridFilter<T> implements Component0<div> {
                     }
                 }
                 if (controlSym != 0 && String.valueOf(data.get(i).value.charAt(data.get(i).value.length() - 1)).equals("\\\\")) {
-                    printError("Ошибка в выражении с обратным слешем", 0);
+                    printError("Ошибка в выражении с обратным слешем - видимо этот символ нельзя экранировать", 0);
                     return false;
                 }
 
@@ -641,7 +641,7 @@ class GridFilter<T> implements Component0<div> {
                     }
                 }
                 if (flag) {
-                    printError("Ошибка синтаксиса", lex.pos);
+                    printError("Ошибка в подряд идущих операторах", lex.pos);
                     return false;
                 }
             }
@@ -698,7 +698,7 @@ class GridFilter<T> implements Component0<div> {
                 printError(lex.value, 0);
                 return false;
             } else {
-                printError("Неизвестный тип", lex.pos);
+                printError("Неизвестный тип оператора", lex.pos);
                 return false;
             }
         }
@@ -758,10 +758,10 @@ class GridFilter<T> implements Component0<div> {
 
         // Check OPZ ---
         if (OPZ.size() == 1 && !OPZ.get(0).lexeme.equals("SYMBOL")) {
-            printError("Ожидалось высказывание", OPZ.get(0).pos);
+            printError("Ожидалось высказывание, а имеем оператор", OPZ.get(0).pos);
             return false;
         } else if (OPZ.size() == 2 || OPZ.size() == 0) {
-            printError("Неверное выражение", 0);
+            printError("Выражение не может состоять из двух элементов", 0);
             return false;
         } else {
             var newOpz = new OPZSave(OPZ);
@@ -782,7 +782,7 @@ class GridFilter<T> implements Component0<div> {
             }
 
             if (newOpz.getSize() != 1 || !newOpz.get(0).lexeme.equals("SYMBOL")) {
-                printError("Ошибка операторов", 0);
+                printError("Выражение не валидно. Пожалуйста прочтите вкладку Помощь", 0);
                 return false;
             }
         }
