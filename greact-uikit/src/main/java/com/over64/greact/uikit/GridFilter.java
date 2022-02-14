@@ -854,6 +854,22 @@ class GridFilter<T> implements Component0<div> {
             return result;
         }
 
+        // space in the symbol check
+        var sp = new String[10];
+        var old_ = "";
+        JSExpression.of("sp = textExpr.replaceAll('\\ ', 'a').split(' ')");
+        for (int i = 0; i < sp.length; i++) {
+            if (!sp[i].equals("")) {
+                if (!old_.equals("")) {
+                    if (!spaceValid(sp[i], old_)) {
+                        result.add(new Lexeme("ERROR", "Пробелы внутри фраз необходимо экранировать", 0));
+                        return result;
+                    }
+                }
+                old_ = sp[i];
+            }
+        }
+
         var spaceArr = new ArrayList<Integer>();
         for (int pos = 0; pos < exprBuilder.length(); pos++) {
             if (exprBuilder.charAt(pos) == ' ' && !((exprBuilder.charAt(pos - 1) + "" + exprBuilder.charAt(pos)).equals("\\\\ ")))
@@ -899,6 +915,12 @@ class GridFilter<T> implements Component0<div> {
         result = sortByLexemeId(result); // по позиции
 
         return result;
+    }
+
+    public static boolean spaceValid(String s, String s1) {
+        if (s.equals("&") ||s.equals("|") ||s.equals("(") ||s.equals(")")) return true;
+        if (s1.equals("&") ||s1.equals("|") ||s1.equals("(") ||s1.equals(")")) return true;
+        return false;
     }
 
     public ArrayList<Lexeme> getTerms(StringBuilder exprBuilder, ArrayList<Integer> splitTermInd) {
