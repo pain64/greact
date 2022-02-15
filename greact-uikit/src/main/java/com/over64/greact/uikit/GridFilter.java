@@ -51,7 +51,7 @@ class GridFilter<T> implements Component0<div> {
 
     public static int likeSplit = -1;
 
-    public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) { // without %
+    public T[] getFilteredData(T[] data, ArrayList<Lexeme> opz) {
         data = Array.filter(data, v -> {
             var newOpz = new OPZSave(opz);
             for (int i = 0; i < newOpz.getSize(); i++) {
@@ -70,19 +70,19 @@ class GridFilter<T> implements Component0<div> {
                     if (type == 1) {
                         expr = deleteLike(expr);
                         JSExpression.of("expr = expr.replace('\\%', '%')");
-                        if (JSExpression.<Boolean>of("strVal.startsWith(expr)")) { // eval(ifSt)
+                        if (JSExpression.<Boolean>of("strVal.startsWith(expr)")) {
                             return true;
                         }
                     } else if (type == 2) {
                         expr = deleteLike(expr);
                         JSExpression.of("expr = expr.replace('\\%', '%')");
-                        if (JSExpression.<Boolean>of("strVal.endsWith(expr)")) { // eval(ifSt)
+                        if (JSExpression.<Boolean>of("strVal.endsWith(expr)")) {
                             return true;
                         }
                     } else if (type == 3) {
                         expr = deleteLike(expr);
                         JSExpression.of("expr = expr.replace('\\%', '%')");
-                        if (JSExpression.<Boolean>of("strVal.includes(expr)")) { // eval(ifSt)
+                        if (JSExpression.<Boolean>of("strVal.includes(expr)")) {
                             return true;
                         }
                     } else if (type == 4) {
@@ -90,12 +90,12 @@ class GridFilter<T> implements Component0<div> {
                         JSExpression.of("var expr2 = expr.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, expr.length)");
                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
                         JSExpression.of("expr2 = expr2.replace('\\%', '%')");
-                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) { // eval(ifSt)
+                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
                             return true;
                         }
                     } else {
                         JSExpression.of("expr = expr.replace('\\%', '%')");
-                        if (JSExpression.<Boolean>of("strVal == expr")) { // eval(ifSt)
+                        if (JSExpression.<Boolean>of("strVal == expr")) {
                             return true;
                         }
                     }
@@ -118,19 +118,19 @@ class GridFilter<T> implements Component0<div> {
                                     if (type == 1) {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) {
                                             flag1 = true;
                                         }
                                     } else if (type == 2) {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) {
                                             flag1 = true;
                                         }
                                     } else if (type == 3) {
                                         val1 = deleteLike(val1);
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.includes(val1)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.includes(val1)")) {
                                             flag1 = true;
                                         }
                                     } else if (type == 4) {
@@ -138,12 +138,12 @@ class GridFilter<T> implements Component0<div> {
                                         JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val1.length)");
                                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
                                         JSExpression.of("expr2 = expr2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
                                             flag1 = true;
                                         }
                                     } else {
                                         JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal == val1")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal == val1")) {
                                             flag1 = true;
                                         }
                                     }
@@ -162,19 +162,19 @@ class GridFilter<T> implements Component0<div> {
                                     if (type == 1) {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(val2)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.startsWith(val2)")) {
                                             flag2 = true;
                                         }
                                     } else if (type == 2) {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.endsWith(val2)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.endsWith(val2)")) {
                                             flag2 = true;
                                         }
                                     } else if (type == 3) {
                                         val2 = deleteLike(val2);
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.includes(val2)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.includes(val2)")) {
                                             flag2 = true;
                                         }
                                     } else if (type == 4) {
@@ -182,12 +182,12 @@ class GridFilter<T> implements Component0<div> {
                                         JSExpression.of("var expr2 = val2.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val2.length)");
                                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
                                         JSExpression.of("expr2 = expr2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
                                             flag2 = true;
                                         }
                                     } else {
                                         JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal == val2")) { // eval(ifSt)
+                                        if (JSExpression.<Boolean>of("strVal == val2")) {
                                             flag2 = true;
                                         }
                                     }
@@ -376,38 +376,23 @@ class GridFilter<T> implements Component0<div> {
         private Object[] array = new Object[INIT_SIZE];
         private int pointer = 0;
 
-        /*
-        Добавляет новый элемент в список. При достижении размера внутреннего
-        массива происходит его увеличение в два раза.
-        */
         public void add(T item) {
             if (pointer == array.length - 1)
-                resize(array.length * 2); // увеличу в 2 раза, если достигли границ
+                resize(array.length * 2);
             array[pointer++] = item;
         }
 
-        /*
-        Возвращает элемент списка по индексу.
-        */
         public T get(int index) {
             return (T) array[index];
         }
 
-        /*
-        Удаляет элемент списка по индексу. Все элементы справа от удаляемого
-        перемещаются на шаг налево. Если после удаления элемента количество
-        элементов стало в CUT_RATE раз меньше чем размер внутреннего массива,
-        то внутренний массив уменьшается в два раза, для экономии занимаемого
-        места.
-        */
         public void remove(int index) {
             for (int i = index; i < pointer; i++)
                 array[i] = array[i + 1];
             array[pointer] = null;
             pointer--;
             if (array.length > INIT_SIZE && pointer < array.length / CUT_RATE)
-                resize(array.length / 2); // если элементов в CUT_RATE раз меньше чем
-            // длина массива, то уменьшу в два раза
+                resize(array.length / 2);
         }
 
         /*Возвращает количество элементов в списке*/
@@ -473,7 +458,7 @@ class GridFilter<T> implements Component0<div> {
             this.value = "";
         }
 
-        public int indexOf(String like) { // for one symbol
+        public int indexOf(String like) {
             for (int i = 0; i < value.length(); i++) {
                 if (String.valueOf(value.charAt(i)).equals(like)) return i;
             }
@@ -578,7 +563,6 @@ class GridFilter<T> implements Component0<div> {
         var data = lexAnalyze(expr);
         if (data.isEmpty()) return false;
 
-        // express check ----
         for (int i = 0; i < data.size(); i++) {
             if (data.get(i).lexeme.equals("SYMBOL")) {
                 var controlSym = data.get(i).value.length();
@@ -616,7 +600,7 @@ class GridFilter<T> implements Component0<div> {
                     return false;
                 }
             }
-        } // back slash check
+        }
         var patternsArr = new ArrayList<Pattern>();
         patternsArr.add(new Pattern("OP_AND", "B_CLOSE"));
         patternsArr.add(new Pattern("OP_OR", "B_CLOSE"));
@@ -648,7 +632,6 @@ class GridFilter<T> implements Component0<div> {
             }
             old = lex;
         }
-        // -------------
 
         for (int i = 0; i < data.size(); i++) {
             Lexeme lex = data.get(i);
@@ -674,12 +657,11 @@ class GridFilter<T> implements Component0<div> {
                 }
             } else if (lex.lexeme.equals("SYMBOL")) {
                 var like = "%";
-                if (new StringBuilder(lex.value).indexOf(like) != -1) { // BAD
+                if (new StringBuilder(lex.value).indexOf(like) != -1) {
                     if (lex.value.length() == 1) {
                         printError("Ожидалось выражение, а получили %", lex.pos);
                         return false;
                     }
-                    // Знаем, что в строке больше одного символа и там содержиться like >=1
                     ArrayList<Integer> likePos = getLikePos(lex.value);
                     if (likePos.size() == 2) {
                         if (lex.value.equals("%%")) {
@@ -703,8 +685,6 @@ class GridFilter<T> implements Component0<div> {
                 return false;
             }
         }
-
-// Здесь мы знаем, что все <term> and <some_op> валидны, осталось проверить саму последовательность
 
         var calStack = new StackLexeme();
         OPZ = new ArrayList<>();
@@ -733,10 +713,9 @@ class GridFilter<T> implements Component0<div> {
             } else if (lexeme.lexeme.equals("B_OPEN")) {
                 calStack.add(lexeme);
             } else if (lexeme.lexeme.equals("B_CLOSE")) {
-                // Выталкиваем все операции, пока не встретим откр. скобку
                 while (true) {
                     if (calStack.isEmpty()) {
-                        printError("Неверно расположены скобки", 0); // bad
+                        printError("Неверно расположены скобки", 0);
                         return false;
                     }
                     var lexEl = calStack.pop();
@@ -757,7 +736,6 @@ class GridFilter<T> implements Component0<div> {
             OPZ.add(calStack.pop());
         }
 
-        // Check OPZ ---
         if (OPZ.size() == 1 && !OPZ.get(0).lexeme.equals("SYMBOL")) {
             printError("Ожидалось высказывание, а имеем оператор", OPZ.get(0).pos);
             return false;
@@ -840,7 +818,7 @@ class GridFilter<T> implements Component0<div> {
         if (textExpr == null) return new ArrayList<>();
         var exprBuilder = new StringBuilder(textExpr);
         var result = new ArrayList<Lexeme>();
-        if (textExpr.isEmpty()) return result; // Ошибка в этом случае будет бесить
+        if (textExpr.isEmpty()) return result;
         if (String.valueOf(textExpr.charAt(0)).equals(" ")) {
             result.add(new Lexeme("ERROR", "Текст не должен начинаться с пробела", 0));
             return result;
@@ -855,7 +833,6 @@ class GridFilter<T> implements Component0<div> {
             return result;
         }
 
-        // space in the symbol check
         var sp = new String[10];
         var old_ = "";
         JSExpression.of("sp = textExpr.replaceAll('\\ ', 'a').split(' ')");
@@ -883,7 +860,6 @@ class GridFilter<T> implements Component0<div> {
             exprBuilder.deleteCharAt(space - pos);
             pos++;
         }
-        // На этот момент мы удалили все неэкранированные пробелы знаем что в нашем запросе минимум 2 символа
         var rest = new ArrayList<String>();
         rest.add("\\\\&");
         rest.add("\\\\|");
@@ -891,7 +867,6 @@ class GridFilter<T> implements Component0<div> {
         rest.add("\\\\)");
         rest.add("\\\\ ");
         var specialSym = findAllWithLengthTwo(exprBuilder, rest);
-        // Теперь мы знаем индексы всех спецсимволов
 
         var splitTermInd = new ArrayList<Integer>();
         for (int i = 0; i < exprBuilder.length(); i++) {
@@ -911,9 +886,9 @@ class GridFilter<T> implements Component0<div> {
                 }
             }
         }
-        // splitTermInd - индексы, разделив по которым мы получим термы
+
         result.addAll(getTerms(exprBuilder, splitTermInd));
-        result = sortByLexemeId(result); // по позиции
+        result = sortByLexemeId(result);
 
         return result;
     }
