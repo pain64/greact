@@ -111,87 +111,15 @@ class GridFilter<T> implements Component0<div> {
                             if (newOpz.get(i - 2).pos == -1) flag1 = true;
                             else if (newOpz.get(i - 2).pos == -2) flag1 = false;
                             else {
-                                for (var col : conf.columns) {
-                                    var strVal = Grid.fetchValue(v, col.memberNames);
-                                    if (strVal == null) strVal = "";
-                                    strVal += "";
-                                    if (type == 1) {
-                                        val1 = deleteLike(val1);
-                                        JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) {
-                                            flag1 = true;
-                                        }
-                                    } else if (type == 2) {
-                                        val1 = deleteLike(val1);
-                                        JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) {
-                                            flag1 = true;
-                                        }
-                                    } else if (type == 3) {
-                                        val1 = deleteLike(val1);
-                                        JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.includes(val1)")) {
-                                            flag1 = true;
-                                        }
-                                    } else if (type == 4) {
-                                        JSExpression.of("var expr1 = val1.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
-                                        JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val1.length)");
-                                        JSExpression.of("expr1 = expr1.replace('\\%', '%')");
-                                        JSExpression.of("expr2 = expr2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
-                                            flag1 = true;
-                                        }
-                                    } else {
-                                        JSExpression.of("val1 = val1.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal == val1")) {
-                                            flag1 = true;
-                                        }
-                                    }
-                                }
+                                flag1 = isFlag1(v, flag1, val1, type);
                             }
                             var flag2 = false;
-                            var val2 = newOpz.get(i - 1).value;
-                            type = getLikeType(val2);
+                            val1 = newOpz.get(i - 1).value;
+                            type = getLikeType(val1);
                             if (newOpz.get(i - 1).pos == -1) flag2 = true;
                             else if (newOpz.get(i - 1).pos == -2) flag2 = false;
                             else {
-                                for (var col : conf.columns) {
-                                    var strVal = Grid.fetchValue(v, col.memberNames);
-                                    if (strVal == null) strVal = "";
-                                    strVal += "";
-                                    if (type == 1) {
-                                        val2 = deleteLike(val2);
-                                        JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(val2)")) {
-                                            flag2 = true;
-                                        }
-                                    } else if (type == 2) {
-                                        val2 = deleteLike(val2);
-                                        JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.endsWith(val2)")) {
-                                            flag2 = true;
-                                        }
-                                    } else if (type == 3) {
-                                        val2 = deleteLike(val2);
-                                        JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.includes(val2)")) {
-                                            flag2 = true;
-                                        }
-                                    } else if (type == 4) {
-                                        JSExpression.of("var expr1 = val2.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
-                                        JSExpression.of("var expr2 = val2.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val2.length)");
-                                        JSExpression.of("expr1 = expr1.replace('\\%', '%')");
-                                        JSExpression.of("expr2 = expr2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
-                                            flag2 = true;
-                                        }
-                                    } else {
-                                        JSExpression.of("val2 = val2.replace('\\%', '%')");
-                                        if (JSExpression.<Boolean>of("strVal == val2")) {
-                                            flag2 = true;
-                                        }
-                                    }
-                                }
+                                flag2 = isFlag1(v, flag2, val1, type);
                             }
 
                             var flagEnd = true;
@@ -212,6 +140,47 @@ class GridFilter<T> implements Component0<div> {
         return data;
     }
 
+    public boolean isFlag1(T v, boolean flag1, String val1, int type) {
+        for (var col : conf.columns) {
+            var strVal = Grid.fetchValue(v, col.memberNames);
+            if (strVal == null) strVal = "";
+            strVal += "";
+            if (type == 1) {
+                val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\%', '%')");
+                if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) {
+                    flag1 = true;
+                }
+            } else if (type == 2) {
+                val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\%', '%')");
+                if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) {
+                    flag1 = true;
+                }
+            } else if (type == 3) {
+                val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\%', '%')");
+                if (JSExpression.<Boolean>of("strVal.includes(val1)")) {
+                    flag1 = true;
+                }
+            } else if (type == 4) {
+                JSExpression.of("var expr1 = val1.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
+                JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val1.length)");
+                JSExpression.of("expr1 = expr1.replace('\\%', '%')");
+                JSExpression.of("expr2 = expr2.replace('\\%', '%')");
+                if (JSExpression.<Boolean>of("strVal.startsWith(expr1) && strVal.endsWith(expr2)")) {
+                    flag1 = true;
+                }
+            } else {
+                JSExpression.of("val1 = val1.replace('\\%', '%')");
+                if (JSExpression.<Boolean>of("strVal == val1")) {
+                    flag1 = true;
+                }
+            }
+        }
+        return flag1;
+    }
+
     public static String deleteLike(String expr) {
         var result = "";
         if (expr.charAt(0) != '%') result += expr.charAt(0);
@@ -224,7 +193,7 @@ class GridFilter<T> implements Component0<div> {
         return result;
     }
 
-    private int getLikeType(String expr) {
+    private int getLikeType(String expr) { // %\\%
         if (expr.charAt(0) == '%' && expr.length() >= 2 && expr.charAt(expr.length() - 1) == '%' && !String.valueOf(expr.charAt(expr.length() - 2)).equals("\\\\")) {
             return 3;
         }
@@ -258,7 +227,6 @@ class GridFilter<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 String reg = filterValue;
-                JSExpression.of("reg = reg.replace('\\', '\\')");
                 flag_ = checkValid(reg);
 
                 T[] filtered = !filterValue.isEmpty() && flag_ ?
@@ -395,12 +363,10 @@ class GridFilter<T> implements Component0<div> {
                 resize(array.length / 2);
         }
 
-        /*Возвращает количество элементов в списке*/
         public int size() {
             return pointer;
         }
 
-        /*Вспомогательный метод для масштабирования.*/
         private void resize(int newLength) {
             Object[] newArray = new Object[newLength];
             for (int i = 0; i < pointer; i++) {
@@ -894,8 +860,8 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public static boolean spaceValid(String s, String s1) {
-        if (s.equals("&") ||s.equals("|") ||s.equals("(") ||s.equals(")")) return true;
-        if (s1.equals("&") ||s1.equals("|") ||s1.equals("(") ||s1.equals(")")) return true;
+        if (s.equals("&") || s.equals("|") || s.equals("(") || s.equals(")")) return true;
+        if (s1.equals("&") || s1.equals("|") || s1.equals("(") || s1.equals(")")) return true;
         return false;
     }
 
