@@ -149,8 +149,10 @@ import java.util.function.Consumer;
                                                 """;
                                             onclick = ev -> {
                                                 ev.stopPropagation();
-                                                conf.onRowDelete.handle(row.data);
-                                                effect(rows = Array.filter(rows, r -> r != row));
+                                                if(JSExpression.of("window.confirm('Действительно удалить?')")) {
+                                                    conf.onRowDelete.handle(row.data);
+                                                    effect(rows = Array.filter(rows, r -> r != row));
+                                                }
                                             };
                                         }};
                                     if (conf.onRowChange != null)

@@ -5,7 +5,6 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 
 @Require.CSS("tabs.css")
 public class Tabs implements Component0<div> {
-
     final Tab[] tabs;
     private Tab selected;
 
@@ -15,25 +14,22 @@ public class Tabs implements Component0<div> {
             this.selected = this.tabs[0];
     }
 
-
     @Override public div mount() {
         return new div() {{
             new div() {{
-                new div() {{
-                    className = "tabs";
-                    for (var tab : tabs)
-                        new span(tab.caption) {{
-                            className = "tabs-content";
-                            onclick = ev -> effect(selected = tab);
+                className = "tabs";
+                for (var tab : tabs)
+                    new span(tab.caption) {{
+                        className = "tabs-content";
+                        onclick = ev -> effect(selected = tab);
 
-                            if (selected == tab)
-                                className += " tabs-content-selected";
-                        }};
-                }};
-                new div() {{
-                    className = "tabs-body";
-                    new slot<>(selected.view);
-                }};
+                        if (selected == tab)
+                            className += " tabs-content-selected";
+                    }};
+            }};
+            new div() {{
+                className = "tabs-body";
+                new slot<>(selected.view);
             }};
         }};
     }

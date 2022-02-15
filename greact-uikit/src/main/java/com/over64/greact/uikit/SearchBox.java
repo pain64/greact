@@ -8,6 +8,7 @@ import com.over64.greact.uikit.controls.Control;
 
 @Require.CSS("search_box.css")
 public class SearchBox implements Component0<div> {
+    public String controlsClassName = null;
     Control[] controls;
     Control[] controlsWithChildren;
     boolean canSearch = false;
@@ -29,6 +30,10 @@ public class SearchBox implements Component0<div> {
 
     @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
         @async R load(A1 a1, A2 a2, A3 a3);
+    }
+
+    @FunctionalInterface public interface AsyncFunc4<A1, A2, A3, A4, R> {
+        @async R load(A1 a1, A2 a2, A3 a3, A4 a4);
     }
 
     <V> void push(V[] array, V value) {
@@ -89,6 +94,10 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
+    public <U1, U2, U3, U4> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, Control<U4> in4, AsyncFunc4<U1, U2, U3, U4, Component0<div>> view) {
+        JSExpression.of("this._nativeInit(...arguments)");
+    }
+
     @Override @async public div mount() {
         checkCanSearch();
         if (canSearch) {
@@ -98,13 +107,14 @@ public class SearchBox implements Component0<div> {
 
         return new div() {{
             new div() {{
-                new div() {{
-                    className = "search-box";
+                className = "search-box";
+                if(controlsClassName != null)
+                    className += " " + controlsClassName;
 
-                    for (var control : controlsWithChildren)
-                        new slot<div>(control);
+                for (var control : controlsWithChildren)
+                    new slot<div>(control);
 
-                    /* FIXME: make autosearch */
+                /* FIXME: make autosearch */
 
 //                new button("искать") {{
 //                    style.margin = "2px";
@@ -114,13 +124,12 @@ public class SearchBox implements Component0<div> {
 //                        effect(doSearch = true);
 //                    };
 //                }};
-                }};
-
-                if (canSearch) {
-                    // doSearch = false;
-                    new slot<>(loaded);
-                }
             }};
+
+            if (canSearch) {
+                // doSearch = false;
+                new slot<>(loaded);
+            }
         }};
     }
 }
