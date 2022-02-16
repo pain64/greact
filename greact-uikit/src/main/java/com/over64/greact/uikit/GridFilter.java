@@ -333,6 +333,14 @@ class GridFilter<T> implements Component0<div> {
             new div() {{
                 if (!flag_ && filterEnabled && !filterValue.equals("")) {
                     new div() {{
+//                        new h3("\u2191") {{
+//                            var margin = "";
+//                            JSExpression.of("var pix = com$over64$greact$uikit$GridFilter.errorPos * 7");
+//                            JSExpression.of("margin = pix + 'px'");
+//                            this.style.padding = "5px";
+//                            this.style.marginLeft = margin;
+//                            this.style.color = "red";
+//                        }};
                         new h5(errorText) {{
                             this.className = "error";
                             this.style.color = "red";
