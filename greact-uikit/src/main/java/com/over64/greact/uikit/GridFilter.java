@@ -69,23 +69,27 @@ class GridFilter<T> implements Component0<div> {
                     strVal += "";
                     if (type == 1) {
                         expr = deleteLike(expr);
+                        JSExpression.of("expr = expr.replace('\\\\', '\\')");
                         JSExpression.of("expr = expr.replace('\\%', '%')");
                         if (JSExpression.<Boolean>of("strVal.startsWith(expr)")) {
                             return true;
                         }
                     } else if (type == 2) {
                         expr = deleteLike(expr);
+                        JSExpression.of("expr = expr.replace('\\\\', '\\')");
                         JSExpression.of("expr = expr.replace('\\%', '%')");
                         if (JSExpression.<Boolean>of("strVal.endsWith(expr)")) {
                             return true;
                         }
                     } else if (type == 3) {
                         expr = deleteLike(expr);
+                        JSExpression.of("expr = expr.replace('\\\\', '\\')");
                         JSExpression.of("expr = expr.replace('\\%', '%')");
                         if (JSExpression.<Boolean>of("strVal.includes(expr)")) {
                             return true;
                         }
                     } else if (type == 4) {
+                        JSExpression.of("expr = expr.replace('\\\\', '\\')");
                         JSExpression.of("var expr1 = expr.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
                         JSExpression.of("var expr2 = expr.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, expr.length)");
                         JSExpression.of("expr1 = expr1.replace('\\%', '%')");
@@ -94,6 +98,7 @@ class GridFilter<T> implements Component0<div> {
                             return true;
                         }
                     } else {
+                        JSExpression.of("expr = expr.replace('\\\\', '\\')");
                         JSExpression.of("expr = expr.replace('\\%', '%')");
                         if (JSExpression.<Boolean>of("strVal == expr")) {
                             return true;
@@ -147,23 +152,27 @@ class GridFilter<T> implements Component0<div> {
             strVal += "";
             if (type == 1) {
                 val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\\\', '\\')");
                 JSExpression.of("val1 = val1.replace('\\%', '%')");
                 if (JSExpression.<Boolean>of("strVal.startsWith(val1)")) {
                     flag1 = true;
                 }
             } else if (type == 2) {
                 val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\\\', '\\')");
                 JSExpression.of("val1 = val1.replace('\\%', '%')");
                 if (JSExpression.<Boolean>of("strVal.endsWith(val1)")) {
                     flag1 = true;
                 }
             } else if (type == 3) {
                 val1 = deleteLike(val1);
+                JSExpression.of("val1 = val1.replace('\\\\', '\\')");
                 JSExpression.of("val1 = val1.replace('\\%', '%')");
                 if (JSExpression.<Boolean>of("strVal.includes(val1)")) {
                     flag1 = true;
                 }
             } else if (type == 4) {
+                JSExpression.of("val1 = val1.replace('\\\\', '\\')");
                 JSExpression.of("var expr1 = val1.substring(0, com$over64$greact$uikit$GridFilter.likeSplit)");
                 JSExpression.of("var expr2 = val1.substring(com$over64$greact$uikit$GridFilter.likeSplit + 1, val1.length)");
                 JSExpression.of("expr1 = expr1.replace('\\%', '%')");
@@ -172,6 +181,7 @@ class GridFilter<T> implements Component0<div> {
                     flag1 = true;
                 }
             } else {
+                JSExpression.of("val1 = val1.replace('\\\\', '\\')");
                 JSExpression.of("val1 = val1.replace('\\%', '%')");
                 if (JSExpression.<Boolean>of("strVal == val1")) {
                     flag1 = true;
@@ -185,20 +195,31 @@ class GridFilter<T> implements Component0<div> {
         var result = "";
         if (expr.charAt(0) != '%') result += expr.charAt(0);
         for (int i = 1; i < expr.length(); i++) {
-            if (expr.charAt(i) == '%' && !String.valueOf(expr.charAt(i - 1)).equals("\\\\")) {
-            } else {
+            if (expr.charAt(i) == '%') {
+                var flag = true;
+                for (int j = i - 1; j >= 0; j--) {
+                    if (String.valueOf(expr.charAt(j)).equals("\\\\")) {
+                        flag = !flag;
+                    } else {
+                        break;
+                    }
+                }
+                if (!flag) {
+                    result += expr.charAt(i);
+                }
+            }else {
                 result += expr.charAt(i);
             }
         }
         return result;
     }
 
-    private int getLikeType(String expr) { // %\\%
-        if (expr.charAt(0) == '%' && expr.length() >= 2 && expr.charAt(expr.length() - 1) == '%' && !String.valueOf(expr.charAt(expr.length() - 2)).equals("\\\\")) {
+    private int getLikeType(String expr) {
+        if (expr.charAt(0) == '%' && expr.length() >= 2 && endWithLike(expr)) {
             return 3;
         }
         if (expr.charAt(0) == '%') return 2;
-        if (expr.length() >= 2 && expr.charAt(expr.length() - 1) == '%' && !String.valueOf(expr.charAt(expr.length() - 2)).equals("\\\\")) {
+        if (expr.length() >= 2 && endWithLike(expr)) {
             return 1;
         }
 
@@ -212,13 +233,26 @@ class GridFilter<T> implements Component0<div> {
         return 0;
     }
 
+    public static boolean endWithLike(String expr) {
+        if (expr.charAt(expr.length() - 1) != '%') return false;
+
+        var flag = true;
+        for (int i = expr.length() - 2; i >= 0; i--) {
+            if (String.valueOf(expr.charAt(i)).equals("\\\\")) {
+                flag = !flag;
+            } else {
+                break;
+            }
+        }
+        return flag;
+    }
+
     public static String deleteEcr(String value) {
         JSExpression.of("value = value.replace('\\&', '&')");
         JSExpression.of("value = value.replace('\\(', '(')");
         JSExpression.of("value = value.replace('\\)', ')')");
         JSExpression.of("value = value.replace('\\|', '|')");
         JSExpression.of("value = value.replace('\\ ', ' ')");
-        JSExpression.of("value = value.replace('\\\\', '\\')");
         return value;
     }
 
