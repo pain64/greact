@@ -1,9 +1,9 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 class GridRowEdit<T> implements Component0<tr> {
     final T data;
     final GridConfig2<T> conf;
@@ -21,14 +21,14 @@ class GridRowEdit<T> implements Component0<tr> {
 
             for (var col : conf.columns) {
                 if(col.hidden) continue;
-                if (col._editor != null)
+                if (col.editor != null)
                     new td() {{
                         Grid.setEditorValueFromRowValue(col, data);
-                        new slot<>(col._editor);
+                        new slot<>(col.editor);
                     }};
                 else
                     new slot<>(
-                            (Component1<td, Object>) col._view,
+                            (Component1<td, Object>) col.view,
                             Grid.fetchValue(data, col.memberNames));
             }
 
@@ -44,8 +44,8 @@ class GridRowEdit<T> implements Component0<tr> {
                             """;
                         onclick = ev -> {
                             for (var col : conf.columns)
-                                if (!col.hidden && col._editor != null)
-                                    Grid.setValue(data, col.memberNames, col._editor.value);
+                                if (!col.hidden && col.editor != null)
+                                    Grid.setValue(data, col.memberNames, col.editor.value);
                             conf.onRowChange.handle(data);
                             onFinishRowEdit.run();
                         };

@@ -23,26 +23,23 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js$Test extends Object {
-                  static A = class extends Object {
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
                     constructor() {
-                      let __init__ = () => {
-                        this.x = 42
-                        this.y = 15
+                      const __init__ = () => {
+                        this.x = 42;
+                        this.y = 15;
                       };
-                      super();
                       __init__();
                     }
-                                
-                    add() {
-                      return this.x + this.y
+                    _add() {
+                      return this.x + this.y;
                     }
                   }
-                    
-                  constructor() {
-                    super();
-                  }
-                }""");
+                }
+                """);
     }
 
     @Test void nestedRecord() throws IOException {
@@ -54,28 +51,20 @@ public class _12InnerClass {
                 }
                 """,
             """
-                class js$Test extends Object {
-                  static A = class extends Object {
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
                     constructor(x, y) {
-                      let __init__ = () => {
-                        this.x = 0
-                        this.y = 0
-                      };
-                      super();
-                      __init__();
                       this.x = x;
                       this.y = y;
                     }
                   }
-                    
-                  constructor() {
-                    super();
-                  }
-                }""");
+                }
+                """);
     }
 
-    @Test
-    void newInstanceCreate() throws IOException {
+    @Test void newInstanceCreate() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.A",
                 """
@@ -86,17 +75,15 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js$A extends Object {
-                      static B = class extends Object {
+                    class js_A {
+                      constructor() {
+                      }
+                      static B = class {
                         constructor() {
-                          super();
                         }
                       }
-                        
-                      constructor() {
-                        super();
-                      }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.C",
                 """
                     package js;
@@ -106,14 +93,44 @@ public class _12InnerClass {
                     }
                     """,
                 """
-                    class js$C extends Object {
+                    class js_C {
                       constructor() {
-                        let __init__ = () => {
-                          this.b = new js$A.B()
+                        const __init__ = () => {
+                          this.b = new js_A.B();
                         };
-                        super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
+    }
+
+    @Test void callStaticFromStaticInnerClass() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                class Test {
+                  static class A {
+                    static int foo() { return 42; }
+                  }
+                  int x = A.foo();
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                    const __init__ = () => {
+                      this.x = js_Test.A._foo();
+                    };
+                    __init__();
+                  }
+                  static A = class {
+                    constructor() {
+                    }
+                    static _foo() {
+                      return 42;
+                    }
+                  }
+                }
+                """);
     }
 }

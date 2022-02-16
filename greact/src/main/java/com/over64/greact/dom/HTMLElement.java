@@ -3,14 +3,17 @@ package com.over64.greact.dom;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
-@JSNativeAPI public class HtmlElement extends Node {
+@JSNativeAPI public class HTMLElement extends Node {
     public static class Style {
         public String color;
-        public String borderColor;
         public String backgroundColor;
         public String border;
-        public String borderRadius;
+        public String borderLeft;
+        public String borderRight;
+        public String borderTop;
         public String borderBottom;
+        public String borderRadius;
+        public String borderColor;
         public String padding;
         public String margin;
         public String marginBottom;
@@ -46,26 +49,30 @@ import com.greact.model.async;
 
     public Object dependsOn;
 
+    public MouseEventHandler onclick;
+    public MouseEventHandler ondblclick;
+    public MouseEventHandler onblur;
+    public ChangeHandler onchange;
+    public MouseEventHandler onmouseout;
+    public MouseEventHandler onmouseover;
+
+
 
     // HTML Event Attributes
-    public static class Event<T> {
+    public static class Event {
         public native void stopPropagation();
-        public T target;
+        public HTMLElement target;
     }
 
-    @FunctionalInterface
-    public interface ChangeHandler<T extends HtmlElement> {
-        @async void handle(Event<T> ev);
+    @FunctionalInterface public interface ChangeHandler {
+        @async void handle(Event ev);
     }
 
-    @FunctionalInterface
-    public interface MouseEventHandler<T extends HtmlElement> {
-        @async void handle(Event<T> ev);
+    @FunctionalInterface public interface MouseEventHandler {
+        @async void handle(Event ev);
     }
 
-    public static class KeyEvent extends Event<HtmlElement> {
-
-    }
+    public static class KeyEvent extends Event { }
 
     public interface KeyHandler {
         void handle(KeyEvent event);

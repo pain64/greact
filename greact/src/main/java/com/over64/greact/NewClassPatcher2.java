@@ -38,6 +38,7 @@ public class NewClassPatcher2 {
         Symbol.ClassSymbol clString = util.lookupClass(String.class);
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
+        Symbol.ClassSymbol clSlot = util.lookupClass(HTMLNativeElements.slot.class);
         Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
         Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
@@ -100,11 +101,12 @@ public class NewClassPatcher2 {
 
     com.sun.tools.javac.util.List<JCTree.JCStatement> consArgsToStatements(
         Symbol.MethodSymbol cons, Type.ClassType htmlElType,
-        JCTree.JCNewClass newClass, Symbol.VarSymbol elVarSymbol) {
+        JCTree.JCNewClass newClass, Symbol.VarSymbol elVarSymbol,
+        TreeTranslator me) {
 
         return IntStream.range(0, newClass.args.length())
             .mapToObj(i -> {
-                var arg = newClass.args.get(i);
+                var arg = me.translate(newClass.args.get(i));
                 var memberName = cons.params.get(i)
                     .getAnnotation(HTMLNativeElements.DomProperty.class)
                     .value();
@@ -147,7 +149,8 @@ public class NewClassPatcher2 {
         var allViewRenderSymbols = new ArrayList<Symbol.VarSymbol>();
 
         for (var viewEntry : allViewEntries) {
-            var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars);
+            var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars,
+                symbols.clSlot);
             var nodesForUpdate = effects.stream()
                 .flatMap(ef -> viewUpdateStrategy.findNodesForUpdate(
                     unconditionalTree, ef.effected()).stream())
@@ -277,9 +280,10 @@ public class NewClassPatcher2 {
                 super.visitIdent(id);
             }
 
-            JCTree.JCBlock mapNewClassBody(Symbol.VarSymbol thisEl, Type.ClassType htmlElementType, JCTree.JCNewClass newClass) {
+            JCTree.JCBlock mapNewClassBody(Symbol.VarSymbol thisEl, Type.ClassType htmlElementType,
+                                           JCTree.JCNewClass newClass, TreeTranslator me) {
                 var cons = extractActualConstructor(newClass);
-                var mappedArgs = consArgsToStatements(cons, htmlElementType, newClass, thisEl);
+                var mappedArgs = consArgsToStatements(cons, htmlElementType, newClass, thisEl, me);
                 var block = maker.Block(Flags.BLOCK, mappedArgs);
 
                 if (newClass.def != null) {
@@ -332,13 +336,13 @@ public class NewClassPatcher2 {
                     var lmbBody = maker.Block(Flags.BLOCK, List.nil());
                     lmb.body = lmbBody;
 
-                    var classBody = mapNewClassBody(nextElSymbol, htmlElementType, newClass);
+                    var classBody = mapNewClassBody(nextElSymbol, htmlElementType, newClass, this);
 
                     final Symbol.VarSymbol resultElSymbol;
                     var updateIndex = allViewsForUpdate.indexOf(newClass);
 
                     if (updateIndex != -1) { // rerenderable
-                        var elHolderSymbol = new Symbol.VarSymbol(Flags.FINAL,
+                        var elHolderSymbol = new Symbol.VarSymbol(Flags.HASINIT,
                             names.fromString("_holder" + nextNum),
                             htmlElementType,
                             nextElOwner);
@@ -398,26 +402,24 @@ public class NewClassPatcher2 {
                     while (mappedNativeElementTypes.contains(ct.getEnclosingType().tsym))
                         ct.setEnclosingType(ct.getEnclosingType().getEnclosingType());
 
+                    newClass.args = newClass.args.map(this::translate);
+                    if (newClass.def != null) newClass.def = this.translate(newClass.def);
+
                     if (parent == null) {
-                        if (custom instanceof Util.IsSlot) throw new RuntimeException("not implemented");
-                        for (var arg : newClass.args) arg.accept(this);
-                        if (newClass.def != null) newClass.def.accept(this);
+                        if (custom instanceof Util.IsSlot)
+                            throw new RuntimeException("not implemented");
                         this.result = newClass;
                     } else {
-                        for (var arg : newClass.args) arg.accept(this);
-                        if (newClass.def != null) newClass.def.accept(this);
-
                         var forMount = custom instanceof Util.IsSlot ? newClass.args.head : newClass;
                         var mountArgs = custom instanceof Util.IsSlot ? newClass.args.tail
                             : com.sun.tools.javac.util.List.<JCTree.JCExpression>nil();
 
-                        this.result = makeCall(symbols.clGReact, symbols.mtGReactMMount,
-                            com.sun.tools.javac.util.List.of(
-                                maker.Ident(current),
-                                forMount,
-                                maker.NewArray(maker.Ident(symbols.clObject), com.sun.tools.javac.util.List.nil(),
-                                        mountArgs)
-                                    .setType(types.makeArrayType(symbols.clObject.type))));
+                        List<JCTree.JCExpression> args = com.sun.tools.javac.util.List.of(
+                            maker.Ident(current), forMount);
+                        args = args.appendList(mountArgs);
+                        var invoke = makeCall(symbols.clGReact, symbols.mtGReactMMount, args);
+                        invoke.varargsElement = symbols.clObject.type;
+                        this.result = invoke;
                     }
                 } else
                     super.visitNewClass(newClass);
@@ -426,19 +428,18 @@ public class NewClassPatcher2 {
 
         classDecl.accept(new TreeTranslator() {
             @Override public void visitExec(JCTree.JCExpressionStatement estmt) {
-                if (estmt.expr instanceof JCTree.JCMethodInvocation invoke) {
-                    if (invoke.meth instanceof JCTree.JCFieldAccess fa)
-                        if (fa.selected instanceof JCTree.JCParens parens)
-                            if (parens.expr instanceof JCTree.JCLambda lmb)
-                                if (lambdaToBlock.contains(lmb)) {
-                                    lmb.body.accept(this);
-                                    result = lmb.body;
-                                    return;
-                                }
+                if (estmt.expr instanceof JCTree.JCMethodInvocation invoke &&
+                    invoke.meth instanceof JCTree.JCFieldAccess fa &&
+                    fa.selected instanceof JCTree.JCParens parens &&
+                    parens.expr instanceof JCTree.JCLambda lmb &&
+                    lambdaToBlock.contains(lmb)) {
+
+                    lmb.body.accept(this);
+                    result = lmb.body;
+                } else {
+                    estmt.expr.accept(this);
+                    result = estmt;
                 }
-
-
-                result = estmt;
             }
         });
     }

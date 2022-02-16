@@ -16,15 +16,18 @@ public class ViewUpdateStrategy {
         public static Node make(JCTree.JCNewClass self) {
             return new Node(self, new HashSet<>(), new HashSet<>(), new ArrayList<>());
         }
-
     }
 
     static class UnconditionalNodeVisitor extends TreeScanner {
         final Set<Symbol.VarSymbol> effectedVars;
         final Node root;
-        public UnconditionalNodeVisitor(Set<Symbol.VarSymbol> effectedVars, Node root) {
+        final Symbol.ClassSymbol clSlot;
+
+        public UnconditionalNodeVisitor(Set<Symbol.VarSymbol> effectedVars, Node root,
+                                        Symbol.ClassSymbol clSlot) {
             this.effectedVars = effectedVars;
             this.root = root;
+            this.clSlot = clSlot;
         }
 
         boolean hasCondition = false;
@@ -39,17 +42,18 @@ public class ViewUpdateStrategy {
         @Override public void visitIdent(JCTree.JCIdent id) {
             if (id.sym instanceof Symbol.VarSymbol sym)
                 if (effectedVars.contains(sym))
-                    if (!hasCondition) root.dependsSelf.add(sym);
-                    else root.dependsConditional.add(sym);
+                    if (hasCondition)
+                        root.dependsConditional.add(sym);
+                    else root.dependsSelf.add(sym);
         }
 
         @Override public void visitNewClass(JCTree.JCNewClass tree) {
-            if (root.self == tree || hasCondition) {
+            if (root.self == tree || hasCondition || tree.type.tsym == clSlot) {
                 super.visitNewClass(tree);
             } else { // new unconditional child
                 var nextRoot = Node.make(tree);
                 root.children.add(nextRoot);
-                new UnconditionalNodeVisitor(effectedVars, nextRoot).scan(tree);
+                new UnconditionalNodeVisitor(effectedVars, nextRoot, clSlot).scan(tree);
             }
         }
 
@@ -74,12 +78,14 @@ public class ViewUpdateStrategy {
         @Override public void visitTry(JCTree.JCTry tree) {
             atConditional(() -> super.visitTry(tree));
         }
-        @Override public void visitLambda(JCTree.JCLambda tree) {}
+        @Override public void visitLambda(JCTree.JCLambda tree) { }
     }
 
-    public Node buildTree(JCTree.JCNewClass view, Set<Symbol.VarSymbol> effectedVars) {
+    public Node buildTree(JCTree.JCNewClass view,
+                          Set<Symbol.VarSymbol> effectedVars,
+                          Symbol.ClassSymbol clSlot) {
         var root = Node.make(view);
-        new UnconditionalNodeVisitor(effectedVars, root).scan(view);
+        new UnconditionalNodeVisitor(effectedVars, root, clSlot).scan(view);
         return root;
     }
 
@@ -95,7 +101,7 @@ public class ViewUpdateStrategy {
             containsAny(root.dependsConditional, changed))
             dest.add(root);
         else
-            for(var child: root.children)
+            for (var child : root.children)
                 pushNodesForUpdate(dest, child, changed);
     }
 

@@ -14,15 +14,15 @@ public class _14Bundle {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.CSS;
+                import com.greact.model.Require;
                                     
-                @CSS.Require({"test.css"}) class Test {}
+                @Require.CSS({"test.css"}) class Test {}
                 """,
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                }""");
+                }
+                """);
     }
 }

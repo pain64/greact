@@ -1,13 +1,12 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
+import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.GridConfig2.AsyncHandler;
 
-import java.util.function.Consumer;
-
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 public class GridRowAdd<T> implements Component0<tr> {
     T data;
     final GridConfig2<T> conf;
@@ -28,19 +27,19 @@ public class GridRowAdd<T> implements Component0<tr> {
             if (conf.customRowAdder != null) {
                 for (var control : conf.customRowAdder.controls)
                     new td() {{
-                        colSpan = control._slots;
+                        colSpan = control.slots;
                         new slot<>(control);
                     }};
             } else
                 for (var col : conf.columns)
-                    if (col._editor != null)
+                    if (col.editor != null)
                         new td() {{
                             Grid.setEditorValueFromRowValue(col, data);
-                            new slot<>(col._editor);
+                            new slot<>(col.editor);
                         }};
                     else
                         new slot<>(
-                            (Component1<td, Object>) col._view,
+                            (Component1<td, Object>) col.view,
                             Grid.fetchValue(data, col.memberNames));
 
             new td() {{ /* toolbox */
@@ -59,8 +58,8 @@ public class GridRowAdd<T> implements Component0<tr> {
                                 data = conf.customRowAdder.loader.load();
                             else
                                 for (var col : conf.columns)
-                                    if (col._editor != null)
-                                        Grid.setValue(data, col.memberNames, col._editor.value);
+                                    if (col.editor != null)
+                                        Grid.setValue(data, col.memberNames, col.editor.value);
 
                             onConfirmRowAdd.handle(data);
                         };

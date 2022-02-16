@@ -9,46 +9,51 @@ import java.util.function.Consumer;
 import static com.over64.greact.dom.Globals.document;
 
 public class GReact {
-    public static HtmlElement element;
-    public static <T extends HtmlElement> T entry(java.lang.Runnable maker) {
+    public static HTMLElement element;
+    public static <T extends HTMLElement> T entry(java.lang.Runnable maker) {
         maker.run();
         return null;
     }
 
-    public static <T extends HtmlElement> T mount(T dest, Component<T> newEl, Object... args) {
+    public static <T extends HTMLElement> T mount(T dest, Component<T> newEl, Object... args) {
         element = dest;
-        JSExpression.of("newEl instanceof Function ? newEl(...args) : newEl.mount(...args)");
+        JSExpression.of("newEl instanceof Function ? newEl(...args) : newEl._mount(...args)");
         return null;
     }
 
-    @async public static <T extends HtmlElement> T mmountAwaitView(Component<T> comp, Object... args) {
-        return JSExpression.of("""
+    @async public static <T extends HTMLElement> T mmountAwaitView(Component<T> comp, Object... args) {
+        return JSExpression.ofAsync("""
             comp instanceof HTMLElement ? comp :
-                comp instanceof Function ? await this.mmountAwaitView(await comp(...args), []) :
-                    await this.mmountAwaitView(await comp.mount(...args), [])
+                comp instanceof Function ? await this._mmountAwaitView(await comp(...args), []) :
+                    await this._mmountAwaitView(await comp._mount(...args), [])
             """);
 
     }
 
-    @async public static <T extends HtmlElement> void mmount(T dest, Component<T> newEl, Object... args) {
+    public static <T extends HTMLElement> void mmount(T dest, Component<T> newEl, Object... args) {
         var placeholder = dest.appendChild(document.createElement("div"));
-        JSExpression.<HtmlElement>of("this.mmountAwaitView(newEl, args).then(v => dest.replaceChild(v, placeholder))");
+        JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => dest.replaceChild(v, placeholder))");
+    }
+
+    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(U dest, Component<T> newEl, Consumer<T> before, Object... args) {
+        var placeholder = dest.appendChild(document.createElement("div"));
+        JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => { before(v); dest.replaceChild(v, placeholder); })");
     }
 
 
-    public static <U extends HtmlElement> void make(HtmlElement parent, String name, Consumer<U> maker) {
+    public static <U extends HTMLElement> void make(HTMLElement parent, String name, Consumer<U> maker) {
         U el = document.createElement(name);
         maker.accept(el);
         parent.appendChild(el);
     }
 
-    public static <T extends HtmlElement> T mountMe(String htmlElName) {
+    public static <T extends HTMLElement> T mountMe(String htmlElName) {
         T newEl = document.createElement(htmlElName);
         element.appendChild(newEl);
         return newEl;
     }
 
-    public static <T extends HtmlElement> T replace(T el, HtmlElement holder) {
+    public static <T extends HTMLElement> T replace(T el, HTMLElement holder) {
         if(holder != null)
             holder.parentNode.replaceChild(el, holder);
 

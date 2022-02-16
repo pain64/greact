@@ -20,25 +20,22 @@ public class _05Inheritance {
                       int  foo(int x)     { return 2;    };
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
-                    
-                      foo($over, ...__args) {
-                        switch($over) {
-                          case 0:
-                            var [x] = __args;
-                            break
-                          case 1:
-                            var [x] = __args;
-                            return 1
-                          case 2:
-                            var [x] = __args;
-                            return 2
+                      _foo($over, ...__args) {
+                        if($over === 0) {
+                          const [x] = __args;
+                        } else if($over === 1) {
+                          const [x] = __args;
+                          return 1;
+                        } else if($over === 2) {
+                          const [x] = __args;
+                          return 2;
                         }
                       }
-                    }"""),
+                    }
+                    """),
             new CompileCase("js.B",
                 """
                     package js;
@@ -48,24 +45,22 @@ public class _05Inheritance {
                       int foo(float x) { return 4; }; 
                     }""",
                 """
-                        class js$B extends js$A {
-                          constructor() {
-                            super();
-                          }
-                                             
-                          foo($over, ...__args) {
-                            switch($over) {
-                              case 1:
-                                var [x] = __args;
-                                return 3
-                              case 3:
-                                var [x] = __args;
-                                return 4
-                              default:
-                                return super.foo.apply(this, arguments)
-                            }
-                          }
-                        }"""),
+                    class js_B extends js_A {
+                      constructor() {
+                        super();
+                      }
+                      _foo($over, ...__args) {
+                        if($over === 1) {
+                          const [x] = __args;
+                          return 3;
+                        } else if($over === 3) {
+                          const [x] = __args;
+                          return 4;
+                        } else
+                          return super._foo.apply(this, arguments);
+                      }
+                    }
+                    """),
             new CompileCase("js.C",
                 """
                     package js;
@@ -74,25 +69,23 @@ public class _05Inheritance {
                       int foo(int x)              { return 5; };
                       int foo(double x, double y) { return 6; };
                     }""",
-                    """
-                            class js$C extends js$B {
-                              constructor() {
-                                super();
-                              }
-                                                  
-                              foo($over, ...__args) {
-                                switch($over) {
-                                  case 2:
-                                    var [x] = __args;
-                                    return 5
-                                  case 4:
-                                    var [x, y] = __args;
-                                    return 6
-                                  default:
-                                    return super.foo.apply(this, arguments)
-                                }
-                              }
-                            }""")
+                """
+                    class js_C extends js_B {
+                      constructor() {
+                        super();
+                      }
+                      _foo($over, ...__args) {
+                        if($over === 2) {
+                          const [x] = __args;
+                          return 5;
+                        } else if($over === 4) {
+                          const [x, y] = __args;
+                          return 6;
+                        } else
+                          return super._foo.apply(this, arguments);
+                      }
+                    }
+                    """)
         );
     }
 }

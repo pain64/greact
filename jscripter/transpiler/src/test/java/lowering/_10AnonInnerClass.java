@@ -5,6 +5,7 @@ import util.CompileAssert;
 
 import java.io.IOException;
 
+import static util.CompileAssert.assertCompiled;
 import static util.CompileAssert.assertCompiledMany;
 
 public class _10AnonInnerClass {
@@ -16,11 +17,11 @@ public class _10AnonInnerClass {
                     public class A {
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -31,18 +32,70 @@ public class _10AnonInnerClass {
                       }
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B {
                       constructor() {
-                        super();
                       }
-                      
-                      foo() {
-                        new class extends js$A {
-                          constructor() {
-                            super();
-                          }
-                        }();
+                      _foo() {
+                        (this0 => {
+                          return new class extends js_A {
+                            constructor() {
+                              super();
+                            }
+                          }()
+                        })(this);
                       }
-                    }"""));
+                    }
+                    """));
+    }
+
+    @Test void withClosure() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                class Test {
+                  static class A {
+                    int y;
+                  }
+                  int x = 42;
+                  void foo() {
+                    new A() {{
+                      y = x;
+                      var z = x;
+                    }};
+                  }
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                    const __init__ = () => {
+                      this.x = 42;
+                    };
+                    __init__();
+                  }
+                  static A = class {
+                    constructor() {
+                      const __init__ = () => {
+                        this.y = 0;
+                      };
+                      __init__();
+                    }
+                  }
+                  _foo() {
+                    (this0 => {
+                      return new class extends js_Test_A {
+                        constructor() {
+                          const __init__ = () => {
+                            this.y = this0.x;
+                            const z = this0.x;
+                          };
+                          super();
+                          __init__();
+                        }
+                      }()
+                    })(this);
+                  }
+                }
+                """);
     }
 }

@@ -14,17 +14,20 @@ public class _02StmtTest {
                 package js;
                 public class Test {
                   int baz() { return 42; }
+                  void bar() { return; }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz() {
-                    return 42
+                  _baz() {
+                    return 42;
                   }
-                }""");
+                  _bar() {
+                    return;
+                  }
+                }
+                """);
     }
 
     @Test
@@ -37,24 +40,23 @@ public class _02StmtTest {
                     if(false) return 41;
                     
                     if(true) return 42;
-                    else return 41; 
+                    else return 41;
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz() {
+                  _baz() {
                     if(false)
-                      return 41
+                      return 41;
                     if(true)
-                      return 42
+                      return 42;
                     else
-                      return 41
+                      return 41;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -71,26 +73,25 @@ public class _02StmtTest {
                       if(x > 100)
                         break;
                       y++;
-                    } 
+                    }
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz(x, y) {
+                  _baz(x, y) {
                     while(true) {
                       x++;
                       if(x > 10)
-                        continue
+                        continue;
                       if(x > 100)
-                        break
+                        break;
                       y++;
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -107,18 +108,17 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz() {
+                  _baz() {
                     outer:
                     for(;;)
                       for(;;)
-                        continue outer
+                        continue outer;
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -130,21 +130,20 @@ public class _02StmtTest {
                   void baz(int x) {
                     do {
                       x++;
-                    } while(x < 100); 
+                    } while(x < 100);
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz(x) {
+                  _baz(x) {
                     do {
                       x++;
-                    } while(x < 100)
+                    } while(x < 100);
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -154,20 +153,19 @@ public class _02StmtTest {
                 package js;
                 public class Test {
                   void baz() {
-                    for(int x = 0, y = 0; true; x++, y++) {} 
+                    for(int x = 0, y = 0; true; x++, y++) {}
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz() {
+                  _baz() {
                     for(let x = 0, y = 0; true; x++, y++) {
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -181,16 +179,15 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz(array) {
+                  _baz(array) {
                     for(let x of array) {
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -212,12 +209,10 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                
-                  baz(x, y) {
+                  _baz(x, y) {
                     switch(x) {
                       case 0:
                         y = 42;
@@ -228,7 +223,8 @@ public class _02StmtTest {
                         y = 40;
                     }
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -242,15 +238,14 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  foo() {
-                    throw new java$lang$Exception(7, 'xxx')
+                  _foo() {
+                    throw new java_lang_Exception(7, 'xxx');
                   }
-                }""");
+                }
+                """);
     }
 
     @Test
@@ -280,70 +275,56 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                    class js$Test extends Object {
-                      static E1 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                     
-                      static E2 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
-                      static E3 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
-                      static E4 = class extends java$lang$Exception {
-                        constructor($over, ...__args) {
-                          switch($over) {
-                            case 11:
-                              super(6, );
-                              break
-                          }
-                        }
-                      }
-                                    
+                    class js_Test {
                       constructor() {
-                        super();
                       }
-                      
-                      foo() {
+                      static E1 = class extends java_lang_Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
                       }
-                                    
-                      baz() {
+                      static E2 = class extends java_lang_Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      static E3 = class extends java_lang_Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      static E4 = class extends java_lang_Exception {
+                        constructor($over, ...__args) {
+                          if($over === 11) {
+                            super(6, );
+                          }
+                        }
+                      }
+                      _foo() {
+                      }
+                      _baz() {
                         try {
-                          this.foo();
+                          this._foo();
                         } catch(e) {
-                          if(e instanceof js$Test$E1 || e instanceof js$Test$E2) {
-                            let x = e;
-                          } else if(e instanceof js$Test$E3) {
-                            let ee = e
-                            let y = ee;
+                          if(e instanceof js_Test_E1 || e instanceof js_Test_E2) {
+                            const x = e;
+                          } else if(e instanceof js_Test_E3) {
+                            const ee = e
+                            const y = ee;
                           } else {
-                            throw e
+                            throw e;
                           }
                         } finally {
-                          let z = 1;
+                          const z = 1;
                         }
                       }
-                    }""");
+                    }
+                    """);
     }
 }

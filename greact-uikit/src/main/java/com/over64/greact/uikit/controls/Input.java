@@ -1,16 +1,22 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
+import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-@CSS.Require("input.css")
+@Require.CSS("input.css")
 public abstract class Input<T> extends Control<T> {
-    boolean required = true;
     int maxWidth = 0;
     int maxLength = 0;
     final String type;
 
-    protected Input(String type) {this.type = type;}
+    protected Input(String type) {
+        this.type = type;
+        if(optional || type.equals("checkbox")) {
+            this.ready = true;
+            this.onReadyChanged.run();
+        }
+    }
     protected abstract T parseValueOpt(input src);
     protected String valueToHtmlValue() {
         return  value.toString();
@@ -20,11 +26,6 @@ public abstract class Input<T> extends Control<T> {
 
     @Override public div mount() {
         var self = this;
-//        if(self.value == null && self._optional) {
-//            self.ready = true; // FIXME: наверное, проверка на _optional должна быть не здесь
-//            self.onReadyChanged.run();
-//        }
-
         return new div() {{
 //            style.alignItems = "center";
             //style.padding = "0px 2px";
@@ -38,11 +39,12 @@ public abstract class Input<T> extends Control<T> {
 
 //                style.height = "100%";
 
-                new span(_label) {{
-//                    style.display = "inline-flex";
-//                    style.alignItems = "center";
-//                    style.whiteSpace = "nowrap";
-                    //style.margin = "0px 5px 0px 0px";
+                style.display = "flex";
+                style.alignItems = "center";
+
+                new span(label) {{
+                    style.whiteSpace = "nowrap";
+                    style.margin = "0px 5px 0px 0px";
                 }};
                 new input() {{
                     //className = "form-check-input";
@@ -54,8 +56,8 @@ public abstract class Input<T> extends Control<T> {
                     // FIXME: вот это вот - костыль для CheckBox
                     checked = (Boolean) self.value;
                     onchange = ev -> {
-                        self.value = parseValueOpt(ev.target);
-                        self.ready = self._optional || self.value != null;
+                        self.value = parseValueOpt((input) ev.target);
+                        self.ready = self.optional || self.value != null;
                         self.onReadyChanged.run();
                     };
                 }};

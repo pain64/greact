@@ -1,5 +1,7 @@
 package com.over64.greact;
 
+import com.over64.greact.dom.HTMLNativeElements.Component0;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Loader {
-    public static Map<String, Supplier<String>> bundle(Class<?> entry) throws IOException {
+    public static Map<String, Supplier<String>> bundle(Class<? extends Component0<?>> entry) throws IOException {
         var bundleFile = Objects.requireNonNull(Loader.class.getResourceAsStream("/bundle/.bundle"));
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
@@ -32,8 +34,8 @@ public class Loader {
             .collect(Collectors.joining("\n", "", "\n"));
 
         var mount = "<script type=\"text/javascript\">\n" +
-            "com$over64$greact$dom$GReact.mmount(document.body, new " +
-            entry.getName().replace(".", "$") + ", [])" +
+            "com_over64_greact_dom_GReact._mmount(document.body, new " +
+            entry.getName().replace(".", "_") + ", [])" +
             "</script>";
 
         var reloadWS = """
@@ -51,21 +53,7 @@ public class Loader {
               <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
                 %s
-                <style>
-                  html {
-                    box-sizing: border-box;
-                  }
-                  *, *:before, *:after {
-                    box-sizing: inherit;
-                  }
-                  body {
-                    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-                    font-weight:400;
-                    color: #403d3d;
-                  }
-                </style>
               </head>
               <body></body>
               %s

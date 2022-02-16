@@ -8,15 +8,15 @@ import java.util.function.Consumer;
 public class Globals {
     public static Window window = JSExpression.of("window");
     public static Document document = JSExpression.of("document");
-    public static HtmlElement gReactElement;
+    public static HTMLElement gReactElement;
 
-    public static <T extends HtmlElement> void gReactMount(T dest, HTMLNativeElements.Component0<T> element,
+    public static <T extends HTMLElement> void gReactMount(T dest, HTMLNativeElements.Component0<T> element,
                                                            Object... args) {
         gReactElement = dest;
         JSExpression.of("element instanceof Function ? element(...args) : element.mount(...args)");
     }
 
-    public static <T extends HtmlElement> T gReactReturn(Fragment.Renderer renderer) {
+    public static <T extends HTMLElement> T gReactReturn(Fragment.Renderer renderer) {
         renderer.render();
         return null;
     }
@@ -26,10 +26,9 @@ public class Globals {
     public static java.lang.Runnable rpcAfterSuccess = () -> {};
     public static Consumer<String> rpcAfterError = err -> {};
 
-    @async
-    public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
+    @async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         // FIXME: migrate to java version for try/catch/finally
-        JSExpression.of("""
+        JSExpression.ofAsync("""
             try {
               this.rpcBeforeSend();
               var resp = await fetch(url, {

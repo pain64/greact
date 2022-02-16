@@ -14,20 +14,14 @@ public class _09RecordDeclaration {
                     record Test(int x, int y, int z) {}
                     """,
                 """
-                    class js$Test extends Object {
+                    class js_Test {
                       constructor(x, y, z) {
-                        let __init__ = () => {
-                          this.x = 0
-                          this.y = 0
-                          this.z = 0
-                        };
-                        super();
-                        __init__();
                         this.x = x;
                         this.y = y;
                         this.z = z;
                       }
-                    }""");
+                    }
+                    """);
     }
 
     @Test void accessProps() throws IOException {
@@ -45,31 +39,22 @@ public class _09RecordDeclaration {
                 }
                 """,
             """
-                class js$Test extends Object {
-                  static A = class extends Object {
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
                     constructor(x, y, z) {
-                      let __init__ = () => {
-                        this.x = 0
-                        this.y = 0
-                        this.z = 0
-                      };
-                      super();
-                      __init__();
                       this.x = x;
                       this.y = y;
                       this.z = z;
                     }
                   }
-                                
-                  constructor() {
-                    super();
+                  _some() {
+                    const a = new js_Test.A(1, 2, 3);
+                    const x = a.x;
+                    const y = a.y;
                   }
-                                
-                  some() {
-                    let a = new js$Test.A(1, 2, 3);
-                    let x = a.x;
-                    let y = a.y;
-                  }
-                }""");
+                }
+                """);
     }
 }

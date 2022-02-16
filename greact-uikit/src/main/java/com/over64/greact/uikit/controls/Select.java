@@ -1,45 +1,33 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
-import java.util.function.Function;
-
-@CSS.Require("select.css")
+@Require.CSS("select.css")
 public class Select<T> extends Control<T> {
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
     }
 
-    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
-    //  inner классы и record components
-    public static <A> MemberRef<A, A> identity() {
-        return JSExpression.of("{value: (v) => v}");
-    }
-
-    public static <A> MemberRef<A, String> identityToString() {
-        return JSExpression.of("{value: (v) => v.toString()}");
-    }
-
     Indexed<T>[] variants;
     int valueIdx;
 
+
     public Select(T[] options) {
-        constructorShared(options, identity(), identityToString());
+        this(options,
+            JSExpression.of("{_value: (v) => v}"),
+            JSExpression.of("{_value: (v) => v.toString()}"));
     }
 
+    // FIXME: Использовать здесь MemberRef нет необходимости, однако, пока не транспилятся
+    //  inner классы и record components
     public Select(T[] options, MemberRef<T, String> captions) {
-        constructorShared(options, identity(), captions);
+        this(options, JSExpression.of("{_value: (v) => v}"), captions);
     }
 
     public <V> Select(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
-        constructorShared(options, values, captions);
-    }
-
-    /* FIXME: починить вызов конструктора из конструктора */
-    <V> void constructorShared(V[] options, MemberRef<V, T> values, MemberRef<V, String> captions) {
         this.variants = new Indexed[options.length];
         for (var i = 0; i < options.length; i++)
             this.variants[i] = new Indexed<>(i, values.value(options[i]), captions.value(options[i]));
@@ -52,11 +40,11 @@ public class Select<T> extends Control<T> {
     }
 
     public Select<T> label(String lbl) {
-        this._label = lbl;
+        this.label = lbl;
         return this;
     }
 
-    @Override public Control child() {return null;}
+    @Override public Control<?> child() { return null; }
 
     @Override
     public div mount() {
@@ -73,7 +61,7 @@ public class Select<T> extends Control<T> {
             new label() {{
                 className = "select";
 
-                new span(_label) {{
+                new span(label) {{
                     className = "select-span";
                 }};
 
@@ -97,7 +85,7 @@ public class Select<T> extends Control<T> {
     }
 
     public Select<T> slots(int n) {
-        _slots = n;
+        slots = n;
         return this;
     }
 }

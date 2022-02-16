@@ -1,6 +1,6 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.ClassRef;
 import com.greact.model.ClassRef.Reflexive;
 import com.greact.model.JSExpression;
@@ -12,7 +12,7 @@ import com.over64.greact.dom.HTMLNativeElements.slot;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-@CSS.Require("grid.css")
+@Require.CSS("grid.css")
 public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
     static <A> boolean strictEqual(A lhs, A rhs) {return JSExpression.of("lhs === rhs");}
@@ -51,8 +51,6 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     }
 
     @SafeVarargs public final Adjuster<T> adjustMany(MemberRef<T, ?>... refs) {
-        // FIXME: varargs
-        refs = JSExpression.of("arguments");
         Column<T, ?>[] dest = new Column[]{};
         for (var ref : refs)
             Array.push(dest, adjust(ref));
@@ -79,7 +77,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     static <T> void setEditorValueFromRowValue(Column<T, ?> col, T rowData) {
         @SuppressWarnings("unchecked")
         var _col = (Column<T, Object>) col;
-        _col._editor.value = JSExpression.of("this.fetchValue(rowData, col.memberNames)");
+        _col.editor.value = JSExpression.of("this._fetchValue(rowData, col.memberNames)");
     }
 
     static <T> void setValue(T rowData, String[] memberNames, Object value) {
@@ -114,7 +112,6 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
         var conf = (GridConfig2<T>) this;
 
         return new div() {{
-
             className = "grid-main";
 
             new GridFilter<>(data, conf, rowData ->

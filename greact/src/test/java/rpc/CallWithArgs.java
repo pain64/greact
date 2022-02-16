@@ -51,7 +51,7 @@ public class CallWithArgs {
                         @async
                         void simple() {
                             int y = 1;
-                            com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", new Object[]{x, y});
+                            com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", x, y);
                         }
                     }"""));
 

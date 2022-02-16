@@ -1,43 +1,39 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
 import com.greact.model.JSExpression;
+import com.greact.model.Require;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.controls.Control;
 
-@CSS.Require("search_box.css")
+@Require.CSS("search_box.css")
 public class SearchBox implements Component0<div> {
+    public String controlsClassName = null;
     Control[] controls;
     Control[] controlsWithChildren;
     boolean canSearch = false;
     boolean doSearch = false;
     AsyncSupplier<Component0<div>> loader;
     Component0<div> loaded;
-    public Object dependsOn;
 
-    @FunctionalInterface
-    public interface AsyncSupplier<T> {
-        @async
-        T load();
+    @FunctionalInterface public interface AsyncSupplier<T> {
+        @async T load();
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc1<A1, R> {
-        @async
-        R load(A1 a1);
+    @FunctionalInterface public interface AsyncFunc1<A1, R> {
+        @async R load(A1 a1);
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc2<A1, A2, R> {
-        @async
-        R load(A1 a1, A2 a2);
+    @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
+        @async R load(A1 a1, A2 a2);
     }
 
-    @FunctionalInterface
-    public interface AsyncFunc3<A1, A2, A3, R> {
-        @async
-        R load(A1 a1, A2 a2, A3 a3);
+    @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
+        @async R load(A1 a1, A2 a2, A3 a3);
+    }
+
+    @FunctionalInterface public interface AsyncFunc4<A1, A2, A3, A4, R> {
+        @async R load(A1 a1, A2 a2, A3 a3, A4 a4);
     }
 
     <V> void push(V[] array, V value) {
@@ -68,11 +64,10 @@ public class SearchBox implements Component0<div> {
     void onReadyChanged() {
         checkCanSearch();
         calcChildren();
-        JSExpression.of("this.performChangedEffects()");
+        JSExpression.of("this._performChangedEffects()");
     }
 
-    @async
-    void performChangedEffects() {
+    @async void performChangedEffects() {
         if (canSearch)
             loaded = loader.load();
 
@@ -88,19 +83,22 @@ public class SearchBox implements Component0<div> {
     }
 
     public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, Component0<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
     public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, Component<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
     public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, Component0<div>> view) {
-        JSExpression.of("this.nativeInit(...arguments)");
+        JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    @Override
-    public div mount() {
+    public <U1, U2, U3, U4> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, Control<U4> in4, AsyncFunc4<U1, U2, U3, U4, Component0<div>> view) {
+        JSExpression.of("this._nativeInit(...arguments)");
+    }
+
+    @Override @async public div mount() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();
@@ -109,13 +107,14 @@ public class SearchBox implements Component0<div> {
 
         return new div() {{
             new div() {{
-                new div() {{
-                    className = "search-box";
+                className = "search-box";
+                if(controlsClassName != null)
+                    className += " " + controlsClassName;
 
-                    for (var control : controlsWithChildren)
-                        new slot<div>(control);
+                for (var control : controlsWithChildren)
+                    new slot<div>(control);
 
-                    /* FIXME: make autosearch */
+                /* FIXME: make autosearch */
 
 //                new button("искать") {{
 //                    style.margin = "2px";
@@ -125,13 +124,12 @@ public class SearchBox implements Component0<div> {
 //                        effect(doSearch = true);
 //                    };
 //                }};
-                }};
-
-                if (canSearch) {
-                    // doSearch = false;
-                    new slot<>(loaded);
-                }
             }};
+
+            if (canSearch) {
+                // doSearch = false;
+                new slot<>(loaded);
+            }
         }};
     }
 }

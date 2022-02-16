@@ -17,16 +17,12 @@ public class _11MemberRef {
                     public record A(long age){}
                     """,
                 """
-                    class js$A extends Object {
+                    class js_A {
                       constructor(age) {
-                        let __init__ = () => {
-                          this.age = 0
-                        };
-                        super();
-                        __init__();
                         this.age = age;
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
@@ -36,16 +32,16 @@ public class _11MemberRef {
                       MemberRef<A, Long> ref3 = a -> a.age();
                     }""",
                 """
-                    class js$B extends Object {
+                    class js_B {
                       constructor() {
-                        let __init__ = () => {
-                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'}
-                          this.ref3 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'}
+                        const __init__ = () => {
+                          this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
+                          this.ref3 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
                         };
-                        super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
     }
 
     @Test void memberRefForClass() throws IOException {
@@ -56,30 +52,30 @@ public class _11MemberRef {
                     public class A { long age; }
                     """,
                 """
-                    class js$A extends Object {
+                    class js_A {
                       constructor() {
-                        let __init__ = () => {
-                          this.age = 0
+                        const __init__ = () => {
+                          this.age = 0;
                         };
-                        super();
                         __init__();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
                     public class B { A a; }
                     """,
                 """
-                    class js$B extends Object {
+                    class js_B {
                       constructor() {
-                        let __init__ = () => {
-                          this.a = null
+                        const __init__ = () => {
+                          this.a = null;
                         };
-                        super();
                         __init__();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileAssert.CompileCase("js.C",
                 """
                     package js;
@@ -89,15 +85,15 @@ public class _11MemberRef {
                       MemberRef<B, Long> ref2 = b -> b.a.age;
                     }""",
                 """
-                    class js$C extends Object {
+                    class js_C {
                       constructor() {
-                        let __init__ = () => {
-                          this.ref1 = {memberNames: () => ['age'], value: (v) => v.age, className: () => 'java.lang.Long'}
-                          this.ref2 = {memberNames: () => ['a', 'age'], value: (v) => v.a.age, className: () => 'java.lang.Long'}
+                        const __init__ = () => {
+                          this.ref1 = {_memberNames: () => ['age'], _value: (v) => v.age, _className: () => 'java.lang.Long'};
+                          this.ref2 = {_memberNames: () => ['a', 'age'], _value: (v) => v.a.age, _className: () => 'java.lang.Long'};
                         };
-                        super();
                         __init__();
                       }
-                    }"""));
+                    }
+                    """));
     }
 }

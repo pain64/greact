@@ -8,22 +8,20 @@ import static util.CompileAssert.*;
 
 public class _00DeclarationsTest {
 
-    @Test
-    void klass() throws IOException {
+    @Test void klass() throws IOException {
         assertCompiled(
             """
                 package js;
                 public class Test {}""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
-                  }              
-                }""");
+                  }
+                }
+                """);
     }
 
-    @Test
-    void klassExtendsGenericType() throws IOException {
+    @Test void klassExtendsGenericType() throws IOException {
         assertCompiledMany(
             new CompileCase("js.A",
                 """
@@ -31,27 +29,27 @@ public class _00DeclarationsTest {
                     public class A<T> {
                     }""",
                 """
-                    class js$A extends Object {
+                    class js_A {
                       constructor() {
-                        super();
                       }
-                    }"""),
+                    }
+                    """),
             new CompileCase("js.B",
                 """
                     package js;
                     public class B extends A<String> {
                     }""",
                 """
-                    class js$B extends js$A {
+                    class js_B extends js_A {
                       constructor() {
                         super();
                       }
-                    }""")
+                    }
+                    """)
         );
     }
 
-    @Test
-    void method() throws IOException {
+    @Test void method() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -61,24 +59,20 @@ public class _00DeclarationsTest {
                   private void foobar() {}
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                    
-                  static bar() {
+                  static _bar() {
                   }
-                  
-                  foo(x, y) {
+                  _foo(x, y) {
                   }
-                  
-                  foobar() {
+                  _foobar() {
                   }
-                }""");
+                }
+                """);
     }
 
-    @Test
-    void abstractMethod() throws IOException {
+    @Test void abstractMethod() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -86,57 +80,45 @@ public class _00DeclarationsTest {
                   abstract void bar();
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                                
-                                
-                }""");
+                }
+                """);
     }
 
-    @Test
-    void overloadedMethod() throws IOException {
+    @Test void overloadedMethod() throws IOException {
         assertCompiled(
             """
-               package js;
-               public class Test {
-                 void baz() {}
-                 void foo() {}
-                 void bar() {}
-                 void bar(int x) {}
-                 void bar(long x) {}
-               }""",
+                package js;
+                public class Test {
+                  void baz() {}
+                  void foo() {}
+                  void bar() {}
+                  void bar(int x) {}
+                  void bar(long x) {}
+                }""",
             """
-                    class js$Test extends Object {
-                      constructor() {
-                        super();
-                      }
-                                    
-                      baz() {
-                      }
-                                    
-                      foo() {
-                      }
-                                    
-                      bar($over, ...__args) {
-                        switch($over) {
-                          case 0:
-                            break
-                          case 1:
-                            var [x] = __args;
-                            break
-                          case 2:
-                            var [x] = __args;
-                            break
-                        }
-                      }
-                    }""");
-
+                class js_Test {
+                  constructor() {
+                  }
+                  _baz() {
+                  }
+                  _foo() {
+                  }
+                  _bar($over, ...__args) {
+                    if($over === 0) {
+                    } else if($over === 1) {
+                      const [x] = __args;
+                    } else if($over === 2) {
+                      const [x] = __args;
+                    }
+                  }
+                }
+                """);
     }
 
-    @Test
-    void localVar() throws IOException {
+    @Test void localVar() throws IOException {
         assertCompiled(
             """
                 package js;
@@ -146,46 +128,13 @@ public class _00DeclarationsTest {
                   }
                 }""",
             """
-                class js$Test extends Object {
+                class js_Test {
                   constructor() {
-                    super();
                   }
-                  
-                  baz() {
-                    let x = null;
+                  _baz() {
+                    const x = null;
                   }
-                }""");
+                }
+                """);
     }
-
-//    @Test
-//    void innerClasses() throws IOException {
-//        // FIXME: expected 1 java input and 2 js output files
-//        // TODO: move this to ordering test
-//        assertCompiledMany(
-//            new CompileCase(
-//                "js.Test",
-//                """
-//                    package js;
-//                    public class Test {
-//                      void bar() {};
-//                    }""",
-//                """
-//                    class js$Test {
-//                      bar() {
-//                      }
-//                    }"""),
-//            new CompileCase(
-//                "js.Test2",
-//                """
-//                    package js;
-//                    public class Test2 {
-//                      void baz() {};
-//                    }""",
-//                """
-//                    class js$Test2 {
-//                      baz() {
-//                      }
-//                    }""")
-//        );
-//    }
 }

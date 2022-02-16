@@ -39,9 +39,9 @@ public class EffectCallFinder {
         JCTree.JCMethodInvocation invocation,
         Set<Symbol.VarSymbol> effected) {}
 
-    public Map<JCTree.JCClassDecl, List<Effect>> find(JCTree.JCCompilationUnit cu) {
+    public LinkedHashMap<JCTree.JCClassDecl, List<Effect>> find(JCTree.JCCompilationUnit cu) {
 
-        var result = new HashMap<JCTree.JCClassDecl, List<Effect>>();
+        var result = new LinkedHashMap<JCTree.JCClassDecl, List<Effect>>();
 
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl currentClass;

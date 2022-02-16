@@ -1,11 +1,10 @@
 package com.over64.greact.uikit;
 
-import com.greact.model.CSS;
-import com.over64.greact.dom.HTMLNativeElements;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLElement;
 
-@CSS.Require("modal.css") public class Modal<A extends HtmlElement, B extends HtmlElement> implements Component0<div> {
+@Require.CSS("modal.css") public class Modal<A extends HTMLElement, B extends HTMLElement> implements Component0<div> {
     final Component0<A> opener;
     final Component0<B> content;
     public String title = "";

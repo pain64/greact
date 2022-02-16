@@ -2,16 +2,16 @@ package com.over64.greact.uikit;
 
 import com.greact.model.async;
 import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.dom.HtmlElement;
+import com.over64.greact.dom.HTMLElement;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-@CSS.Require("grid.css")
-class GridTable<T> implements Component0<table> {
+@Require.CSS("grid.css") class GridTable<T> implements Component0<table> {
     static class RowData<T> {
         final T data;
         boolean expanded = false;
@@ -26,7 +26,7 @@ class GridTable<T> implements Component0<table> {
     boolean addNewRowMode = false;
     RowData<T>[] rows;
     RowData<T> selectedRow = null;
-    HtmlElement theTable;
+    HTMLElement theTable;
     Integer[] columnSizes;
 
     void keepSizes() {
@@ -39,7 +39,7 @@ class GridTable<T> implements Component0<table> {
 
     GridTable(T[] data, GridConfig2<T> conf,
               Consumer<T> onRowSelect, Runnable onFilterEnableDisable) {
-        this.rows = Array.map(data, d -> new RowData<>(d)); /* FIXME: support method reference to new */
+        this.rows = Array.map(data, RowData::new);
         this.conf = conf;
         this.onRowSelect = onRowSelect;
         this.onFilterEnableDisable = onFilterEnableDisable;
@@ -65,7 +65,7 @@ class GridTable<T> implements Component0<table> {
                         new td() {{
                             if (colWithSize.b != 0)
                                 style.width = colWithSize.b + "px";
-                            new span(colWithSize.a._header);
+                            new span(colWithSize.a.header);
                         }};
                     new td() {{
                         className = "grid-table-td";
@@ -152,11 +152,11 @@ class GridTable<T> implements Component0<table> {
                             for (var col : conf.columns)
                                 if (!col.hidden) {
                                     var colValue = Grid.fetchValue(row.data, col.memberNames);
-                                    var nativeEl = GReact.mmountAwaitView(col._view, new Object[]{colValue, row.data});
-                                    var bgColor = col.backgroundColor;
-                                    if (bgColor != null)
-                                        nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);
-                                    this.appendChild(nativeEl);
+                                    GReact.mmountWith(this, col.view, nativeEl -> {
+                                        var bgColor = col.backgroundColor;
+                                        if (bgColor != null)
+                                            nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);
+                                    }, colValue, row.data);
                                 }
 
                             new td() {{ /* toolbox */
@@ -172,8 +172,10 @@ class GridTable<T> implements Component0<table> {
                                                 """;
                                             onclick = ev -> {
                                                 ev.stopPropagation();
-                                                conf.onRowDelete.handle(row.data);
-                                                effect(rows = Array.filter(rows, r -> r != row));
+                                                if(JSExpression.of("window.confirm('Действительно удалить?')")) {
+                                                    conf.onRowDelete.handle(row.data);
+                                                    effect(rows = Array.filter(rows, r -> r != row));
+                                                }
                                             };
                                         }};
                                     if (conf.onRowChange != null)

@@ -1,12 +1,12 @@
 package com.over64.greact.uikit.controls;
 
-import com.greact.model.CSS;
+import com.greact.model.Require;
 import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.uikit.Dates;
 
 import java.util.Date;
 
-@CSS.Require("date_input.css")
+@Require.CSS("date_input.css")
 public class DateInput extends Control<Date> {
     @Override public Control child() {return null;}
 
@@ -17,7 +17,7 @@ public class DateInput extends Control<Date> {
             new label() {{
                 className = "date-input";
 
-                new span(_label) {{
+                new span(label) {{
                     className = "date-input-span";
                 }};
                 new input() {{
@@ -27,11 +27,11 @@ public class DateInput extends Control<Date> {
 
 
                     onchange = ev -> {
-                        value = ev.target.value;
-                        ready = _optional || value != null;
+                        value = ((input) ev.target).value;
+                        ready = optional || value != null;
                         onReadyChanged.run();
 
-                        self.value = Dates.fromUnixTime(ev.target.valueAsNumber);
+                        self.value = Dates.fromUnixTime(((input) ev.target).valueAsNumber);
                     };
                 }};
             }};

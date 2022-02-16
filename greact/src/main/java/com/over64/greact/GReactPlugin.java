@@ -67,12 +67,14 @@ public class GReactPlugin implements Plugin {
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
-                    System.out.println("before init: " + System.currentTimeMillis());
-                    System.out.println("compile for:  " + e.getCompilationUnit().getSourceFile().getName());
+                    var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    var t2 = System.currentTimeMillis();
                     new RPCPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    var t3 = System.currentTimeMillis();
                     new MarkupPlugin2(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
-                    System.out.println("after init:  " + System.currentTimeMillis());
+                    var t4 = System.currentTimeMillis();
+
 
                     var env = JavacProcessingEnvironment.instance(context);
                     var cu = (JCTree.JCCompilationUnit) e.getCompilationUnit();
@@ -88,9 +90,14 @@ public class GReactPlugin implements Plugin {
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
-                    // ((JCTree.JCMethodDecl) ((JCTree.JCClassDecl) cu.defs.get(5)).defs.get(1)).body.stats
-                    var zz = 1;
-                    // new class file
+                    var t5 = System.currentTimeMillis();
+
+                    System.out.println("for " + e.getCompilationUnit().getSourceFile() +
+                        "\ncode_view_plugin: " + (t2 - t1) + "ms" +
+                        "\nrpc_plugin      : " + (t3 - t2) + "ms" +
+                        "\nmarkup_plugin   : " + (t4 - t3) + "ms" +
+                        "\npatch_file      : " + (t5 - t4) + "ms"
+                    );
                 }
             }
         });
