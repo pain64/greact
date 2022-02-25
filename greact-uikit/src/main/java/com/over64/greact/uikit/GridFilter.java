@@ -55,17 +55,7 @@ class GridFilter<T> implements Component0<div> {
                         stringSplit(filterValue, " "),
                         s -> stringLength(s) != 0);
 
-                T[] filtered = filterWords.length != 0 ?
-                        Array.filter(data, v -> {
-                            for (var col : conf.columns) {
-                                var strVal = Grid.fetchValue(v, col.memberNames);
-                                if (strVal == null) strVal = "";
-                                strVal += ""; // FIXME: cast to string!!!
-                                for (var fVal : filterWords)
-                                    if (JSExpression.<Boolean>of("strVal.indexOf(fVal) != -1")) return true;
-                            }
-                            return false;
-                        }) : data;
+                T[] filtered = filterWords.length != 0 ? eval(data, parse(lex(filterValue), 0).token) : data;
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
@@ -143,11 +133,9 @@ class GridFilter<T> implements Component0<div> {
         }};
     }
 
-    public static boolean errorStatus = false;
-
     public static void printError(String s, int i) {
-        errorStatus = true;
         JSExpression.of("console.log(s)");
+        throw new ArithmeticException();
     }
 
     public static class Lexeme {
@@ -219,8 +207,87 @@ class GridFilter<T> implements Component0<div> {
             Array.push(res, new Lexeme("SYMBOL", acc, expr.length() - 1));
         }
 
-        errorStatus = false;
         return res;
     }
 
+    public static class Token {
+        String kind;
+        String expr;
+        Token token;
+        boolean valueForExpr;
+
+        Token leftToken;
+        Token rightToken;
+
+        public Token() {}
+
+        public Token(String kind, String expr) {
+            this.kind = kind;
+            this.expr = expr;
+        }
+
+        public Token(String kind, Token token) {
+            this.kind = kind;
+            this.token = token;
+        }
+
+        public Token(String kind, Token leftToken, Token rightToken) {
+            this.kind = kind;
+            this.leftToken = leftToken;
+            this.rightToken = rightToken;
+        }
+    }
+
+    public static class Tree {
+        int poz;
+        Token token;
+
+        public Tree(int poz, Token token) {
+            this.poz = poz;
+            this.token = token;
+        }
+    }
+
+    public static Tree parse(Lexeme[] tokens, int i) {
+        if(i >= tokens.length) throw new ArithmeticException();
+        var current = tokens[i];
+
+        var left = new Token();
+        if(tokens[i].lexeme.equals("B_OPEN")) {
+            var temp = new Tree(0, new Token());
+            JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
+            var nextI = temp.poz;
+            var token = temp.token;
+            temp = new Tree(0, new Token());
+            if(!tokens[nextI].lexeme.equals("B_CLOSE")) throw new ArithmeticException();
+            left = new Token("parens", token);
+            i = nextI + 1;
+        } else if(!current.lexeme.equals("B_CLOSE") &&
+                !current.lexeme.equals("OP_AND")  &&
+                !current.lexeme.equals("B_OR")) {
+            left = new Token ("term", current.value);
+            i++;
+        }
+
+        if(i >= tokens.length) return new Tree(i, left);
+
+        var operator = tokens[i];
+        if(!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR")) return new Tree(i, left);
+
+        var temp = new Tree(0, new Token());
+        JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
+        var nextI = temp.poz;
+        var right = temp.token;
+        temp = new Tree(0, new Token());
+        return new Tree(nextI, new Token(operator.lexeme, left, right));
+    }
+
+    public T[] eval(T[] data, Token expr) {
+        JSExpression.of("console.log(expr)");
+        return data;
+    }
+
+    // Приоритет операций
+    // Обработка ошибок
+    // Реализация поиска
 }

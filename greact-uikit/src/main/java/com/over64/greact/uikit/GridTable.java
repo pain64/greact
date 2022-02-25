@@ -1,7 +1,6 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.async;
-import com.greact.model.CSS;
 import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;

@@ -467,6 +467,22 @@ public class MainPage implements Component0<div> {
             }};
 
             new div() {{
+                var data = Array.of(
+                        new Data(1, "One"),
+                        new Data(2, "Tw%o"),
+                        new Data(3, "T\\\\hree"),
+                        new Data(451, "Dog cat"),
+                        new Data(79, "Bell&kar"),
+                        new Data(91, "(sam)")
+                );
+
+                new Grid<>(data) {{
+                    adjust(Data::x).name("the X");
+                    onRowChange = row -> JSExpression.of("console.log(row)");
+                }};
+            }};
+
+            new div() {{
                 className = "footer";
                 new h3("Создано на Greact") {{
                     className = "footer-text";
