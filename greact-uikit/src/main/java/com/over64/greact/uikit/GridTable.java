@@ -90,7 +90,7 @@ import java.util.function.Consumer;
                             }}, () -> new div() {{
                                 new h3("Помощь в использовании фильтра") {{style.color = "#000";}};
                                 new h5("1. Слово матчим полностью: если ищем слово abc, то ищем полное совпадение - не abcd") {{style.textAlign="left";}};
-                                new h5("2. Работаем с like: abc% или %abc или %abc% или abc%abc") {{style.textAlign="left";}};
+                                new h5("2. Работаем с like: abc% или %abc или %abc%") {{style.textAlign="left";}};
                                 new h5("3. Поддерживаем приоритет через скобки: a & (b | (c | d))") {{style.textAlign="left";}};
                                 new h5("4. Операторы: & и |") {{style.textAlign="left";}};
                                 new h5("5. Экранирование спецсимволов: \\\\(, \\\\), \\\\&, \\\\|, \\\\%, \\\\\\\\  и \\\\пробел") {{style.textAlign="left";}};

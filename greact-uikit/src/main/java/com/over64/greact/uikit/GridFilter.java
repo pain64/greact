@@ -40,6 +40,7 @@ class GridFilter<T> implements Component0<div> {
     String[] stringSplit(String str, String delim) {
         return JSExpression.of("str.split(delim)");
     }
+
     int stringLength(String str) {
         return JSExpression.of("str.length");
     }
@@ -48,14 +49,16 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
-    @Override public div mount() {
+    @Override
+    public div mount() {
         return new div() {{
             new div() {{
                 var filterWords = Array.filter(
                         stringSplit(filterValue, " "),
                         s -> stringLength(s) != 0);
 
-                T[] filtered = filterWords.length != 0 ? eval(data, parse(lex(filterValue), 0).token) : data;
+                T[] filteredT = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
+                T[] filtered = isError ? data : filteredT;
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
@@ -96,15 +99,15 @@ class GridFilter<T> implements Component0<div> {
                             if (filtered.length > pageSizes[0]) {
                                 new div() {{
                                     innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                        """;
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                            """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
                                 }};
                                 new div() {{
                                     innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                        """;
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                            """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
                                 }};
@@ -133,9 +136,53 @@ class GridFilter<T> implements Component0<div> {
         }};
     }
 
+    public static boolean isError = false;
+    public static int errorPoz = -1;
+    public static String errorMessage;
+
+    private Lexeme[] addPriority(Lexeme[] lex) {
+        var ind = 0;
+        while (ind != -1) {
+            ind = -1;
+            for (int i = 2; i < lex.length; i++) {
+                if (lex[i - 2].lexeme.equals("SYMBOL") && lex[i - 1].lexeme.equals("OP_AND") && lex[i].lexeme.equals("SYMBOL")) {
+                    if (i - 3 < 0 || i + 1 == lex.length) {
+                        ind = i;
+                        break;
+                    } else if (!lex[i - 3].lexeme.equals("B_OPEN") || !lex[i + 1].lexeme.equals("B_CLOSE")) {
+                        ind = i;
+                        break;
+                    }
+                }
+            }
+            if (ind != -1) {
+                var temp = new Lexeme[lex.length + 2];
+
+                for (int i = 0; i <= ind - 3; i++) {
+                    temp[i] = lex[i];
+                }
+
+                temp[ind - 2] = new Lexeme("B_OPEN", "(", ind);
+                temp[ind - 1] = lex[ind - 2];
+                temp[ind] = lex[ind - 1];
+                temp[ind + 1] = lex[ind];
+                temp[ind + 2] = new Lexeme("B_CLOSE", ")", ind);
+
+                for (int i = ind + 3; i < lex.length + 2; i++) {
+                    temp[i] = lex[i - 2];
+                }
+
+                lex = temp;
+            }
+        }
+        JSExpression.of("console.log(lex)");
+        return lex;
+    }
+
     public static void printError(String s, int i) {
-        JSExpression.of("console.log(s)");
-        throw new ArithmeticException();
+        isError = true;
+        errorPoz = i;
+        errorMessage = s;
     }
 
     public static class Lexeme {
@@ -212,14 +259,15 @@ class GridFilter<T> implements Component0<div> {
 
     public static class Token {
         String kind;
+
         String expr;
         Token token;
-        boolean valueForExpr;
 
         Token leftToken;
         Token rightToken;
 
-        public Token() {}
+        public Token() {
+        }
 
         public Token(String kind, String expr) {
             this.kind = kind;
@@ -249,31 +297,31 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public static Tree parse(Lexeme[] tokens, int i) {
-        if(i >= tokens.length) throw new ArithmeticException();
+        if (i >= tokens.length) throw new ArithmeticException();
         var current = tokens[i];
 
         var left = new Token();
-        if(tokens[i].lexeme.equals("B_OPEN")) {
+        if (tokens[i].lexeme.equals("B_OPEN")) {
             var temp = new Tree(0, new Token());
             JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
             var nextI = temp.poz;
             var token = temp.token;
             temp = new Tree(0, new Token());
-            if(!tokens[nextI].lexeme.equals("B_CLOSE")) throw new ArithmeticException();
+            if (!tokens[nextI].lexeme.equals("B_CLOSE")) throw new ArithmeticException();
             left = new Token("parens", token);
             i = nextI + 1;
-        } else if(!current.lexeme.equals("B_CLOSE") &&
-                !current.lexeme.equals("OP_AND")  &&
+        } else if (!current.lexeme.equals("B_CLOSE") &&
+                !current.lexeme.equals("OP_AND") &&
                 !current.lexeme.equals("B_OR")) {
-            left = new Token ("term", current.value);
+            left = new Token("term", current.value);
             i++;
         }
 
-        if(i >= tokens.length) return new Tree(i, left);
+        if (i >= tokens.length) return new Tree(i, left);
 
         var operator = tokens[i];
-        if(!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR")) return new Tree(i, left);
-
+        if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR")) return new Tree(i, left);
+        // Для И и для ИЛИ мы делаем одинаковые вещи
         var temp = new Tree(0, new Token());
         JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
         var nextI = temp.poz;
@@ -283,11 +331,42 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public T[] eval(T[] data, Token expr) {
-        JSExpression.of("console.log(expr)");
-        return data;
+        isError = false;
+        return Array.filter(data, v -> evalStatus(v, expr));
     }
 
-    // Приоритет операций
-    // Обработка ошибок
-    // Реализация поиска
+    private boolean evalStatus(T strVal, Token expr) {
+        switch (expr.kind) {
+            case "OP_AND":
+                var op1 = evalStatus(strVal, expr.leftToken);
+                var op2 = evalStatus(strVal, expr.rightToken);
+                return op1 && op2;
+            case "OP_OR":
+                var opOr1 = evalStatus(strVal, expr.leftToken);
+                var opOr2 = evalStatus(strVal, expr.rightToken);
+                return opOr1 || opOr2;
+            case "parens":
+                return evalStatus(strVal, expr.token);
+            case "term":
+                var flag = false;
+                for (var col : conf.columns) {
+                    var str = Grid.fetchValue(strVal, col.memberNames);
+                    if (str == null) str = "";
+                    str += ""; // FIXME: cast to string!!!
+
+                    if (JSExpression.<Boolean>of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
+                        if (JSExpression.<Boolean>of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
+                            flag = true;
+                    } else if (JSExpression.<Boolean>of("expr.expr.startsWith('.*')")) {
+                        if (JSExpression.<Boolean>of("str.endsWith(expr.expr.replaceAll('.*', ''))")) flag = true;
+                    } else if (JSExpression.<Boolean>of("expr.expr.endsWith('.*')")) {
+                        if (JSExpression.<Boolean>of("str.startsWith(expr.expr.replaceAll('.*', ''))")) flag = true;
+                    } else {
+                        if (JSExpression.<Boolean>of("str === expr.expr")) flag = true;
+                    }
+                }
+                return flag;
+        }
+        return false;
+    }
 }
