@@ -1,7 +1,6 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
-import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.function.Consumer;
@@ -56,21 +55,26 @@ class GridFilter<T> implements Component0<div> {
                 var filterWords = Array.filter(
                         stringSplit(filterValue, " "),
                         s -> stringLength(s) != 0);
-
-                T[] filteredT = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
-                T[] filtered = isError ? data : filteredT;
+                T[] filtered;
+                JSExpression.of("try{console.log()");
+                filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
+                JSExpression.of("}catch(e){console.log()");
+                filtered = data;
+                JSExpression.of("}");
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
                 effectUnaffectedMe(() ->
                         effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
 
-                if (filtered.length > pageSizes[0] || conf.title != null)
+                if (filtered.length > pageSizes[0] || conf.title != null) {
+                    T[] finalFiltered = filtered;
+                    T[] finalFiltered1 = filtered;
                     new div() {{
                         className = "grid-filter";
 
                         new div() {{
-                            if (filtered.length > pageSizes[0]) {
+                            if (finalFiltered.length > pageSizes[0]) {
                                 new select() {{
                                     onchange = ev -> {
                                         // FIXME: move to one effect
@@ -96,7 +100,7 @@ class GridFilter<T> implements Component0<div> {
                         }};
 
                         new div() {{
-                            if (filtered.length > pageSizes[0]) {
+                            if (finalFiltered1.length > pageSizes[0]) {
                                 new div() {{
                                     innerHTML = """
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
@@ -114,6 +118,7 @@ class GridFilter<T> implements Component0<div> {
                             }
                         }};
                     }};
+                }
             }};
             if (filterEnabled)
                 new div() {{
@@ -126,6 +131,14 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }};
             new div() {{
+                if (isError && filterEnabled && !filterValue.equals("")) {
+                    new div() {{
+                        new h5(errorMessage) {{
+                            this.className = "error";
+                            this.style.color = "red";
+                        }};
+                    }};
+                }
                 var hint = pageData;
                 new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
                     effect(filterEnabled = !filterEnabled);
@@ -218,9 +231,10 @@ class GridFilter<T> implements Component0<div> {
                     break;
                 case "%":
                     if (prev.equals("\\\\")) acc += ch;
-                    else if ((i == 0 || prev.equals(" ")) && (i == expr.length() - 1 || next.equals(" ")))
-                        printError("unexpected %", i);
-                    else acc += ".*";
+                    else if ((i == 0 || prev.equals(" ")) && (i == expr.length() - 1 || next.equals(" "))) {
+                        JSExpression.of("com_over64_greact_uikit_GridFilter._printError('unexpected %', i)");
+                        JSExpression.of("throw new Error()");
+                    } else acc += ".*";
                     break;
                 case "&":
                 case "|":
@@ -244,7 +258,10 @@ class GridFilter<T> implements Component0<div> {
                     }
                     break;
                 default:  // any other char
-                    if (prev.equals("\\\\")) printError("bad escape", i);
+                    if (prev.equals("\\\\")) {
+                        JSExpression.of("com_over64_greact_uikit_GridFilter._printError('bad escape', i)");
+                        JSExpression.of("throw new Error()");
+                    }
                     acc += ch;
                     break;
             }
@@ -297,7 +314,10 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public static Tree parse(Lexeme[] tokens, int i) {
-        if (i >= tokens.length) throw new ArithmeticException();
+        if (i >= tokens.length) {
+            JSExpression.of("com_over64_greact_uikit_GridFilter._printError('Ошибка парсинга', i - 1)");
+            JSExpression.of("throw new Error()");
+        }
         var current = tokens[i];
 
         var left = new Token();
@@ -307,7 +327,10 @@ class GridFilter<T> implements Component0<div> {
             var nextI = temp.poz;
             var token = temp.token;
             temp = new Tree(0, new Token());
-            if (!tokens[nextI].lexeme.equals("B_CLOSE")) throw new ArithmeticException();
+            if (!tokens[nextI].lexeme.equals("B_CLOSE")) {
+                JSExpression.of("com_over64_greact_uikit_GridFilter._printError('Ожидали )', tokens[nextI].pos)");
+                JSExpression.of("throw new Error()");
+            }
             left = new Token("parens", token);
             i = nextI + 1;
         } else if (!current.lexeme.equals("B_CLOSE") &&
@@ -321,7 +344,6 @@ class GridFilter<T> implements Component0<div> {
 
         var operator = tokens[i];
         if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR")) return new Tree(i, left);
-        // Для И и для ИЛИ мы делаем одинаковые вещи
         var temp = new Tree(0, new Token());
         JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
         var nextI = temp.poz;
