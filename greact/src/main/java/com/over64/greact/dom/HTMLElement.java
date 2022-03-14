@@ -15,6 +15,10 @@ import com.greact.model.async;
         public String borderRadius;
         public String borderColor;
         public String padding;
+        public String paddingLeft;
+        public String paddingRight;
+        public String paddingTop;
+        public String paddingBottom;
         public String margin;
         public String marginBottom;
         public String marginTop;
@@ -29,6 +33,7 @@ import com.greact.model.async;
         public String justifyContent;
         public String flexWrap;
         public String flexDirection;
+        public String alignSelf;
         public String alignItems;
         public String whiteSpace;
         public String height;
@@ -36,6 +41,10 @@ import com.greact.model.async;
         public String textAlign;
         public String fontSize;
         public String fontWeight;
+        public String fontStyle;
+        public String fontFamily;
+        public String gap;
+        public String pageBreakAfter;
     }
 
     // HTML Global Attributes

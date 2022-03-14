@@ -6,6 +6,16 @@ import com.greact.model.Static;
 import java.util.function.Function;
 
 public class Map<K, V> {
+    static void bar() {
+
+    }
+    static void foo() {
+        bar(); // а тут this.bar()
+    }
+
+    void baz() {
+        bar(); // тут нужно this.constructor.bar()
+    }
     public static <K, V> Map<K, V> make() {return JSExpression.of("new Map()");}
     public native void set(K key, V value);
     @Static public  V get(K key) {

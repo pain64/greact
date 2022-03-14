@@ -17,12 +17,17 @@ public class Column<T, U> {
             style.textAlign = "left";
         }};
 
+    static <T> boolean isNullOrUndefined(T value) {
+        return JSExpression.of("typeof value === 'undefined' || value === null");
+    }
+
     public String header;
     public String[] memberNames;
     public boolean hidden = false;
     public Control<U> editor = null;
     public BiFunction<U, T, String> backgroundColor = null;
-    public Component2<td, U, T> view = (value, row) -> new td(value == null ? "" : value.toString());
+    public Component2<td, U, T> view = (value, row) ->
+        new td(isNullOrUndefined(value) ? "" : value.toString());
 
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);

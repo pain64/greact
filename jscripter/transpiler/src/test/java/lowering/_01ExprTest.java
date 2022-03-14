@@ -10,9 +10,7 @@ import static util.CompileAssert.assertCompiled;
 import static util.CompileAssert.assertCompiledMany;
 
 public class _01ExprTest {
-
-    @Test
-    void literal() throws IOException {
+    @Test void literal() throws IOException {
         assertCompiled(
             """
                 package js;

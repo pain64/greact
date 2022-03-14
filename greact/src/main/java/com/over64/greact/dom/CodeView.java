@@ -34,7 +34,6 @@ public class CodeView<T extends HTMLElement> implements Component0<div> {
         this.code = code;
     }
     @Override @async public Component0<div> mount() {
-        // FIXME: fix varargs
-        return GReact.mmountAwaitView(renderer, new Object[]{new CodeAndView<>(code, view)});
+        return GReact.mmountAwaitView(renderer, new CodeAndView<>(code, view));
     }
 }

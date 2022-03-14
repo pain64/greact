@@ -35,7 +35,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
             var col = columns[idx];
             if (col.memberNames.length != ref.memberNames().length) continue;
             for (var i = 0; i < col.memberNames.length; i++) {
-                if (col.memberNames[i] != ref.memberNames()[i]) continue;
+                if (!col.memberNames[i].equals(ref.memberNames()[i])) continue;
                 return idx;
             }
         }
@@ -91,7 +91,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     }
     // END move to column
 
-    final T[] data;
+    public final T[] data;
     T selectedRowData;
     public Grid(@Reflexive T[] data) {
         this.data = data;

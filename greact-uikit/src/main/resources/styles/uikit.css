@@ -19,3 +19,12 @@ h1, h2, h3, h4, h5 {
 h5 {
   margin-bottom: 10px;
 }
+
+@media print {
+  .page-break {
+    break-after: page;
+  }
+  .page-break > p {
+    display: none;
+  }
+}
