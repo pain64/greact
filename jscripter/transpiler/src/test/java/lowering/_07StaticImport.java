@@ -89,4 +89,40 @@ public class _07StaticImport {
                     }
                     """));
     }
+
+    @Test void innerStaticImport() throws IOException {
+        assertCompiledMany(
+                new CompileAssert.CompileCase("js.A",
+                        """
+                            package js;
+                            public class A {
+                              static String s = "";
+                            }""",
+                        """
+                            class js_A {
+                              constructor() {
+                              }
+                              static s = '';
+                            }
+                            """),
+                new CompileAssert.CompileCase("js.B",
+                        """
+                            package js;
+                            import static js.A.s;
+                            class B {
+                              void f() {
+                                String ss = s + s;
+                              }
+                            }""",
+                        """
+                                class js_B {
+                                  constructor() {
+                                  }
+                                  _f() {
+                                    const ss = js_A.s + js_A.s;
+                                  }
+                                }
+                                """));
+    }
+
 }

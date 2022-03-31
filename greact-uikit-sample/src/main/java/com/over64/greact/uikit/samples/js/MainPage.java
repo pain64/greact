@@ -29,6 +29,8 @@ public class MainPage implements Component0<div> {
 
                     new textarea() {{
                         var nl = "\n";
+                        // codeAndView.code.replaceAll("a", "a");
+                        // var a = new Data2(1, "", Dates.now()) instanceof Data2;
                         innerHTML = JSExpression.of("codeAndView.code.replaceAll(nl, '&#10').replaceAll(' ' , '&nbsp')");
                         className = "code";
                         style.height = height + "px";
@@ -37,6 +39,7 @@ public class MainPage implements Component0<div> {
     }
 
     record Data(int x, String y, Date z) {
+    }record Data2(int x, String y, Date z) {
     }
 
     @Override
