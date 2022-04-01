@@ -24,7 +24,8 @@ import static com.greact.generate.util.CompileException.ERROR.CANNOT_BE_DECLARED
 abstract class ClassBodyGen extends StatementGen {
     @Override
     public void visitVarDef(JCTree.JCVariableDecl varDef) {
-        if (varDef.sym.isStatic() && !varDef.sym.owner.isEnum()) {
+        var flag = varDef.sym.owner.owner.getKind().isClass();
+        if (varDef.sym.isStatic() && !flag) {
             out.write("static ");
             out.write(varDef.getName().toString());
             out.write(" = ");
@@ -35,7 +36,7 @@ abstract class ClassBodyGen extends StatementGen {
         } else if (!(varDef.sym.owner instanceof Symbol.ClassSymbol)) {
             // skip class fields & delegate to StatementGen
             super.visitVarDef(varDef);
-        } else if (varDef.sym.owner.isEnum() && varDef.sym.isStatic()) {
+        } else if (flag && varDef.sym.isStatic()) {
             out.write(getRightName(varDef.sym));
             out.write(" = ");
 
@@ -63,7 +64,7 @@ abstract class ClassBodyGen extends StatementGen {
     void initRecordFields(JCTree.JCMethodDecl method) {
         if (((Symbol.ClassSymbol) method.sym.owner).isRecord())
             method.params.forEach(varDef -> {
-                out.write("this");
+                out.write("this.");
                 out.write(varDef.getName().toString());
                 out.write(" = ");
                 out.write(varDef.getName().toString());
@@ -76,14 +77,16 @@ abstract class ClassBodyGen extends StatementGen {
                 ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
                 : method.body.stats;
 
-        withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
-            if (!statements.isEmpty()) // super constructor invocation
-                statements.get(0).accept(this);
+        withStaticMethodCall(method.sym.isStatic(), () -> {
+            withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
+                if (!statements.isEmpty()) // super constructor invocation
+                    statements.get(0).accept(this);
 
-            if (hasInit) out.writeLn("__init__();");
-            initRecordFields(method);
+                if (hasInit) out.writeLn("__init__();");
+                initRecordFields(method);
 
-            statements.stream().skip(1).forEach(stmt -> stmt.accept(this));
+                statements.stream().skip(1).forEach(stmt -> stmt.accept(this));
+            });
         });
     }
 

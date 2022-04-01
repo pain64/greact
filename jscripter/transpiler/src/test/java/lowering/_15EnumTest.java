@@ -96,7 +96,7 @@ public class _15EnumTest {
                 """);
     }
 
-    // @Test
+    @Test
     void tempTest() throws IOException {
         assertCompiled("""
                 package js;

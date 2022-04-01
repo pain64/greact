@@ -443,11 +443,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                         } else {
                             prop.selected.accept(this);
                             out.write(".");
-                            System.out.println(prop.sym.name.toString() + " : " + prop.sym.owner.toString());
+
                             if (!isRecordAccessor &&
                                 (prop.sym.flags_field & Flags.NATIVE) == 0 &&
                                 !prop.sym.owner.toString().equals("java.lang.Object") &&
-                                !prop.sym.owner.toString().equals("java.lang.String") && // How check native?
+                                !prop.sym.owner.toString().equals("java.lang.String") && // How smart check native?
                                 !prop.sym.owner.toString().equals("java.lang.Integer")
                             ) out.write("_");
 
@@ -581,12 +581,12 @@ abstract class ExpressionGen extends VisitorWithContext {
 
         // FIXME: disable for arrays (aka x instanceof String[])
         Consumer<Runnable> checkGen = switch (ofType) {
-            case "java.lang.String" -> eGen -> {
+            case "java_lang_String" -> eGen -> {
                 out.write("(($x) => {return typeof $x === 'string' || $x instanceof String})(");
                 eGen.run();
                 out.write(")");
             };
-            case "java.lang.Integer", "java.lang.Long", "java.lang.Float" -> eGen -> {
+            case "java_lang_Integer", "java_lang_Long", "java_lang_Float" -> eGen -> {
                 out.write("typeof ");
                 eGen.run();
                 out.write(" == 'number'");
