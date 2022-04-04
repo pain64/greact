@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.async;
 import com.greact.model.Require;
 import com.greact.model.JSExpression;
 import com.over64.greact.dom.GReact;
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
         final T data;
         boolean expanded = false;
         boolean editing = false;
-        RowData(T data) {this.data = data;}
+        RowData(T data) { this.data = data; }
     }
 
     final GridConfig2<T> conf;
@@ -29,7 +30,7 @@ import java.util.function.Consumer;
 
     void keepSizes() {
         columnSizes = JSExpression.of("[].slice.call(this.theTable.tHead.rows[0].cells).map(e => e" +
-                ".getBoundingClientRect().width)");
+            ".getBoundingClientRect().width)");
     }
     void clearSizes() {
         columnSizes = Array.map(conf.columns, v -> 0);
@@ -77,6 +78,39 @@ import java.util.function.Consumer;
                                     """;
                                 onclick = ev -> onFilterEnableDisable.run();
                             }};
+                            new Modal<>(() -> new div() {{
+
+                                className = "grid-table-td-content";
+                                innerHTML = """                           
+                                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+                                    width="16" height="16"
+                                    viewBox="0 0 24 24"
+                                    style=" fill:#000000;"><path d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z" opacity=".3"></path><path d="M13,17h-2v-6h2V17z M13,9h-2V7h2V9z"></path><path fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2" d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z"></path></svg>
+                                    """;
+                            }}, () -> new div() {{
+                                new h3("Помощь в использовании фильтра") {{
+                                    style.color = "#000";
+                                }};
+                                new h5("1. Слово матчим полностью: если ищем слово abc, то ищем полное совпадение - не abcd") {{
+                                    style.textAlign = "left";
+                                }};
+                                new h5("2. Работаем с like: abc% или %abc или %abc%") {{
+                                    style.textAlign = "left";
+                                }};
+                                new h5("3. Поддерживаем приоритет через скобки: a & (b | (c | d))") {{
+                                    style.textAlign = "left";
+                                }};
+                                new h5("4. Операторы: & и |") {{ style.textAlign = "left"; }};
+                                new h5("5. Экранирование спецсимволов: \\\\(, \\\\), \\\\&, \\\\|, \\\\%, \\\\\\\\  и \\\\пробел") {{
+                                    style.textAlign = "left";
+                                }};
+                                new h5("6. Ошибки парсинга выражения отображаются ниже фильтра") {{
+                                    style.textAlign = "left";
+                                }};
+                            }}) {{
+
+                            }};
+
                             if (conf.onRowAdd != null)
                                 new div() {{
                                     className = "grid-table-td-content";
@@ -97,17 +131,17 @@ import java.util.function.Consumer;
             new tbody() {{
                 if (addNewRowMode)
                     new GridRowAdd<>(conf,
-                            newRowData -> {
-                                var persisted = conf.onRowAdd.supply(newRowData);
-                                var newRow = new RowData<>(persisted);
-                                // add row locally
-                                // add row to filtered data
-                                // add row to grid data
-                                JSExpression.of("this.rows.splice(0, 0, newRow)");
-                                effect(rows);
-                                effect(addNewRowMode = false);
-                            },
-                            () -> effect(addNewRowMode = false));
+                        newRowData -> {
+                            var persisted = conf.onRowAdd.supply(newRowData);
+                            var newRow = new RowData<>(persisted);
+                            // add row locally
+                            // add row to filtered data
+                            // add row to grid data
+                            JSExpression.of("this.rows.splice(0, 0, newRow)");
+                            effect(rows);
+                            effect(addNewRowMode = false);
+                        },
+                        () -> effect(addNewRowMode = false));
 
                 for (var row : rows) {
                     if (row.editing)
@@ -149,7 +183,7 @@ import java.util.function.Consumer;
                                                 """;
                                             onclick = ev -> {
                                                 ev.stopPropagation();
-                                                if(JSExpression.of("window.confirm('Действительно удалить?')")) {
+                                                if (JSExpression.of("window.confirm('Действительно удалить?')")) {
                                                     conf.onRowDelete.handle(row.data);
                                                     effect(rows = Array.filter(rows, r -> r != row));
                                                 }
@@ -173,10 +207,10 @@ import java.util.function.Consumer;
                                     if (conf.expandedRow != null)
                                         new div() {{ /* expand */
                                             innerHTML = row.expanded
-                                                    ? """
+                                                ? """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"/></svg>
                                                 """
-                                                    : """
+                                                : """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"/></svg>
                                                 """;
 
