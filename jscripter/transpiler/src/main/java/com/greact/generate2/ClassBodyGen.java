@@ -22,10 +22,9 @@ import java.util.List;
 import static com.greact.generate.util.CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC;
 
 abstract class ClassBodyGen extends StatementGen {
-    @Override
-    public void visitVarDef(JCTree.JCVariableDecl varDef) {
-        var flag = varDef.sym.owner.owner.getKind().isClass();
-        if (varDef.sym.isStatic() && !flag) {
+    @Override public void visitVarDef(JCTree.JCVariableDecl varDef) {
+        var isEnclosingClassIsNested = varDef.sym.owner.owner.getKind().isClass();
+        if (varDef.sym.isStatic() && !isEnclosingClassIsNested) {
             out.write("static ");
             out.write(varDef.getName().toString());
             out.write(" = ");
@@ -36,7 +35,7 @@ abstract class ClassBodyGen extends StatementGen {
         } else if (!(varDef.sym.owner instanceof Symbol.ClassSymbol)) {
             // skip class fields & delegate to StatementGen
             super.visitVarDef(varDef);
-        } else if (flag && varDef.sym.isStatic()) {
+        } else if (isEnclosingClassIsNested && varDef.sym.isStatic()) {
             out.write(getRightName(varDef.sym));
             out.write(" = ");
 
@@ -74,8 +73,8 @@ abstract class ClassBodyGen extends StatementGen {
 
     void writeMethodStatements(JCTree.JCMethodDecl method, boolean hasInit) {
         var statements = method.sym.isAbstract()
-                ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
-                : method.body.stats;
+            ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
+            : method.body.stats;
 
         withStaticMethodCall(method.sym.isStatic(), () -> {
             withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
@@ -110,9 +109,9 @@ abstract class ClassBodyGen extends StatementGen {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
                 throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
-                        At %s:%d:%d
-                        constructor cannot be declared as @async"""
-                        .formatted(super.cu.sourcefile.getName(), line, col));
+                    At %s:%d:%d
+                    constructor cannot be declared as @async"""
+                    .formatted(super.cu.sourcefile.getName(), line, col));
             }
 
             var visitor = new HasAsyncCalls(super.stdShim, super.types);
@@ -121,11 +120,11 @@ abstract class ClassBodyGen extends StatementGen {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
                 throw new CompileException(CANNOT_BE_DECLARED_AS_ASYNC, """
-                        At %s:%d:%d
-                        method cannot be declared as @async due to:
-                        - is not abstract or interface or native (OR)
-                        - does not makes async calls"""
-                        .formatted(super.cu.sourcefile.getName(), line, col));
+                    At %s:%d:%d
+                    method cannot be declared as @async due to:
+                    - is not abstract or interface or native (OR)
+                    - does not makes async calls"""
+                    .formatted(super.cu.sourcefile.getName(), line, col));
             }
             if (visitor.hasAsyncCalls) anyMethodHasAsyncCalls = true;
         }
@@ -141,9 +140,9 @@ abstract class ClassBodyGen extends StatementGen {
         }
 
         var params = methods.stream()
-                .map(m -> m.snd.getParameters())
-                .max(Comparator.comparingInt(List::size))
-                .orElseThrow(() -> new IllegalStateException("unreachable"));
+            .map(m -> m.snd.getParameters())
+            .max(Comparator.comparingInt(List::size))
+            .orElseThrow(() -> new IllegalStateException("unreachable"));
 
         if (!table.isOverloaded())
             out.mkString(params, param -> {
@@ -171,17 +170,17 @@ abstract class ClassBodyGen extends StatementGen {
             }
 
             var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
-                    .filter(el -> el.getKind() == ElementKind.FIELD)
-                    .map(el -> (VariableElement) el)
-                    .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
+                .filter(el -> el.getKind() == ElementKind.FIELD)
+                .map(el -> (VariableElement) el)
+                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
 
             var initBlock = classDefs.lastElement().defs.stream()
-                    .filter(def -> def instanceof JCTree.JCBlock)
-                    .map(def -> (JCTree.JCBlock) def)
-                    .findFirst();
+                .filter(def -> def instanceof JCTree.JCBlock)
+                .map(def -> (JCTree.JCBlock) def)
+                .findFirst();
 
             hasInit = (fields.hasNext() && !classDefs.lastElement().sym.isRecord())
-                    || initBlock.isPresent();
+                || initBlock.isPresent();
 
             if (hasInit) {
                 withAsyncContext(false, () -> { // constructor cannot be async in JS
@@ -240,16 +239,15 @@ abstract class ClassBodyGen extends StatementGen {
     }
 
     List<Pair<Integer, JCTree.JCMethodDecl>> mapMethods(
-            List<JCTree.JCMethodDecl> group, List<Pair<Integer, ExecutableElement>> methods) {
+        List<JCTree.JCMethodDecl> group, List<Pair<Integer, ExecutableElement>> methods) {
 
         return methods.stream().map(p ->
-                new Pair<>(p.fst, group.stream().filter(m -> m.sym == p.snd)
-                        .findFirst().orElseThrow())).toList();
+            new Pair<>(p.fst, group.stream().filter(m -> m.sym == p.snd)
+                .findFirst().orElseThrow())).toList();
     }
 
 
-    @Override
-    public void visitMethodDef(JCTree.JCMethodDecl methodDef) {
+    @Override public void visitMethodDef(JCTree.JCMethodDecl methodDef) {
         var group = groups.get(methodDef.getName());
         if (group == null) return; // @DoNotTranspile method
         if (methodDef != group.get(0)) return;
