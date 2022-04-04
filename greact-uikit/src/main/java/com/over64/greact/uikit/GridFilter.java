@@ -53,8 +53,8 @@ class GridFilter<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 var filterWords = Array.filter(
-                        stringSplit(filterValue, " "),
-                        s -> stringLength(s) != 0);
+                    stringSplit(filterValue, " "),
+                    s -> stringLength(s) != 0);
                 T[] filtered;
                 JSExpression.of("try{console.log()");
                 filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
@@ -65,7 +65,7 @@ class GridFilter<T> implements Component0<div> {
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
                 effectUnaffectedMe(() ->
-                        effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
+                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
 
                 if (filtered.length > pageSizes[0] || conf.title != null) {
                     T[] finalFiltered = filtered;
@@ -79,7 +79,7 @@ class GridFilter<T> implements Component0<div> {
                                     onchange = ev -> {
                                         // FIXME: move to one effect
                                         effect(currentSize = Integer.parseInt(
-                                                ((select) ev.target).value));
+                                            ((select) ev.target).value));
                                         effect(currentPage = 1);
                                     };
 
@@ -103,15 +103,15 @@ class GridFilter<T> implements Component0<div> {
                             if (finalFiltered1.length > pageSizes[0]) {
                                 new div() {{
                                     innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
-                                            """;
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
+                                        """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
                                 }};
                                 new div() {{
                                     innerHTML = """
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
-                                            """;
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+                                        """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
                                 }};
@@ -334,8 +334,8 @@ class GridFilter<T> implements Component0<div> {
             left = new Token("parens", token);
             i = nextI + 1;
         } else if (!current.lexeme.equals("B_CLOSE") &&
-                !current.lexeme.equals("OP_AND") &&
-                !current.lexeme.equals("B_OR")) {
+            !current.lexeme.equals("OP_AND") &&
+            !current.lexeme.equals("B_OR")) {
             left = new Token("term", current.value);
             i++;
         }
@@ -343,7 +343,8 @@ class GridFilter<T> implements Component0<div> {
         if (i >= tokens.length) return new Tree(i, left);
 
         var operator = tokens[i];
-        if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR")) return new Tree(i, left);
+        if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR"))
+            return new Tree(i, left);
         var temp = new Tree(0, new Token());
         JSExpression.of("temp = com_over64_greact_uikit_GridFilter._parse(tokens, i + 1)");
         var nextI = temp.poz;
@@ -380,9 +381,11 @@ class GridFilter<T> implements Component0<div> {
                         if (JSExpression.<Boolean>of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
                             flag = true;
                     } else if (JSExpression.<Boolean>of("expr.expr.startsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.endsWith(expr.expr.replaceAll('.*', ''))")) flag = true;
+                        if (JSExpression.<Boolean>of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
+                            flag = true;
                     } else if (JSExpression.<Boolean>of("expr.expr.endsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.startsWith(expr.expr.replaceAll('.*', ''))")) flag = true;
+                        if (JSExpression.<Boolean>of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
+                            flag = true;
                     } else {
                         if (JSExpression.<Boolean>of("str === expr.expr")) flag = true;
                     }

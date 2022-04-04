@@ -10,7 +10,7 @@ public class String {
     }
 
     @Static public boolean isEmpty() {
-        return JSExpression.of("this.length == 0");
+        return JSExpression.of("this.length === 0");
     }
     @Static public char charAt(int i) { return JSExpression.of("this.charAt(i)"); }
     @Static public java.lang.String[] split(java.lang.String regex) {
