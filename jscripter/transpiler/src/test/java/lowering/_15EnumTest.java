@@ -43,7 +43,7 @@ public class _15EnumTest {
                 """);
     }
 
-    //@Test
+    @Test
     void enumInnerClass() throws IOException {
         assertCompiled(
             """
@@ -91,6 +91,34 @@ public class _15EnumTest {
                     const t = js_Test.T.FOO;
                     const xx = t === js_Test.T.BAR;
                     t._twice();
+                  }
+                }
+                """);
+    }
+
+    @Test
+    void tempTest() throws IOException {
+        assertCompiled("""
+                package js;
+                class Test {
+                static void bar() { }
+                static void foo() {
+                bar();
+                }
+                void baz() {
+                bar();
+                }
+                }""", """
+                class js_Test {
+                  constructor() {
+                  }
+                  static _bar() {
+                  }
+                  static _foo() {
+                    this._bar();
+                  }
+                  _baz() {
+                    this.constructor._bar();
                   }
                 }
                 """);

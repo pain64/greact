@@ -183,19 +183,23 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else
                 out.write(id.sym.toString().replace(".", "_"));
         } else if (id.sym instanceof Symbol.MethodSymbol) {
+            var isStatic_ = id.sym.isStatic();
+
             if (id.name.toString().equals("super")) out.write("super");
             else if (id.sym.isStatic()) {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
                     out.write(id.sym.owner.toString().replace(".", "_"));
                     out.write("._");
                 } else
-                    out.write("this.constructor._");
+                    if (isStaticMethodCall) out.write("this._");
+                    else out.write("this.constructor._");
                 out.write(id.name.toString());
             } else {
                 out.write("this.");
                 if ((id.sym.flags_field & Flags.NATIVE) == 0) out.write("_");
                 out.write(id.name.toString());
             }
+            // withStaticMethodCall(isStatic_, () -> ); // TODO: Make this
         } else
             out.write(id.name.toString());
     }
@@ -376,7 +380,6 @@ abstract class ExpressionGen extends VisitorWithContext {
             var targetMethod = shimmedType != null
                 ? super.stdShim.findShimmedMethod(shimmedType, methodSym)
                 : methodSym;
-
             var info = shimmedType != null
                 ? Overloads.methodInfo(super.types, (TypeElement) shimmedType.tsym, targetMethod)
                 : Overloads.methodInfo(super.types, (TypeElement) methodOwnerSym.type.tsym, methodSym);
@@ -412,7 +415,6 @@ abstract class ExpressionGen extends VisitorWithContext {
             }
 
             if (isAsync) out.write("(await ");
-
             if (call.meth instanceof JCTree.JCIdent id) { // call local or static import
                 if (id.name.equals(names.fromString("this"))) {
                     out.write("$over = ");
@@ -441,9 +443,12 @@ abstract class ExpressionGen extends VisitorWithContext {
                         } else {
                             prop.selected.accept(this);
                             out.write(".");
+
                             if (!isRecordAccessor &&
                                 (prop.sym.flags_field & Flags.NATIVE) == 0 &&
-                                !prop.sym.owner.toString().equals("java.lang.Object")
+                                !prop.sym.owner.toString().equals("java.lang.Object") &&
+                                !prop.sym.owner.toString().equals("java.lang.String") && // How smart check native?
+                                !prop.sym.owner.toString().equals("java.lang.Integer")
                             ) out.write("_");
 
                             out.write(prop.name.toString());
@@ -572,17 +577,16 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitTypeTest(JCTree.JCInstanceOf instanceOf) {
-        var ofType = TreeInfo.symbol(instanceOf.getType())
-            .getQualifiedName().toString();
+        var ofType = getRightName(TreeInfo.symbol(instanceOf.getType()));
 
         // FIXME: disable for arrays (aka x instanceof String[])
         Consumer<Runnable> checkGen = switch (ofType) {
-            case "java.lang.String" -> eGen -> {
+            case "java_lang_String" -> eGen -> {
                 out.write("(($x) => {return typeof $x === 'string' || $x instanceof String})(");
                 eGen.run();
                 out.write(")");
             };
-            case "java.lang.Integer", "java.lang.Long", "java.lang.Float" -> eGen -> {
+            case "java_lang_Integer", "java_lang_Long", "java_lang_Float" -> eGen -> {
                 out.write("typeof ");
                 eGen.run();
                 out.write(" == 'number'");
@@ -590,7 +594,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             default -> eGen -> {
                 eGen.run();
                 out.write(" instanceof ");
-                out.write(ofType.replace(".", "_"));
+                out.write(ofType);
             };
         };
 
@@ -647,6 +651,21 @@ abstract class ExpressionGen extends VisitorWithContext {
             out.writeNL();
             out.writeCBEnd(false);
             out.write(")(this)");
+        }
+    }
+
+    public static String getRightName(Symbol symbol) {
+        return getName(symbol).substring(1);
+    }
+
+    private static String getName(Symbol symbol) {
+        if (symbol == null) return "";
+        if (symbol.owner == null) return symbol.name.toString();
+
+        if (symbol.owner.getKind().isClass()) {
+            return getName(symbol.owner) + "." + symbol.name;
+        } else {
+            return getName(symbol.owner) + "_" + symbol.name;
         }
     }
 }

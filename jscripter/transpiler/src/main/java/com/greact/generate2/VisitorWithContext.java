@@ -44,4 +44,12 @@ abstract class VisitorWithContext extends JCTree.Visitor {
         block.run();
         this.isAsyncContext = old;
     }
+
+    boolean isStaticMethodCall = false;
+    void withStaticMethodCall(boolean isStaticMethodCall, Runnable block) {
+        var old = this.isStaticMethodCall;
+        this.isStaticMethodCall = isStaticMethodCall;
+        block.run();
+        this.isStaticMethodCall = old;
+    }
 }
