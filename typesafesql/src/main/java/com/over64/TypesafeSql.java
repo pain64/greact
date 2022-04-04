@@ -28,7 +28,7 @@ public class TypesafeSql {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Id {}
+    public @interface Id { }
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Joins {
@@ -122,10 +122,15 @@ public class TypesafeSql {
             var exprAndOffsets = mapQueryArgs(stmt, args);
             var offsets = exprAndOffsets.offsets;
 
+            System.out.println("### EXEC QUERY:\n" + exprAndOffsets.newExpr);
+            //System.out.println("ARGS: " + Arrays.toString(args));
+
             var procCall = conn.prepareCall(exprAndOffsets.newExpr);
 
-            for (var i = 0; i < offsets.size(); i++)
+            for (var i = 0; i < offsets.size(); i++) {
+                //System.out.println("arg(" + i + ") = " + args[offsets.get(i).argIdx]);
                 procCall.setObject(i + 1, args[offsets.get(i).argIdx]);
+            }
 
             procCall.executeUpdate();
             return null;
@@ -139,7 +144,7 @@ public class TypesafeSql {
         return withConnection(conn -> exec(conn, stmt, args));
     }
 
-    record ArgOffset(int argIdx, int offset) {}
+    record ArgOffset(int argIdx, int offset) { }
 
     int nDigits(int n) {
         int length = 0;
@@ -151,22 +156,24 @@ public class TypesafeSql {
         return length;
     }
 
-    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) {}
+    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) { }
 
     public ExprAndOffsets mapQueryArgs(String expr, Object... args) {
         var offsets = new ArrayList<ArgOffset>();
 
-        for (var i = 0; i < args.length; i++) {
+        for (var i = args.length - 1; i >=0 ; i--) {
             for (; ; ) {
                 var offset = expr.indexOf(":" + (i + 1));
                 var iLength = nDigits(i + 1);
                 if (offset == -1) break;
-                expr = expr.substring(0, offset) + "?" + " ".repeat(iLength) + expr.substring(offset + iLength + 1);
+                expr = expr.substring(0, offset) +
+                    "?" + " ".repeat(iLength) + // NB! keep offsets
+                    expr.substring(offset + iLength + 1);
                 offsets.add(new ArgOffset(i, offset));
             }
         }
 
-        offsets.sort(Comparator.comparingInt(o -> o.offset));
+        offsets.sort(Comparator.comparingInt(ArgOffset::offset));
 
         return new ExprAndOffsets(expr, offsets);
     }

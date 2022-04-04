@@ -12,7 +12,20 @@ public class Array<T> {
     }
 
     public static <T> T find(T[] self, Predicate<T> predicate) {
-        return JSExpression.of("self.find(predicate)");
+        var found = JSExpression.of("self.find(predicate)");
+        return JSExpression.of("typeof found === 'undefined' ? null : found");
+    }
+
+    public static <T> boolean exists(T[] self, Predicate<T> predicate) {
+        return JSExpression.of("typeof self.find(predicate) !== 'undefined'");
+    }
+
+    public static <T> long indexOf(T[] self, T el) {
+        return JSExpression.of("self.indexOf(el)");
+    }
+
+    public static <T> T contains(T[] self, T el) {
+        return JSExpression.of("self.indexOf(el) !== -1");
     }
 
     public static <T> void push(T[] array, T value) {
@@ -37,7 +50,7 @@ public class Array<T> {
         return result;
     }
 
-    public static <T> T[] spliced(T[] array, int start, int deleteCount) {
+    public static <T> T[] spliced(T[] array, long start, long deleteCount) {
         var cloned = JSExpression.<T[]>of("Array.from(array)");
         JSExpression.of("cloned.splice(start, deleteCount)");
         return cloned;

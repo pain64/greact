@@ -31,16 +31,15 @@ public class GridRowAdd<T> implements Component0<tr> {
                         new slot<>(control);
                     }};
             } else
-                for (var col : conf.columns)
+                for (var col : conf.columns) {
+                    if(col.hidden) continue;
                     if (col.editor != null)
                         new td() {{
                             Grid.setEditorValueFromRowValue(col, data);
                             new slot<>(col.editor);
                         }};
-                    else
-                        new slot<>(
-                            (Component1<td, Object>) col.view,
-                            Grid.fetchValue(data, col.memberNames));
+                    else new td();
+                }
 
             new td() {{ /* toolbox */
                 className = "grid-row-add-toolbox";

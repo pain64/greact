@@ -1,5 +1,6 @@
 package com.over64.greact.uikit.controls;
 
+import com.greact.model.JSExpression;
 import com.greact.model.Require;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.*;
@@ -20,6 +21,10 @@ public abstract class Input<T> extends Control<T> {
     protected abstract T parseValueOpt(input src);
     protected String valueToHtmlValue() {
         return  value.toString();
+    }
+
+    static <T> boolean isNullOrUndefined(T value) {
+        return JSExpression.of("typeof value === 'undefined' || value === null");
     }
 
     @Override public Control child() { return null; }
@@ -51,7 +56,7 @@ public abstract class Input<T> extends Control<T> {
                     // FIXME: вот это вот - костыль для CheckBox
                     if(self.type != "checkbox") className = "input-body-checkbox";
                     type = self.type;
-                    value = self.value == null ? null : valueToHtmlValue();
+                    value = isNullOrUndefined(self.value) ? null : valueToHtmlValue();
                     onclick = ev -> ev.stopPropagation();
                     // FIXME: вот это вот - костыль для CheckBox
                     checked = (Boolean) self.value;

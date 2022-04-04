@@ -12,6 +12,8 @@ import com.over64.greact.uikit.Array;
 
 import java.util.Date;
 
+import static com.over64.greact.uikit.Column.TEXT_AT_LEFT;
+
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> rendererWithHeight(int height) {
@@ -27,7 +29,8 @@ public class MainPage implements Component0<div> {
                     }};
 
                     new textarea() {{
-                        innerHTML = codeAndView.code.replaceAll("\n", "&#10").replaceAll(" ", "&nbsp");
+                        var nl = "\n";
+                        innerHTML = JSExpression.of("codeAndView.code.replaceAll(nl, '&#10').replaceAll(' ' , '&nbsp')");
                         className = "code";
                         style.height = height + "px";
                     }};
@@ -458,6 +461,7 @@ public class MainPage implements Component0<div> {
 
                                         new Grid<>(data) {{
                                             adjust(Data::x).name("the X");
+                                            adjust(Data::y).viewCell(TEXT_AT_LEFT);
                                             onRowChange = row -> JSExpression.of("console.log(row)");
                                         }};
                                     }}, rendererWithHeight(200));

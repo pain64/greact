@@ -17,8 +17,7 @@ public class StrInput extends Input<String> {
         return this;
     }
 
-    @Override
-    protected String parseValueOpt(input src) {
+    @Override protected String parseValueOpt(input src) {
         return JSExpression.of("src.value === ''") ? null : src.value;
     }
 }

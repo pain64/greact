@@ -103,6 +103,10 @@ public class HTMLNativeElements {
         public span() {}
         public span(@DomProperty("innerText") String innerText) {}
     }
+    @JSNativeAPI public static class p extends HTMLElement implements NativeElementAsComponent<p> {
+        public p() {}
+        public p(@DomProperty("innerText") String innerText) {}
+    }
     @JSNativeAPI public static class strong extends HTMLElement implements NativeElementAsComponent<strong> {
         public strong() {}
         public strong(@DomProperty("innerText") String innerText) {}
@@ -116,11 +120,6 @@ public class HTMLNativeElements {
         public String href;
         public a() {}
         public a(@DomProperty("innerText") String innerText) {}
-    }
-
-    @JSNativeAPI public static class p extends HTMLElement implements NativeElementAsComponent<a> {
-        public p() {}
-        public p(@DomProperty("innerText") String innerText) {}
     }
 
     @JSNativeAPI public static class table extends HTMLElement implements NativeElementAsComponent<table> {
