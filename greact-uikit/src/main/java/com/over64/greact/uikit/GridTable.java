@@ -79,13 +79,9 @@ import java.util.function.Consumer;
                                 onclick = ev -> onFilterEnableDisable.run();
                             }};
                             new Modal<>(() -> new div() {{
-
                                 className = "grid-table-td-content";
                                 innerHTML = """                           
-                                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-                                    width="16" height="16"
-                                    viewBox="0 0 24 24"
-                                    style=" fill:#000000;"><path d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z" opacity=".3"></path><path d="M13,17h-2v-6h2V17z M13,9h-2V7h2V9z"></path><path fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2" d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z"></path></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                                     """;
                             }}, () -> new div() {{
                                 new h3("Помощь в использовании фильтра") {{
