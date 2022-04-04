@@ -10,8 +10,9 @@ public class String {
     }
 
     @Static public boolean isEmpty() {
-        return JSExpression.of("this.length != 0");
+        return JSExpression.of("this.length === 0");
     }
+    @Static public char charAt(int i) { return JSExpression.of("this.charAt(i)"); }
     @Static public java.lang.String[] split(java.lang.String regex) {
         return JSExpression.of("this.split(new RegExp(regex))");
     }
@@ -27,6 +28,7 @@ public class String {
     public static java.lang.String valueOf(long obj) { return "" + obj; }
     public static java.lang.String valueOf(float obj) { return "" + obj; }
     public static java.lang.String valueOf(double obj) { return "" + obj; }
+    public static java.lang.String valueOf(char obj) { return "" + obj; }
 
 //    @Replace("{this}.matches(new RegExp({regex})) != null")
 //    public native boolean matches(java.lang.String regex);

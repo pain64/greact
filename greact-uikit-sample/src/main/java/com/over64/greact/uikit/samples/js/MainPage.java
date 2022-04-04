@@ -8,6 +8,7 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import com.over64.greact.dom.HTMLElement;
 import com.over64.greact.uikit.*;
 import com.over64.greact.uikit.controls.CheckBox;
+import com.over64.greact.uikit.Array;
 
 import java.util.Date;
 
@@ -38,9 +39,8 @@ public class MainPage implements Component0<div> {
                 }};
     }
 
-    record Data(int x, String y, Date z) {
-    }record Data2(int x, String y, Date z) {
-    }
+    record Data(int x, String y, Date z) { }
+    record Data2(int x, String y, Date z) { }
 
     @Override
     public div mount() {
@@ -453,7 +453,12 @@ public class MainPage implements Component0<div> {
                             new CodeView<>(() ->
                                     new div() {{
                                         var data = Array.of(
-                                                new Data(1, "One", Dates.parse("1997-11-23"))
+                                                new Data(1, "One"),
+                                                new Data(2, "Tw%o"),
+                                                new Data(3, "T\\\\hree"),
+                                                new Data(451, "Dog cat"),
+                                                new Data(79, "Bell&kar"),
+                                                new Data(91, "(sam)")
                                         );
 
                                         new Grid<>(data) {{
@@ -464,6 +469,22 @@ public class MainPage implements Component0<div> {
                                     }}, rendererWithHeight(200));
                         }};
                     }};
+                }};
+            }};
+
+            new div() {{
+                var data = Array.of(
+                        new Data(1, "One"),
+                        new Data(2, "Tw%o"),
+                        new Data(3, "T\\\\hree"),
+                        new Data(451, "Dog cat"),
+                        new Data(79, "Bell&kar"),
+                        new Data(91, "(sam)")
+                );
+
+                new Grid<>(data) {{
+                    adjust(Data::x).name("the X");
+                    onRowChange = row -> JSExpression.of("console.log(row)");
                 }};
             }};
 
