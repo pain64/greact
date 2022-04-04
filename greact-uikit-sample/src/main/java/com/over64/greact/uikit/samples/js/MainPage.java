@@ -39,8 +39,7 @@ public class MainPage implements Component0<div> {
                 }};
     }
 
-    record Data(int x, String y, Date z) { }
-    record Data2(int x, String y, Date z) { }
+    record Data(int x, String y) { }
 
     @Override
     public div mount() {
