@@ -152,13 +152,9 @@ abstract class ExpressionGen extends VisitorWithContext {
             else {
                 if (id.getName().toString().equals("this"))
                     out.write("this");
-                else if (id.sym.getModifiers().contains(Modifier.STATIC)) {
-                    var owner = (Symbol.ClassSymbol) id.sym.owner;
-                    var fullName = owner.fullname.toString().replace(".", "_");
-                    out.write(fullName);
-                    out.write(".");
-                    out.write(id.getName().toString());
-                } else {
+                else if (id.sym.getModifiers().contains(Modifier.STATIC))
+                    out.write(getRightName(id.sym));
+                else {
                     var index = -1;
                     for (var i = classDefs.size() - 1; i >= 0; i--)
                         if (classDefs.get(i).sym == id.sym.owner) {

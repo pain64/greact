@@ -1,6 +1,7 @@
 package com.over64.greact.uikit;
 
 import com.greact.model.JSExpression;
+import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.*;
 
 import java.util.function.Consumer;
@@ -12,6 +13,7 @@ class GridFilter<T> implements Component0<div> {
     boolean filterEnabled = false;
     String filterValue = "";
     T[] pageData;
+    boolean showHint = false;
 
     final T[] data;
     final GridConfig2<T> conf;
@@ -120,7 +122,21 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }
             }};
-            if (filterEnabled)
+            if (filterEnabled) {
+                if (showHint) {
+                    new h4("Помощь в использовании фильтра") {{ style.color = "#0c3383"; style.paddingLeft = "10px"; style.marginBottom = "10px"; }};
+                    new div() {{
+                        style.textAlign = "left";
+                        style.padding = "20px";
+                        style.backgroundColor = "#dff8ff";
+                        new h5("- слово сопоставляется полностью: если ищем слово abc, то ищем полное совпадение (не abcd)");
+                        new h5("- % - последовательность любых символов: abc% или %abc или %abc%");
+                        new h5("- операторы: & и |") {{ }};
+                        new h5("- приоритет задается через скобки: a & (b | (c | d))");
+                        new h5("- экранирование спецсимволов: \\\\( или \\\\) или \\\\& или \\\\| или \\\\% или \\\\\\\\  или \\\\пробел");
+                        new h5("- ошибки выражения поиска отображаются ниже фильтра");
+                    }};
+                }
                 new div() {{
                     className = "grid-filter-enabled";
                     new input() {{
@@ -129,7 +145,15 @@ class GridFilter<T> implements Component0<div> {
                         className = "grid-filter-input";
                         onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
+                    new div() {{
+                        className = "grid-filter-hint";
+                        innerHTML = """
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            """;
+                        onclick = ev -> effect(showHint = !showHint);
+                    }};
                 }};
+            }
             new div() {{
                 if (isError && filterEnabled && !filterValue.equals("")) {
                     new div() {{
@@ -315,7 +339,7 @@ class GridFilter<T> implements Component0<div> {
 
     public static Tree parse(Lexeme[] tokens, int i) {
         if (i >= tokens.length) {
-            JSExpression.of("com_over64_greact_uikit_GridFilter._printError('Ошибка парсинга', i - 1)");
+            JSExpression.of("com_over64_greact_uikit_GridFilter._printError('Ошибка выражения поиска', i - 1)");
             JSExpression.of("throw new Error()");
         }
         var current = tokens[i];

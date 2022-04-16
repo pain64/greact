@@ -133,4 +133,30 @@ public class _12InnerClass {
                 }
                 """);
     }
+
+    @Test void nestedClassStaticFields() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import static js.Test.A.FOO;
+                class Test {
+                  static class A {
+                    static String FOO = "hello";
+                  }
+                  static String BAR = FOO;
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
+                    constructor() {
+                    }
+                    static FOO = 'hello';
+                  }
+                  static BAR = js_Test.A.FOO;
+                }
+                """);
+    }
 }

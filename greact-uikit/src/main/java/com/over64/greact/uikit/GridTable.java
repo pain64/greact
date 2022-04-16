@@ -73,38 +73,10 @@ import java.util.function.Consumer;
                             className = "toolbox-header";
                             new div() {{
                                 className = "grid-table-td-content";
-                                innerHTML = """                           
+                                innerHTML = """
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                                     """;
                                 onclick = ev -> onFilterEnableDisable.run();
-                            }};
-                            new Modal<>(() -> new div() {{
-                                className = "grid-table-td-content";
-                                innerHTML = """                           
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                    """;
-                            }}, () -> new div() {{
-                                new h3("Помощь в использовании фильтра") {{
-                                    style.color = "#000";
-                                }};
-                                new h5("1. Слово матчим полностью: если ищем слово abc, то ищем полное совпадение - не abcd") {{
-                                    style.textAlign = "left";
-                                }};
-                                new h5("2. Работаем с like: abc% или %abc или %abc%") {{
-                                    style.textAlign = "left";
-                                }};
-                                new h5("3. Поддерживаем приоритет через скобки: a & (b | (c | d))") {{
-                                    style.textAlign = "left";
-                                }};
-                                new h5("4. Операторы: & и |") {{ style.textAlign = "left"; }};
-                                new h5("5. Экранирование спецсимволов: \\\\(, \\\\), \\\\&, \\\\|, \\\\%, \\\\\\\\  и \\\\пробел") {{
-                                    style.textAlign = "left";
-                                }};
-                                new h5("6. Ошибки парсинга выражения отображаются ниже фильтра") {{
-                                    style.textAlign = "left";
-                                }};
-                            }}) {{
-
                             }};
 
                             if (conf.onRowAdd != null)

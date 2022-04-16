@@ -36,7 +36,12 @@ abstract class ClassBodyGen extends StatementGen {
             // skip class fields & delegate to StatementGen
             super.visitVarDef(varDef);
         } else if (isEnclosingClassIsNested && varDef.sym.isStatic()) {
-            out.write(getRightName(varDef.sym));
+            if(varDef.sym.owner.isEnum())
+                out.write(getRightName(varDef.sym));
+            else {
+                out.write("static ");
+                out.write(varDef.sym.getSimpleName().toString());
+            }
             out.write(" = ");
 
             if (varDef.init != null) varDef.init.accept(this);

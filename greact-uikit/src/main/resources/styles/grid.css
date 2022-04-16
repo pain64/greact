@@ -110,6 +110,12 @@ tr:hover > td > .toolbox {
   padding: 5px;
   background-color: #eee;
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.grid-filter-hint {
+  margin-left: 5px;
 }
 
 .grid-filter-input {
