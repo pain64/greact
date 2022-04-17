@@ -261,6 +261,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         @TaskAction void reload() {
+            var currentTime = System.currentTimeMillis();
+
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
                 ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
@@ -338,6 +340,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                         new RResource<>(moduleName + ".css", moduleCssPath));
                 }).toList();
 
+            System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
+
             var bundleFile = bundleDir.resolve(".bundle");
             try {
 
@@ -361,7 +365,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 throw new RuntimeException(ex);
             }
 
-            System.out.println("BEFORE WS MESSAGE SEND!");
+            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
             workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
