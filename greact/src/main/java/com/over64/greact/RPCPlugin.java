@@ -188,7 +188,7 @@ public class RPCPlugin {
             }
 
             @Override public void visitClassDef(JCTree.JCClassDecl tree) {
-                System.out.println("NEW CLASS DEF: " + tree.sym + "is static: " + tree.sym.isStatic());
+                System.out.println("NEW CLASS DEF: " + tree.sym + " is static: " + tree.sym.isStatic());
                 if(!tree.sym.isStatic()) classDecl = tree;
                 withNewClassDecl(tree, () -> super.visitClassDef(tree));
             }

@@ -39,11 +39,51 @@ public class Loader {
             "</script>";
 
         var reloadWS = """
-            <script>
-              let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
-              ws.onmessage = m => document.location.reload();
-              setInterval(() => ws.send('heartbeat'), 1000 * 60);
-            </script>""";
+                <script>
+                function reloadCss(filename, hash)
+                 {
+                     var links = document.getElementsByTagName("link");
+                     for (var cl in links)
+                     {
+                         var link = links[cl];
+                         if(link.rel === "stylesheet") {
+                             temp = link.href.split("/");
+                             file = temp[temp.length - 1];
+                             if(file.startsWith(filename + "?hash=")) {
+                                 file = filename + "?hash=" + hash;
+                                 link.href = file;
+                             }
+                         }
+                     }
+                 }
+                 
+                 function reloadJs(filename, hash) {
+                     Array.from(document.getElementsByTagName("script")).map(i => {
+                         temp = i.src.split("/");
+                         file = temp[temp.length - 1];
+                         if(file.startsWith(filename + "?hash=")) {
+                             i.src = filename + "?hash=" + hash;
+                         }
+                     })
+                 }
+                
+                  let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+                  ws.onmessage = function(event) {
+                           if (event.data === "reload") {
+                                document.location.reload();
+                           } else {
+                                arr = event.data.split("\\n");
+                                for (i = 0; i < arr.length; i+=1) {
+                                    if (arr[i].split(" ")[0].endsWith("css")) {
+                                        reloadCss(arr[i].split(" ")[0], arr[i].split(" ")[1]);
+                                    } else if (arr[i].split(" ")[0].endsWith("js")) {
+                                        reloadJs(arr[i].split(" ")[0], arr[i].split(" ")[1]);
+                                    }
+                                }
+                           }
+                  };
+                  setInterval(() => ws.send('heartbeat'), 1000 * 60);
+                </script>""";
 
         if (!livereload) reloadWS = "";
 
