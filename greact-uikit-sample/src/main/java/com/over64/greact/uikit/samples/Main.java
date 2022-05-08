@@ -47,6 +47,8 @@ public class Main {
             if (found != null) {
                 if (resourceName.endsWith(".css"))
                     res.type("text/css");
+                if (resourceName.endsWith(".js"))
+                    res.type("text/javascript");
                 return found.get();
             } else {
                 res.status(404);

@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.security.MessageDigest;
@@ -45,8 +46,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
     public static class WorkServerParams implements WorkParameters {
     }
-
-    public static volatile ConcurrentHashMap<String, String> fileBase = new ConcurrentHashMap<>();
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override
@@ -68,14 +67,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     var socket = new ClientHandler();
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     Session session = fut.get();
-                    var mess = new StringBuilder();
-                    for (String s : fileBase.keySet()) {
-                        mess.append(s).append(" ").append(fileBase.get(s)).append("\n");
-                    }
-                    if (mess.length() != 0) {
-                        mess.deleteCharAt(mess.length() - 1); // delete last \n
-                    }
-                    session.getRemote().sendString(mess.toString());
+                    session.getRemote().sendString("update");
+                    // session.getRemote().sendString("reload");
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
                 } finally {
@@ -128,7 +121,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             @Override
             public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
-                if (!message.equals("heartbeat")) {
+                if (!message.equals("reload") && !message.equals("update")) return;
                     var me = session;
 
                     sessions.forEach(ss -> {
@@ -139,7 +132,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                                 System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
                             }
                     });
-                }
+
             }
         }
     }
@@ -384,18 +377,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     }
                 }
 
-                var sha1 = MessageDigest.getInstance("SHA-1");
-                fileBase = new ConcurrentHashMap<>();
                 Files.write(bundleFile, Stream.of(libModules, localResourceOrdered)
                         .flatMap(Collection::stream)
                         .map(r -> {
-                            try {
-                                var hash = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve(r.name))));
-                                fileBase.put(r.name, hash);
-                                return r.name + " " + hash;
-                            } catch (IOException e) {
-                                return r.name + " " + "123";
-                            }
+                            return r.name;
                         })
                         .collect(Collectors.joining("\n"))
                         .getBytes());
@@ -403,8 +388,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
             }
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
