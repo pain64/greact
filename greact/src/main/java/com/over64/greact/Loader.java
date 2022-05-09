@@ -30,7 +30,10 @@ public class Loader {
                 .collect(Collectors.joining("\n", "", "\n"));
 
         var scripts = "";
-        var module = "";
+        var mount ="<script type=\"text/javascript\">\nfunction mount(){\n" +
+                "com_over64_greact_dom_GReact._mmount(document.body, new " +
+                entry.getName().replace(".", "_") + ", [])" +
+                "\n}\nmount()\n</script>";
 
         if (!livereload) {
             scripts = resources.stream()
@@ -40,67 +43,10 @@ public class Loader {
                     .collect(Collectors.joining("\n", "", "\n"));
         } else {
             scripts = resources.stream()
-                    .filter(res -> (res[0].endsWith(".js") && (res[0].startsWith("greact") || res[0].startsWith("std-"))))
+                    .filter(res -> (res[0].endsWith(".js")))
                     .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
                     .collect(Collectors.joining("\n", "", "\n"));
-
-            module = resources.stream()
-                    .filter(res -> (res[0].endsWith(".js") && !(res[0].startsWith("greact") || res[0].startsWith("std-"))))
-                    .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
-                    .collect(Collectors.joining("\n", "", "\n"));
-
-            try {
-                var bundleJs = Path.of(Objects.requireNonNull(Loader.class.getResource("/bundle/")).toURI()).resolve("bundle.js").toFile();
-                if (bundleJs.exists()) {
-                    bundleJs.delete();
-                }
-                bundleJs.createNewFile(); // import A from './modA.js?t=1231232312'
-
-                var data = resources.stream()
-                        .filter(res -> (res[0].endsWith(".js") && !(res[0].startsWith("greact") || res[0].startsWith("std-"))))
-                        .map(res -> "import " + res[0].substring(0, res[0].length() - 3).replace('.', '_') + " from '/" + res[0] + "?t=" + new Date().getTime() + "'")
-                        .collect(Collectors.joining("\n", "", "\n"));
-
-                Files.writeString(bundleJs.toPath(), data + """
-                                                
-                        var handler;
-                        export function start() {
-                            handler = setInterval(() => {
-                                console.log('greet from bundle!!');
-                                // Global.greet();
-                                // new A().greet();
-                                // new B().greet();
-                            }, 1000);
-                        }
-                                                
-                        export function stop() {
-                            clearInterval(handler)
-                        }
-                        """);
-
-                var moduleScripts = resources.stream()
-                        .filter(res -> (res[0].endsWith(".js") && !(res[0].startsWith("greact") || res[0].startsWith("std-")))).toList();
-
-                for (String[] script : moduleScripts) {
-                    var file = Path.of(Objects.requireNonNull(Loader.class.getResource("/bundle/")).toURI()).resolve(script[0]);
-                    Files.writeString(file, "export default " + Files.readString(file));
-
-                    for (String[] script2 : moduleScripts) {
-                        if (!script[0].equals(script2[0])) {
-
-                        }
-                    }
-                }
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                throw new IOException("Can't create bundle.js file");
-            }
-
         }
-        var mount = "<script type=\"text/javascript\">\n" +
-                "com_over64_greact_dom_GReact._mmount(document.body, new " +
-                entry.getName().replace(".", "_") + ", [])" +
-                "</script>";
 
         var reloadWS = """
                 <script>   
@@ -119,29 +65,32 @@ public class Loader {
                        }
                   }
                 }
-                                
-                var mod;
-                async function loadApp() {
-                        if(mod != null) mod.stop();
-                        mod = await import('./bundle.js?t=' + new Date().getTime())
-                        mod.start();
-                }
                  
-                 function reloadJs() {
-                     loadApp();
+                 function reloadJs(changeFiles) {
+                        for (i = 0; i < changeFiles.length; i++) {
+                            var data = changeFiles[i].split("?*_CODE_*&");
+                            var class_ = data[0];
+                            var code = data[1];
+                            eval(class_ + " = " + code);
+                        }
+                    document.body.innerHTML = '';
+                     mount();
                  }
                                 
                   let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
                   ws.onmessage = function(event) {
                            if (event.data === "reload") {
                                 document.location.reload();
-                           } else if(event.data === "update"){
+                           } else if(event.data.startsWith("update")){
+                           var changeFiles = [];
+                           if (event.data.length > 7) {     
+                                changeFiles = event.data.substring(18).split("**_GREACT_**");
+                           }
                                 reloadCss();
-                                reloadJs();
+                                reloadJs(changeFiles);
                            }
                   };
                   setInterval(() => ws.send('heartbeat'), 1000 * 60);
-                  reloadJs();
                 </script>""";
 
         if (!livereload) reloadWS = "";

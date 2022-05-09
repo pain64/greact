@@ -67,7 +67,12 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     var socket = new ClientHandler();
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     Session session = fut.get();
-                    session.getRemote().sendString("update");
+
+                    StringBuilder message = new StringBuilder("update");
+//                    for (class_:changeClasses) {
+//                        message.append("**_GREACT_**" + class_.name + "?*_CODE_*&" + class_.code);
+//                    }
+                    session.getRemote().sendString(message.toString());
                     // session.getRemote().sendString("reload");
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
@@ -121,7 +126,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             @Override
             public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
-                if (!message.equals("reload") && !message.equals("update")) return;
+                if (!message.equals("reload") && !message.startsWith("update")) return;
                     var me = session;
 
                     sessions.forEach(ss -> {
