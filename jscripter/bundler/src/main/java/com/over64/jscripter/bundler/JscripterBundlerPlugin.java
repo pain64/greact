@@ -47,6 +47,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     public static class WorkServerParams implements WorkParameters {
     }
 
+
+    public static HashMap<String, String> varFiles = new HashMap<>();
+    public static HashMap<String, String> allFiles = new HashMap<>();
+
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override
         public void execute() {
@@ -69,10 +73,13 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     Session session = fut.get();
 
                     StringBuilder message = new StringBuilder("update");
-//                    for (class_:changeClasses) {
-//                        message.append("**_GREACT_**" + class_.name + "?*_CODE_*&" + class_.code);
-//                    }
+
+                    for (String class_ : varFiles.keySet()) {
+                        message.append("**_GREACT_**").append(class_).append("?*_CODE_*&").append(varFiles.get(class_));
+                    }
+
                     session.getRemote().sendString(message.toString());
+                    varFiles = new HashMap<>();
                     // session.getRemote().sendString("reload");
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
@@ -127,16 +134,16 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
                 if (!message.equals("reload") && !message.startsWith("update")) return;
-                    var me = session;
+                var me = session;
 
-                    sessions.forEach(ss -> {
-                        if (ss != me)
-                            try {
-                                ss.getRemote().sendString(message);
-                            } catch (java.lang.Exception ex) {
-                                System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
-                            }
-                    });
+                sessions.forEach(ss -> {
+                    if (ss != me)
+                        try {
+                            ss.getRemote().sendString(message);
+                        } catch (java.lang.Exception ex) {
+                            System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
+                        }
+                });
 
             }
         }
@@ -385,12 +392,34 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 Files.write(bundleFile, Stream.of(libModules, localResourceOrdered)
                         .flatMap(Collection::stream)
                         .map(r -> {
+                            if (r.name.endsWith(".js")) {
+                                if (!allFiles.containsKey(r.name)) {
+                                    try {
+                                        allFiles.put(r.name, Files.readString(r.data));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                try {
+                                    var data = Files.readString(r.data);
+                                    if (!allFiles.get(r.name).equals(data)) {
+                                        // TODO: be smart!!! Если в файле больше одного класса, то могут быть проблемы
+                                        String className = data.substring(0, data.indexOf("{")).trim().substring(5);
+                                        allFiles.put(className, data);
+                                        varFiles.put(className, data);
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
                             return r.name;
                         })
                         .collect(Collectors.joining("\n"))
                         .getBytes());
 
                 Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
+
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
