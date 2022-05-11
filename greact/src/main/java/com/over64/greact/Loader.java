@@ -68,7 +68,7 @@ public class Loader {
                  
                  function reloadJs(changeFiles) {
                         for (i = 0; i < changeFiles.length; i++) {
-                            var data = changeFiles[i].split("?*_CODE_*&");
+                            var data = changeFiles[i].split("**_SYMB_**");
                             var class_ = data[0];
                             var code = data[1];
                             eval(class_ + " = " + code);

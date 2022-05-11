@@ -75,7 +75,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     StringBuilder message = new StringBuilder("update");
 
                     for (String class_ : varFiles.keySet()) {
-                        message.append("**_GREACT_**").append(class_).append("?*_CODE_*&").append(varFiles.get(class_));
+                        message.append("**_GREACT_**").append(class_).append("**_SYMB_**").append(varFiles.get(class_)); // Мейби отправлять JSON в виде массива байт
                     }
 
                     session.getRemote().sendString(message.toString());
@@ -402,8 +402,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                                 }
                                 try {
                                     var data = Files.readString(r.data);
-                                    if (!allFiles.get(r.name).equals(data)) {
-                                        // TODO: be smart!!! Если в файле больше одного класса, то могут быть проблемы
+                                    if (!allFiles.get(r.name).equals(data)) { // Нужен более оптимальный способ чекать изменеия в файла=
+                                        // Если в файле больше одного класса, то могут быть проблемы
                                         String className = data.substring(0, data.indexOf("{")).trim().substring(5);
                                         allFiles.put(className, data);
                                         varFiles.put(className, data);
