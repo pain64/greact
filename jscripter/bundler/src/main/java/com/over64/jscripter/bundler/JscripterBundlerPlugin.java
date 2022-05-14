@@ -44,16 +44,14 @@ import java.util.zip.ZipEntry;
 
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
-    public static class WorkServerParams implements WorkParameters {
-    }
+    public static class WorkServerParams implements WorkParameters { }
 
 
     public static HashMap<String, String> varFiles = new HashMap<>();
     public static HashMap<String, String> allFiles = new HashMap<>();
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
-        @Override
-        public void execute() {
+        @Override public void execute() {
             try {
                 System.out.println("AT EXECUTOR");
                 _execute();
@@ -72,7 +70,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     Session session = fut.get();
 
-                    StringBuilder message = new StringBuilder("update");
+                    var message = new StringBuilder("update");
 
                     for (String class_ : varFiles.keySet()) {
                         message.append("**_GREACT_**").append(class_).append("**_SYMB_**").append(varFiles.get(class_)); // Мейби отправлять JSON в виде массива байт
@@ -111,27 +109,23 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
         }
 
-        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
-        }
+        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener { }
 
         public static class ServerHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
             static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
             volatile Session session = null;
 
-            @Override
-            public void onWebSocketConnect(Session ss) {
+            @Override public void onWebSocketConnect(Session ss) {
                 this.session = ss;
                 sessions.add(ss);
             }
 
-            @Override
-            public void onWebSocketClose(int statusCode, String reason) {
+            @Override public void onWebSocketClose(int statusCode, String reason) {
                 var ss = session;
                 if (ss != null) sessions.remove(ss);
             }
 
-            @Override
-            public void onWebSocketText(String message) {
+            @Override public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
                 if (!message.equals("reload") && !message.startsWith("update")) return;
                 var me = session;
@@ -152,8 +146,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     public static class Livereload extends DefaultTask {
         final WorkerExecutor workerExecutor;
 
-        @Inject
-        public Livereload(WorkerExecutor workerExecutor) {
+        @Inject public Livereload(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
         }
 
@@ -175,20 +168,14 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         String removeSuffix(String s, String suffix) {
             return s.endsWith(suffix)
-                    ? s.substring(0, s.length() - suffix.length())
-                    : s;
+                ? s.substring(0, s.length() - suffix.length())
+                : s;
         }
 
-        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {
-        }
-
-        record RResource<D>(String name, D data) {
-        }
-
+        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) { }
+        record RResource<D>(String name, D data) { }
         record ModuleCode<D>(List<RResource<D>> resources,
-                             Map<String, List<String>> dependencies) {
-        }
-
+                             Map<String, List<String>> dependencies) { }
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream,
                                       Function<E, String> entryName,
@@ -197,25 +184,25 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             var dependencies = new HashMap<String, List<String>>();
             var resources =
-                    stream.filter(e -> {
-                                var name = entryName.apply(e);
-                                if (name.endsWith(".js") || name.endsWith(".css")) return true;
-                                else {
-                                    if (name.endsWith(".js.dep")) {
-                                        var depData = entryContent.apply(e);
-                                        var depName = removeSuffix(name, ".dep");
-                                        if (!depData.isEmpty())
-                                            dependencies.put(
-                                                    depName,
-                                                    Arrays.stream(depData.split("\n"))
-                                                            .filter(s -> !s.isEmpty())
-                                                            .toList());
-                                    }
-                                    return false;
-                                }
-                            })
-                            .map(e -> new RResource<>(entryName.apply(e), entryData.apply(e)))
-                            .toList();
+                stream.filter(e -> {
+                        var name = entryName.apply(e);
+                        if (name.endsWith(".js") || name.endsWith(".css")) return true;
+                        else {
+                            if (name.endsWith(".js.dep")) {
+                                var depData = entryContent.apply(e);
+                                var depName = removeSuffix(name, ".dep");
+                                if (!depData.isEmpty())
+                                    dependencies.put(
+                                        depName,
+                                        Arrays.stream(depData.split("\n"))
+                                            .filter(s -> !s.isEmpty())
+                                            .toList());
+                            }
+                            return false;
+                        }
+                    })
+                    .map(e -> new RResource<>(entryName.apply(e), entryData.apply(e)))
+                    .toList();
 
             return new ModuleCode<>(resources, dependencies);
         }
@@ -223,9 +210,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         ModuleCode<String> walkOverJar(File jarFile) {
             try (var jar = new JarFile(jarFile)) {
                 return walkOver(jar.stream(),
-                        je -> je.getName().replace("/", "."),
-                        je -> readJar(jar, je),
-                        je -> readJar(jar, je));
+                    je -> je.getName().replace("/", "."),
+                    je -> readJar(jar, je),
+                    je -> readJar(jar, je));
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -236,9 +223,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 var fullName = path.toString();
                 if (fullName.endsWith(".js") || fullName.endsWith(".js.dep"))
                     return fullName
-                            .replace(baseDir.toPath().toString(), "")
-                            .substring(1) // strip /
-                            .replace("/", ".");
+                        .replace(baseDir.toPath().toString(), "")
+                        .substring(1) // strip /
+                        .replace("/", ".");
                 else
                     return path.getFileName().toString(); // css
             };
@@ -252,10 +239,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
 
             return walkOver(
-                    pathsStream,
-                    pathToResourceName,
-                    p -> readFile(p.toFile()),
-                    p -> p);
+                pathsStream,
+                pathToResourceName,
+                p -> readFile(p.toFile()),
+                p -> p);
         }
 
         <D> void pushDependencies2(ModuleCode<D> module,
@@ -266,15 +253,15 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             for (var dep : deps) {
                 // FIXME: try to find dep in library code
                 var depResource = module.resources.stream()
-                        .filter(r -> r.name.equals(dep))
-                        .findFirst();
+                    .filter(r -> r.name.equals(dep))
+                    .findFirst();
 
 //                        ?: throw RuntimeException("""
 //                        cannot find resource for dependency: $deps
 //                        all resources: ${module.resources.joinToString("\n") { it.name }}
 //                        """.trimIndent())
                 depResource.ifPresent(dr ->
-                        pushDependencies2(module, dest, dr));
+                    pushDependencies2(module, dest, dr));
             }
 
             dest.add(resource);
@@ -287,12 +274,11 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             return dest;
         }
 
-        @TaskAction
-        void reload() {
+        @TaskAction void reload() {
             var currentTime = System.currentTimeMillis();
 
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
-                    ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var stylesDir = resourceDir.toPath().resolve("styles");
@@ -329,50 +315,44 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 }
 
             var localJs = sourceSets.getByName("main")
-                    .getOutput().getClassesDirs().getFiles().stream()
-                    .map(this::walkOverDirectory)
-                    .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
-                            new ModuleCode<>(
-                                    new ArrayList<>(m2.resources) {{
-                                        addAll(m2.resources);
-                                    }},
-                                    new HashMap<>(m1.dependencies) {{
-                                        putAll(m2.dependencies);
-                                    }}));
+                .getOutput().getClassesDirs().getFiles().stream()
+                .map(this::walkOverDirectory)
+                .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
+                    new ModuleCode<>(
+                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
+                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
             var localModule = new ModuleCode<>(
-                    new ArrayList<>(localJs.resources) {{
-                        addAll(localCss);
-                    }},
-                    localJs.dependencies);
+                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
+                localJs.dependencies);
             var localResourceOrdered = buildDependencies(localModule);
 
             var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
             var libModules = StreamSupport.stream(runtimeClassPath.spliterator(), false)
-                    .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
-                    .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
-                    .flatMap(cpWithMod -> {
-                        var libResourcesOrdered = buildDependencies(cpWithMod.mod);
+                .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
+                .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
+                .flatMap(cpWithMod -> {
+                    var libResourcesOrdered = buildDependencies(cpWithMod.mod);
 
-                        var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
-                        var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
+                    var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
+                    var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
 
-                        var moduleName = removeSuffix(cpWithMod.classPath.toPath().getFileName().toString(), ".jar");
-                        var moduleJsPath = Paths.get(bundleDir + "/" + moduleName + ".js");
-                        var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
+                    var moduleName = removeSuffix(cpWithMod.classPath.toPath().getFileName().toString(), ".jar");
+                    var moduleJsPath = Paths.get(bundleDir + "/" + moduleName + ".js");
+                    var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
 
-                        try {
-                            Files.write(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()).getBytes());
-                            Files.write(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()).getBytes());
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                    try {
+                        Files.write(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()).getBytes());
+                        Files.write(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()).getBytes());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
 
-                        return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
-                                new RResource<>(moduleName + ".css", moduleCssPath));
-                    }).toList();
+                    return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
+                        new RResource<>(moduleName + ".css", moduleCssPath));
+                }).toList();
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
@@ -390,33 +370,33 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 }
 
                 Files.write(bundleFile, Stream.of(libModules, localResourceOrdered)
-                        .flatMap(Collection::stream)
-                        .map(r -> {
-                            if (r.name.endsWith(".js")) {
-                                if (!allFiles.containsKey(r.name)) {
-                                    try {
-                                        allFiles.put(r.name, Files.readString(r.data));
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+                    .flatMap(Collection::stream)
+                    .map(r -> {
+                        if (r.name.endsWith(".js")) {
+                            if (!allFiles.containsKey(r.name)) {
                                 try {
-                                    var data = Files.readString(r.data);
-                                    if (!allFiles.get(r.name).equals(data)) { // Нужен более оптимальный способ чекать изменеия в файла=
-                                        // Если в файле больше одного класса, то могут быть проблемы
-                                        String className = data.substring(0, data.indexOf("{")).trim().substring(5);
-                                        allFiles.put(className, data);
-                                        varFiles.put(className, data);
-                                    }
+                                    allFiles.put(r.name, Files.readString(r.data));
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-
                             }
-                            return r.name;
-                        })
-                        .collect(Collectors.joining("\n"))
-                        .getBytes());
+                            try {
+                                var data = Files.readString(r.data);
+                                if (!allFiles.get(r.name).equals(data)) { // Нужен более оптимальный способ чекать изменеия в файла=
+                                    // Если в файле больше одного класса, то могут быть проблемы
+                                    String className = data.substring(0, data.indexOf("{")).trim().substring(5);
+                                    allFiles.put(className, data);
+                                    varFiles.put(className, data);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                        return r.name;
+                    })
+                    .collect(Collectors.joining("\n"))
+                    .getBytes());
 
                 Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
 
@@ -426,8 +406,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {
-            });
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
     }
 
@@ -442,7 +421,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         @TaskAction
         void prod() {
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
-                    ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var bundleDir = resourceDir.toPath().resolve("bundle");
