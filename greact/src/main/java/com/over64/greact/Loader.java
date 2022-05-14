@@ -27,26 +27,23 @@ public class Loader {
                 + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\">")
             .collect(Collectors.joining("\n", "", "\n"));
 
-        var scripts = "";
         var mount = "<script type=\"text/javascript\">\nfunction mount(){\n" +
             "com_over64_greact_dom_GReact._mmount(document.body, new " +
             entry.getName().replace(".", "_") + ", [])" +
             "\n}\nmount()\n</script>";
 
-        if (!livereload) {
-            scripts = resources.stream()
+        var scripts = !livereload ?
+            resources.stream()
                 .filter(res -> res[0].endsWith(".js"))
                 .map(res -> " <script src=\""
                     + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
-                .collect(Collectors.joining("\n", "", "\n"));
-        } else {
-            scripts = resources.stream()
+                .collect(Collectors.joining("\n", "", "\n")) :
+            resources.stream()
                 .filter(res -> (res[0].endsWith(".js")))
                 .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
                 .collect(Collectors.joining("\n", "", "\n"));
-        }
 
-        var reloadWS = """
+        var reloadWS = livereload ? """
             <script>
               function reloadCss() {
                 var links = document.getElementsByTagName("link");
@@ -87,9 +84,7 @@ public class Loader {
                 }
               };
               setInterval(() => ws.send('heartbeat'), 1000 * 60);
-            </script>""";
-
-        if (!livereload) reloadWS = "";
+            </script>""" : "";
 
         var page = String.format("""
             <!doctype html>
