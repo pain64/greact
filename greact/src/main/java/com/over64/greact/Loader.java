@@ -32,15 +32,15 @@ public class Loader {
             entry.getName().replace(".", "_") + ", [])" +
             "\n}\nmount()\n</script>";
 
-        var scripts = !livereload ?
+        var scripts = livereload ?
+            resources.stream()
+                .filter(res -> (res[0].endsWith(".js")))
+                .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
+                .collect(Collectors.joining("\n", "", "\n")) :
             resources.stream()
                 .filter(res -> res[0].endsWith(".js"))
                 .map(res -> " <script src=\""
                     + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
-                .collect(Collectors.joining("\n", "", "\n")) :
-            resources.stream()
-                .filter(res -> (res[0].endsWith(".js")))
-                .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
                 .collect(Collectors.joining("\n", "", "\n"));
 
         var reloadWS = livereload ? """
@@ -50,8 +50,8 @@ public class Loader {
                 for (var cl in links) {
                   var link = links[cl];
                   if(link.rel === "stylesheet") {
-                    temp = link.href.split("/");
-                    file = temp[temp.length - 1].split("?t=")[0];
+                    var temp = link.href.split("/");
+                    var file = temp[temp.length - 1].split("?t=")[0];
                     if(file.includes(".css")) {
                       link.href = file + "?t=" + Date.now();
                     }
