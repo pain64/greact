@@ -68,7 +68,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     client.start();
                     var socket = new ClientHandler();
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
-                    Session session = fut.get();
+                    var session = fut.get();
 
                     var message = new StringBuilder("update");
 
@@ -376,8 +376,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                             if (!allFiles.containsKey(r.name)) {
                                 try {
                                     allFiles.put(r.name, Files.readString(r.data));
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                } catch (IOException ex) {
+                                    throw new RuntimeException(ex);
                                 }
                             }
                             try {
@@ -388,8 +388,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                                     allFiles.put(className, data);
                                     varFiles.put(className, data);
                                 }
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
                             }
 
                         }
