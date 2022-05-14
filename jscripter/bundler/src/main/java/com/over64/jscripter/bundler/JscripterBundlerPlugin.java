@@ -357,6 +357,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
             var bundleFile = bundleDir.resolve(".bundle");
+            // var lastBuild = mtime(bundleFile)
+            // все файлы, который новее => присылаем дельты
+            // class A {
+            // window.A = {
             try {
 
                 for (var res : localResourceOrdered) {
@@ -384,7 +388,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                                 var data = Files.readString(r.data);
                                 if (!allFiles.get(r.name).equals(data)) { // Нужен более оптимальный способ чекать изменеия в файла=
                                     // Если в файле больше одного класса, то могут быть проблемы
-                                    String className = data.substring(0, data.indexOf("{")).trim().substring(5);
+                                    var className = data.substring(0, data.indexOf("{")).trim().substring(5);
                                     allFiles.put(className, data);
                                     varFiles.put(className, data);
                                 }
@@ -393,7 +397,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                             }
 
                         }
-                        return r.name;
+                        // спросили на файле mtime
+                        return r.name; // + mtime
                     })
                     .collect(Collectors.joining("\n"))
                     .getBytes());
