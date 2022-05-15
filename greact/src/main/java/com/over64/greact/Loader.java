@@ -28,7 +28,7 @@ public class Loader {
             .collect(Collectors.joining("\n", "", "\n"));
 
         var mount = "<script type=\"text/javascript\">\nfunction mount(){\n" +
-            "com_over64_greact_dom_GReact._mmount(document.body, new " +
+            "com_over64_greact_dom_GReact._mmount(document.body, new window." +
             entry.getName().replace(".", "_") + ", [])" +
             "\n}\nmount()\n</script>";
 
@@ -44,47 +44,60 @@ public class Loader {
                 .collect(Collectors.joining("\n", "", "\n"));
 
         var reloadWS = livereload ? """
-            <script>
-              function reloadCss() {
-                var links = document.getElementsByTagName("link");
-                for (var cl in links) {
-                  var link = links[cl];
-                  if(link.rel === "stylesheet") {
-                    var temp = link.href.split("/");
-                    var file = temp[temp.length - 1].split("?t=")[0];
-                    if(file.includes(".css")) {
-                      link.href = file + "?t=" + Date.now();
+                <script>
+                  function reloadCss(filename) {
+                    var links = document.getElementsByTagName("link");
+                    for (var cl in links) {
+                      var link = links[cl];
+                      if(link.rel === "stylesheet") {
+                        var temp = link.href.split("/");
+                        var file = temp[temp.length - 1].split("?t=")[0];
+                        if(file === filename) {
+                          link.href = file + "?t=" + Date.now();
+                        }
+                      }
                     }
                   }
-                }
-              }
+                  
+                  function reloadJs(filename) {
+                      var scripts = document.getElementsByTagName("script");
+                          
+                      for (var script of scripts) {
+                         
+                           var temp = script.src.split("/")
+                           var src = temp[temp.length - 1].split("?t=")[0];
+                           if(src === filename) {
+                                script.parentNode.removeChild(script);
 
-              function reloadJs(changeFiles) {
-                for (i = 0; i < changeFiles.length; i++) {
-                  var data = changeFiles[i].split("**_SYMB_**");
-                  var class_ = data[0];
-                  var code = data[1];
-                  eval(class_ + " = " + code);
-                }
-                document.body.innerHTML = '';
-                mount();
-              }
-
-              let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
-              ws.onmessage = function(event) {
-                if (event.data === "reload") {
-                  document.location.reload();
-                } else if(event.data.startsWith("update")) {
-                  var changeFiles = [];
-                  if (event.data.length > 7) {
-                    changeFiles = event.data.substring(18).split("**_GREACT_**");
+                                var newScript = document.createElement('script');
+                                newScript.src = src + "?t=" + Date.now();
+                                document.head.appendChild(newScript);
+                           }
+                      }
                   }
-                  reloadCss();
-                  reloadJs(changeFiles);
-                }
-              };
-              setInterval(() => ws.send('heartbeat'), 1000 * 60);
-            </script>""" : "";
+
+                  let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+                  ws.onmessage = function(event) {
+                    if (event.data === "reload") {
+                      document.location.reload();
+                    } else if(event.data.startsWith("update")) {
+                    var reload = false;
+                      for(var file of event.data.substring(7).split("$")) {
+                            if (file.endsWith(".js")) {
+                                reloadJs(file);
+                                reload = true;
+                            } else if (file.endsWith(".css")) {
+                                reloadCss(file);
+                            }
+                      }
+                      if (reload) {
+                        document.body.innerHTML = '';
+                        mount();
+                      }
+                    }
+                  };
+                  setInterval(() => ws.send('heartbeat'), 1000 * 60);
+                </script>""" : "";
 
         var page = String.format("""
             <!doctype html>
