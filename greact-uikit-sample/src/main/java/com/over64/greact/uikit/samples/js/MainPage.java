@@ -69,7 +69,7 @@ public class MainPage implements Component0<div> {
                         className = "info-main";
                     }};
 
-                    new h4("На этойff странице предоставлена витрина основных UI элементов Greact-a") {{
+                    new h4("На этой странице предоставлена витрина основных UI элементов Greact-a") {{
                         className = "info-desc";
                     }};
                 }};

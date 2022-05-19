@@ -70,8 +70,22 @@ public class Loader {
                                 script.parentNode.removeChild(script);
 
                                 var newScript = document.createElement('script');
-                                newScript.src = src + "?t=" + Date.now();
+                                var localSrc = src + "?t=" + Date.now();
+                                newScript.src = localSrc;
                                 document.head.appendChild(newScript);
+                                
+                                if (window.XMLHttpRequest)
+                                {
+                                    xmlhttp=new XMLHttpRequest();
+                                }
+                                else
+                                {
+                                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                                }
+                                xmlhttp.open("GET",localSrc,false);
+                                xmlhttp.send();
+                                
+                                eval(xmlhttp.responseText);
                            }
                       }
                   }
@@ -111,7 +125,7 @@ public class Loader {
               %s
               %s
               %s
-              </html>""", styles, scripts, reloadWS, mount);
+              </html>""", styles, scripts, mount, reloadWS);
 
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);

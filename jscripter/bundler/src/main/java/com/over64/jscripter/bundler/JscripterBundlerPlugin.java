@@ -75,8 +75,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     for (String class_ : changeFiles) {
                         message.append("$").append(class_);
                     }
-
-                    session.getRemote().sendString(message.toString());
+                    if (!message.toString().equals("update")) {
+                        session.getRemote().sendString(message.toString());
+                    }
                     changeFiles = new ArrayList<>();
                     // session.getRemote().sendString("reload");
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
@@ -400,10 +401,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                                         e.printStackTrace();
                                     }
                                 }
-                            }
-                            else {
+                            } else {
                                 try {
-                                    if (localResourceOrdered.contains(r) && r.name.endsWith(".js") && !Files.readString(r.data).startsWith("window")){
+                                    if (localResourceOrdered.contains(r) && r.name.endsWith(".js") && !Files.readString(r.data).startsWith("window")) {
                                         Files.writeString(bundleDir.resolve(r.name), replaceClassDeclarationWithWindow(Files.readString(r.data)));
                                     }
                                 } catch (IOException e) {
@@ -432,7 +432,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var strings = readString.split("\n");
             if (strings.length < 2) return "";
 
-            var result = new StringBuilder("window." + strings[0].split(" ")[1] + " = class " + strings[0].split(" ")[1] +" {");
+            var result = new StringBuilder("window." + strings[0].split(" ")[1] + " = class " + strings[0].split(" ")[1] + " {");
 
             for (int i = 1; i < strings.length; i++) {
                 result.append("\n").append(strings[i]);
