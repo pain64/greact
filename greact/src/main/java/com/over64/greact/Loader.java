@@ -19,29 +19,29 @@ public class Loader {
         var livereload = bundle.endsWith("livereload\n");
 
         var resources = Arrays.stream(filesWithCode)
-            .map(res -> res.split(" ")).toList();
+                .map(res -> res.split(" ")).toList();
 
         var styles = resources.stream()
-            .filter(res -> res[0].endsWith(".css"))
-            .map(res -> " <link rel=\"stylesheet\" href=\""
-                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\">")
-            .collect(Collectors.joining("\n", "", "\n"));
+                .filter(res -> res[0].endsWith(".css"))
+                .map(res -> " <link rel=\"stylesheet\" href=\""
+                        + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\">")
+                .collect(Collectors.joining("\n", "", "\n"));
 
         var mount = "<script type=\"text/javascript\">\nfunction mount(){\n" +
-            "com_over64_greact_dom_GReact._mmount(document.body, new window." +
-            entry.getName().replace(".", "_") + ", [])" +
-            "\n}\nmount()\n</script>";
+                "com_over64_greact_dom_GReact._mmount(document.body, new window." +
+                entry.getName().replace(".", "_") + ", [])" +
+                "\n}\nmount()\n</script>";
 
         var scripts = livereload ?
-            resources.stream()
-                .filter(res -> (res[0].endsWith(".js")))
-                .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
-                .collect(Collectors.joining("\n", "", "\n")) :
-            resources.stream()
-                .filter(res -> res[0].endsWith(".js"))
-                .map(res -> " <script src=\""
-                    + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
-                .collect(Collectors.joining("\n", "", "\n"));
+                resources.stream()
+                        .filter(res -> (res[0].endsWith(".js")))
+                        .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")
+                        .collect(Collectors.joining("\n", "", "\n")) :
+                resources.stream()
+                        .filter(res -> res[0].endsWith(".js"))
+                        .map(res -> " <script src=\""
+                                + res[0] + (res.length == 2 ? "?hash=" + res[1] : "") + "\"></script>")
+                        .collect(Collectors.joining("\n", "", "\n"));
 
         var reloadWS = livereload ? """
                 <script>
@@ -114,18 +114,18 @@ public class Loader {
                 </script>""" : "";
 
         var page = String.format("""
-            <!doctype html>
-            <html lang="en">
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                %s
-              </head>
-              <body></body>
-              %s
-              %s
-              %s
-              </html>""", styles, scripts, mount, reloadWS);
+                <!doctype html>
+                <html lang="en">
+                  <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                    %s
+                  </head>
+                  <body></body>
+                  %s
+                  %s
+                  %s
+                  </html>""", styles, scripts, mount, reloadWS);
 
         var all = new HashMap<String, Supplier<String>>();
         all.put("/", () -> page);
