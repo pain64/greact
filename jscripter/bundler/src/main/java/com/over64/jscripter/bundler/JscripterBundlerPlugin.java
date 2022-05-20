@@ -70,16 +70,21 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     var session = fut.get();
 
+                    if (changeFiles.stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css")))) {
+                        session.getRemote().sendString("reload");
+                    }
+
                     var message = new StringBuilder("update");
 
                     for (String class_ : changeFiles) {
                         message.append("$").append(class_);
                     }
+
                     if (!message.toString().equals("update")) {
                         session.getRemote().sendString(message.toString());
                     }
                     changeFiles = new ArrayList<>();
-                    // session.getRemote().sendString("reload");
+
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
                 } finally {
