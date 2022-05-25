@@ -222,7 +222,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 var fullName = path.toString();
                 if (fullName.endsWith(".js") || fullName.endsWith(".js.dep"))
                     return fullName.replace(baseDir.toPath().toString(), "").substring(1) // strip /
-                            .replace("/", ".");
+                        .replace("/", ".");
                 else return path.getFileName().toString(); // css
             };
 
