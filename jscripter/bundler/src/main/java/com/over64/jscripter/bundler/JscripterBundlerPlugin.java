@@ -169,9 +169,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {}
-
         record RResource<D>(String name, D data) {}
-
         record ModuleCode<D>(List<RResource<D>> resources, Map<String, List<String>> dependencies) {}
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream, Function<E, String> entryName, Function<E, String> entryContent, Function<E, D> entryData) {
