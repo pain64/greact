@@ -21,14 +21,9 @@ import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.attribute.FileAttribute;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -51,16 +46,20 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override public void execute() {
             try {
-                System.out.println("AT EXECUTOR"); _execute();
+                System.out.println("AT EXECUTOR");
+                _execute();
             } catch (Exception e) {
-                System.out.println("RT EXCEPTION: " + e); throw new RuntimeException(e);
+                System.out.println("RT EXCEPTION: " + e);
+                throw new RuntimeException(e);
             }
         }
 
         void _execute() throws Exception {
             try {
-                var client = new WebSocketClient(); try {
-                    client.start(); var socket = new ClientHandler();
+                var client = new WebSocketClient();
+                try {
+                    client.start();
+                    var socket = new ClientHandler();
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     var session = fut.get();
 
@@ -76,7 +75,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
                     if (!message.toString().equals("update")) {
                         session.getRemote().sendString(message.toString());
-                    } changeFiles = new ArrayList<>();
+                    }
+                    changeFiles = new ArrayList<>();
 
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
@@ -85,15 +85,19 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 }
             } catch (java.util.concurrent.ExecutionException t) {
                 if (t.getCause() instanceof java.net.ConnectException) {
-                    System.out.println("start livereload server!"); var server = new Server();
-                    var connector = new ServerConnector(server); connector.setPort(8080);
+                    System.out.println("start livereload server!");
+                    var server = new Server();
+                    var connector = new ServerConnector(server);
+                    connector.setPort(8080);
                     server.addConnector(connector);
 
                     var context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-                    context.setContextPath("/"); server.setHandler(context);
+                    context.setContextPath("/");
+                    server.setHandler(context);
 
                     JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
-                        wsContainer.setMaxTextMessageSize(65535); wsContainer.setIdleTimeout(Duration.ofHours(1));
+                        wsContainer.setMaxTextMessageSize(65535);
+                        wsContainer.setIdleTimeout(Duration.ofHours(1));
                         wsContainer.addMapping("/greact_livereload_events/*", ServerHandler.class);
                     });
 
@@ -111,16 +115,19 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             volatile Session session = null;
 
             @Override public void onWebSocketConnect(Session ss) {
-                this.session = ss; sessions.add(ss);
+                this.session = ss;
+                sessions.add(ss);
             }
 
             @Override public void onWebSocketClose(int statusCode, String reason) {
-                var ss = session; if (ss != null) sessions.remove(ss);
+                var ss = session;
+                if (ss != null) sessions.remove(ss);
             }
 
             @Override public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
-                if (!message.equals("reload") && !message.startsWith("update")) return; var me = session;
+                if (!message.equals("reload") && !message.startsWith("update")) return;
+                var me = session;
 
                 sessions.forEach(ss -> {
                     if (ss != me) try {
@@ -169,14 +176,18 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream, Function<E, String> entryName, Function<E, String> entryContent, Function<E, D> entryData) {
 
-            var dependencies = new HashMap<String, List<String>>(); var resources = stream.filter(e -> {
-                var name = entryName.apply(e); if (name.endsWith(".js") || name.endsWith(".css")) return true;
+            var dependencies = new HashMap<String, List<String>>();
+            var resources = stream.filter(e -> {
+                var name = entryName.apply(e);
+                if (name.endsWith(".js") || name.endsWith(".css")) return true;
                 else {
                     if (name.endsWith(".js.dep")) {
-                        var depData = entryContent.apply(e); var depName = removeSuffix(name, ".dep");
+                        var depData = entryContent.apply(e);
+                        var depName = removeSuffix(name, ".dep");
                         if (!depData.isEmpty())
                             dependencies.put(depName, Arrays.stream(depData.split("\n")).filter(s -> !s.isEmpty()).toList());
-                    } return false;
+                    }
+                    return false;
                 }
             }).map(e -> new RResource<>(entryName.apply(e), entryData.apply(e))).toList();
 
@@ -193,7 +204,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         ModuleCode<Path> walkOverDirectory(File baseDir) {
             Function<Path, String> pathToResourceName = path -> {
-                var fullName = path.toString(); if (fullName.endsWith(".js") || fullName.endsWith(".js.dep"))
+                var fullName = path.toString();
+                if (fullName.endsWith(".js") || fullName.endsWith(".js.dep"))
                     return fullName.replace(baseDir.toPath().toString(), "").substring(1) // strip /
                         .replace("/", ".");
                 else return path.getFileName().toString(); // css
@@ -212,7 +224,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         <D> void pushDependencies2(ModuleCode<D> module, LinkedHashSet<RResource<D>> dest, RResource<D> resource) {
 
-            var deps = module.dependencies.getOrDefault(resource.name, List.of()); for (var dep : deps) {
+            var deps = module.dependencies.getOrDefault(resource.name, List.of());
+            for (var dep : deps) {
                 // FIXME: try to find dep in library code
                 var depResource = module.resources.stream().filter(r -> r.name.equals(dep)).findFirst();
 
@@ -227,8 +240,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         <D> LinkedHashSet<RResource<D>> buildDependencies(ModuleCode<D> module) {
-            var dest = new LinkedHashSet<RResource<D>>(); for (var resource : module.resources)
-                pushDependencies2(module, dest, resource); return dest;
+            var dest = new LinkedHashSet<RResource<D>>();
+            for (var resource : module.resources)
+                pushDependencies2(module, dest, resource);
+            return dest;
         }
 
         @TaskAction void reload() {
@@ -252,9 +267,11 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             try {
                 if (bundleDir.resolve("main.js").toFile().exists()) {
                     Files.delete(bundleDir.resolve("main.js"));
-                } if (bundleDir.resolve("main.css").toFile().exists()) {
+                }
+                if (bundleDir.resolve("main.css").toFile().exists()) {
                     Files.delete(bundleDir.resolve("main.css"));
-                } if (bundleDir.resolve(".release").toFile().exists()) {
+                }
+                if (bundleDir.resolve(".release").toFile().exists()) {
                     Files.delete(bundleDir.resolve(".release"));
                 }
             } catch (IOException ex) {
@@ -277,7 +294,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             // FIXME: make listConcat & mapConcat method
             var localModule = new ModuleCode<>(new ArrayList<>(localJs.resources) {{
                 addAll(localCss);
-            }}, localJs.dependencies); var localResourceOrdered = buildDependencies(localModule);
+            }}, localJs.dependencies);
+            var localResourceOrdered = buildDependencies(localModule);
 
             var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
             var libModules = StreamSupport.stream(runtimeClassPath.spliterator(), false).map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp))).filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js"))).flatMap(cpWithMod -> {
@@ -302,12 +320,15 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            var bundleFile = bundleDir.resolve(".bundle"); var lastBuild = bundleFile.toFile().lastModified();
+            var bundleFile = bundleDir.resolve(".bundle");
+            var lastBuild = bundleFile.toFile().lastModified();
 
             try {
 
                 for (var res : localResourceOrdered) {
-                    var dest = bundleDir.resolve(res.name); var __ = dest.toFile().mkdirs(); try {
+                    var dest = bundleDir.resolve(res.name);
+                    var __ = dest.toFile().mkdirs();
+                    try {
                         Files.copy(res.data, dest, StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
@@ -316,7 +337,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
                 Files.write(bundleFile, Stream.of(libModules, localResourceOrdered).flatMap(Collection::stream).map(r -> {
                     if (lastBuild < r.data.toFile().lastModified() && localResourceOrdered.contains(r)) {
-                        changeFiles.add(r.name); if (r.name.endsWith(".js")) {
+                        changeFiles.add(r.name);
+                        if (r.name.endsWith(".js")) {
                             try {
                                 Files.writeString(bundleDir.resolve(r.name), replaceClassDeclarationWithWindow(Files.readString(r.data)));
                             } catch (IOException e) {
@@ -331,7 +353,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    } return r.name;
+                    }
+                    return r.name;
                 }).collect(Collectors.joining("\n")).getBytes());
 
                 Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
@@ -347,14 +370,16 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
-            if (readString.startsWith("window")) return readString; var strings = readString.split("\n");
+            if (readString.startsWith("window")) return readString;
+            var strings = readString.split("\n");
             if (strings.length < 2) return "";
 
             var result = new StringBuilder("window." + strings[0].split(" ")[1] + " = class " + strings[0].split(" ")[1] + " {");
 
             for (int i = 1; i < strings.length; i++) {
                 result.append("\n").append(strings[i]);
-            } return result;
+            }
+            return result;
         }
     }
 
@@ -370,34 +395,41 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var bundleDir = resourceDir.toPath().resolve("bundle");
-            var bundleFile = resourceDir.toPath().resolve("bundle").resolve(".bundle"); List<String> data;
+            var bundleFile = resourceDir.toPath().resolve("bundle").resolve(".bundle");
+            List<String> data;
 
             try {
-                data = Files.readAllLines(bundleFile); if (!bundleDir.resolve(".release").toFile().exists()) {
+                data = Files.readAllLines(bundleFile);
+                if (!bundleDir.resolve(".release").toFile().exists()) {
                     Files.createFile(bundleDir.resolve(".release"));
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
-            List<String> css = new ArrayList<>(); List<String> js = new ArrayList<>();
+            List<String> css = new ArrayList<>();
+            List<String> js = new ArrayList<>();
 
             for (String file : data) {
-                if (file.endsWith("js")) js.add(file); if (file.endsWith("css")) css.add(file);
+                if (file.endsWith("js")) js.add(file);
+                if (file.endsWith("css")) css.add(file);
             }
 
             try {
                 var mainJs = new File(bundleDir.resolve("main.js").toString());
                 var mainCss = new File(bundleDir.resolve("main.css").toString());
 
-                var __ = mainJs.createNewFile(); __ = mainCss.createNewFile();
+                var __ = mainJs.createNewFile();
+                __ = mainCss.createNewFile();
 
-                var jsBuilder = new StringBuilder(); for (String file : js)
+                var jsBuilder = new StringBuilder();
+                for (String file : js)
                     jsBuilder.append(Files.readString(bundleDir.resolve(file)));
 
                 Files.writeString(bundleDir.resolve("main.js"), jsBuilder);
 
-                var cssBuilder = new StringBuilder(); for (String file : css)
+                var cssBuilder = new StringBuilder();
+                for (String file : css)
                     cssBuilder.append(Files.readString(bundleDir.resolve(file)));
 
                 Files.writeString(bundleDir.resolve("main.css"), cssBuilder);
@@ -405,7 +437,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 for (String file : data)
                     __ = bundleDir.resolve(file).toFile().delete();
 
-                __ = bundleFile.toFile().delete(); __ = bundleFile.toFile().createNewFile();
+                __ = bundleFile.toFile().delete();
+                __ = bundleFile.toFile().createNewFile();
 
                 var sha1 = MessageDigest.getInstance("SHA-1");
                 var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
@@ -419,8 +452,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     }
 
     public void apply(Project project) {
-        project.getPlugins().apply("java"); var classes = project.getTasks().getByName("classes");
-        classes.dependsOn("livereload"); project.getTasks().register("livereload", Livereload.class, reload -> {
+        project.getPlugins().apply("java");
+        var classes = project.getTasks().getByName("classes");
+        classes.dependsOn("livereload");
+        project.getTasks().register("livereload", Livereload.class, reload -> {
             reload.dependsOn("compileJava", "processResources");
         });
 
@@ -431,7 +466,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     }
 
     private static String byteArrayToHexString(byte[] b) {
-        var result = new StringBuilder(); for (byte value : b)
+        var result = new StringBuilder();
+        for (byte value : b)
             result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
 
         return result.toString();
