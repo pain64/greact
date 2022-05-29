@@ -392,7 +392,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 }).collect(Collectors.joining("\n")).getBytes());
 
                 Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
-
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
