@@ -322,32 +322,35 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
-            var localModule = new ModuleCode<>(new ArrayList<>(localJs.resources) {{
-                addAll(localCss);
-            }}, localJs.dependencies);
+            var localModule = new ModuleCode<>(
+                new ArrayList<>(localJs.resources) {{addAll(localCss);}},
+                localJs.dependencies);
             var localResourceOrdered = buildDependencies(localModule);
 
             var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
-            var libModules = StreamSupport.stream(runtimeClassPath.spliterator(), false).map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp))).filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js"))).flatMap(cpWithMod -> {
-                var libResourcesOrdered = buildDependencies(cpWithMod.mod);
+            var libModules = StreamSupport.stream(runtimeClassPath.spliterator(), false)
+                .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
+                .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
+                .flatMap(cpWithMod -> {
+                    var libResourcesOrdered = buildDependencies(cpWithMod.mod);
 
-                var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
-                var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
+                    var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
+                    var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
 
-                var moduleName = removeSuffix(cpWithMod.classPath.toPath().getFileName().toString(), ".jar");
-                var moduleJsPath = Paths.get(bundleDir + "/" + moduleName + ".js");
-                var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
+                    var moduleName = removeSuffix(cpWithMod.classPath.toPath().getFileName().toString(), ".jar");
+                    var moduleJsPath = Paths.get(bundleDir + "/" + moduleName + ".js");
+                    var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
 
-                try {
-                    Files.write(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()).getBytes());
-                    Files.write(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()).getBytes());
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
+                    try {
+                        Files.write(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()).getBytes());
+                        Files.write(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()).getBytes());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
 
-                return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
-                    new RResource<>(moduleName + ".css", moduleCssPath));
-            }).toList();
+                    return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
+                        new RResource<>(moduleName + ".css", moduleCssPath));
+                }).toList();
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
