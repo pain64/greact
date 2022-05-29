@@ -130,11 +130,12 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 var me = session;
 
                 sessions.forEach(ss -> {
-                    if (ss != me) try {
-                        ss.getRemote().sendString(message);
-                    } catch (java.lang.Exception ex) {
-                        System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
-                    }
+                    if (ss != me)
+                        try {
+                            ss.getRemote().sendString(message);
+                        } catch (java.lang.Exception ex) {
+                            System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
+                        }
                 });
 
             }
@@ -165,36 +166,52 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         String removeSuffix(String s, String suffix) {
-            return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
+            return s.endsWith(suffix)
+                ? s.substring(0, s.length() - suffix.length())
+                : s;
         }
 
         record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {}
         record RResource<D>(String name, D data) {}
-        record ModuleCode<D>(List<RResource<D>> resources, Map<String, List<String>> dependencies) {}
+        record ModuleCode<D>(List<RResource<D>> resources,
+            Map<String, List<String>> dependencies) {}
 
-        <E, D> ModuleCode<D> walkOver(Stream<E> stream, Function<E, String> entryName, Function<E, String> entryContent, Function<E, D> entryData) {
+        <E, D> ModuleCode<D> walkOver(Stream<E> stream,
+                                      Function<E, String> entryName,
+                                      Function<E, String> entryContent,
+                                      Function<E, D> entryData) {
 
             var dependencies = new HashMap<String, List<String>>();
-            var resources = stream.filter(e -> {
-                var name = entryName.apply(e);
-                if (name.endsWith(".js") || name.endsWith(".css")) return true;
-                else {
-                    if (name.endsWith(".js.dep")) {
-                        var depData = entryContent.apply(e);
-                        var depName = removeSuffix(name, ".dep");
-                        if (!depData.isEmpty())
-                            dependencies.put(depName, Arrays.stream(depData.split("\n")).filter(s -> !s.isEmpty()).toList());
-                    }
-                    return false;
-                }
-            }).map(e -> new RResource<>(entryName.apply(e), entryData.apply(e))).toList();
+            var resources =
+                stream.filter(e -> {
+                        var name = entryName.apply(e);
+                        if (name.endsWith(".js") || name.endsWith(".css")) return true;
+                        else {
+                            if (name.endsWith(".js.dep")) {
+                                var depData = entryContent.apply(e);
+                                var depName = removeSuffix(name, ".dep");
+                                if (!depData.isEmpty())
+                                    dependencies.put(
+                                        depName,
+                                        Arrays.stream(depData.split("\n"))
+                                            .filter(s -> !s.isEmpty())
+                                            .toList());
+                            }
+                            return false;
+                        }
+                    })
+                    .map(e -> new RResource<>(entryName.apply(e), entryData.apply(e)))
+                    .toList();
 
             return new ModuleCode<>(resources, dependencies);
         }
 
         ModuleCode<String> walkOverJar(File jarFile) {
             try (var jar = new JarFile(jarFile)) {
-                return walkOver(jar.stream(), je -> je.getName().replace("/", "."), je -> readJar(jar, je), je -> readJar(jar, je));
+                return walkOver(jar.stream(),
+                    je -> je.getName().replace("/", "."),
+                    je -> readJar(jar, je),
+                    je -> readJar(jar, je));
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -204,9 +221,12 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             Function<Path, String> pathToResourceName = path -> {
                 var fullName = path.toString();
                 if (fullName.endsWith(".js") || fullName.endsWith(".js.dep"))
-                    return fullName.replace(baseDir.toPath().toString(), "").substring(1) // strip /
+                    return fullName
+                        .replace(baseDir.toPath().toString(), "")
+                        .substring(1) // strip /
                         .replace("/", ".");
-                else return path.getFileName().toString(); // css
+                else
+                    return path.getFileName().toString(); // css
             };
 
             final Stream<Path> pathsStream;
@@ -217,10 +237,16 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 throw new RuntimeException(ex);
             }
 
-            return walkOver(pathsStream, pathToResourceName, p -> readFile(p.toFile()), p -> p);
+            return walkOver(
+                pathsStream,
+                pathToResourceName,
+                p -> readFile(p.toFile()),
+                p -> p);
         }
 
-        <D> void pushDependencies2(ModuleCode<D> module, LinkedHashSet<RResource<D>> dest, RResource<D> resource) {
+        <D> void pushDependencies2(ModuleCode<D> module,
+                                   LinkedHashSet<RResource<D>> dest,
+                                   RResource<D> resource) {
 
             var deps = module.dependencies.getOrDefault(resource.name, List.of());
             for (var dep : deps) {
@@ -384,11 +410,13 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     public static class ProductBuild extends DefaultTask {
         final WorkerExecutor workerExecutor;
 
-        @Inject public ProductBuild(WorkerExecutor workerExecutor) {
+        @Inject
+        public ProductBuild(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
         }
 
-        @TaskAction void prod() {
+        @TaskAction
+        void prod() {
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer) ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
