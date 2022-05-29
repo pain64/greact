@@ -137,7 +137,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                             System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
                         }
                 });
-
             }
         }
     }
@@ -251,13 +250,16 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var deps = module.dependencies.getOrDefault(resource.name, List.of());
             for (var dep : deps) {
                 // FIXME: try to find dep in library code
-                var depResource = module.resources.stream().filter(r -> r.name.equals(dep)).findFirst();
+                var depResource = module.resources.stream()
+                    .filter(r -> r.name.equals(dep))
+                    .findFirst();
 
 //                        ?: throw RuntimeException("""
 //                        cannot find resource for dependency: $deps
 //                        all resources: ${module.resources.joinToString("\n") { it.name }}
 //                        """.trimIndent())
-                depResource.ifPresent(dr -> pushDependencies2(module, dest, dr));
+                depResource.ifPresent(dr ->
+                    pushDependencies2(module, dest, dr));
             }
 
             dest.add(resource);
@@ -273,7 +275,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         @TaskAction void reload() {
             var currentTime = System.currentTimeMillis();
 
-            var sourceSets = (org.gradle.api.tasks.SourceSetContainer) ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+            var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var stylesDir = resourceDir.toPath().resolve("styles");
@@ -302,17 +305,20 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 throw new RuntimeException(ex);
             }
 
-            if (!bundleDir.toFile().exists()) try {
-                Files.createDirectory(bundleDir);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            if (!bundleDir.toFile().exists())
+                try {
+                    Files.createDirectory(bundleDir);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
 
-            var localJs = sourceSets.getByName("main").getOutput().getClassesDirs().getFiles().stream().map(this::walkOverDirectory).reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) -> new ModuleCode<>(new ArrayList<>(m2.resources) {{
-                addAll(m2.resources);
-            }}, new HashMap<>(m1.dependencies) {{
-                putAll(m2.dependencies);
-            }}));
+            var localJs = sourceSets.getByName("main")
+                .getOutput().getClassesDirs().getFiles().stream()
+                .map(this::walkOverDirectory)
+                .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
+                    new ModuleCode<>(
+                        new ArrayList<>(m2.resources) {{addAll(m2.resources);}},
+                        new HashMap<>(m1.dependencies) {{putAll(m2.dependencies);}}));
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
@@ -339,7 +345,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     throw new RuntimeException(ex);
                 }
 
-                return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath), new RResource<>(moduleName + ".css", moduleCssPath));
+                return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
+                    new RResource<>(moduleName + ".css", moduleCssPath));
             }).toList();
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
@@ -389,8 +396,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {
-            });
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {});
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
@@ -417,7 +423,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         @TaskAction
         void prod() {
-            var sourceSets = (org.gradle.api.tasks.SourceSetContainer) ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+            var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var bundleDir = resourceDir.toPath().resolve("bundle");
