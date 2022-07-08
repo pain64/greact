@@ -65,6 +65,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
 
+    implementation("org.postgresql:postgresql:42.3.6")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
 }
