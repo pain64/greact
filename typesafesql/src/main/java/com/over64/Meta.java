@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 import static com.over64.TypesafeSql.Joins;
 import static com.over64.TypesafeSql.Table;
 
-class Meta {
+public class Meta {
     interface FieldFetcher {
         Object fetch(ResultSet rs, int idx) throws SQLException;
     }
@@ -56,7 +56,7 @@ class Meta {
         return ResultSet::getObject;
     }
 
-    static <T> ClassMeta<T> parseClass(Class<T> klass) {
+    public static <T> ClassMeta<T> parseClass(Class<T> klass) {
         var tableAnn = klass.getAnnotation(Table.class);
         if (tableAnn == null)
             throw new IllegalStateException(klass.getName() + ": class o record must be annotated with @Table");

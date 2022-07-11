@@ -6,16 +6,12 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 
 import javax.tools.StandardLocation;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
@@ -54,7 +50,6 @@ public class GReactPlugin implements Plugin {
             public void finished(TaskEvent e) {
                 if (e.getKind() == TaskEvent.Kind.COMPILATION) {
 
-
                     try {
                         //comp.log.
                         var result = comp.errorCount() == 0 ? "success" : "fail";
@@ -67,6 +62,9 @@ public class GReactPlugin implements Plugin {
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
+
+                    new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();

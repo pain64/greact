@@ -1,13 +1,11 @@
 package com.over64.greact.uikit.samples;
 
-import com.over64.greact.Loader;
-import com.over64.greact.uikit.samples.js.MainPage;
-import com.over64.greact.rpc.RPC;
-import com.zaxxer.hikari.HikariDataSource;
-
 import com.over64.TypesafeSql;
+import com.over64.greact.Loader;
+import com.over64.greact.rpc.RPC;
+import com.over64.greact.uikit.samples.js.MainPage;
+import com.zaxxer.hikari.HikariDataSource;
 import spark.Spark;
-
 
 import java.io.IOException;
 import java.util.function.Function;
@@ -47,8 +45,8 @@ public class Main {
         Spark.get("/*", (req, res) -> {
             var resourceName = req.pathInfo();
             var found = resources.get(resourceName);
-            if(found != null) {
-                if(resourceName.endsWith(".css"))
+            if (found != null) {
+                if (resourceName.endsWith(".css"))
                     res.type("text/css");
                 return found.get();
             } else {
