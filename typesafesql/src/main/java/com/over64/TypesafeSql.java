@@ -1,18 +1,21 @@
 package com.over64;
 
+import org.jetbrains.annotations.Nullable;
+
 import javax.sql.DataSource;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class TypesafeSql {
@@ -55,6 +58,18 @@ public class TypesafeSql {
         this.ds = ds;
     }
 
+    interface FieldFetcher {
+        Object fetch(ResultSet rs, int idx) throws SQLException;
+    }
+
+    static FieldFetcher fetcherForFieldType(Class<?> fieldType) {
+        if (fieldType == int.class || fieldType == Integer.class) return ResultSet::getInt;
+        if (fieldType == long.class || fieldType == Long.class) return ResultSet::getLong;
+        if (fieldType == boolean.class || fieldType == Boolean.class) return ResultSet::getBoolean;
+        if (fieldType == String.class) return ResultSet::getString;
+        return ResultSet::getObject;
+    }
+
     /* FIXME: may handler throw Exception ??? */
     public <T> T withConnection(Function<Connection, T> handler) {
         try (var conn = ds.getConnection()) {
@@ -88,7 +103,7 @@ public class TypesafeSql {
                 while (rs.next()) {
                     var fetchArgId = 1;
                     for (var i = 0; i < consArgs.length; i++) {
-                        var fetcher = Meta.fetcherForFieldType(cons.getParameters()[i].getType());
+                        var fetcher = fetcherForFieldType(cons.getParameters()[i].getType());
                         consArgs[i] = fetcher.fetch(rs, fetchArgId++);
                     }
 
@@ -178,8 +193,43 @@ public class TypesafeSql {
         return new ExprAndOffsets(expr, offsets);
     }
 
+    record FieldInfo(Method accessor, FieldFetcher fetcher){}
+
+    static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
+        return new Meta.Mapper<>() {
+            @Override public String className(Class<T> klass) { return klass.getName(); }
+            @Override public String fieldName(RecordComponent field) { return field.getName(); }
+            @Override public Stream<RecordComponent> readFields(Class<T> symbol) {
+                return Arrays.stream(symbol.getRecordComponents());
+            }
+
+            @Override public <A extends Annotation> @Nullable A classAnnotation(
+                    Class<T> klass, Class<A> annotationClass) {
+                return klass.getAnnotation(annotationClass);
+            }
+
+            @Override public <A extends Annotation> @Nullable A fieldAnnotation(
+                    RecordComponent field, Class<A> annotationClass) {
+                return field.getAnnotation(annotationClass);
+            }
+
+            @Override public Constructor<T> mapClass(Class<T> klass) {
+                @SuppressWarnings("unchecked")
+                var cons = (Constructor<T>) klass.getDeclaredConstructors()[0];
+                cons.setAccessible(true);
+                return cons;
+            }
+
+            @Override public FieldInfo mapField(RecordComponent field) {
+                var accessor = field.getAccessor();
+                accessor.setAccessible(true);
+                return new FieldInfo(accessor, fetcherForFieldType(field.getType()));
+            }
+        };
+    }
+
     public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
-        var meta = Meta.parseClass(klass);
+        var meta = Meta.parseClass(klass, reflectionMapper());
         var fromTable = meta.table();
         var query = " select\n\t%s\n from\n\t%s\n\t%s".formatted(
             meta.fields().stream()
@@ -209,14 +259,14 @@ public class TypesafeSql {
             pstmt.execute();
             var rs = pstmt.getResultSet();
             var data = new ArrayList<T>();
-            var constructor = meta.cons();
+            var constructor = meta.info();
             var consArgs = new Object[constructor.getParameters().length];
 
             while (rs.next()) {
                 var fetchArgId = 1;
                 for (var i = 0; i < consArgs.length; i++) {
                     var field = meta.fields().get(i);
-                    consArgs[i] = field.fetcher().fetch(rs, fetchArgId++);
+                    consArgs[i] = field.info().fetcher.fetch(rs, fetchArgId++);
                 }
 
                 data.add(constructor.newInstance(consArgs));
@@ -249,7 +299,7 @@ public class TypesafeSql {
     }
 
     public <T> T insertSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass());
+        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var nonJoinedFields = meta.fields().stream()
             .filter(f -> f.atTable() == meta.table()).toList();
 
@@ -267,7 +317,7 @@ public class TypesafeSql {
                 generated.add(field.atColumn());
             } else {
                 try {
-                    paramValues.add(field.accessor().invoke(entity));
+                    paramValues.add(field.info().accessor.invoke(entity));
                     params.add("?");
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     throw new RuntimeException(ex);
@@ -295,7 +345,7 @@ public class TypesafeSql {
 
             cstmt.execute();
 
-            var constructor = meta.cons();
+            var constructor = meta.info();
             var consArgs = new Object[constructor.getParameters().length];
             for (var i = 0; i < consArgs.length; i++) {
                 var field = meta.fields().get(i);
@@ -303,7 +353,7 @@ public class TypesafeSql {
                 if (genIdx != -1)
                     consArgs[i] = cstmt.getLong(paramValues.size() + genIdx + 1);
                 else
-                    consArgs[i] = field.accessor().invoke(entity);
+                    consArgs[i] = field.info().accessor.invoke(entity);
             }
             return (T) constructor.newInstance(consArgs);
 
@@ -317,7 +367,7 @@ public class TypesafeSql {
     }
 
     public <T> Void updateSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass());
+        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var nonJoinedFields = meta.fields().stream()
             .filter(f -> f.atTable() == meta.table()).toList();
         var noIdFields = nonJoinedFields.stream()
@@ -340,10 +390,10 @@ public class TypesafeSql {
             var pstmt = conn.prepareStatement(query);
 
             for (var i = 0; i < noIdFields.size(); i++)
-                pstmt.setObject(i + 1, noIdFields.get(i).accessor().invoke(entity));
+                pstmt.setObject(i + 1, noIdFields.get(i).info().accessor.invoke(entity));
 
             for (var i = 0; i < idFields.size(); i++)
-                pstmt.setObject(noIdFields.size() + i + 1, idFields.get(i).accessor().invoke(entity));
+                pstmt.setObject(noIdFields.size() + i + 1, idFields.get(i).info().accessor.invoke(entity));
 
             pstmt.execute();
 
@@ -359,7 +409,7 @@ public class TypesafeSql {
     }
 
     public <T> Void deleteSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass());
+        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var idFields = meta.fields().stream()
             .filter(Meta.FieldRef::isId).toList();
 
@@ -373,7 +423,7 @@ public class TypesafeSql {
             var pstmt = conn.prepareStatement(query);
 
             for (var i = 0; i < idFields.size(); i++)
-                pstmt.setObject(i + 1, idFields.get(i).accessor().invoke(entity));
+                pstmt.setObject(i + 1, idFields.get(i).info().accessor.invoke(entity));
 
             pstmt.execute();
 
