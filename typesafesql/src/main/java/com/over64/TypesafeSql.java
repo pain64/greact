@@ -259,9 +259,7 @@ public class TypesafeSql {
             pstmt.execute();
             var rs = pstmt.getResultSet();
             var data = new ArrayList<T>();
-            @SuppressWarnings("unchecked")
-            var constructor = (Constructor<T>) meta.info();
-            constructor.setAccessible(true);
+            var constructor = meta.info();
             var consArgs = new Object[constructor.getParameters().length];
 
             while (rs.next()) {
