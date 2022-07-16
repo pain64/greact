@@ -41,7 +41,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
     public static ArrayList<String> changeFiles = new ArrayList<>();
 
-    public static class WorkServerParams implements WorkParameters {}
+    public static class WorkServerParams implements WorkParameters { }
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override public void execute() {
@@ -108,7 +108,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             }
         }
 
-        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {}
+        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener { }
 
         public static class ServerHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
             static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
@@ -170,10 +170,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 : s;
         }
 
-        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) {}
-        record RResource<D>(String name, D data) {}
+        record ClassPathWithModule<D>(File classPath, ModuleCode<D> mod) { }
+        record RResource<D>(String name, D data) { }
         record ModuleCode<D>(List<RResource<D>> resources,
-            Map<String, List<String>> dependencies) {}
+                             Map<String, List<String>> dependencies) { }
 
         <E, D> ModuleCode<D> walkOver(Stream<E> stream,
                                       Function<E, String> entryName,
@@ -317,13 +317,13 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 .map(this::walkOverDirectory)
                 .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
                     new ModuleCode<>(
-                        new ArrayList<>(m2.resources) {{addAll(m2.resources);}},
-                        new HashMap<>(m1.dependencies) {{putAll(m2.dependencies);}}));
+                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
+                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
             var localCss = walkOverDirectory(stylesDir.toFile()).resources;
             // FIXME: make listConcat & mapConcat method
             var localModule = new ModuleCode<>(
-                new ArrayList<>(localJs.resources) {{addAll(localCss);}},
+                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
                 localJs.dependencies);
             var localResourceOrdered = buildDependencies(localModule);
 
@@ -398,7 +398,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {});
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
