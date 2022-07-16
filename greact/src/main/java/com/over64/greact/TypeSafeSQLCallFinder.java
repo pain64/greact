@@ -1,6 +1,5 @@
 package com.over64.greact;
 
-import com.over64.Meta;
 import com.over64.TypesafeSql;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
@@ -15,8 +14,8 @@ public class TypeSafeSQLCallFinder { ;
     private static Names names;
 
     public TypeSafeSQLCallFinder(Context context) {
-        this.symtab = Symtab.instance(context);
-        this.names = Names.instance(context);
+        symtab = Symtab.instance(context);
+        names = Names.instance(context);
     }
 
     static class Symbols {
