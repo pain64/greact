@@ -64,7 +64,7 @@ public class Loader {
                     for (let script of scripts) {
                          const temp = script.src.split("/")
                          const src = temp[temp.length - 1].split("?t=")[0];
-                         
+
                          if(src === filename) {
                               script.parentNode.removeChild(script);
                               const newScript = document.createElement('script');
