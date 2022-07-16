@@ -114,7 +114,8 @@ public class TypesafeSql {
                     data.add((T) rs.getObject(1));
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+        } catch (SQLException | IllegalAccessException | InvocationTargetException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -176,7 +177,7 @@ public class TypesafeSql {
     public ExprAndOffsets mapQueryArgs(String expr, Object... args) {
         var offsets = new ArrayList<ArgOffset>();
 
-        for (var i = args.length - 1; i >=0 ; i--) {
+        for (var i = args.length - 1; i >= 0; i--) {
             for (; ; ) {
                 var offset = expr.indexOf(":" + (i + 1));
                 var iLength = nDigits(i + 1);
@@ -193,7 +194,7 @@ public class TypesafeSql {
         return new ExprAndOffsets(expr, offsets);
     }
 
-    record FieldInfo(Method accessor, FieldFetcher fetcher){}
+    record FieldInfo(Method accessor, FieldFetcher fetcher) { }
 
     static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
         return new Meta.Mapper<>() {
@@ -204,12 +205,12 @@ public class TypesafeSql {
             }
 
             @Override public <A extends Annotation> @Nullable A classAnnotation(
-                    Class<T> klass, Class<A> annotationClass) {
+                Class<T> klass, Class<A> annotationClass) {
                 return klass.getAnnotation(annotationClass);
             }
 
             @Override public <A extends Annotation> @Nullable A fieldAnnotation(
-                    RecordComponent field, Class<A> annotationClass) {
+                RecordComponent field, Class<A> annotationClass) {
                 return field.getAnnotation(annotationClass);
             }
 
@@ -273,7 +274,8 @@ public class TypesafeSql {
             }
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+        } catch (SQLException | IllegalAccessException | InvocationTargetException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -357,7 +359,8 @@ public class TypesafeSql {
             }
             return (T) constructor.newInstance(consArgs);
 
-        } catch (SQLException | IllegalAccessException | InstantiationException | InvocationTargetException ex) {
+        } catch (SQLException | IllegalAccessException | InstantiationException |
+                 InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }
     }
