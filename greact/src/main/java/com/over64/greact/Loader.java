@@ -45,70 +45,60 @@ public class Loader {
 
         var reloadWS = livereload ? """
             <script>
-              function reloadCss(filename) {
-                var links = document.getElementsByTagName("link");
-                for (var cl in links) {
-                  var link = links[cl];
-                  if(link.rel === "stylesheet") {
-                    var temp = link.href.split("/");
-                    var file = temp[temp.length - 1].split("?t=")[0];
-                    if(file === filename) {
-                      link.href = file + "?t=" + Date.now();
-                    }
-                  }
-                }
-              }
-              
-              function reloadJs(filename) {
-                  var scripts = document.getElementsByTagName("script");
-                      
-                  for (var script of scripts) {
-                     
-                       var temp = script.src.split("/")
-                       var src = temp[temp.length - 1].split("?t=")[0];
-                       if(src === filename) {
-                            script.parentNode.removeChild(script);
-
-                            var newScript = document.createElement('script');
-                            var localSrc = src + "?t=" + Date.now();
-                            newScript.src = localSrc;
-                            document.head.appendChild(newScript);
-                                                       
-                            if (window.XMLHttpRequest)
-                            {
-                                xmlhttp=new XMLHttpRequest();
+                function reloadCss(filename) {
+                    var links = document.getElementsByTagName("link");
+                    for (var cl in links) {
+                        var link = links[cl];
+                        if (link.rel === "stylesheet") {
+                            var temp = link.href.split("/");
+                            var file = temp[temp.length - 1].split("?t=")[0];
+                            if (file === filename) {
+                                link.href = file + "?t=" + Date.now();
                             }
-                            else
-                            {
-                                xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-                            }
-                            xmlhttp.open("GET",localSrc,false);
-                            xmlhttp.send();
-                            
-                            eval(xmlhttp.responseText);
-                       }
-                  }
-              }
-
-              let ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
-              ws.onmessage = function(event) {
-                if (event.data === "reload") {
-                  document.location.reload();
-                } else if(event.data.startsWith("update")) {
-                var reload = false;
-                  for(var file of event.data.substring(7).split("$")) {
-                        if (file.endsWith(".js")) {
-                            reloadJs(file);
-                            reload = true;
-                        } else if (file.endsWith(".css")) {
-                            reloadCss(file);
                         }
-                  }
-                  if (reload) {
-                    document.body.innerHTML = '';
-                    mount();
-                  }
+                    }
                 }
+
+                function reloadJs(filename) {
+                    const scripts = document.getElementsByTagName("script");
+                    for (let script of scripts) {
+                         const temp = script.src.split("/")
+                         const src = temp[temp.length - 1].split("?t=")[0];
+                         
+                         if(src === filename) {
+                              script.parentNode.removeChild(script);
+                              const newScript = document.createElement('script');
+                              const localSrc = src + "?t=" + Date.now();
+                              newScript.src = localSrc;
+                              document.head.appendChild(newScript);
+
+                              const xhr = new XMLHttpRequest();
+                              xhr.open("GET",localSrc,false);
+                              xhr.send();
+                              eval(xhr.responseText);
+                         }
+                    }
+                }
+
+              const ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+              ws.onmessage = function(event) {
+                  if (event.data === "reload") {
+                      document.location.reload();
+                  } else if(event.data.startsWith("update")) {
+                      let reload = false;
+                      for (var file of event.data.substring(7).split("$")) {
+                          if (file.endsWith(".js")) {
+                              reloadJs(file);
+                              reload = true;
+                          } else if (file.endsWith(".css")) {
+                              reloadCss(file);
+                          }
+                      }
+                      if (reload) {
+                          document.body.innerHTML = '';
+                          mount();
+                      }
+                  }
               };
               setInterval(() => ws.send('heartbeat'), 1000 * 60);
             </script>""" : "";
