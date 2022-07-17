@@ -15,8 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.RecordComponent;
-import java.util.*;
-import java.util.function.Function;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class TypeSafeSQLCallFinder {
@@ -48,8 +47,8 @@ public class TypeSafeSQLCallFinder {
     public static <T> Meta.Mapper<JCTree.JCExpression, RecordComponent, Constructor<T>, Object> reflectionMapper() {
         return new Meta.Mapper<>() {
 
-            @Override public String className(JCTree.JCExpression symbol) {
-                return null;
+            @Override public String className(JCTree.JCExpression symbol) { // +
+                return TreeInfo.symbol(symbol).owner.toString();
             }
             @Override public String fieldName(RecordComponent field) {
                 return null;
@@ -58,8 +57,8 @@ public class TypeSafeSQLCallFinder {
                 return null;
             }
             @Override
-            public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) {
-                return null;
+            public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) { // +
+                return TreeInfo.symbol(symbol).owner.getAnnotation(annotationClass);
             }
             @Override
             public <A extends Annotation> @Nullable A fieldAnnotation(RecordComponent field, Class<A> annotationClass) {
@@ -92,23 +91,18 @@ public class TypeSafeSQLCallFinder {
                     symbols.insertSelfMethod.contains(methodSym) ||
                     symbols.updateSelfMethod.contains(methodSym)) {
 
-                    TypesafeSql.Table annotation  = null;
                     JCTree.JCExpression tableClass = null;
 
                     for (JCTree.JCExpression arg : tree.args) {
                         var ann = TreeInfo.symbol(arg).owner.getAnnotation(TypesafeSql.Table.class);
                         if (ann != null) {
-                            annotation = ann;
                             tableClass = arg;
                         }
                     }
 
-                    if (annotation == null) throw new RuntimeException();
-
-                    var name = TreeInfo.symbol(tableClass).owner;
-
-                    System.out.println(name);
-                    System.out.println(annotation);
+                    if (tableClass == null) throw new RuntimeException();
+                    var a = (Symbol.ClassSymbol) TreeInfo.symbol(tableClass).owner;
+                    System.out.println(a);
                 }
 
 
