@@ -8,6 +8,7 @@ import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -39,6 +40,14 @@ public class Util {
         var res = (Optional<T>) from.getEnclosedElements().stream()
             .filter(el -> el.name.equals(names.fromString(name)))
             .findFirst();
+        return res;
+    }
+
+    public List<Symbol.MethodSymbol> lookupMemberAll(Symbol.ClassSymbol from, String name) {
+        var res = from.getEnclosedElements().stream()
+            .filter(el -> el.name.equals(names.fromString(name)))
+            .map(n -> ((Symbol.MethodSymbol) n))
+            .toList();
         return res;
     }
 

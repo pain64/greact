@@ -1,14 +1,10 @@
 package com.over64.greact.uikit.samples.js;
 
-import com.greact.model.JSExpression;
 import com.greact.model.async;
 import com.over64.TypesafeSql.Table;
-import com.over64.greact.dom.CodeView;
-import com.over64.greact.dom.HTMLElement;
-import com.over64.greact.dom.HTMLNativeElements.*;
+import com.over64.greact.dom.HTMLNativeElements.Component0;
+import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.uikit.Grid;
-
-import java.util.Date;
 
 import static com.over64.greact.uikit.samples.Main.Server.server;
 

@@ -49,6 +49,7 @@ val test by tasks.getting(Test::class) {
 }
 
 dependencies {
+    implementation("org.jetbrains:annotations:20.1.0")
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
     implementation(project(":typesafesql"))

@@ -195,7 +195,7 @@ public class TypesafeSql {
 
     record FieldInfo(Method accessor, FieldFetcher fetcher){}
 
-    static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
+    public static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
         return new Meta.Mapper<>() {
             @Override public String className(Class<T> klass) { return klass.getName(); }
             @Override public String fieldName(RecordComponent field) { return field.getName(); }
