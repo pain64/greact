@@ -45,21 +45,21 @@ public class TypeSafeSQLCallFinder {
     public static <T> Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper() {
         return new Meta.Mapper<>() {
 
-            @Override public String className(JCTree.JCExpression symbol) { // +
+            @Override public String className(JCTree.JCExpression symbol) {
                 return TreeInfo.symbol(symbol).owner.toString();
             }
             @Override public String fieldName(Symbol.RecordComponent field) {
                 return field.toString();
-            } // +
-            @Override public Stream<Symbol.RecordComponent> readFields(JCTree.JCExpression symbol) { // +
+            }
+            @Override public Stream<Symbol.RecordComponent> readFields(JCTree.JCExpression symbol) {
                 return ((Symbol.ClassSymbol) TreeInfo.symbol(symbol).owner).getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
             }
             @Override
-            public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) { // +
+            public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) {
                 return TreeInfo.symbol(symbol).owner.getAnnotation(annotationClass);
             }
             @Override
-            public <A extends Annotation> @Nullable A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) { // +
+            public <A extends Annotation> @Nullable A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) {
                 return field.getAnnotation(annotationClass);
             }
             @Override public Symbol.ClassSymbol mapClass(JCTree.JCExpression klass) {
@@ -97,11 +97,9 @@ public class TypeSafeSQLCallFinder {
                             tableClass = arg;
                         }
                     }
+                    if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
 
-                    if (tableClass == null) throw new RuntimeException();
-
-                    var meta = Meta.parseClass(tableClass, finderMapper());
-                     System.out.println(meta);
+                    Meta.parseClass(tableClass, finderMapper());
                 }
 
 
