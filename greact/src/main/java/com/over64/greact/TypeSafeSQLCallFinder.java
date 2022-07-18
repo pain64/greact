@@ -13,8 +13,6 @@ import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.RecordComponent;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -44,31 +42,31 @@ public class TypeSafeSQLCallFinder {
 
     final Symbols symbols;
 
-    public static <T> Meta.Mapper<JCTree.JCExpression, RecordComponent, Constructor<T>, Object> reflectionMapper() {
+    public static <T> Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper() {
         return new Meta.Mapper<>() {
 
             @Override public String className(JCTree.JCExpression symbol) { // +
                 return TreeInfo.symbol(symbol).owner.toString();
             }
-            @Override public String fieldName(RecordComponent field) {
-                return null;
-            }
-            @Override public Stream<RecordComponent> readFields(JCTree.JCExpression symbol) {
-                return null;
+            @Override public String fieldName(Symbol.RecordComponent field) {
+                return field.toString();
+            } // +
+            @Override public Stream<Symbol.RecordComponent> readFields(JCTree.JCExpression symbol) { // +
+                return ((Symbol.ClassSymbol) TreeInfo.symbol(symbol).owner).getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
             }
             @Override
             public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) { // +
                 return TreeInfo.symbol(symbol).owner.getAnnotation(annotationClass);
             }
             @Override
-            public <A extends Annotation> @Nullable A fieldAnnotation(RecordComponent field, Class<A> annotationClass) {
-                return null;
+            public <A extends Annotation> @Nullable A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) { // +
+                return field.getAnnotation(annotationClass);
             }
-            @Override public Constructor<T> mapClass(JCTree.JCExpression klass) {
-                return null;
+            @Override public Symbol.ClassSymbol mapClass(JCTree.JCExpression klass) {
+                return ((Symbol.ClassSymbol) TreeInfo.symbol(klass).owner);
             }
-            @Override public Object mapField(RecordComponent field) {
-                return null;
+            @Override public JCTree.JCMethodDecl mapField(Symbol.RecordComponent field) {
+                return field.accessorMeth;
             }
         };
     }
@@ -101,8 +99,9 @@ public class TypeSafeSQLCallFinder {
                     }
 
                     if (tableClass == null) throw new RuntimeException();
-                    var a = (Symbol.ClassSymbol) TreeInfo.symbol(tableClass).owner;
-                    System.out.println(a);
+
+                    var meta = Meta.parseClass(tableClass, finderMapper());
+                     System.out.println(meta);
                 }
 
 
