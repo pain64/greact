@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
 
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Log;
@@ -55,9 +56,13 @@ public class GReactPlugin implements Plugin {
                         var result = comp.errorCount() == 0 ? "success" : "fail";
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                        TypeSafeSQLCallFinder.executor.shutdown();
+                        TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
                         System.out.println("GREACT COMPILATION DONE!!!");
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException("Too long waiting from database");
                     }
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {

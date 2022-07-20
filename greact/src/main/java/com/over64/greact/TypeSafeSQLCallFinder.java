@@ -13,8 +13,8 @@ import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
-import java.sql.Connection;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 public class TypeSafeSQLCallFinder {
@@ -101,8 +101,9 @@ public class TypeSafeSQLCallFinder {
         };
     }
 
-    public void apply(JCTree.JCCompilationUnit cu) {
+    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS, new SynchronousQueue());
 
+    public void apply(JCTree.JCCompilationUnit cu) {
         cu.accept(new TreeScanner() {
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
@@ -157,8 +158,12 @@ public class TypeSafeSQLCallFinder {
                 else if (symbols.updateSelfMethod.contains(methodSym))
                     query = TypesafeSql.QueryBuilder.updateSelfQuery(meta);
 
-                System.out.println(query);
-                // Теперь нужно получить Connection и создать PreparedStatement по этому Connection и query
+                String finalQuery = query;
+
+                executor.execute(() -> {
+                    // Теперь нужно получить Connection и создать PreparedStatement по этому Connection и query
+                    System.out.println(finalQuery);
+                });
             }
         });
     }
