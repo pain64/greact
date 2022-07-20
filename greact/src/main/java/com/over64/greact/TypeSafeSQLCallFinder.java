@@ -10,9 +10,14 @@ import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -157,11 +162,31 @@ public class TypeSafeSQLCallFinder {
                 }
 
                 String query = "";
-                if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym))
-                    query = TypesafeSql.QueryBuilder.selectQuery(meta);
-                else if (symbols.deleteSelfMethod.contains(methodSym))
+                if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
+                    String finalQuery1 = TypesafeSql.QueryBuilder.selectQuery(meta);
+                    executor.execute(() -> {
+                        try {
+                            var ps = createPreparedStatement(finalQuery1);
+                            var preparedStatementMetadata = ps.getMetaData();
+
+                            if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
+                                throw new RuntimeException("Не совпадает количество колонок");
+
+                            for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
+                                if (!preparedStatementMetadata.getColumnClassName(i).equals(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
+                                    throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
+                                }
+                            }
+
+                            ps.close();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    return;
+                } else if (symbols.deleteSelfMethod.contains(methodSym)) {
                     query = TypesafeSql.QueryBuilder.deleteSelfQuery(meta);
-                else if (symbols.insertSelfMethod.contains(methodSym))
+                } else if (symbols.insertSelfMethod.contains(methodSym))
                     query = TypesafeSql.QueryBuilder.insertSelfQuery(meta);
                 else if (symbols.updateSelfMethod.contains(methodSym))
                     query = TypesafeSql.QueryBuilder.updateSelfQuery(meta);
@@ -169,11 +194,66 @@ public class TypeSafeSQLCallFinder {
                 String finalQuery = query;
 
                 executor.execute(() -> {
-                    // Теперь нужно получить Connection и создать PreparedStatement по этому Connection и query
-                    System.out.println(finalQuery);
-                    // throw new RuntimeException("Don't be table");
+                    try {
+                        var ps = createPreparedStatement(finalQuery);
+                        var parameterMetadata = ps.getParameterMetaData();
+
+                        if (symbols.insertSelfMethod.contains(methodSym) || symbols.updateSelfMethod.contains(methodSym)) {
+                            if (parameterMetadata.getParameterCount() != meta.fields().size())
+                                throw new RuntimeException("Не совпадает количество колонок");
+
+                            if (symbols.insertSelfMethod.contains(methodSym)) {
+                                for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
+                                    if (!parameterMetadata.getParameterClassName(i).equals(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
+                                        throw new RuntimeException("Не совпадают типы колонок: " + parameterMetadata.getParameterClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
+                                    }
+                                }
+                            } else {
+                                if (parameterMetadata.getParameterCount() != meta.fields().size())
+                                    throw new RuntimeException("Не совпадает количество колонок");
+
+                                String isId = "";
+                                var typeVar = new ArrayList<String>();
+
+                                for (int i = 0; i < meta.fields().size(); i++) {
+                                    if (meta.fields().get(i).isId()) {
+                                        isId = meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString();
+                                    } else {
+                                        typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString());
+                                    }
+                                }
+
+                                typeVar.add(isId);
+
+                                for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
+                                    if (!typeVar.get(i - 1).equals(parameterMetadata.getParameterClassName(i))) throw new RuntimeException("Не совпадают типы колонок");
+                                }
+
+                            }
+                        } else {
+                            var varId = meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().get().info().getReturnType().type.tsym.getQualifiedName().toString();
+                            if (!parameterMetadata.getParameterClassName(1).equals(varId)) throw new RuntimeException("Не совпадают типы колонок");
+                        }
+
+                        ps.close();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
             }
         });
+    }
+    private PreparedStatement createPreparedStatement(String finalQuery) throws SQLException {
+        var ds = new HikariDataSource() {{
+            //setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+            setDriverClassName("org.postgresql.Driver");
+            setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
+            setUsername("postgres");
+            setPassword("postgres");
+            setMaximumPoolSize(2);
+            setConnectionTimeout(1000);
+        }};
+
+        return ds.getConnection().prepareStatement(finalQuery);
     }
 }

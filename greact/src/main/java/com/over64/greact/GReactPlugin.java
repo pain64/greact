@@ -58,8 +58,9 @@ public class GReactPlugin implements Plugin {
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
                         TypeSafeSQLCallFinder.executor.shutdown();
-                        TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
+                        var closeAllThread = TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
 
+                        if (!closeAllThread) throw new InterruptedException();
                         if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
 
                         System.out.println("GREACT COMPILATION DONE!!!");
