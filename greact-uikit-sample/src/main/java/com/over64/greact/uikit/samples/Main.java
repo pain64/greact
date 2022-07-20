@@ -24,7 +24,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         var ds = new HikariDataSource() {{
-//            setDriverClassName("com.mysql.jdbc.Driver");
             setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
             setUsername("postgres");
             setPassword("postgres");

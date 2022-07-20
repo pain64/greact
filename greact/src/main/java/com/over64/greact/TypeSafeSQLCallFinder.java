@@ -13,6 +13,7 @@ import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.sql.Connection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -71,11 +72,42 @@ public class TypeSafeSQLCallFinder {
         };
     }
 
+    public static <T> Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderSelfMapper() {
+        return new Meta.Mapper<>() {
+
+            @Override public String className(JCTree.JCExpression symbol) {
+                return symbol.type.tsym.toString();
+            }
+            @Override public String fieldName(Symbol.RecordComponent field) {
+                return field.toString();
+            }
+            @Override public Stream<Symbol.RecordComponent> readFields(JCTree.JCExpression symbol) {
+                return ((Symbol.ClassSymbol) symbol.type.tsym).getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
+            }
+            @Override
+            public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) {
+                return symbol.type.tsym.getAnnotation(annotationClass);
+            }
+            @Override
+            public <A extends Annotation> @Nullable A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) {
+                return field.getAnnotation(annotationClass);
+            }
+            @Override public Symbol.ClassSymbol mapClass(JCTree.JCExpression klass) {
+                return ((Symbol.ClassSymbol) klass.type.tsym);
+            }
+            @Override public JCTree.JCMethodDecl mapField(Symbol.RecordComponent field) {
+                return field.accessorMeth;
+            }
+        };
+    }
+
     public void apply(JCTree.JCCompilationUnit cu) {
 
         cu.accept(new TreeScanner() {
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
+                super.visitApply(tree);
+
                 final Symbol methodSym;
                 if (tree.meth instanceof JCTree.JCIdent ident)
                     methodSym = ident.sym;
@@ -83,27 +115,50 @@ public class TypeSafeSQLCallFinder {
                     methodSym = field.sym;
                 else return;
 
-                if (symbols.selectMethod.contains(methodSym) ||
-                    symbols.selectOneMethod.contains(methodSym) ||
-                    symbols.deleteSelfMethod.contains(methodSym) ||
-                    symbols.insertSelfMethod.contains(methodSym) ||
-                    symbols.updateSelfMethod.contains(methodSym)) {
+                JCTree.JCExpression tableClass = null;
+                Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta;
 
-                    JCTree.JCExpression tableClass = null;
+                if (symbols.selectMethod.contains(methodSym) ||
+                    symbols.selectOneMethod.contains(methodSym)) {
 
                     for (JCTree.JCExpression arg : tree.args) {
                         var ann = TreeInfo.symbol(arg).owner.getAnnotation(TypesafeSql.Table.class);
                         if (ann != null) {
                             tableClass = arg;
+                            break;
                         }
                     }
                     if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
+                    meta = Meta.parseClass(tableClass, finderMapper());
 
-                    Meta.parseClass(tableClass, finderMapper());
+                } else if (symbols.deleteSelfMethod.contains(methodSym) ||
+                    symbols.insertSelfMethod.contains(methodSym) ||
+                    symbols.updateSelfMethod.contains(methodSym)) {
+
+                    for (JCTree.JCExpression arg : tree.args) {
+                        if (arg.type.tsym.getAnnotation(TypesafeSql.Table.class) != null) {
+                            tableClass = arg;
+                            break;
+                        }
+                    }
+                    if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
+                    meta = Meta.parseClass(tableClass, finderSelfMapper());
+                } else {
+                    return;
                 }
 
+                String query = "";
+                if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym))
+                    query = TypesafeSql.QueryBuilder.selectQuery(meta);
+                else if (symbols.deleteSelfMethod.contains(methodSym))
+                    query = TypesafeSql.QueryBuilder.deleteSelfQuery(meta);
+                else if (symbols.insertSelfMethod.contains(methodSym))
+                    query = TypesafeSql.QueryBuilder.insertSelfQuery(meta);
+                else if (symbols.updateSelfMethod.contains(methodSym))
+                    query = TypesafeSql.QueryBuilder.updateSelfQuery(meta);
 
-                super.visitApply(tree);
+                System.out.println(query);
+                // Теперь нужно получить Connection и создать PreparedStatement по этому Connection и query
             }
         });
     }
