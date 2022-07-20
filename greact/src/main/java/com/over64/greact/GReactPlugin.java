@@ -56,13 +56,17 @@ public class GReactPlugin implements Plugin {
                         var result = comp.errorCount() == 0 ? "success" : "fail";
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
                         TypeSafeSQLCallFinder.executor.shutdown();
                         TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
+
+                        if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
+
                         System.out.println("GREACT COMPILATION DONE!!!");
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
                     } catch (InterruptedException ex) {
                         throw new RuntimeException("Too long waiting from database");
+                    } catch (Throwable ex) {
+                        throw new RuntimeException(ex);
                     }
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {

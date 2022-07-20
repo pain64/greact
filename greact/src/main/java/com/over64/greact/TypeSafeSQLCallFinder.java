@@ -14,7 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class TypeSafeSQLCallFinder {
@@ -100,8 +102,14 @@ public class TypeSafeSQLCallFinder {
             }
         };
     }
-
-    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS, new SynchronousQueue());
+    public static Throwable preparedStatementError;
+    static Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> preparedStatementError = ex;
+    public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS,
+        new SynchronousQueue(), runnable -> {
+        Thread thread = new Thread(runnable);
+        thread.setUncaughtExceptionHandler(exceptionHandler);
+        return thread;
+    });
 
     public void apply(JCTree.JCCompilationUnit cu) {
         cu.accept(new TreeScanner() {
@@ -163,6 +171,7 @@ public class TypeSafeSQLCallFinder {
                 executor.execute(() -> {
                     // Теперь нужно получить Connection и создать PreparedStatement по этому Connection и query
                     System.out.println(finalQuery);
+                    // throw new RuntimeException("Don't be table");
                 });
             }
         });
