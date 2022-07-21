@@ -8,7 +8,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import spark.Spark;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.function.Function;
 
 public class Main {
@@ -22,7 +21,7 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws IOException {
 
         var ds = new HikariDataSource() {{
             setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");

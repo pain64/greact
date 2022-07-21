@@ -20,7 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -111,7 +111,7 @@ public class TypeSafeSQLCallFinder {
     public static Throwable preparedStatementError;
     static Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> preparedStatementError = ex;
     public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS,
-        new SynchronousQueue(), runnable -> {
+        new LinkedBlockingDeque<>(), runnable -> {
         Thread thread = new Thread(runnable);
         thread.setUncaughtExceptionHandler(exceptionHandler);
         return thread;
@@ -120,7 +120,7 @@ public class TypeSafeSQLCallFinder {
     static Connection conn;
     public void apply(JCTree.JCCompilationUnit cu) {
         if (!finderOn) return;
-        var t0 = System.currentTimeMillis();
+
         if (conn == null) {
             try {
                 initConnection();
@@ -128,8 +128,6 @@ public class TypeSafeSQLCallFinder {
                 throw new RuntimeException(e);
             }
         }
-        var t1 = System.currentTimeMillis();
-        System.out.println(t1-t0 + " ms");
         cu.accept(new TreeScanner() {
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
@@ -141,43 +139,43 @@ public class TypeSafeSQLCallFinder {
                 else if (tree.meth instanceof JCTree.JCFieldAccess field)
                     methodSym = field.sym;
                 else return;
+                executor.execute(() -> {
+                    JCTree.JCExpression tableClass = null;
+                    Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta;
 
-                JCTree.JCExpression tableClass = null;
-                Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta;
+                    if (symbols.selectMethod.contains(methodSym) ||
+                        symbols.selectOneMethod.contains(methodSym)) {
 
-                if (symbols.selectMethod.contains(methodSym) ||
-                    symbols.selectOneMethod.contains(methodSym)) {
-
-                    for (JCTree.JCExpression arg : tree.args) {
-                        var ann = TreeInfo.symbol(arg).owner.getAnnotation(TypesafeSql.Table.class);
-                        if (ann != null) {
-                            tableClass = arg;
-                            break;
+                        for (JCTree.JCExpression arg : tree.args) {
+                            var ann = TreeInfo.symbol(arg).owner.getAnnotation(TypesafeSql.Table.class);
+                            if (ann != null) {
+                                tableClass = arg;
+                                break;
+                            }
                         }
-                    }
-                    if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
-                    meta = Meta.parseClass(tableClass, finderMapper());
+                        if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
+                        meta = Meta.parseClass(tableClass, finderMapper());
 
-                } else if (symbols.deleteSelfMethod.contains(methodSym) ||
-                    symbols.insertSelfMethod.contains(methodSym) ||
-                    symbols.updateSelfMethod.contains(methodSym)) {
+                    } else if (symbols.deleteSelfMethod.contains(methodSym) ||
+                        symbols.insertSelfMethod.contains(methodSym) ||
+                        symbols.updateSelfMethod.contains(methodSym)) {
 
-                    for (JCTree.JCExpression arg : tree.args) {
-                        if (arg.type.tsym.getAnnotation(TypesafeSql.Table.class) != null) {
-                            tableClass = arg;
-                            break;
+                        for (JCTree.JCExpression arg : tree.args) {
+                            if (arg.type.tsym.getAnnotation(TypesafeSql.Table.class) != null) {
+                                tableClass = arg;
+                                break;
+                            }
                         }
+                        if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
+                        meta = Meta.parseClass(tableClass, finderSelfMapper());
+                    } else {
+                        return;
                     }
-                    if (tableClass == null) throw new IllegalStateException("Record must be annotated with @Table");
-                    meta = Meta.parseClass(tableClass, finderSelfMapper());
-                } else {
-                    return;
-                }
 
-                String query = "";
-                if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
-                    String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
-                    executor.execute(() -> {
+                    String query = "";
+                    if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
+                        String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
+
                         try {
                             var ps = createPreparedStatement(conn, finalQuery);
                             var preparedStatementMetadata = ps.getMetaData();
@@ -193,18 +191,18 @@ public class TypeSafeSQLCallFinder {
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
-                    });
-                    return;
-                } else if (symbols.deleteSelfMethod.contains(methodSym)) {
-                    query = TypesafeSql.QueryBuilder.deleteSelfQuery(meta);
-                } else if (symbols.insertSelfMethod.contains(methodSym))
-                    query = TypesafeSql.QueryBuilder.insertSelfQuery(meta);
-                else if (symbols.updateSelfMethod.contains(methodSym))
-                    query = TypesafeSql.QueryBuilder.updateSelfQuery(meta);
 
-                String finalQuery = query;
+                        return;
+                    } else if (symbols.deleteSelfMethod.contains(methodSym)) {
+                        query = TypesafeSql.QueryBuilder.deleteSelfQuery(meta);
+                    } else if (symbols.insertSelfMethod.contains(methodSym))
+                        query = TypesafeSql.QueryBuilder.insertSelfQuery(meta);
+                    else if (symbols.updateSelfMethod.contains(methodSym))
+                        query = TypesafeSql.QueryBuilder.updateSelfQuery(meta);
 
-                executor.execute(() -> {
+                    String finalQuery = query;
+
+
                     try {
                         var ps = createPreparedStatement(conn, finalQuery);
                         var parameterMetadata = ps.getParameterMetaData();
