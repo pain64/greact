@@ -73,8 +73,8 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
 
+                    var t0 = System.currentTimeMillis();
                     new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
-
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();
@@ -101,6 +101,7 @@ public class GReactPlugin implements Plugin {
                     var t5 = System.currentTimeMillis();
 
                     System.out.println("for " + e.getCompilationUnit().getSourceFile() +
+                        "\ntypesafe_finder_plugin: " + (t1 - t0) + "ms" +
                         "\ncode_view_plugin: " + (t2 - t1) + "ms" +
                         "\nrpc_plugin      : " + (t3 - t2) + "ms" +
                         "\nmarkup_plugin   : " + (t4 - t3) + "ms" +

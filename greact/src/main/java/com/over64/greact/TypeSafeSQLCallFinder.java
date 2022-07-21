@@ -17,7 +17,6 @@ import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -163,10 +162,10 @@ public class TypeSafeSQLCallFinder {
 
                 String query = "";
                 if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
-                    String finalQuery1 = TypesafeSql.QueryBuilder.selectQuery(meta);
+                    String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
                     executor.execute(() -> {
                         try {
-                            var ps = createPreparedStatement(finalQuery1);
+                            var ps = createPreparedStatement(finalQuery);
                             var preparedStatementMetadata = ps.getMetaData();
 
                             if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
