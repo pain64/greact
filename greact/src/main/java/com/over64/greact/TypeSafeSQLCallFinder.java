@@ -115,7 +115,11 @@ public class TypeSafeSQLCallFinder {
         return thread;
     });
 
+    public static HikariDataSource ds;
+    static boolean finderOn = true; // Refactor
+
     public void apply(JCTree.JCCompilationUnit cu) {
+        if (!finderOn) return;
         cu.accept(new TreeScanner() {
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
@@ -159,7 +163,7 @@ public class TypeSafeSQLCallFinder {
                 } else {
                     return;
                 }
-
+                if (ds == null) initPreparedStatement();
                 String query = "";
                 if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
                     String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
@@ -242,9 +246,8 @@ public class TypeSafeSQLCallFinder {
             }
         });
     }
-    private PreparedStatement createPreparedStatement(String finalQuery) throws SQLException {
-        var ds = new HikariDataSource() {{
-            //setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    private void initPreparedStatement() { // Refactor
+        ds = new HikariDataSource(){{
             setDriverClassName("org.postgresql.Driver");
             setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
             setUsername("postgres");
@@ -252,7 +255,8 @@ public class TypeSafeSQLCallFinder {
             setMaximumPoolSize(2);
             setConnectionTimeout(1000);
         }};
-
+    }
+    private PreparedStatement createPreparedStatement(String finalQuery) throws SQLException {
         return ds.getConnection().prepareStatement(finalQuery);
     }
 }

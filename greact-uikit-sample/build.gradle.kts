@@ -1,5 +1,3 @@
-import com.over64.jscripter.bundler.JscripterBundlerPlugin.Livereload
-
 plugins {
     id("java")
     id("com.over64.jscripter.bundler") version "0.0.1"
