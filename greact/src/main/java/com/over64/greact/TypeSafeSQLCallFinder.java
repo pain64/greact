@@ -1,5 +1,6 @@
 package com.over64.greact;
 
+import com.greact.TranspilerPlugin;
 import com.over64.Meta;
 import com.over64.TypesafeSql;
 import com.sun.tools.javac.code.Symbol;
@@ -116,7 +117,7 @@ public class TypeSafeSQLCallFinder {
     });
 
     public static HikariDataSource ds;
-    static boolean finderOn = true; // Refactor
+    static boolean finderOn = TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-url="));
 
     public void apply(JCTree.JCCompilationUnit cu) {
         if (!finderOn) return;
@@ -164,6 +165,7 @@ public class TypeSafeSQLCallFinder {
                     return;
                 }
                 if (ds == null) initPreparedStatement();
+
                 String query = "";
                 if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
                     String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
@@ -182,6 +184,7 @@ public class TypeSafeSQLCallFinder {
                             }
 
                             ps.close();
+                            System.out.println("Done");
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -246,14 +249,26 @@ public class TypeSafeSQLCallFinder {
             }
         });
     }
-    private void initPreparedStatement() { // Refactor
+    private void initPreparedStatement() {
+        var jdbcUrl = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-url=")).findFirst().get().split("=")[1];
+        var username = "";
+        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-username="))) {
+            username = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-username=")).findFirst().get().split("=")[1];
+        }
+        var password = "";
+        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-password="))) {
+            password = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-password=")).findFirst().get().split("=")[1];
+        }
+
+        String finalUsername = username;
+        String finalPassword = password;
         ds = new HikariDataSource(){{
             setDriverClassName("org.postgresql.Driver");
-            setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
-            setUsername("postgres");
-            setPassword("postgres");
+            setJdbcUrl(jdbcUrl);
+            setUsername(finalUsername);
+            setPassword(finalPassword);
             setMaximumPoolSize(2);
-            setConnectionTimeout(1000);
+            setConnectionTimeout(10000);
         }};
     }
     private PreparedStatement createPreparedStatement(String finalQuery) throws SQLException {

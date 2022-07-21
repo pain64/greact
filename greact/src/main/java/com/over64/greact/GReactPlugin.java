@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Log;
 
+import static com.over64.greact.TypeSafeSQLCallFinder.ds;
+import static com.over64.greact.TypeSafeSQLCallFinder.finderOn;
+
 
 public class GReactPlugin implements Plugin {
 

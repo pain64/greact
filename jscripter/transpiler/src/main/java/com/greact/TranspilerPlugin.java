@@ -18,6 +18,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ public class TranspilerPlugin implements Plugin {
 
     String jsCodePackage = null;
     String[] stdConversionClass = null;
+    public static List<String> argsData;
 
     @Override
     public String getName() {
@@ -44,10 +47,13 @@ public class TranspilerPlugin implements Plugin {
 
     @Override
     public void init(JavacTask task, String... args) {
+        argsData = Arrays.asList(args);
         var options = new Options()
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
-            }})
+            }}).addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url for validation TypesafeSql calls"))
+            .addOption(new Option(null, "tsql-check-schema-username", true, "username for validation TypesafeSql calls"))
+            .addOption(new Option(null, "tsql-check-schema-password", true, "password for validation TypesafeSql calls"))
             .addOption(new Option(null, "std-conv-class", true, "java standard library type conversion"));
 
         try {
