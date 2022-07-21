@@ -15,6 +15,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -115,12 +116,20 @@ public class TypeSafeSQLCallFinder {
         thread.setUncaughtExceptionHandler(exceptionHandler);
         return thread;
     });
-
-    public static HikariDataSource ds;
     static boolean finderOn = TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-url="));
-
+    static Connection conn;
     public void apply(JCTree.JCCompilationUnit cu) {
         if (!finderOn) return;
+        var t0 = System.currentTimeMillis();
+        if (conn == null) {
+            try {
+                initConnection();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        var t1 = System.currentTimeMillis();
+        System.out.println(t1-t0 + " ms");
         cu.accept(new TreeScanner() {
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
@@ -164,14 +173,13 @@ public class TypeSafeSQLCallFinder {
                 } else {
                     return;
                 }
-                if (ds == null) initPreparedStatement();
 
                 String query = "";
                 if (symbols.selectMethod.contains(methodSym) || symbols.selectOneMethod.contains(methodSym)) {
                     String finalQuery = TypesafeSql.QueryBuilder.selectQuery(meta);
                     executor.execute(() -> {
                         try {
-                            var ps = createPreparedStatement(finalQuery);
+                            var ps = createPreparedStatement(conn, finalQuery);
                             var preparedStatementMetadata = ps.getMetaData();
 
                             if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
@@ -182,9 +190,6 @@ public class TypeSafeSQLCallFinder {
                                     throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
                                 }
                             }
-
-                            ps.close();
-                            System.out.println("Done");
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -201,7 +206,7 @@ public class TypeSafeSQLCallFinder {
 
                 executor.execute(() -> {
                     try {
-                        var ps = createPreparedStatement(finalQuery);
+                        var ps = createPreparedStatement(conn, finalQuery);
                         var parameterMetadata = ps.getParameterMetaData();
 
                         if (symbols.insertSelfMethod.contains(methodSym) || symbols.updateSelfMethod.contains(methodSym)) {
@@ -232,16 +237,16 @@ public class TypeSafeSQLCallFinder {
                                 typeVar.add(isId);
 
                                 for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-                                    if (!typeVar.get(i - 1).equals(parameterMetadata.getParameterClassName(i))) throw new RuntimeException("Не совпадают типы колонок");
+                                    if (!typeVar.get(i - 1).equals(parameterMetadata.getParameterClassName(i)))
+                                        throw new RuntimeException("Не совпадают типы колонок");
                                 }
 
                             }
                         } else {
                             var varId = meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().get().info().getReturnType().type.tsym.getQualifiedName().toString();
-                            if (!parameterMetadata.getParameterClassName(1).equals(varId)) throw new RuntimeException("Не совпадают типы колонок");
+                            if (!parameterMetadata.getParameterClassName(1).equals(varId))
+                                throw new RuntimeException("Не совпадают типы колонок");
                         }
-
-                        ps.close();
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
@@ -249,7 +254,7 @@ public class TypeSafeSQLCallFinder {
             }
         });
     }
-    private void initPreparedStatement() {
+    private void initConnection() throws SQLException {
         var jdbcUrl = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-url=")).findFirst().get().split("=")[1];
         var username = "";
         if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-username="))) {
@@ -262,16 +267,16 @@ public class TypeSafeSQLCallFinder {
 
         String finalUsername = username;
         String finalPassword = password;
-        ds = new HikariDataSource(){{
+        conn = new HikariDataSource() {{
             setDriverClassName("org.postgresql.Driver");
             setJdbcUrl(jdbcUrl);
             setUsername(finalUsername);
             setPassword(finalPassword);
             setMaximumPoolSize(2);
             setConnectionTimeout(10000);
-        }};
+        }}.getConnection();
     }
-    private PreparedStatement createPreparedStatement(String finalQuery) throws SQLException {
-        return ds.getConnection().prepareStatement(finalQuery);
+    private PreparedStatement createPreparedStatement(Connection conn, String finalQuery) throws SQLException {
+        return conn.prepareStatement(finalQuery);
     }
 }

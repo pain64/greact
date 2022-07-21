@@ -6,8 +6,10 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Log;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;
@@ -15,12 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.TimeUnit;
-
-import com.sun.tools.javac.main.JavaCompiler;
-import com.sun.tools.javac.util.Log;
-
-import static com.over64.greact.TypeSafeSQLCallFinder.ds;
-import static com.over64.greact.TypeSafeSQLCallFinder.finderOn;
 
 
 public class GReactPlugin implements Plugin {
