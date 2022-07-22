@@ -43,6 +43,11 @@ public class MainPage implements Component0<div> {
     @Override
     public div mount() {
         return new div() {{
+            new button("hello, world123") {{
+               onclick = ev -> {
+                   JSExpression.of("console.log('debug me 3')");
+               };
+            }};
             new div() {{
                 className = "header";
 

@@ -21,6 +21,8 @@ import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.*;
@@ -37,10 +39,12 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
 
+// FIXME: rename to JScripter
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
-    public static ArrayList<String> changeFiles = new ArrayList<>();
+    public static ArrayList<String> changedFiles = new ArrayList<>();
 
+    // FIXME: pass changed files with parameters
     public static class WorkServerParams implements WorkParameters { }
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
@@ -60,24 +64,23 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 try {
                     client.start();
                     var socket = new ClientHandler();
+                    // FIXME: inline fut
                     var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
                     var session = fut.get();
 
-                    if (changeFiles.stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css")))) {
+                    // FIXME: здесь мы должны уже получать конкретный message
+                    if (changedFiles.stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css"))))
                         session.getRemote().sendString("reload");
+                    else {
+                        var message = new StringBuilder("update");
+                        for (var file : changedFiles)
+                            message.append("$").append(file);
+
+                        if (!message.toString().equals("update"))
+                            session.getRemote().sendString(message.toString());
                     }
 
-                    var message = new StringBuilder("update");
-
-                    for (String class_ : changeFiles) {
-                        message.append("$").append(class_);
-                    }
-
-                    if (!message.toString().equals("update")) {
-                        session.getRemote().sendString(message.toString());
-                    }
-                    changeFiles = new ArrayList<>();
-
+                    changedFiles = new ArrayList<>();
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
                 } finally {
@@ -272,7 +275,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             return dest;
         }
 
-        @TaskAction void reload() {
+        @TaskAction void reload() throws Exception {
             var currentTime = System.currentTimeMillis();
 
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
@@ -281,6 +284,13 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var stylesDir = resourceDir.toPath().resolve("styles");
             var bundleDir = resourceDir.toPath().resolve("bundle");
+            if (!bundleDir.toFile().exists()) Files.createDirectory(bundleDir);
+
+            if (Files.exists(bundleDir.resolve("main.js")))
+                Files.delete(bundleDir.resolve("main.js"));
+            if (Files.exists(bundleDir.resolve("main.css")))
+                Files.delete(bundleDir.resolve("main.css"));
+
 //            if(!resourceDir.exists()) {
 //                // at source code src/main/resources dir is empty
 //                try {
@@ -290,27 +300,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 //                    throw new RuntimeException(ex);
 //                }
 //            }
-
-            try {
-                if (bundleDir.resolve("main.js").toFile().exists()) {
-                    Files.delete(bundleDir.resolve("main.js"));
-                }
-                if (bundleDir.resolve("main.css").toFile().exists()) {
-                    Files.delete(bundleDir.resolve("main.css"));
-                }
-                if (bundleDir.resolve(".release").toFile().exists()) {
-                    Files.delete(bundleDir.resolve(".release"));
-                }
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-
-            if (!bundleDir.toFile().exists())
-                try {
-                    Files.createDirectory(bundleDir);
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
 
             var localJs = sourceSets.getByName("main")
                 .getOutput().getClassesDirs().getFiles().stream()
@@ -342,8 +331,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
 
                     try {
-                        Files.write(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()).getBytes());
-                        Files.write(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()).getBytes());
+                        Files.writeString(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()));
+                        Files.writeString(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()));
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -354,64 +343,42 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            var bundleFile = bundleDir.resolve(".bundle");
-            var lastBuild = bundleFile.toFile().lastModified();
+            var bundlePath = bundleDir.resolve(".bundle");
+            var bundleFile = bundlePath.toFile();
+            var bundleExists = bundleFile.exists();
+            var lastBuild = bundleFile.lastModified();
 
-            try {
-
-                for (var res : localResourceOrdered) {
+            for (var res : localResourceOrdered) {
+                if (!bundleExists || res.data.toFile().lastModified() > lastBuild) {
+                    changedFiles.add(res.name);
                     var dest = bundleDir.resolve(res.name);
-                    var __ = dest.toFile().mkdirs();
-                    try {
+
+                    // При первой сборке просто копируем файлы без
+                    // префикса `window. = class`
+                    // При последующих livereload сборках добавляем префикс
+                    // TODO: подумать над тем, чтобы JScripter сам добавлял префикс
+                    if (bundleExists && res.name.endsWith(".js")) {
+                        var adopted = replaceClassDeclarationWithWindow(Files.readString(res.data));
+                        var destFile = dest.toFile();
+                        if (!destFile.exists()) { var __ = destFile.createNewFile(); }
+                        Files.writeString(dest, adopted, StandardOpenOption.TRUNCATE_EXISTING);
+                    } else
                         Files.copy(res.data, dest, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
                 }
-
-                Files.write(bundleFile, Stream.of(libModules, localResourceOrdered).flatMap(Collection::stream).map(r -> {
-                    if (lastBuild < r.data.toFile().lastModified() && localResourceOrdered.contains(r)) {
-                        changeFiles.add(r.name);
-                        if (r.name.endsWith(".js")) {
-                            try {
-                                Files.writeString(bundleDir.resolve(r.name), replaceClassDeclarationWithWindow(Files.readString(r.data)));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } else {
-                        try {
-                            if (localResourceOrdered.contains(r) && r.name.endsWith(".js") && !Files.readString(r.data).startsWith("window")) {
-                                Files.writeString(bundleDir.resolve(r.name), replaceClassDeclarationWithWindow(Files.readString(r.data)));
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    return r.name;
-                }).collect(Collectors.joining("\n")).getBytes());
-
-                Files.write(bundleFile, Collections.singleton("\nlivereload"), StandardOpenOption.APPEND);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
             }
 
-            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
+            Files.writeString(bundlePath, Stream.of(libModules, localResourceOrdered)
+                .flatMap(Collection::stream)
+                .map(r -> r.name)
+                .collect(Collectors.joining("\n")));
+            Files.writeString(bundlePath, "\nlivereload", StandardOpenOption.APPEND);
 
+            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
             workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
-            if (readString.startsWith("window")) return readString;
-            var strings = readString.split("\n");
-            if (strings.length < 2) return "";
-
-            var result = new StringBuilder("window." + strings[0].split(" ")[1] + " = class " + strings[0].split(" ")[1] + " {");
-
-            for (int i = 1; i < strings.length; i++) {
-                result.append("\n").append(strings[i]);
-            }
-            return result;
+            return readString.replaceAll("class (\\S*) \\{", "window.$1 = class {");
         }
     }
 
@@ -423,81 +390,70 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             this.workerExecutor = workerExecutor;
         }
 
+        interface Appender {
+            void appendAndDrop(FileOutputStream to, String fileName) throws IOException;
+        }
+
         @TaskAction
-        void prod() {
+        void prod() throws IOException, NoSuchAlgorithmException {
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
                 ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
             var bundleDir = resourceDir.toPath().resolve("bundle");
-            var bundleFile = resourceDir.toPath().resolve("bundle").resolve(".bundle");
-            List<String> data;
+            var bundleFile = bundleDir.resolve(".bundle");
+            var allFileNames = Files.readAllLines(bundleFile);
 
-            try {
-                data = Files.readAllLines(bundleFile);
-                if (!bundleDir.resolve(".release").toFile().exists()) {
-                    Files.createFile(bundleDir.resolve(".release"));
+            var mainJsFile = bundleDir.resolve("main.js").toFile();
+            var mainCssFile = bundleDir.resolve("main.css").toFile();
+            if (!mainJsFile.exists()) { var __ = mainJsFile.createNewFile(); }
+            if (!mainCssFile.exists()) { var __ = mainCssFile.createNewFile(); }
+
+            Appender appender = (to, fileName) -> {
+                var inFile = bundleDir.resolve(fileName).toFile();
+                try (var in = new FileInputStream(inFile)) {
+                    var inCh = in.getChannel();
+                    inCh.transferTo(0, inCh.size(), to.getChannel());
                 }
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                var __ = inFile.delete();
+            };
+
+            try (var outJs = new FileOutputStream(mainJsFile, false);
+                 var outCss = new FileOutputStream(mainCssFile, false)) {
+                for (var fileName : allFileNames)
+                    if (fileName.endsWith(".js")) appender.appendAndDrop(outJs, fileName);
+                    else if (fileName.endsWith(".css")) appender.appendAndDrop(outCss, fileName);
             }
 
-            List<String> css = new ArrayList<>();
-            List<String> js = new ArrayList<>();
+            var __ = bundleFile.toFile().delete();
+            __ = bundleFile.toFile().createNewFile();
 
-            for (String file : data) {
-                if (file.endsWith("js")) js.add(file);
-                if (file.endsWith("css")) css.add(file);
-            }
+            // TODO: use timestamps instead of SHA-1
+            var sha1 = MessageDigest.getInstance("SHA-1");
+            var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
+            var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
 
-            try {
-                var mainJs = new File(bundleDir.resolve("main.js").toString());
-                var mainCss = new File(bundleDir.resolve("main.css").toString());
-
-                var __ = mainJs.createNewFile();
-                __ = mainCss.createNewFile();
-
-                var jsBuilder = new StringBuilder();
-                for (String file : js)
-                    jsBuilder.append(Files.readString(bundleDir.resolve(file)));
-
-                Files.writeString(bundleDir.resolve("main.js"), jsBuilder);
-
-                var cssBuilder = new StringBuilder();
-                for (String file : css)
-                    cssBuilder.append(Files.readString(bundleDir.resolve(file)));
-
-                Files.writeString(bundleDir.resolve("main.css"), cssBuilder);
-
-                for (String file : data)
-                    __ = bundleDir.resolve(file).toFile().delete();
-
-                __ = bundleFile.toFile().delete();
-                __ = bundleFile.toFile().createNewFile();
-
-                var sha1 = MessageDigest.getInstance("SHA-1");
-                var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
-                var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
-
-                Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
-            } catch (IOException | NoSuchAlgorithmException ex) {
-                throw new RuntimeException(ex);
-            }
+            Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
         }
     }
 
     public void apply(Project project) {
+        // add tasks: greact_debug_build
+        //   от него зависит classes
+        //            greact_production_build
+        //   от него зависит jar
+        //            livereload
+        //   он запускается из gradle напрямую
+        //
         project.getPlugins().apply("java");
         var classes = project.getTasks().getByName("classes");
         classes.dependsOn("livereload");
-        project.getTasks().register("livereload", Livereload.class, reload -> {
-            reload.dependsOn("compileJava", "processResources");
-        });
+        project.getTasks().register("livereload", Livereload.class, reload ->
+            reload.dependsOn("compileJava", "processResources"));
 
+        project.getTasks().register("prodTask", ProductBuild.class, production ->
+            production.dependsOn("compileJava", "processResources"));
         project.getTasks().getByName("jar").dependsOn("prodTask");
-        project.getTasks().register("prodTask", ProductBuild.class, reload -> {
-            reload.dependsOn("compileJava", "processResources");
-        });
     }
 
     private static String byteArrayToHexString(byte[] b) {
