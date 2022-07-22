@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+
 public class Meta {
     public record TableRef(String name, @Nullable String alias) { }
     public record JoinedTable(TypesafeSql.Mode mode, TableRef table, String onExpr) { }
@@ -73,7 +74,7 @@ public class Meta {
 
                 if (atAnn != null) {
                     if (atAnn.value().isEmpty()) throw new RuntimeException(
-                        className + ": @At: info name cannot be empty");
+                            className + ": @At: info name cannot be empty");
                     atName = atAnn.value();
                     fieldTableRef = null;
                 } else {

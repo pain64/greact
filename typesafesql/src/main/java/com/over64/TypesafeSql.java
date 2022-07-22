@@ -7,6 +7,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.*;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -116,7 +117,8 @@ public class TypesafeSql {
                     data.add((T) rs.getObject(1));
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+        } catch (SQLException | IllegalAccessException | InvocationTargetException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -201,6 +203,7 @@ public class TypesafeSql {
         return new Meta.Mapper<>() {
             @Override public String className(Class<T> klass) {return klass.getName();}
             @Override public String fieldName(RecordComponent field) {return field.getName();}
+
             @Override public Stream<RecordComponent> readFields(Class<T> symbol) {
                 return Arrays.stream(symbol.getRecordComponents());
             }
@@ -329,7 +332,8 @@ public class TypesafeSql {
             }
 
             return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-        } catch (SQLException | IllegalAccessException | InvocationTargetException | InstantiationException ex) {
+        } catch (SQLException | IllegalAccessException | InvocationTargetException |
+                 InstantiationException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -408,7 +412,8 @@ public class TypesafeSql {
             }
             return (T) constructor.newInstance(consArgs);
 
-        } catch (SQLException | IllegalAccessException | InstantiationException | InvocationTargetException ex) {
+        } catch (SQLException | IllegalAccessException | InstantiationException |
+                 InvocationTargetException ex) {
             throw new RuntimeException(ex);
         }
     }
