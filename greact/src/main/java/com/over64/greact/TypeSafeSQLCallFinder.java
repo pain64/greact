@@ -116,11 +116,14 @@ public class TypeSafeSQLCallFinder {
         thread.setUncaughtExceptionHandler(exceptionHandler);
         return thread;
     });
-    static boolean finderOn = TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-url="));
+    static boolean finderOn = TranspilerPlugin.argsData.stream()
+        .filter(n -> n.startsWith("--tsql-check-enabled="))
+        .findFirst().get()
+        .split("=")[1]
+        .equals("true");
     static Connection conn;
     public void apply(JCTree.JCCompilationUnit cu) {
         if (!finderOn) return;
-
         if (conn == null) {
             try {
                 initConnection();
@@ -184,7 +187,7 @@ public class TypeSafeSQLCallFinder {
                                 throw new RuntimeException("Не совпадает количество колонок");
 
                             for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
-                                if (!preparedStatementMetadata.getColumnClassName(i).equals(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
+                                if (!typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
                                     throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
                                 }
                             }
@@ -213,7 +216,7 @@ public class TypeSafeSQLCallFinder {
 
                             if (symbols.insertSelfMethod.contains(methodSym)) {
                                 for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-                                    if (!parameterMetadata.getParameterClassName(i).equals(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
+                                    if (!typeEquals(parameterMetadata.getParameterClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString())) {
                                         throw new RuntimeException("Не совпадают типы колонок: " + parameterMetadata.getParameterClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
                                     }
                                 }
@@ -235,14 +238,14 @@ public class TypeSafeSQLCallFinder {
                                 typeVar.add(isId);
 
                                 for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-                                    if (!typeVar.get(i - 1).equals(parameterMetadata.getParameterClassName(i)))
+                                    if (!typeEquals(typeVar.get(i - 1), parameterMetadata.getParameterClassName(i)))
                                         throw new RuntimeException("Не совпадают типы колонок");
                                 }
 
                             }
                         } else {
                             var varId = meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().get().info().getReturnType().type.tsym.getQualifiedName().toString();
-                            if (!parameterMetadata.getParameterClassName(1).equals(varId))
+                            if (!typeEquals(parameterMetadata.getParameterClassName(1), varId))
                                 throw new RuntimeException("Не совпадают типы колонок");
                         }
                     } catch (SQLException e) {
@@ -252,21 +255,47 @@ public class TypeSafeSQLCallFinder {
             }
         });
     }
+    private boolean typeEquals(String firstType, String secondType) {
+        if (firstType.equals("java.lang.Integer") && (secondType.equals("int") || secondType.equals("long")))
+            return true;
+        return firstType.equals(secondType);
+    }
     private void initConnection() throws SQLException {
-        var jdbcUrl = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-url=")).findFirst().get().split("=")[1];
+        var jdbcUrl = TranspilerPlugin.argsData.stream()
+            .filter(n -> n.startsWith("--tsql-check-schema-url="))
+            .findFirst().get()
+            .split("=")[1];
         var username = "";
         if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-username="))) {
-            username = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-username=")).findFirst().get().split("=")[1];
+            username = TranspilerPlugin.argsData.stream()
+                .filter(n -> n.startsWith("--tsql-check-schema-username="))
+                .findFirst()
+                .get()
+                .split("=")[1];
         }
         var password = "";
         if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-password="))) {
-            password = TranspilerPlugin.argsData.stream().filter(n -> n.startsWith("--tsql-check-schema-password=")).findFirst().get().split("=")[1];
+            password = TranspilerPlugin.argsData.stream()
+                .filter(n -> n.startsWith("--tsql-check-schema-password="))
+                .findFirst()
+                .get()
+                .split("=")[1];
+        }
+        var driverClassName = "";
+        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-driver-class-name="))) {
+            driverClassName = TranspilerPlugin.argsData.stream()
+                .filter(n -> n.startsWith("--tsql-driver-class-name="))
+                .findFirst()
+                .get()
+                .split("=")[1];
         }
 
         String finalUsername = username;
         String finalPassword = password;
+        String finalDriverClassName = driverClassName;
+
         conn = new HikariDataSource() {{
-            setDriverClassName("org.postgresql.Driver");
+            setDriverClassName(finalDriverClassName);
             setJdbcUrl(jdbcUrl);
             setUsername(finalUsername);
             setPassword(finalPassword);
