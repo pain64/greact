@@ -49,11 +49,14 @@ val test by tasks.getting(Test::class) {
 }
 
 dependencies {
+    implementation("org.jetbrains:annotations:20.1.0")
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
+    implementation(project(":typesafesql"))
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
+    implementation("com.zaxxer:HikariCP:4.0.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")

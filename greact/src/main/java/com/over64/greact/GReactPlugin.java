@@ -6,21 +6,17 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Log;
 
 import javax.tools.StandardLocation;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-
-import com.sun.tools.javac.main.JavaCompiler;
-import com.sun.tools.javac.util.Log;
+import java.util.concurrent.TimeUnit;
 
 
 public class GReactPlugin implements Plugin {
@@ -54,19 +50,30 @@ public class GReactPlugin implements Plugin {
             public void finished(TaskEvent e) {
                 if (e.getKind() == TaskEvent.Kind.COMPILATION) {
 
-
                     try {
                         //comp.log.
                         var result = comp.errorCount() == 0 ? "success" : "fail";
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                        TypeSafeSQLCallFinder.executor.shutdown();
+                        var closeAllThread = TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
+
+                        if (!closeAllThread) throw new InterruptedException();
+                        if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
+
                         System.out.println("GREACT COMPILATION DONE!!!");
-                    } catch (IOException ex) {
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException("Too long waiting from database");
+                    } catch (Throwable ex) {
                         throw new RuntimeException(ex);
                     }
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
+
+                    var t0 = System.currentTimeMillis();
+                    new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();
@@ -93,6 +100,7 @@ public class GReactPlugin implements Plugin {
                     var t5 = System.currentTimeMillis();
 
                     System.out.println("for " + e.getCompilationUnit().getSourceFile() +
+                        "\ntypesafe_finder_plugin: " + (t1 - t0) + "ms" +
                         "\ncode_view_plugin: " + (t2 - t1) + "ms" +
                         "\nrpc_plugin      : " + (t3 - t2) + "ms" +
                         "\nmarkup_plugin   : " + (t4 - t3) + "ms" +

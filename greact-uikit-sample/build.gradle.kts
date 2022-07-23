@@ -1,5 +1,3 @@
-import com.over64.jscripter.bundler.JscripterBundlerPlugin.Livereload
-
 plugins {
     id("java")
     id("com.over64.jscripter.bundler") version "0.0.1"
@@ -27,7 +25,12 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.samples.js")
+    options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.samples.js " +
+            "--tsql-check-enabled=true " +
+            "--tsql-driver-class-name=org.postgresql.Driver " +
+            "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/postgres " +
+            "--tsql-check-schema-username=postgres " +
+            "--tsql-check-schema-password=postgres ")
     options.fork()
     options.forkOptions.jvmArgs = listOf(
         "--enable-preview",
@@ -64,6 +67,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
+
+    implementation("org.postgresql:postgresql:42.3.6")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")

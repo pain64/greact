@@ -7,7 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-class Meta {
+
+public class Meta {
     public record TableRef(String name, @Nullable String alias) { }
     public record JoinedTable(TypesafeSql.Mode mode, TableRef table, String onExpr) { }
     public record FieldRef<FI>(FI info, String name, TableRef atTable, String atColumn,
@@ -15,7 +16,7 @@ class Meta {
     public record ClassMeta<CI, FI>(CI info, TableRef table,
                                     List<JoinedTable> joins, List<FieldRef<FI>> fields) { }
 
-    interface Mapper<C, F, CI, FI> {
+    public interface Mapper<C, F, CI, FI> {
         String className(C symbol);
         String fieldName(F field);
         Stream<F> readFields(C symbol);
@@ -43,7 +44,7 @@ class Meta {
         return new JoinedTable(join.mode(), parseTableRef(join.table()), join.on());
     }
 
-    static <C, F, CI, FI> ClassMeta<CI, FI> parseClass(C klass, Mapper<C, F, CI, FI> mapper) {
+    public static <C, F, CI, FI> ClassMeta<CI, FI> parseClass(C klass, Mapper<C, F, CI, FI> mapper) {
         var className = mapper.className(klass);
         var tableAnn = mapper.classAnnotation(klass, TypesafeSql.Table.class);
         if (tableAnn == null) throw new IllegalStateException(

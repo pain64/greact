@@ -12,6 +12,8 @@ import com.sun.tools.javac.util.Names;
 import java.io.IOException;
 
 public class CodeViewPlugin {
+    private final Util util;
+    private final Name constructorName;
     public CodeViewPlugin(Context context) {
         this.util = new Util(context);
         this.constructorName = Names.instance(context).fromString("<init>");
@@ -29,8 +31,7 @@ public class CodeViewPlugin {
                 .findFirst().orElseThrow(() -> new RuntimeException("unreachable"));
     }
 
-    final Util util;
-    final Name constructorName;
+
     final TreeMaker maker;
     final Symbols symbols;
 

@@ -12,7 +12,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,7 +34,7 @@ public class TypesafeSql {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Id { }
+    public @interface Id {}
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Joins {
@@ -52,7 +55,7 @@ public class TypesafeSql {
 
     public enum Mode {INNER, LEFT, RIGHT, FULL}
 
-    final DataSource ds;
+    public final DataSource ds;
 
     public TypesafeSql(DataSource ds) {
         this.ds = ds;
@@ -160,9 +163,9 @@ public class TypesafeSql {
         return withConnection(conn -> exec(conn, stmt, args));
     }
 
-    record ArgOffset(int argIdx, int offset) { }
+    record ArgOffset(int argIdx, int offset) {}
 
-    int nDigits(int n) {
+    static int nDigits(int n) {
         int length = 0;
         long temp = 1;
         while (temp <= n) {
@@ -172,9 +175,9 @@ public class TypesafeSql {
         return length;
     }
 
-    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) { }
+    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) {}
 
-    public ExprAndOffsets mapQueryArgs(String expr, Object... args) {
+    public static ExprAndOffsets mapQueryArgs(String expr, Object... args) {
         var offsets = new ArrayList<ArgOffset>();
 
         for (var i = args.length - 1; i >= 0; i--) {
@@ -194,12 +197,13 @@ public class TypesafeSql {
         return new ExprAndOffsets(expr, offsets);
     }
 
-    record FieldInfo(Method accessor, FieldFetcher fetcher) { }
+    record FieldInfo(Method accessor, FieldFetcher fetcher) {}
 
-    static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
+    public static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
         return new Meta.Mapper<>() {
-            @Override public String className(Class<T> klass) { return klass.getName(); }
-            @Override public String fieldName(RecordComponent field) { return field.getName(); }
+            @Override public String className(Class<T> klass) {return klass.getName();}
+            @Override public String fieldName(RecordComponent field) {return field.getName();}
+
             @Override public Stream<RecordComponent> readFields(Class<T> symbol) {
                 return Arrays.stream(symbol.getRecordComponents());
             }
@@ -229,22 +233,76 @@ public class TypesafeSql {
         };
     }
 
+    public static class QueryBuilder {
+        public static <T, V> String selectQuery(Meta.ClassMeta<T, V> meta) {
+            var fromTable = meta.table();
+            return " select\n\t%s\n from\n\t%s\n\t%s".formatted(
+                meta.fields().stream()
+                    .map(f -> (f.atTable() != null && f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
+                    .collect(Collectors.joining(",\n\t")),
+                fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
+                meta.joins().stream()
+                    .map(join -> {
+                        var kind = join.mode().toString().toLowerCase() + " join";
+                        var tableExpr = " " + join.table().name() +
+                            (join.table().alias() != null ? " " + join.table().alias() : "");
+
+                        return kind + tableExpr + " on " + join.onExpr();
+                    }).collect(Collectors.joining("\n\t")));
+        }
+        public static <T, V> String deleteSelfQuery(Meta.ClassMeta<T, V> meta) {
+            var idFields = meta.fields().stream()
+                .filter(Meta.FieldRef::isId).toList();
+            return "delete from " + meta.table().name() + " where " +
+                idFields.stream().map(f -> f.atColumn() + " = ?")
+                    .collect(Collectors.joining(" and "));
+        }
+
+        public static <T, V> String insertSelfQuery(Meta.ClassMeta<T, V> meta) {
+            var nonJoinedFields = meta.fields().stream()
+                .filter(f -> f.atTable() == meta.table()).toList();
+
+            var values = nonJoinedFields.stream()
+                .map(Meta.FieldRef::atColumn)
+                .collect(Collectors.joining(", ", "(", ")"));
+
+            var params = new ArrayList<String>();
+
+
+            for (var field : nonJoinedFields) {
+                if (field.sequence() != null) {
+                    params.add(field.sequence() + ".nextval");
+                } else {
+                    params.add("?");
+                }
+            }
+
+            return "insert into " + meta.table().name() + values + " values " +
+                params.stream().collect(Collectors.joining(", ", "(", ")"));
+        }
+
+        public static <T, V> String updateSelfQuery(Meta.ClassMeta<T, V> meta) {
+            var nonJoinedFields = meta.fields().stream()
+                .filter(f -> f.atTable() == meta.table()).toList();
+            var noIdFields = nonJoinedFields.stream()
+                .filter(f -> !f.isId()).toList();
+            var idFields = nonJoinedFields.stream()
+                .filter(f -> f.isId()).toList();
+
+            return "update " + meta.table().name()
+                + " set " +
+                noIdFields.stream()
+                    .map(f -> f.atColumn() + " = ?")
+                    .collect(Collectors.joining(", ")) +
+                " where " +
+                idFields.stream().map(f -> f.atColumn() + " = ?")
+                    .collect(Collectors.joining(" and "));
+        }
+    }
+
     public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
         var meta = Meta.parseClass(klass, reflectionMapper());
-        var fromTable = meta.table();
-        var query = " select\n\t%s\n from\n\t%s\n\t%s".formatted(
-            meta.fields().stream()
-                .map(f -> (f.atTable() != null && f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
-                .collect(Collectors.joining(",\n\t")),
-            fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
-            meta.joins().stream()
-                .map(join -> {
-                    var kind = join.mode().toString().toLowerCase() + " join";
-                    var tableExpr = " " + join.table().name() +
-                        (join.table().alias() != null ? " " + join.table().alias() : "");
-
-                    return kind + tableExpr + " on " + join.onExpr();
-                }).collect(Collectors.joining("\n\t")));
+        var query = QueryBuilder.selectQuery(meta);
 
         var exprAndOffsets = mapQueryArgs(query + "\n" + expr, args);
         var offsets = exprAndOffsets.offsets;
@@ -305,10 +363,6 @@ public class TypesafeSql {
         var nonJoinedFields = meta.fields().stream()
             .filter(f -> f.atTable() == meta.table()).toList();
 
-        var values = nonJoinedFields.stream()
-            .map(Meta.FieldRef::atColumn)
-            .collect(Collectors.joining(", ", "(", ")"));
-
         var params = new ArrayList<String>();
         var paramValues = new ArrayList<>();
         var generated = new ArrayList<String>();
@@ -327,8 +381,7 @@ public class TypesafeSql {
             }
         }
 
-        var query = "insert into " + meta.table().name() + values + " values " +
-            params.stream().collect(Collectors.joining(", ", "(", ")"));
+        var query = QueryBuilder.insertSelfQuery(meta);
 
         if (!generated.isEmpty())
             query += " returning " + String.join(", ", generated) + " into " +
@@ -378,14 +431,7 @@ public class TypesafeSql {
         var idFields = nonJoinedFields.stream()
             .filter(f -> f.isId()).toList();
 
-        var query = "update " + meta.table().name()
-            + " set " +
-            noIdFields.stream()
-                .map(f -> f.atColumn() + " = ?")
-                .collect(Collectors.joining(", ")) +
-            " where " +
-            idFields.stream().map(f -> f.atColumn() + " = ?")
-                .collect(Collectors.joining(" and "));
+        var query = QueryBuilder.updateSelfQuery(meta);
 
         System.out.println("### EXEC QUERY:\n" + query);
 
@@ -416,9 +462,7 @@ public class TypesafeSql {
         var idFields = meta.fields().stream()
             .filter(Meta.FieldRef::isId).toList();
 
-        var query = "delete from " + meta.table().name() + " where " +
-            idFields.stream().map(f -> f.atColumn() + " = ?")
-                .collect(Collectors.joining(" and "));
+        var query = QueryBuilder.deleteSelfQuery(meta);
 
         System.out.println("### EXEC QUERY:\n" + query);
 
