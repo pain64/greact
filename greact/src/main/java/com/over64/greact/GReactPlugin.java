@@ -56,11 +56,12 @@ public class GReactPlugin implements Plugin {
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-                        TypeSafeSQLCallFinder.executor.shutdown();
-                        var closeAllThread = TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
+                        TypesafeSqlChecker.FinderData.executor.shutdown();
+                        var closeAllThread = TypesafeSqlChecker.FinderData.executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
 
                         if (!closeAllThread) throw new InterruptedException();
-                        if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
+                        if (TypesafeSqlChecker.FinderData.preparedStatementError != null)
+                            throw TypesafeSqlChecker.FinderData.preparedStatementError;
 
                         System.out.println("GREACT COMPILATION DONE!!!");
                     } catch (InterruptedException ex) {
@@ -71,9 +72,13 @@ public class GReactPlugin implements Plugin {
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
-
                     var t0 = System.currentTimeMillis();
-                    new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-enabled=")) && TranspilerPlugin.argsData.stream()
+                        .filter(n -> n.startsWith("--tsql-check-enabled="))
+                        .findFirst().get()
+                        .split("=")[1]
+                        .equals("true"))
+                        new TypesafeSqlChecker(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();
