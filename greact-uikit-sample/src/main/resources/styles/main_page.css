@@ -1,139 +1,285 @@
-a:hover {
-  text-decoration: underline;
-  color: #682888;
+@import url('https://fonts.googleapis.com/css?family=Exo:400,700');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.header {
-  height: 150px;
-  background-color: #6f5499;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#563d7c), to(#6f5499));
-  background-image: -webkit-linear-gradient(top, #563d7c 0, #6f5499 100%);
-  background-image: -o-linear-gradient(top, #563d7c 0, #6f5499 100%);
-  background-image: linear-gradient(to bottom, #563d7c 0, #6f5499 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#563d7c', endColorstr='#6F5499', GradientType=0);
-  background-repeat: repeat-x;
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Exo', sans-serif;
+}
+
+
+.context {
+    width: 100%;
+    position: absolute;
+    top: 1vh;
+
+}
+
+.context h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 50px;
+}
+
+
+.area {
+    /*background: #ed6142;*/
+    background: -webkit-linear-gradient(#fa6b04, #bd674a);
+    width: 100%;
+    height: 20vh;
+}
+
+.circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20%;
+    overflow: hidden;
+}
+
+.circles li {
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    animation: animate 25s linear infinite;
+    bottom: -150px;
+
+}
+
+.circles li:nth-child(1) {
+    left: 25%;
+    width: 80px;
+    height: 80px;
+    animation-delay: 0s;
+}
+
+
+.circles li:nth-child(2) {
+    left: 10%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+}
+
+.circles li:nth-child(3) {
+    left: 70%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 4s;
+}
+
+.circles li:nth-child(4) {
+    left: 40%;
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+    animation-duration: 18s;
+}
+
+.circles li:nth-child(5) {
+    left: 65%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 0s;
+}
+
+.circles li:nth-child(6) {
+    left: 75%;
+    width: 110px;
+    height: 110px;
+    animation-delay: 3s;
+}
+
+.circles li:nth-child(7) {
+    left: 35%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 7s;
+}
+
+.circles li:nth-child(8) {
+    left: 50%;
+    width: 25px;
+    height: 25px;
+    animation-delay: 15s;
+    animation-duration: 45s;
+}
+
+.circles li:nth-child(9) {
+    left: 20%;
+    width: 15px;
+    height: 15px;
+    animation-delay: 2s;
+    animation-duration: 35s;
+}
+
+.circles li:nth-child(10) {
+    left: 85%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 0s;
+    animation-duration: 11s;
+}
+
+
+@keyframes animate {
+
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 0;
+    }
+
+    100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
+/*-------*/
+
+a:hover {
+    text-decoration: underline;
+    color: #fa6b04;
 }
 
 .main {
-  margin-top: 3%;
+    margin-top: 3%;
 }
 
 .menu {
-  display: flex;
-  flex-direction: column;
-  margin-left: 7%;
-  margin-top: 3%;
-  position: sticky;
-  top: 0;
-  float: right;
-  max-width: 20%;
-  background: #fff;
+    display: flex;
+    flex-direction: column;
+    margin-left: 7%;
+    margin-top: 3%;
+    position: sticky;
+    top: 0;
+    float: right;
+    max-width: 20%;
+    background: #fff;
 }
 
 .examples {
-  margin-left: 5%;
-  overflow: hidden;
-  min-height: 100%;
+    margin-left: 5%;
+    overflow: hidden;
+    min-height: 100%;
 }
 
 .menu-element {
-  float: left;
+    float: left;
 }
 
 .desc-element {
-  margin-right: 5%;
-  float: right;
-  max-width: 350px;
+    margin-right: 5%;
+    float: right;
+    max-width: 350px;
 }
 
 .h1-main {
-  font-family: Andale Mono, monospace;
-  font-weight: 900;
-  font-size: 60px;
-  color: #fff;
+    font-family: Andale Mono, monospace;
+    font-weight: 900;
+    font-size: 60px;
+    color: #fff;
 }
 
 .info-main {
-  color: #fff;
-  font-family: Arial Narrow, sans-serif;
-  font-size: 30px;
+    color: #fff;
+    font-family: Arial Narrow, sans-serif;
+    font-size: 30px;
 }
 
 .info-desc {
-  color: #d3b6e4;
+    color: #d3b6e4;
 }
 
 .menu-item {
-  margin-top: 10px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: Gill Sans, sans-serif;
-  color: #767676;
+    margin-top: 10px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: Gill Sans, sans-serif;
+    color: #767676;
 }
 
 .footer {
-  height: 70px;
-  background-color: #6f5499;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#563d7c), to(#6f5499));
-  background-image: -webkit-linear-gradient(top, #563d7c 0, #6f5499 100%);
-  background-image: -o-linear-gradient(top, #563d7c 0, #6f5499 100%);
-  background-image: linear-gradient(to bottom, #563d7c 0, #6f5499 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#563d7c', endColorstr='#6F5499', GradientType=0);
-  background-repeat: repeat-x;
+    height: 70px;
+    background: -webkit-linear-gradient(#fa6b04, #bd674a);
 }
 
 .footer-text {
-  line-height: 70px;
-  font-family: Trebuchet MS, sans-serif;
+    line-height: 70px;
 }
 
 .example {
-  margin: 2%;
+    margin: 2%;
 }
 
 .heading {
-  font-size: 30px;
-  font-family: inherit;
-  font-weight: 500;
-  line-height: 1.1;
-  color: inherit;
+    font-size: 30px;
+    font-family: 'Exo', sans-serif;
+    margin-bottom: 2%;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
 }
 
 .ex-text {
-  margin-left: 3%;
-  color: #cdcdcd;
+    margin-left: 3%;
+    margin-top: 1%;
+    color: #cdcdcd;
 }
 
 .code {
-  resize: none;
-  overflow: auto;
-  outline: none;
-  -moz-appearance: none;
-  width: 80%;
-  border: 1px solid #f7f7f9;
-  background: #f7f7f9;
-  margin: 3%;
-  font-weight: 200;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 13px;
-  line-height: 1.42857143;
-  color: #333;
+    resize: none;
+    overflow: auto;
+    outline: none;
+    -moz-appearance: none;
+    width: 80%;
+    border: 1px solid #f7f7f9;
+    background: #f7f7f9;
+    margin: 3%;
+    font-weight: 200;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
 }
 
 .vision-code {
-  margin-bottom: 2%;
-  background: #f7f7f9;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+    margin-bottom: 2%;
+    background: #f7f7f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
 .line {
-  height: 1px;
-  background: #ddd;
+    height: 1px;
+    background: #ddd;
 }
 
 .view {
-  margin-bottom: 3%;
-  margin-left: 3%;
+    margin: 3%;
 }
+
+/*!
+  Theme: Default
+  Description: Original highlight.js style
+  Author: (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
+  Maintainer: @highlightjs/core-team
+  Website: https://highlightjs.org/
+  License: see project LICENSE
+  Touched: 2021
+*/pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{background:#f3f3f3;color:#444}.hljs-comment{color:#697070}.hljs-punctuation,.hljs-tag{color:#444a}.hljs-tag .hljs-attr,.hljs-tag .hljs-name{color:#444}.hljs-attribute,.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-name,.hljs-selector-tag{font-weight:700}.hljs-deletion,.hljs-number,.hljs-quote,.hljs-selector-class,.hljs-selector-id,.hljs-string,.hljs-template-tag,.hljs-type{color:#800}.hljs-section,.hljs-title{color:#800;font-weight:700}.hljs-link,.hljs-operator,.hljs-regexp,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-symbol,.hljs-template-variable,.hljs-variable{color:#ab5656}.hljs-literal{color:#695}.hljs-addition,.hljs-built_in,.hljs-bullet,.hljs-code{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta .hljs-string{color:#38a}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}

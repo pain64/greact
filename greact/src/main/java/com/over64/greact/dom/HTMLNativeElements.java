@@ -35,9 +35,20 @@ public class HTMLNativeElements {
         public h1() {};
         public h1(@DomProperty("innerText") String innerText) { }
     }
+
+    @JSNativeAPI public static class i extends HTMLElement implements NativeElementAsComponent<i>{
+        public String dataFeather;
+        public i() {};
+    }
     @JSNativeAPI public static class h2 extends HTMLElement implements NativeElementAsComponent<h2> {
         public h2() {};
         public h2(@DomProperty("innerText") String innerText) { }
+    }
+
+    @JSNativeAPI public static class canvas extends HTMLElement implements NativeElementAsComponent<canvas> {
+        public  String width;
+        public  String height;
+        public canvas() {};
     }
 
     @JSNativeAPI public static class h3 extends HTMLElement implements NativeElementAsComponent<h3> {
@@ -60,11 +71,18 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static  class button extends HTMLElement implements NativeElementAsComponent<button> {
         public button() {}
+        public String type;
         public button(@DomProperty("innerText") String innerText) { }
     }
 
     @JSNativeAPI public static class body extends HTMLElement implements NativeElementAsComponent<body> { }
     @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
+    }
+
+    @JSNativeAPI public static class pre extends HTMLElement implements NativeElementAsComponent<pre> {
+    }
+
+    @JSNativeAPI public static class code extends HTMLElement implements NativeElementAsComponent<code> {
     }
     @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}
     @JSNativeAPI public static class section extends HTMLElement implements NativeElementAsComponent<section> { }
@@ -74,6 +92,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class input extends HTMLElement implements NativeElementAsComponent<input> {
         public boolean autofocus = false;
         public boolean readOnly;
+        public boolean required;
         public enum Autocomplete {OFF, ON}
         public Autocomplete autocomplete;
         public enum InputType {CHECKBOX, TEXT}
@@ -82,13 +101,23 @@ public class HTMLNativeElements {
         public String type;
         public String placeholder;
         public String value;
+        public String minlength;
+        public String maxlength;
         public long valueAsNumber;
         public Boolean checked;
         public native void setCustomValidity(String text);
     }
 
+    @JSNativeAPI public static class form extends HTMLElement implements NativeElementAsComponent<form> {
+        public String action;
+        public String name;
+        public String method;
+        public String acceptCharset;
+    }
+
     @JSNativeAPI public static class select extends HTMLElement implements NativeElementAsComponent<select> {
         public String value;
+        public String name;
     }
     @JSNativeAPI public static class option extends HTMLElement implements NativeElementAsComponent<option> {
         public boolean selected;
@@ -172,6 +201,7 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class iframe extends HTMLElement implements NativeElementAsComponent<iframe> {
+        public String sandbox;
         public String src;
     }
     @JSNativeAPI public static class html extends HTMLElement implements NativeElementAsComponent<html> {

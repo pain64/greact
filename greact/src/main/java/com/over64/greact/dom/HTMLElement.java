@@ -4,9 +4,20 @@ import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
 @JSNativeAPI public class HTMLElement extends Node {
+    public String pattern;
     public static class Style {
         public String color;
+        public String lineHeight;
+        public String letterSpacing;
+        public String textDecoration;
+        public String font;
+        public String backgroundImage;
+        public String backgroundPosition;
+        public String borderWidth;
         public String backgroundColor;
+        public String background;
+        public String opacity;
+        public String backgroundSize;
         public String border;
         public String borderLeft;
         public String borderRight;
@@ -45,10 +56,12 @@ import com.greact.model.async;
         public String fontFamily;
         public String gap;
         public String pageBreakAfter;
+        public String backgroundRepeat;
     }
 
     // HTML Global Attributes
     public String id;
+    public String name;
     public String className;
     public String innerText;
     public String innerHTML;
