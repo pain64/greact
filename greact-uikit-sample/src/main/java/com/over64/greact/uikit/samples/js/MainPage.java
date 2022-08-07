@@ -50,7 +50,7 @@ public class MainPage implements Component0<div> {
                 list.forEach(function(element) {
                     element.parentNode.removeChild(element);
                 });
-                
+                                
                 var link = document.createElement('link');
                 link.rel = 'icon';
                 link.href = 'https://i.postimg.cc/TPTs9Bvf/favicon.png';
@@ -83,12 +83,12 @@ public class MainPage implements Component0<div> {
 
                 new div() {{
                     className = "menu";
-
                     new img() {{
+                        style.cursor = "pointer";
                         src = "https://i.postimg.cc/v8xmyV2J/greact.png";
                         style.marginRight = "15%";
+                        onclick = (ev) -> JSExpression.of("window.location.href = '#'");
                     }};
-
                     new div() {{
                         className = "menu";
                         style.marginLeft = "35%";
