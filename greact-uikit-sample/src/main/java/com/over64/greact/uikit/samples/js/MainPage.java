@@ -53,7 +53,7 @@ public class MainPage implements Component0<div> {
                                 
                 var link = document.createElement('link');
                 link.rel = 'icon';
-                link.href = 'https://i.postimg.cc/TPTs9Bvf/favicon.png';
+                link.href = 'https://i.postimg.cc/Kcs7MhxX/favicon.png';
                 document.head.appendChild(link);
                 """);
             new div() {{
