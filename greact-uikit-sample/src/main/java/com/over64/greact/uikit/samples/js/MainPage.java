@@ -85,7 +85,7 @@ public class MainPage implements Component0<div> {
                     className = "menu";
                     new img() {{
                         style.cursor = "pointer";
-                        src = "https://i.postimg.cc/v8xmyV2J/greact.png";
+                        src = "https://i.postimg.cc/rwdBBqZJ/logo.png";
                         style.marginRight = "15%";
                         onclick = (ev) -> JSExpression.of("window.location.href = '#'");
                     }};
