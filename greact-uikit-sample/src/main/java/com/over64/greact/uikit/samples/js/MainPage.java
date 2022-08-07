@@ -19,7 +19,7 @@ public class MainPage implements Component0<div> {
     @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id int school_id,
                                                            String name, String email, int age) { }
     public record Data(int id, String text) { }
-    private <T extends HTMLElement> Component1<div, CodeAndView<T>> rendererWithHeight(int height) {
+    private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
                 new div() {{
@@ -33,10 +33,11 @@ public class MainPage implements Component0<div> {
 
                 new pre() {{
                     new code() {{
+                        style.borderRadius = "5px";
+                        style.backgroundColor = "#fff";
                         var nl = "\n";
-                        innerHTML = JSExpression.of("'&#10' + codeAndView.code.replaceAll(nl, '&#10').replaceAll(' ' , '&nbsp') + '&#10'");
+                        innerHTML = JSExpression.of("codeAndView.code.replaceAll(nl, '&#10').replaceAll(' ' , '&nbsp')");
                         className = "language-java";
-                        style.height = height + "px";
                     }};
                 }};
             }};
@@ -45,9 +46,20 @@ public class MainPage implements Component0<div> {
     @Override
     public div mount() {
         return new div() {{
+            JSExpression.of("""
+                var list = document.querySelectorAll('link[rel=\"icon\"], link[rel=\"shortcut icon\"]');
+                list.forEach(function(element) {
+                    element.parentNode.removeChild(element);
+                });
+                
+                var link = document.createElement('link');
+                link.rel = 'icon';
+                link.href = 'https://i.postimg.cc/TPTs9Bvf/favicon.png';
+                document.head.appendChild(link);
+                """);
             new div() {{
                 className = "context";
-                new h1("Документация Greact");
+                new h1("Greact UIKit Sample");
             }};
 
             new div() {{
@@ -82,37 +94,37 @@ public class MainPage implements Component0<div> {
                         className = "menu";
                         style.marginLeft = "35%";
 
-                        new a("Текст") {{
+                        new a("Text") {{
                             className = "menu-item";
                             href = "#text";
                         }};
 
-                        new a("Картинки") {{
+                        new a("Images") {{
                             className = "menu-item";
                             href = "#image";
                         }};
 
-                        new a("Кнопки") {{
+                        new a("Buttons") {{
                             className = "menu-item";
                             href = "#button";
                         }};
 
-                        new a("Ссылки") {{
+                        new a("Links") {{
                             className = "menu-item";
                             href = "#link";
                         }};
 
-                        new a("Таблицы") {{
+                        new a("Tables") {{
                             className = "menu-item";
                             href = "#table";
                         }};
 
-                        new a("Обычний список") {{
+                        new a("List") {{
                             className = "menu-item";
                             href = "#list";
                         }};
 
-                        new a("Всплывающий список") {{
+                        new a("Select") {{
                             className = "menu-item";
                             href = "#select";
                         }};
@@ -127,7 +139,7 @@ public class MainPage implements Component0<div> {
                             href = "#input";
                         }};
 
-                        new a("Check box") {{
+                        new a("Checkbox") {{
                             className = "menu-item";
                             href = "#check-box";
                         }};
@@ -142,7 +154,7 @@ public class MainPage implements Component0<div> {
                             href = "#grid";
                         }};
 
-                        new a("Формы") {{
+                        new a("Forms") {{
                             className = "menu-item";
                             href = "#form";
                         }};
@@ -157,14 +169,14 @@ public class MainPage implements Component0<div> {
                         id = "text";
                         className = "example";
 
-                        new h2("Примеры использования текста") {{
+                        new h2("Text usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -173,13 +185,7 @@ public class MainPage implements Component0<div> {
                                     new h1("h1 text") {{
                                         style.color = "#703191";
                                     }};
-                                    new h3("h3 text") {{
-                                        style.color = "#44944A";
-                                    }};
-                                    new h5("h5 text") {{
-                                        style.color = "#4285B4";
-                                    }};
-                                }}, rendererWithHeight(260));
+                                }}, renderer());
                         }};
                     }};
 
@@ -187,21 +193,22 @@ public class MainPage implements Component0<div> {
                         id = "image";
                         className = "example";
 
-                        new h2("Пример использования изображений") {{
+                        new h2("Image usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
                             new CodeView<>(() ->
                                 new img() {{
-                                    src = "https://clck.ru/YFWWu";
-                                }}, rendererWithHeight(120));
+                                    src = "https://i.postimg.cc/855hkmMh/cat.jpg";
+                                    style.maxWidth = "300px";
+                                }}, renderer());
                         }};
                     }};
 
@@ -209,14 +216,14 @@ public class MainPage implements Component0<div> {
                         id = "button";
                         className = "example";
 
-                        new h2("Пример использования кнопок") {{
+                        new h2("Button usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -226,7 +233,7 @@ public class MainPage implements Component0<div> {
                                     style.width = "150px";
                                     style.height = "30px";
                                     style.backgroundColor = "#3b2751";
-                                }}, rendererWithHeight(180));
+                                }}, renderer());
                         }};
                     }};
 
@@ -234,14 +241,14 @@ public class MainPage implements Component0<div> {
                         id = "link";
                         className = "example";
 
-                        new h2("Пример использования ссылок") {{
+                        new h2("Link usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -249,7 +256,7 @@ public class MainPage implements Component0<div> {
                                 new a("Link") {{
                                     href = "#";
                                     style.color = "#609123";
-                                }}, rendererWithHeight(150));
+                                }}, renderer());
                         }};
                     }};
 
@@ -257,14 +264,14 @@ public class MainPage implements Component0<div> {
                         id = "table";
                         className = "example";
 
-                        new h2("Пример использования таблиц") {{
+                        new h2("Table usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -272,22 +279,22 @@ public class MainPage implements Component0<div> {
                                 new table() {{
                                     style.border = "1px solid grey";
                                     new tr() {{
-                                        new td("Ячейка 1") {{
+                                        new td("Cell 1") {{
                                             style.border = "1px solid grey";
                                         }};
-                                        new td("Ячейка 2") {{
+                                        new td("Cell 2") {{
                                             style.border = "1px solid grey";
                                         }};
                                     }};
                                     new tr() {{
-                                        new td("Ячейка 3") {{
+                                        new td("Cell 3") {{
                                             style.border = "1px solid grey";
                                         }};
-                                        new td("Ячейка 4") {{
+                                        new td("Cell 4") {{
                                             style.border = "1px solid grey";
                                         }};
                                     }};
-                                }}, rendererWithHeight(400));
+                                }}, renderer());
                         }};
                     }};
 
@@ -295,14 +302,14 @@ public class MainPage implements Component0<div> {
                         id = "list";
                         className = "example";
 
-                        new h2("Пример использования списка") {{
+                        new h2("List usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -315,7 +322,7 @@ public class MainPage implements Component0<div> {
                                     new li() {{
                                         innerText = "Second";
                                     }};
-                                }}, rendererWithHeight(220));
+                                }}, renderer());
                         }};
                     }};
 
@@ -323,14 +330,14 @@ public class MainPage implements Component0<div> {
                         id = "select";
                         className = "example";
 
-                        new h2("Пример использования всплывающего списка") {{
+                        new h2("Select usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -342,7 +349,7 @@ public class MainPage implements Component0<div> {
                                     new option("Second") {{
                                         style.color = "#682887";
                                     }};
-                                }}, rendererWithHeight(200));
+                                }}, renderer());
                         }};
                     }};
 
@@ -350,14 +357,14 @@ public class MainPage implements Component0<div> {
                         id = "textarea";
                         className = "example";
 
-                        new h2("Пример использования textarea") {{
+                        new h2("Textarea usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -365,7 +372,7 @@ public class MainPage implements Component0<div> {
                                 new textarea() {{
                                     style.backgroundColor = "#fff";
                                     style.border = "3px solid #682887";
-                                }}, rendererWithHeight(150));
+                                }}, renderer());
                         }};
                     }};
 
@@ -373,21 +380,21 @@ public class MainPage implements Component0<div> {
                         id = "input";
                         className = "example";
 
-                        new h2("Пример использования input") {{
+                        new h2("Input usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
                             new CodeView<>(() ->
                                 new input() {{
                                     style.border = "3px solid #1240AB";
-                                }}, rendererWithHeight(120));
+                                }}, renderer());
                         }};
                     }};
 
@@ -395,14 +402,14 @@ public class MainPage implements Component0<div> {
                         id = "check-box";
                         className = "example";
 
-                        new h2("Пример использования CheckBox") {{
+                        new h2("CheckBox usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -410,7 +417,7 @@ public class MainPage implements Component0<div> {
                                 new div() {{
                                     new CheckBox() {{
                                     }};
-                                }}, rendererWithHeight(150));
+                                }}, renderer());
                         }};
                     }};
 
@@ -418,14 +425,14 @@ public class MainPage implements Component0<div> {
                         id = "tabs";
                         className = "example";
 
-                        new h2("Пример использования tabs") {{
+                        new h2("Tabs usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -437,7 +444,7 @@ public class MainPage implements Component0<div> {
                                     new Tab("ex2", new div() {{
                                         new h1("World");
                                     }})
-                                ), rendererWithHeight(200));
+                                ), renderer());
                         }};
                     }};
 
@@ -445,14 +452,14 @@ public class MainPage implements Component0<div> {
                         id = "grid";
                         className = "example";
 
-                        new h2("Пример использования grid") {{
+                        new h2("Grid usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -469,7 +476,7 @@ public class MainPage implements Component0<div> {
                                         adjust(Data::id);
                                         onRowChange = row -> JSExpression.of("console.log(row)");
                                     }};
-                                }}, rendererWithHeight(240));
+                                }}, renderer());
                         }};
                     }};
 
@@ -477,14 +484,14 @@ public class MainPage implements Component0<div> {
                         id = "form";
                         className = "example";
 
-                        new h2("Пример использования формы") {{
+                        new h2("Form usage example") {{
                             className = "heading";
                         }};
 
                         new div() {{
                             className = "vision-code";
 
-                            new h3("ПРИМЕР") {{
+                            new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
 
@@ -501,7 +508,7 @@ public class MainPage implements Component0<div> {
                                             type = "submit";
                                         }};
                                     }};
-                                }}, rendererWithHeight(290));
+                                }}, renderer());
                         }};
                     }};
                 }};
@@ -509,13 +516,15 @@ public class MainPage implements Component0<div> {
 
             new div() {{
                 className = "footer";
-                new h3("Создано на Greact") {{
+                new h3("Created on Greact") {{
                     className = "footer-text";
                     style.color = "#fff";
                     style.textAlign = "center";
                 }};
             }};
-            JSExpression.of("hljs.highlightAll();");
+            JSExpression.of("hljs.highlightAll();" +
+                "hljs.initLineNumbersOnLoad();" +
+                "document.title='Greact UIKit Sample';");
         }};
     }
 }
