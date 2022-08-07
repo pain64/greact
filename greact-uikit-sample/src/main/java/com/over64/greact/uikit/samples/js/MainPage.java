@@ -6,19 +6,18 @@ import com.over64.TypesafeSql;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLElement;
-import com.over64.greact.dom.HTMLNativeElements;
 import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.uikit.Array;
 import com.over64.greact.uikit.Grid;
 import com.over64.greact.uikit.Tab;
 import com.over64.greact.uikit.Tabs;
 import com.over64.greact.uikit.controls.CheckBox;
 
+import static com.over64.greact.uikit.samples.Main.Server.server;
+
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
     @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id int school_id,
                                                            String name, String email, int age) { }
-    public record Data(int id, String text) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -463,17 +462,11 @@ public class MainPage implements Component0<div> {
                                 className = "ex-text";
                             }};
 
-//                                    server(db -> db.updateSelf(new StudyForm(3, "abbalb", "ddd@dd.er", 25)));
-//                                    var data = server(db -> db.select(StudyForm.class));
-
                             new CodeView<>(() ->
                                 new div() {{
-                                    var data = Array.of(
-                                        new Data(1, "Some text 1"),
-                                        new Data(2, "Some text 2")
-                                    );
+                                    var data = server(db -> db.select(StudyForm.class));
                                     new Grid<>(data) {{
-                                        adjust(Data::id);
+                                        adjust(StudyForm::school_id);
                                         onRowChange = row -> JSExpression.of("console.log(row)");
                                     }};
                                 }}, renderer());
