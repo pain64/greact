@@ -100,6 +100,9 @@ public class TypesafeSqlChecker {
         List<Symbol.MethodSymbol> updateSelfMethod = util.lookupMemberAll(clComponent, "updateSelf");
         List<Symbol.MethodSymbol> deleteSelfMethod = util.lookupMemberAll(clComponent, "deleteSelf");
         List<Symbol.MethodSymbol> insertSelfMethod = util.lookupMemberAll(clComponent, "insertSelf");
+        List<Symbol.MethodSymbol> arrayMethod = util.lookupMemberAll(clComponent, "array");
+        List<Symbol.MethodSymbol> uniqueOrNullMethod = util.lookupMemberAll(clComponent, "uniqueOrNull");
+        List<Symbol.MethodSymbol> execMethod = util.lookupMemberAll(clComponent, "exec");
 
         List<Symbol.MethodSymbol> allMethods = new ArrayList<>() {{
             addAll(selectMethod);
@@ -107,6 +110,9 @@ public class TypesafeSqlChecker {
             addAll(updateSelfMethod);
             addAll(deleteSelfMethod);
             addAll(insertSelfMethod);
+            addAll(arrayMethod);
+            addAll(uniqueOrNullMethod);
+            addAll(execMethod);
         }};
     }
 
@@ -132,11 +138,21 @@ public class TypesafeSqlChecker {
                 else return;
                 if (symbols.allMethods.contains((Symbol.MethodSymbol) methodSym))
                     FinderData.executor.execute(() -> {
-                        JCTree.JCExpression tableClass = tree.args.get(0).type.toString().equals("java.sql.Connection") ? tree.args.get(1) : tree.args.get(0);
+                        if (symbols.execMethod.contains((Symbol.MethodSymbol) methodSym)) {
+                            execCheck(tree.args);
+                            return;
+                        }
+
+                        JCTree.JCExpression tableClass = tree.args.get(0).type.toString().equals("java.sql.Connection")
+                            || tree.args.get(0).type.toString().equals("java.lang.String")
+                            ? tree.args.get(1)
+                            : tree.args.get(0);
 
                         Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta = Meta.parseClass(tableClass, FinderData.finderMapper(
                             symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                                symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym)));
+                                symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym) ||
+                                symbols.arrayMethod.contains((Symbol.MethodSymbol) methodSym) ||
+                                symbols.uniqueOrNullMethod.contains((Symbol.MethodSymbol) methodSym)));
 
                         if (symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym))
                             selectCheck(meta);
@@ -146,6 +162,8 @@ public class TypesafeSqlChecker {
                             insertCheck(meta);
                         else if (symbols.updateSelfMethod.contains((Symbol.MethodSymbol) methodSym))
                             updateCheck(meta);
+                        else if (symbols.arrayMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.uniqueOrNullMethod.contains((Symbol.MethodSymbol) methodSym))
+                            arrayCheck(meta, tree.args);
                     });
             }
         });
@@ -212,22 +230,28 @@ public class TypesafeSqlChecker {
         }
     }
     private void selectCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) {
+        var finalQuery = QueryBuilder.selectQuery(meta);
+        typeAndSizeCheck(meta, finalQuery);
+    }
+    private void execCheck(com.sun.tools.javac.util.List<JCTree.JCExpression> args) {
         try {
-            var finalQuery = QueryBuilder.selectQuery(meta);
-            var ps = createPreparedStatement(FinderData.conn, finalQuery);
-            var preparedStatementMetadata = ps.getMetaData();
-
-            if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
-                throw new RuntimeException("Не совпадает количество колонок");
-
-            for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
-                if (typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
-                    throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
-
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            var query = args.get(0).type.toString().equals("java.lang.String") ? args.get(0) : args.get(1);
+            PreparedStatement ps = createPreparedStatement(FinderData.conn, query.toString().substring(1, query.toString().length() - 1));
+            ps.getParameterMetaData();
+            ps.getMetaData();
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
         }
+    }
+    private void arrayCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, com.sun.tools.javac.util.List<JCTree.JCExpression> args) {
+        var query = "";
+        for (JCTree.JCExpression arg : args) {
+            if (arg.type.toString().equals("java.lang.String")) {
+                query = arg.toString();
+                break;
+            }
+        }
+        typeAndSizeCheck(meta, query.substring(1, query.length() - 1));
     }
     private boolean typeEquals(String firstType, String secondType) {
         if ((firstType.equals("java.lang.Integer") || firstType.equals("int")) && ((secondType.equals("int") || secondType.equals("long") || secondType.equals("java.lang.Integer"))))
@@ -265,5 +289,22 @@ public class TypesafeSqlChecker {
     }
     private PreparedStatement createPreparedStatement(Connection conn, String finalQuery) throws SQLException {
         return conn.prepareStatement(finalQuery);
+    }
+    private void typeAndSizeCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, String query) {
+        try {
+            PreparedStatement ps = createPreparedStatement(FinderData.conn, query);
+            var preparedStatementMetadata = ps.getMetaData();
+
+            if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
+                throw new RuntimeException("Не совпадает количество колонок");
+
+            for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
+                if (typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
+                    throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

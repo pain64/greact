@@ -468,6 +468,8 @@ public class MainPage implements Component0<div> {
                                     server(db -> db.insertSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
                                     server(db -> db.deleteSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
                                     server(db -> db.updateSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
+                                    server(db -> db.array("SELECT * FROM teachers", StudyForm.class));
+                                    server(db -> db.exec("INSERT INTO teachers VALUES (?, ?,?,?)"));
                                     new Grid<>(data) {{
                                         adjust(StudyForm::school_id);
                                         onRowChange = row -> JSExpression.of("console.log(row)");

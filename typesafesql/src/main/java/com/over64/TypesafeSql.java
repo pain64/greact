@@ -7,7 +7,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.*;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +33,7 @@ public class TypesafeSql {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Id {}
+    public @interface Id { }
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Joins {
@@ -82,7 +81,7 @@ public class TypesafeSql {
         }
     }
 
-    public <T> T[] array(Connection conn, String stmt, Class<T> klass, Object... args) {
+    public <T> T[] array(Connection conn, Class<T> klass, String stmt, Object... args) {
         var exprAndOffsets = mapQueryArgs(stmt, args);
         var offsets = exprAndOffsets.offsets;
 
@@ -124,16 +123,16 @@ public class TypesafeSql {
     }
 
     public <T> T[] array(String stmt, Class<T> klass, Object... args) {
-        return withConnection(conn -> array(conn, stmt, klass, args));
+        return withConnection(conn -> array(conn, klass, stmt, args));
     }
 
-    public <T> T uniqueOrNull(Connection conn, String stmt, Class<T> klass, Object... args) {
-        var result = array(conn, stmt, klass, args);
+    public <T> T uniqueOrNull(Connection conn, Class<T> klass, String stmt, Object... args) {
+        var result = array(conn, klass, stmt, args);
         return result.length == 0 ? null : result[0];
     }
 
-    public <T> T uniqueOrNull(String stmt, Class<T> klass, Object... args) {
-        return withConnection(conn -> uniqueOrNull(conn, stmt, klass, args));
+    public <T> T uniqueOrNull(Class<T> klass, String stmt, Object... args) {
+        return withConnection(conn -> uniqueOrNull(conn, klass, stmt, args));
     }
 
     public Void exec(Connection conn, String stmt, Object... args) {
@@ -163,7 +162,7 @@ public class TypesafeSql {
         return withConnection(conn -> exec(conn, stmt, args));
     }
 
-    record ArgOffset(int argIdx, int offset) {}
+    record ArgOffset(int argIdx, int offset) { }
 
     static int nDigits(int n) {
         int length = 0;
@@ -175,7 +174,7 @@ public class TypesafeSql {
         return length;
     }
 
-    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) {}
+    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) { }
 
     public static ExprAndOffsets mapQueryArgs(String expr, Object... args) {
         var offsets = new ArrayList<ArgOffset>();
@@ -197,12 +196,12 @@ public class TypesafeSql {
         return new ExprAndOffsets(expr, offsets);
     }
 
-    record FieldInfo(Method accessor, FieldFetcher fetcher) {}
+    record FieldInfo(Method accessor, FieldFetcher fetcher) { }
 
     public static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
         return new Meta.Mapper<>() {
-            @Override public String className(Class<T> klass) {return klass.getName();}
-            @Override public String fieldName(RecordComponent field) {return field.getName();}
+            @Override public String className(Class<T> klass) { return klass.getName(); }
+            @Override public String fieldName(RecordComponent field) { return field.getName(); }
 
             @Override public Stream<RecordComponent> readFields(Class<T> symbol) {
                 return Arrays.stream(symbol.getRecordComponents());
