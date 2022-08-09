@@ -465,6 +465,9 @@ public class MainPage implements Component0<div> {
                             new CodeView<>(() ->
                                 new div() {{
                                     var data = server(db -> db.select(StudyForm.class));
+                                    server(db -> db.insertSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
+                                    server(db -> db.deleteSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
+                                    server(db -> db.updateSelf(new StudyForm(111, "name", "asda@fsfs.ru", 43)));
                                     new Grid<>(data) {{
                                         adjust(StudyForm::school_id);
                                         onRowChange = row -> JSExpression.of("console.log(row)");

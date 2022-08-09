@@ -45,7 +45,7 @@ public class TypesafeSqlChecker {
         this.cmd = cmd;
     }
 
-    class FinderData {
+    static class FinderData {
         static Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper(boolean isClass) {
             return new Meta.Mapper<>() {
 
@@ -132,113 +132,102 @@ public class TypesafeSqlChecker {
                 else return;
                 if (symbols.allMethods.contains((Symbol.MethodSymbol) methodSym))
                     FinderData.executor.execute(() -> {
-                        JCTree.JCExpression tableClass = null;
-                        Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta;
+                        JCTree.JCExpression tableClass = tree.args.get(0).type.toString().equals("java.sql.Connection") ? tree.args.get(1) : tree.args.get(0);
 
-                        if (symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                            symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym)) {
+                        Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta = Meta.parseClass(tableClass, FinderData.finderMapper(
+                            symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) ||
+                                symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym)));
 
-                            for (JCTree.JCExpression arg : tree.args) {
-                                var ann = TreeInfo.symbol(arg).owner.getAnnotation(TypesafeSql.Table.class);
-                                if (ann != null) {
-                                    tableClass = arg;
-                                    break;
-                                }
-                            }
-                            meta = Meta.parseClass(tableClass, FinderData.finderMapper(true));
-
-                        } else if (symbols.deleteSelfMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                            symbols.insertSelfMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                            symbols.updateSelfMethod.contains((Symbol.MethodSymbol) methodSym)) {
-
-                            for (JCTree.JCExpression arg : tree.args) {
-                                if (arg.type.tsym.getAnnotation(TypesafeSql.Table.class) != null) {
-                                    tableClass = arg;
-                                    break;
-                                }
-                            }
-                            meta = Meta.parseClass(tableClass, FinderData.finderMapper(false));
-                        } else return;
-
-                        var query = "";
-                        if (symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym)) {
-                            var finalQuery = QueryBuilder.selectQuery(meta);
-
-                            try {
-                                var ps = createPreparedStatement(FinderData.conn, finalQuery);
-                                var preparedStatementMetadata = ps.getMetaData();
-
-                                if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
-                                    throw new RuntimeException("Не совпадает количество колонок");
-
-                                for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
-                                    if (typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
-                                        throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
-
-                                }
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            return;
-                        } else if (symbols.deleteSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                            query = QueryBuilder.deleteSelfQuery(meta);
+                        if (symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym))
+                            selectCheck(meta);
+                        else if (symbols.deleteSelfMethod.contains((Symbol.MethodSymbol) methodSym))
+                            deleteCheck(meta);
                         else if (symbols.insertSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                            query = QueryBuilder.insertSelfQuery(meta);
+                            insertCheck(meta);
                         else if (symbols.updateSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                            query = QueryBuilder.updateSelfQuery(meta);
-
-                        var finalQuery = query;
-
-
-                        try {
-                            var ps = createPreparedStatement(FinderData.conn, finalQuery);
-                            var parameterMetadata = ps.getParameterMetaData();
-
-                            if (symbols.insertSelfMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.updateSelfMethod.contains((Symbol.MethodSymbol) methodSym)) {
-                                if (parameterMetadata.getParameterCount() != meta.fields().size())
-                                    throw new RuntimeException("Не совпадает количество колонок");
-
-                                if (symbols.insertSelfMethod.contains((Symbol.MethodSymbol) methodSym)) {
-                                    for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-                                        if (typeEquals(parameterMetadata.getParameterClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
-                                            throw new RuntimeException("Не совпадают типы колонок: " + parameterMetadata.getParameterClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
-
-                                    }
-                                } else {
-                                    if (parameterMetadata.getParameterCount() != meta.fields().size())
-                                        throw new RuntimeException("Не совпадает количество колонок");
-
-                                    String isId = "";
-                                    var typeVar = new ArrayList<String>();
-
-                                    for (int i = 0; i < meta.fields().size(); i++) {
-                                        if (meta.fields().get(i).isId())
-                                            isId = meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString();
-                                        else
-                                            typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString());
-
-                                    }
-
-                                    typeVar.add(isId);
-
-                                    for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-                                        if (typeEquals(typeVar.get(i - 1), parameterMetadata.getParameterClassName(i)))
-                                            throw new RuntimeException("Не совпадают типы колонок " + typeVar.get(i - 1) + " : " + parameterMetadata.getParameterClassName(i));
-                                    }
-
-                                }
-                            } else {
-                                var varId = Objects.requireNonNull(meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().orElse(null)).info().getReturnType().type.tsym.getQualifiedName().toString();
-                                if (typeEquals(parameterMetadata.getParameterClassName(1), varId))
-                                    throw new RuntimeException("Не совпадают типы колонок");
-                            }
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
+                            updateCheck(meta);
                     });
             }
         });
+    }
+    private void updateCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) {
+        try {
+            var query = QueryBuilder.updateSelfQuery(meta);
+            var ps = createPreparedStatement(FinderData.conn, query);
+            var parameterMetadata = ps.getParameterMetaData();
+            if (parameterMetadata.getParameterCount() != meta.fields().size())
+                throw new RuntimeException("Не совпадает количество колонок");
+
+            if (parameterMetadata.getParameterCount() != meta.fields().size())
+                throw new RuntimeException("Не совпадает количество колонок");
+
+            String isId = "";
+            var typeVar = new ArrayList<String>();
+
+            for (int i = 0; i < meta.fields().size(); i++) {
+                if (meta.fields().get(i).isId())
+                    isId = meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString();
+                else
+                    typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString());
+
+            }
+
+            typeVar.add(isId);
+
+            for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
+                if (typeEquals(typeVar.get(i - 1), parameterMetadata.getParameterClassName(i)))
+                    throw new RuntimeException("Не совпадают типы колонок " + typeVar.get(i - 1) + " : " + parameterMetadata.getParameterClassName(i));
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
+        }
+    }
+    private void insertCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) {
+        try {
+            var query = QueryBuilder.insertSelfQuery(meta);
+            var ps = createPreparedStatement(FinderData.conn, query);
+            var parameterMetadata = ps.getParameterMetaData();
+            if (parameterMetadata.getParameterCount() != meta.fields().size())
+                throw new RuntimeException("Не совпадает количество колонок");
+
+            for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
+                if (typeEquals(parameterMetadata.getParameterClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
+                    throw new RuntimeException("Не совпадают типы колонок: " + parameterMetadata.getParameterClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
+
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
+        }
+    }
+    private void deleteCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) {
+        try {
+            var query = QueryBuilder.deleteSelfQuery(meta);
+            PreparedStatement ps = createPreparedStatement(FinderData.conn, query);
+            var parameterMetadata = ps.getParameterMetaData();
+            var varId = Objects.requireNonNull(meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().orElse(null)).info().getReturnType().type.tsym.getQualifiedName().toString();
+            if (typeEquals(parameterMetadata.getParameterClassName(1), varId))
+                throw new RuntimeException("Не совпадают типы колонок");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private void selectCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) {
+        try {
+            var finalQuery = QueryBuilder.selectQuery(meta);
+            var ps = createPreparedStatement(FinderData.conn, finalQuery);
+            var preparedStatementMetadata = ps.getMetaData();
+
+            if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
+                throw new RuntimeException("Не совпадает количество колонок");
+
+            for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
+                if (typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
+                    throw new RuntimeException("Не совпадают типы колонок: " + preparedStatementMetadata.getColumnClassName(i) + " - " + meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
     private boolean typeEquals(String firstType, String secondType) {
         if ((firstType.equals("java.lang.Integer") || firstType.equals("int")) && ((secondType.equals("int") || secondType.equals("long") || secondType.equals("java.lang.Integer"))))
