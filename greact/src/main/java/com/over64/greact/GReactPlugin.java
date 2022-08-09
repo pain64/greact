@@ -69,7 +69,7 @@ public class GReactPlugin implements Plugin {
                     } catch (InterruptedException ex) {
                         throw new RuntimeException("Too long waiting from database");
                     } catch (Throwable ex) {
-                        throw new RuntimeException(ex);
+                        throw new RuntimeException(ex.getMessage());
                     }
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
