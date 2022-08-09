@@ -1,6 +1,5 @@
 package com.over64.greact;
 
-import com.greact.TranspilerPlugin;
 import com.over64.Meta;
 import com.over64.QueryBuilder;
 import com.over64.TypesafeSql;
@@ -13,6 +12,8 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -33,17 +34,19 @@ public class TypesafeSqlChecker {
     final Names names;
     final Types types;
     final Util util;
+    final CommandLine cmd;
 
-    public TypesafeSqlChecker(Context context) {
+    public TypesafeSqlChecker(Context context, CommandLine cmd) {
         this.symtab = Symtab.instance(context);
         this.names = Names.instance(context);
         this.types = Types.instance(context);
         this.util = new Util(context);
         this.symbols = new Symbols();
+        this.cmd = cmd;
     }
 
-    static class FinderData {
-        public static Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper(boolean isClass) {
+    class FinderData {
+        static Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper(boolean isClass) {
             return new Meta.Mapper<>() {
 
                 @Override public String className(JCTree.JCExpression symbol) {
@@ -79,9 +82,9 @@ public class TypesafeSqlChecker {
                 }
             };
         }
-        public static Throwable preparedStatementError;
+        static Throwable preparedStatementError;
         static Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> preparedStatementError = ex;
-        public static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS,
+        static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS,
             new LinkedBlockingDeque<>(), runnable -> {
             Thread thread = new Thread(runnable);
             thread.setUncaughtExceptionHandler(exceptionHandler);
@@ -111,8 +114,8 @@ public class TypesafeSqlChecker {
     public void apply(JCTree.JCCompilationUnit cu) {
         if (FinderData.conn == null) {
             try {
-                initConnection();
-            } catch (SQLException e) {
+                initConnection(cmd);
+            } catch (SQLException | ParseException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -242,41 +245,22 @@ public class TypesafeSqlChecker {
             return false;
         return !firstType.equals(secondType);
     }
-    private void initConnection() throws SQLException {
-        var jdbcUrl = Objects.requireNonNull(TranspilerPlugin.argsData.stream()
-                .filter(n -> n.startsWith("--tsql-check-schema-url="))
-                .findFirst().orElse(null))
-            .split("=")[1];
+    private void initConnection(CommandLine cmd) throws SQLException, ParseException {
+        var jdbcUrl = cmd.getOptionValue("tsql-check-schema-url");
+
         var username = "";
-        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-username=")))
-            username = Objects.requireNonNull(TranspilerPlugin.argsData.stream()
-                    .filter(n -> n.startsWith("--tsql-check-schema-username="))
-                    .findFirst()
-                    .orElse(null))
-                .split("=")[1];
+        if (cmd.hasOption("tsql-check-schema-username"))
+            username = cmd.getOptionValue("tsql-check-schema-username");
 
         var password = "";
-        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-check-schema-password=")))
-            password = Objects.requireNonNull(TranspilerPlugin.argsData.stream()
-                    .filter(n -> n.startsWith("--tsql-check-schema-password="))
-                    .findFirst()
-                    .orElse(null))
-                .split("=")[1];
+        if (cmd.hasOption("tsql-check-schema-password"))
+            password = cmd.getOptionValue("tsql-check-schema-password");
 
         var driverClassName = "";
-        if (TranspilerPlugin.argsData.stream().anyMatch(n -> n.startsWith("--tsql-driver-class-name=")))
-            driverClassName = Objects.requireNonNull(TranspilerPlugin.argsData.stream()
-                    .filter(n -> n.startsWith("--tsql-driver-class-name="))
-                    .findFirst()
-                    .orElse(null))
-                .split("=")[1];
+        if (cmd.hasOption("tsql-driver-class-name"))
+            driverClassName = cmd.getOptionValue("tsql-driver-class-name");
 
-
-        var finalUsername = username;
-        var finalPassword = password;
-        var finalDriverClassName = driverClassName;
-
-        var ds = getDataSource(finalUsername, finalPassword, finalDriverClassName, jdbcUrl);
+        var ds = getDataSource(username, password, driverClassName, jdbcUrl);
 
         FinderData.conn = ds.getConnection();
     }
