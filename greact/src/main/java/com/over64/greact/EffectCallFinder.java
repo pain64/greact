@@ -81,11 +81,12 @@ public class EffectCallFinder {
                                 return (Symbol.VarSymbol) id.sym;
 
                         throw new RuntimeException("""
+                            %s:%s
                             error at: %s
                             for ∀ x is variable expected any of:
                               effect(x)
                               effect(x = expression)
-                              effect(x op= expression)""".formatted(tree));
+                              effect(x op= expression)""".formatted(currentClass.sym.fullname, tree.meth.pos ,tree));
                     };
 
                     result.get(currentClass)

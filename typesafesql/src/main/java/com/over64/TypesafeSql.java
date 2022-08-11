@@ -72,6 +72,34 @@ public class TypesafeSql {
         return ResultSet::getObject;
     }
 
+    static String camelCaseToSnakeCase(String str) {
+        var result = new StringBuilder();
+
+        result.append(Character.toLowerCase(str.charAt(0)));
+
+        for (int i = 1; i < str.length(); i++) {
+            var ch = str.charAt(i);
+            if (Character.isUpperCase(ch)) result.append('_').append(Character.toLowerCase(ch));
+            else result.append(ch);
+
+        }
+
+        return result.toString();
+    }
+
+    static String snakeCaseToCamelCase(String str) {
+        var result = new StringBuilder(str);
+
+        for (int i = 0; i < result.length(); i++) {
+            if (result.charAt(i) == '_') {
+                result.deleteCharAt(i);
+                result.replace(i, i+1, String.valueOf(Character.toUpperCase(result.charAt(i))));
+            }
+        }
+
+        return result.toString();
+    }
+
     /* FIXME: may handler throw Exception ??? */
     public <T> T withConnection(Function<Connection, T> handler) {
         try (var conn = ds.getConnection()) {
@@ -93,7 +121,7 @@ public class TypesafeSql {
                 pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
 
             pstmt.execute();
-            var rs = pstmt.getResultSet();
+            var rs = pstmt.getResultSet(); // snake to camel
             var data = new ArrayList<T>();
 
             if (klass.isRecord()) {
@@ -245,10 +273,13 @@ public class TypesafeSql {
             var pstmt = conn.prepareStatement(destQuery);
 
             for (var i = 0; i < offsets.size(); i++)
-                pstmt.setObject(i + 1, args[offsets.get(i).argIdx]);
+                pstmt.setObject(i + 1, args[offsets.get(i).argIdx]); // gen query
+
+            // base -> java - snake-camel
+            // java -> query - came-snake
 
             pstmt.execute();
-            var rs = pstmt.getResultSet();
+            var rs = pstmt.getResultSet(); // snake to camel
             var data = new ArrayList<T>();
             var constructor = meta.info();
             var consArgs = new Object[constructor.getParameters().length];
