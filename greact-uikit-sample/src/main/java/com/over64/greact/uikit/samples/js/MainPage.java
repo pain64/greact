@@ -17,7 +17,7 @@ import static com.over64.greact.uikit.samples.Main.Server.server;
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
     @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id int schoolId,
-                                                           String name, String email) { }
+                                                           String name, String email, int age) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -180,10 +180,8 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new div() {{
-                                    new h1("h1 text") {{
-                                        style.color = "#703191";
-                                    }};
+                                new h1("h1 text") {{
+                                    style.color = "#703191";
                                 }}, renderer());
                         }};
                     }};
@@ -413,9 +411,8 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new div() {{
-                                    new CheckBox() {{
-                                    }};
+                                new CheckBox() {{
+
                                 }}, renderer());
                         }};
                     }};
@@ -489,17 +486,15 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new div() {{
-                                    new form() {{
-                                        method = "GET";
-                                        action = "#";
-                                        new input() {{
-                                            type = "text";
-                                            placeholder = "Enter text...";
-                                        }};
-                                        new button("Enter") {{
-                                            type = "submit";
-                                        }};
+                                new form() {{
+                                    method = "GET";
+                                    action = "#";
+                                    new input() {{
+                                        type = "text";
+                                        placeholder = "Enter text...";
+                                    }};
+                                    new button("Enter") {{
+                                        type = "submit";
                                     }};
                                 }}, renderer());
                         }};

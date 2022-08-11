@@ -4,11 +4,25 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class QueryBuilder {
+    static String camelCaseToSnakeCase(String str) {
+        var result = new StringBuilder();
+
+        result.append(Character.toLowerCase(str.charAt(0)));
+
+        for (int i = 1; i < str.length(); i++) {
+            var ch = str.charAt(i);
+            if (Character.isUpperCase(ch)) result.append('_').append(Character.toLowerCase(ch));
+            else result.append(ch);
+
+        }
+
+        return result.toString();
+    }
     public static <T, V> String selectQuery(Meta.ClassMeta<T, V> meta) {
         var fromTable = meta.table();
         return " select\n\t%s\n from\n\t%s\n\t%s".formatted(
             meta.fields().stream()
-                .map(f -> (f.atTable() != null && f.atTable().alias() != null ? f.atTable().alias() + "." : "") + f.atColumn())
+                .map(f -> (f.atTable() != null && f.atTable().alias() != null ? f.atTable().alias() + "." : "") + camelCaseToSnakeCase(f.atColumn()))
                 .collect(Collectors.joining(",\n\t")),
             fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
             meta.joins().stream()
@@ -24,7 +38,7 @@ public class QueryBuilder {
         var idFields = meta.fields().stream()
             .filter(Meta.FieldRef::isId).toList();
         return "delete from " + meta.table().name() + " where " +
-            idFields.stream().map(f -> f.atColumn() + " = ?")
+            idFields.stream().map(f -> camelCaseToSnakeCase(f.atColumn()) + " = ?")
                 .collect(Collectors.joining(" and "));
     }
 
@@ -34,6 +48,7 @@ public class QueryBuilder {
 
         var values = nonJoinedFields.stream()
             .map(Meta.FieldRef::atColumn)
+            .map(QueryBuilder::camelCaseToSnakeCase)
             .collect(Collectors.joining(", ", "(", ")"));
 
         var params = new ArrayList<String>();
@@ -62,10 +77,10 @@ public class QueryBuilder {
         return "update " + meta.table().name()
             + " set " +
             noIdFields.stream()
-                .map(f -> f.atColumn() + " = ?")
+                .map(f -> camelCaseToSnakeCase(f.atColumn()) + " = ?")
                 .collect(Collectors.joining(", ")) +
             " where " +
-            idFields.stream().map(f -> f.atColumn() + " = ?")
+            idFields.stream().map(f -> camelCaseToSnakeCase(f.atColumn()) + " = ?")
                 .collect(Collectors.joining(" and "));
     }
 }
