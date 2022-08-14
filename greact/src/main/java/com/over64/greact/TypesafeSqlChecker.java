@@ -10,7 +10,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.cli.CommandLine;
@@ -22,7 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -36,7 +36,6 @@ public class TypesafeSqlChecker {
     final Types types;
     final Util util;
     final CommandLine cmd;
-    final Log javacLog;
 
     public TypesafeSqlChecker(Context context, CommandLine cmd) {
         this.symtab = Symtab.instance(context);
@@ -45,69 +44,90 @@ public class TypesafeSqlChecker {
         this.util = new Util(context);
         this.symbols = new Symbols();
         this.cmd = cmd;
-        this.javacLog = Log.instance(context);
     }
 
-    static class FinderData {
-        static Meta.Mapper<JCTree.JCExpression, Symbol.RecordComponent, Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper(boolean isClass) {
-            return new Meta.Mapper<>() {
-
-                @Override public String className(JCTree.JCExpression symbol) {
-                    if (isClass) return TreeInfo.symbol(symbol).owner.toString();
-                    else return symbol.type.tsym.toString();
-                }
-                @Override public String fieldName(Symbol.RecordComponent field) {
-                    return field.toString();
-                }
-                @Override
-                public Stream<Symbol.RecordComponent> readFields(JCTree.JCExpression symbol) {
-                    if (isClass)
-                        return ((Symbol.ClassSymbol) TreeInfo.symbol(symbol).owner).getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
-                    else
-                        return ((Symbol.ClassSymbol) symbol.type.tsym).getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
-                }
-                @Override
-                public <A extends Annotation> @Nullable A classAnnotation(JCTree.JCExpression symbol, Class<A> annotationClass) {
-                    if (isClass)
-                        return TreeInfo.symbol(symbol).owner.getAnnotation(annotationClass);
-                    else return symbol.type.tsym.getAnnotation(annotationClass);
-                }
-                @Override
-                public <A extends Annotation> @Nullable A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) {
-                    return field.getAnnotation(annotationClass);
-                }
-                @Override public Symbol.ClassSymbol mapClass(JCTree.JCExpression klass) {
-                    if (isClass) return ((Symbol.ClassSymbol) TreeInfo.symbol(klass).owner);
-                    else return ((Symbol.ClassSymbol) klass.type.tsym);
-                }
-                @Override public JCTree.JCMethodDecl mapField(Symbol.RecordComponent field) {
-                    return field.accessorMeth;
-                }
-            };
-        }
-        static Throwable preparedStatementError;
-        static Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> preparedStatementError = ex;
-        static final ThreadPoolExecutor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 0L, TimeUnit.SECONDS,
-            new LinkedBlockingDeque<>(), runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setUncaughtExceptionHandler(exceptionHandler);
-            return thread;
-        });
-        static Connection conn;
+    static class SchemaCheckException extends Exception {
+        public SchemaCheckException(String message) { super(message); }
     }
+
+    public Meta.Mapper<Symbol.ClassSymbol,
+        Symbol.RecordComponent,
+        Symbol.ClassSymbol,
+        JCTree.JCMethodDecl> finderMapper() {
+        return new Meta.Mapper<>() {
+            @Override public String className(Symbol.ClassSymbol symbol) {
+                return symbol.className();
+            }
+            @Override public String fieldName(Symbol.RecordComponent field) {
+                return field.toString();
+            }
+            @Override
+            public Stream<Symbol.RecordComponent> readFields(Symbol.ClassSymbol symbol) {
+                return symbol.getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
+            }
+            @Override
+            public <A extends Annotation> @Nullable
+                A classAnnotation(Symbol.ClassSymbol symbol, Class<A> annotationClass) {
+                return symbol.getAnnotation(annotationClass);
+            }
+            @Override
+            public <A extends Annotation> @Nullable
+                A fieldAnnotation(Symbol.RecordComponent field, Class<A> annotationClass) {
+                return field.getAnnotation(annotationClass);
+            }
+            @Override public Symbol.ClassSymbol mapClass(Symbol.ClassSymbol klass) {
+                return klass;
+            }
+            @Override public JCTree.JCMethodDecl mapField(Symbol.RecordComponent field) {
+                return field.accessorMeth;
+            }
+        };
+    }
+    Throwable preparedStatementError;
+    Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> preparedStatementError = ex;
+    final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+        0,
+        Integer.MAX_VALUE,
+        0L,
+        TimeUnit.SECONDS,
+        new LinkedBlockingDeque<>(), runnable -> {
+        var thread = new Thread(runnable);
+        thread.setUncaughtExceptionHandler(exceptionHandler);
+        return thread;
+    });
+    Connection conn;
+
 
     class Symbols {
         Symbol.ClassSymbol clComponent = util.lookupClass(TypesafeSql.class);
-        List<Symbol.MethodSymbol> selectMethod = util.lookupMemberAll(clComponent, "select");
-        List<Symbol.MethodSymbol> selectOneMethod = util.lookupMemberAll(clComponent, "selectOne");
-        List<Symbol.MethodSymbol> updateSelfMethod = util.lookupMemberAll(clComponent, "updateSelf");
-        List<Symbol.MethodSymbol> deleteSelfMethod = util.lookupMemberAll(clComponent, "deleteSelf");
-        List<Symbol.MethodSymbol> insertSelfMethod = util.lookupMemberAll(clComponent, "insertSelf");
-        List<Symbol.MethodSymbol> arrayMethod = util.lookupMemberAll(clComponent, "array");
-        List<Symbol.MethodSymbol> uniqueOrNullMethod = util.lookupMemberAll(clComponent, "uniqueOrNull");
-        List<Symbol.MethodSymbol> execMethod = util.lookupMemberAll(clComponent, "exec");
+        Symbol.ClassSymbol javaSqlConnection = util.lookupClass(java.sql.Connection.class);
+        Symbol.ClassSymbol javaLangString = util.lookupClass(java.lang.String.class);
+        HashSet<Symbol.MethodSymbol> selectMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "select"));
+        }};
+        HashSet<Symbol.MethodSymbol> selectOneMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "selectOne"));
+        }};
+        HashSet<Symbol.MethodSymbol> updateSelfMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "updateSelf"));
+        }};
+        HashSet<Symbol.MethodSymbol> deleteSelfMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "deleteSelf"));
+        }};
+        HashSet<Symbol.MethodSymbol> insertSelfMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "insertSelf"));
+        }};
+        HashSet<Symbol.MethodSymbol> arrayMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "array"));
+        }};
+        HashSet<Symbol.MethodSymbol> uniqueOrNullMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "uniqueOrNull"));
+        }};
+        HashSet<Symbol.MethodSymbol> execMethod = new HashSet<>() {{
+            addAll(util.lookupMemberAll(clComponent, "exec"));
+        }};
 
-        List<Symbol.MethodSymbol> allMethods = new ArrayList<>() {{
+        HashSet<Symbol.MethodSymbol> allMethods = new HashSet<>() {{
             addAll(selectMethod);
             addAll(selectOneMethod);
             addAll(updateSelfMethod);
@@ -121,7 +141,7 @@ public class TypesafeSqlChecker {
 
     final Symbols symbols;
     public void apply(JCTree.JCCompilationUnit cu) {
-        if (FinderData.conn == null) {
+        if (conn == null) {
             try {
                 initConnection(cmd);
             } catch (SQLException | ParseException e) {
@@ -130,160 +150,197 @@ public class TypesafeSqlChecker {
         }
 
         cu.accept(new TreeScanner() {
-            @Override public void visitClassDef(JCTree.JCClassDecl newClass) {
-                super.visitClassDef(newClass);
-                newClass.accept(new TreeScanner() {
-                    @Override
-                    public void visitApply(JCTree.JCMethodInvocation tree) {
-                        super.visitApply(tree);
+            @Override
+            public void visitApply(JCTree.JCMethodInvocation tree) {
+                super.visitApply(tree);
 
-                        final Symbol methodSym;
-                        if (tree.meth instanceof JCTree.JCIdent ident)
-                            methodSym = ident.sym;
-                        else if (tree.meth instanceof JCTree.JCFieldAccess field)
-                            methodSym = field.sym;
-                        else return;
-                        if (symbols.allMethods.contains((Symbol.MethodSymbol) methodSym))
-                            FinderData.executor.execute(() -> {
-                                try {
-                                    if (symbols.execMethod.contains((Symbol.MethodSymbol) methodSym)) {
-                                        execCheck(tree.args);
-                                        return;
-                                    }
+                final Symbol.MethodSymbol methodSym;
+                if (tree.meth instanceof JCTree.JCIdent ident)
+                    methodSym = (Symbol.MethodSymbol) ident.sym;
+                else if (tree.meth instanceof JCTree.JCFieldAccess field)
+                    methodSym = (Symbol.MethodSymbol) field.sym;
+                else return;
 
-                                    JCTree.JCExpression tableClass = tree.args.get(0).type.toString().equals("java.sql.Connection")
-                                        || tree.args.get(0).type.toString().equals("java.lang.String")
-                                        ? tree.args.get(1)
-                                        : tree.args.get(0);
+                if (symbols.allMethods.contains(methodSym))
+                    executor.execute(() -> {
+                        try {
+                            if (symbols.execMethod.contains(methodSym)) {
+                                checkExec(tree.args);
+                                return;
+                            }
 
-                                    Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta = Meta.parseClass(tableClass, FinderData.finderMapper(
-                                        symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                                            symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                                            symbols.arrayMethod.contains((Symbol.MethodSymbol) methodSym) ||
-                                            symbols.uniqueOrNullMethod.contains((Symbol.MethodSymbol) methodSym)));
+                            var tableClass = tree.args.get(0).type.tsym ==
+                                symbols.javaSqlConnection
+                                || tree.args.get(0).type.tsym == symbols.javaLangString
+                                ? tree.args.get(1)
+                                : tree.args.get(0);
 
-                                    if (symbols.selectMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.selectOneMethod.contains((Symbol.MethodSymbol) methodSym))
-                                        selectCheck(meta);
-                                    else if (symbols.deleteSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                                        deleteCheck(meta);
-                                    else if (symbols.insertSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                                        insertCheck(meta);
-                                    else if (symbols.updateSelfMethod.contains((Symbol.MethodSymbol) methodSym))
-                                        updateCheck(meta);
-                                    else if (symbols.arrayMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.uniqueOrNullMethod.contains((Symbol.MethodSymbol) methodSym))
-                                        arrayCheck(meta, tree.args);
-                                } catch (Exception e) {
-                                    throw new RuntimeException(
-                                        util.treeSourcePosition(cu, tree.meth) + "\n" + e.getMessage());
-                                }
-                            });
-                    }
-                });
+                            var classSymbol = TreeInfo.symbol(tableClass) == null ?
+                                tableClass.getTree().type.asElement().enclClass() :
+                                (Symbol.ClassSymbol) TreeInfo.symbol(tableClass).owner;
+
+                            var meta = Meta.parseClass(classSymbol, finderMapper());
+
+                            if (symbols.selectMethod.contains(methodSym) ||
+                                symbols.selectOneMethod.contains(methodSym))
+                                checkSelect(meta, getStringParameter(tree.args));
+                            else if (symbols.deleteSelfMethod.contains(methodSym))
+                                checkDelete(meta);
+                            else if (symbols.insertSelfMethod.contains(methodSym))
+                                checkInsert(meta);
+                            else if (symbols.updateSelfMethod.contains(methodSym))
+                                checkUpdate(meta);
+                            else if (symbols.arrayMethod.contains(methodSym) ||
+                                symbols.uniqueOrNullMethod.contains(methodSym))
+                                checkArray(meta, tree.args);
+                        } catch (SchemaCheckException | SQLException e) {
+                            throw new RuntimeException(
+                                util.treeSourcePosition(cu, tree.meth) + "\n" + e.getMessage());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e.getMessage());
+                        }
+                    });
             }
         });
     }
-    private void updateCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) throws SQLException {
+    private String getStringParameter(List<JCTree.JCExpression> args) {
+        JCTree.JCExpression stringArg = null;
+        for (JCTree.JCExpression arg : args) {
+            if (arg.type.tsym == symbols.javaLangString) stringArg = arg;
+        }
+        if (stringArg instanceof JCTree.JCLiteral)
+            return ((JCTree.JCLiteral) stringArg).value.toString();
+        return "";
+    }
+    private void checkUpdate(Meta.ClassMeta<Symbol.ClassSymbol,
+        JCTree.JCMethodDecl> meta) throws SQLException, SchemaCheckException {
         var query = QueryBuilder.updateSelfQuery(meta);
-        var ps = createPreparedStatement(FinderData.conn, query);
+        var ps = createPreparedStatement(conn, query);
         var parameterMetadata = ps.getParameterMetaData();
 
-        if (parameterMetadata.getParameterCount() != meta.fields().size())
-            throw new RuntimeException("""
-                %s
-                %s : %s
-                Не совпадает количество колонок
-                Ожидалось %s, а имеем %s
-                """.formatted(query, meta.info(), meta.table().name(), parameterMetadata.getParameterCount(), meta.fields().size()));
+        checkCountColumns(meta, query, parameterMetadata.getParameterCount());
 
-        String isId = "";
+        var isId = "";
         var typeVar = new ArrayList<String>();
+        var typeVar2 = new ArrayList<String>();
 
         for (int i = 0; i < meta.fields().size(); i++) {
+            typeVar2.add(parameterMetadata.getParameterClassName(i + 1));
             if (meta.fields().get(i).isId())
-                isId = meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString();
+                isId = meta.fields().get(i).info().getReturnType().type.tsym.
+                    getQualifiedName().toString();
             else
-                typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.getQualifiedName().toString());
+                typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.
+                    getQualifiedName().toString());
 
         }
 
         typeVar.add(isId);
 
-        for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-            if (typeEquals(typeVar.get(i - 1), parameterMetadata.getParameterClassName(i)))
-                throw new RuntimeException("""
+        checkParametersTypes(meta, query, typeVar, typeVar2);
+    }
+    private void checkParametersTypes(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, String query, ArrayList<String> typeVar, ArrayList<String> typeVar2) throws SchemaCheckException {
+        for (int i = 0; i < typeVar.size(); i++) {
+            if (typeEquals(typeVar.get(i), typeVar2.get(i)))
+                throw new SchemaCheckException("""
                     %s
                     %s : %s
                     Не совпадают типы колонок
                     Имеем %s, а ожидали %s
                     Имя колонки: %s
-                    Индекс колонки: %s""".formatted(query, meta.info(), meta.table().name(), typeVar.get(i - 1), parameterMetadata.getParameterClassName(i), meta.fields().get(i).name(), i));
+                    Индекс колонки: %s""".formatted(query,
+                    meta.info(),
+                    meta.table().name(),
+                    typeVar.get(i),
+                    typeVar2.get(i),
+                    meta.fields().get(i).name(),
+                    i));
         }
     }
-    private void insertCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) throws SQLException {
-        var query = QueryBuilder.insertSelfQuery(meta);
-        var ps = createPreparedStatement(FinderData.conn, query);
-        var parameterMetadata = ps.getParameterMetaData();
-        System.out.println(parameterMetadata.getParameterCount());
-        System.out.println(meta.fields().size());
-        System.out.println(query);
-        if (parameterMetadata.getParameterCount() != meta.fields().size())
-            throw new RuntimeException("""
+    private void checkCountColumns(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, String query, int parameterCount) throws SchemaCheckException {
+        if (parameterCount != meta.fields().size())
+            throw new SchemaCheckException("""
                 %s
                 %s : %s
                 Не совпадает количество колонок
                 Ожидалось %s, а имеем %s
-                """.formatted(query, meta.info(), meta.table().name(), parameterMetadata.getParameterCount(), meta.fields().size()));
+                """.formatted(query,
+                meta.info(),
+                meta.table().name(),
+                parameterCount,
+                meta.fields().size()));
+    }
+    private void checkInsert(Meta.ClassMeta<Symbol.ClassSymbol,
+        JCTree.JCMethodDecl> meta) throws SQLException, SchemaCheckException {
+        var query = QueryBuilder.insertSelfQuery(meta);
+        var ps = createPreparedStatement(conn, query);
+        var parameterMetadata = ps.getParameterMetaData();
+
+        checkCountColumns(meta, query, parameterMetadata.getParameterCount());
+
+        var firstTypes = new ArrayList<String>();
+        var secondTypes = new ArrayList<String>();
 
         for (int i = 1; i <= parameterMetadata.getParameterCount(); i++) {
-            if (typeEquals(parameterMetadata.getParameterClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
-                throw new RuntimeException("""
-                    %s
-                    %s : %s
-                    Не совпадают типы колонок
-                    Имеем %s, а ожидали %s
-                    Имя колонки: %s
-                    Индекс колонки: %s""".formatted(query, meta.info(), meta.table().name(), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString(), parameterMetadata.getParameterClassName(i), meta.fields().get(i - 1).name(), i));
+            firstTypes.add(parameterMetadata.getParameterClassName(i));
+            secondTypes.add(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
         }
 
+        checkParametersTypes(meta, query, firstTypes, secondTypes);
+
     }
-    private void deleteCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) throws SQLException {
+    private void checkDelete(Meta.ClassMeta<Symbol.ClassSymbol,
+        JCTree.JCMethodDecl> meta) throws SQLException, SchemaCheckException {
         var query = QueryBuilder.deleteSelfQuery(meta);
 
-        PreparedStatement ps = createPreparedStatement(FinderData.conn, query);
+        var ps = createPreparedStatement(conn, query);
         var parameterMetadata = ps.getParameterMetaData();
-        var varId = Objects.requireNonNull(meta.fields().stream().filter(Meta.FieldRef::isId).findFirst().orElse(null)).info().getReturnType().type.tsym.getQualifiedName().toString();
-        if (typeEquals(parameterMetadata.getParameterClassName(1), varId))
-            throw new RuntimeException("""
-                %s
-                %s : %s
-                Не совпадают типы колонок
-                Имеем %s, а ожидали %s""".formatted(query, meta.info(), meta.table().name(), varId, parameterMetadata.getParameterClassName(1)));
+        var varId = Objects.requireNonNull(meta.fields().stream()
+                .filter(Meta.FieldRef::isId)
+                .findFirst()
+                .orElse(null))
+            .info().getReturnType().type.tsym.getQualifiedName().toString();
 
+        checkParametersTypes(meta, query, new ArrayList<>() {{
+            add(parameterMetadata.getParameterClassName(1));
+        }}, new ArrayList<>() {{
+            add(varId);
+        }});
     }
-    private void selectCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) throws SQLException {
-        // TODO: в случае select, к query нужно добавить expr, и делать это на стороне QueryBuilder
-        var finalQuery = QueryBuilder.selectQuery(meta);
-        typeAndSizeCheck(meta, finalQuery);
+    private void checkSelect(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta,
+                             String stringQuery) throws SQLException, SchemaCheckException {
+        var finalQuery = QueryBuilder.selectQuery(meta, stringQuery);
+        checkTypeAndSize(meta, finalQuery);
     }
-    private void execCheck(com.sun.tools.javac.util.List<JCTree.JCExpression> args) throws SQLException {
-        // TODO: multiline strings - не использовать toString
-        var query = args.get(0).type.toString().equals("java.lang.String") ? args.get(0) : args.get(1);
-        PreparedStatement ps = createPreparedStatement(FinderData.conn, query.toString().substring(1, query.toString().length() - 1));
-        ps.getParameterMetaData();
-        ps.getMetaData();
+    private void checkExec(com.sun.tools.javac.util.List<JCTree.JCExpression> args)
+        throws SQLException, SchemaCheckException {
+        var arg = args.get(0).type.tsym == symbols.javaLangString ? args.get(0) : args.get(1);
+        if (arg instanceof JCTree.JCLiteral) {
+            var ps = createPreparedStatement(conn, ((JCTree.JCLiteral) arg).value.toString());
+            ps.getParameterMetaData();
+            ps.getMetaData();
+        } else {
+            throw new SchemaCheckException(arg + "\nExcepted JCLiteral");
+        }
     }
-    private void arrayCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, com.sun.tools.javac.util.List<JCTree.JCExpression> args) throws SQLException {
+    private void checkArray(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta,
+                            com.sun.tools.javac.util.List<JCTree.JCExpression> args)
+        throws SQLException, SchemaCheckException {
         var query = "";
         for (JCTree.JCExpression arg : args) {
-            if (arg.type.toString().equals("java.lang.String")) {
+            if (arg.type.tsym == symbols.javaLangString) {
                 query = arg.toString();
                 break;
             }
         }
-        typeAndSizeCheck(meta, query.substring(1, query.length() - 1));
+        checkTypeAndSize(meta, query.substring(1, query.length() - 1));
     }
     private boolean typeEquals(String firstType, String secondType) {
-        if ((firstType.equals("java.lang.Integer") || firstType.equals("int")) && ((secondType.equals("int") || secondType.equals("long") || secondType.equals("java.lang.Integer"))))
+        if ((firstType.equals("java.lang.Integer") ||
+            firstType.equals("int")) &&
+            ((secondType.equals("int") ||
+                secondType.equals("long") ||
+                secondType.equals("java.lang.Integer"))))
             return false;
         return !firstType.equals(secondType);
     }
@@ -304,9 +361,12 @@ public class TypesafeSqlChecker {
 
         var ds = getDataSource(username, password, driverClassName, jdbcUrl);
 
-        FinderData.conn = ds.getConnection();
+        conn = ds.getConnection();
     }
-    private HikariDataSource getDataSource(String finalUsername, String finalPassword, String finalDriverClassName, String jdbcUrl) {
+    private HikariDataSource getDataSource(String finalUsername,
+                                           String finalPassword,
+                                           String finalDriverClassName,
+                                           String jdbcUrl) {
         return new HikariDataSource() {{
             setDriverClassName(finalDriverClassName);
             setJdbcUrl(jdbcUrl);
@@ -316,32 +376,28 @@ public class TypesafeSqlChecker {
             setConnectionTimeout(10000);
         }};
     }
-    private PreparedStatement createPreparedStatement(Connection conn, String finalQuery) throws SQLException {
-        // TODO: В случае исключения тут печатать query
-        return conn.prepareStatement(finalQuery);
+    private PreparedStatement createPreparedStatement(Connection conn, String finalQuery) {
+        try {
+            return conn.prepareStatement(finalQuery);
+        } catch (Exception e) {
+            throw new RuntimeException(finalQuery);
+        }
     }
-    private void typeAndSizeCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, String query) throws SQLException {
-        if(true) throw new RuntimeException(query);
-        PreparedStatement ps = createPreparedStatement(FinderData.conn, query);
+    private void checkTypeAndSize(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta,
+                                  String query) throws SQLException, SchemaCheckException {
+        var ps = createPreparedStatement(conn, query);
         var preparedStatementMetadata = ps.getMetaData();
 
-        if (preparedStatementMetadata.getColumnCount() != meta.fields().size())
-            throw new RuntimeException("""
-                %s
-                %s : %s
-                Не совпадает количество колонок
-                Ожидалось %s, а имеем %s
-                """.formatted(query, meta.info(), meta.table().name(), preparedStatementMetadata.getColumnCount(), meta.fields().size()));
+        var firstTypes = new ArrayList<String>();
+        var secondTypes = new ArrayList<String>();
+
+        checkCountColumns(meta, query, preparedStatementMetadata.getColumnCount());
 
         for (int i = 1; i <= preparedStatementMetadata.getColumnCount(); i++) {
-            if (typeEquals(preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString()))
-                throw new RuntimeException("""
-                    %s
-                    %s : %s
-                    Не совпадают типы колонок
-                    Имеем %s, а ожидали %s
-                    Имя колонки: %s
-                    Индекс колонки: %s""".formatted(query, meta.info(), meta.table().name(), meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString(), preparedStatementMetadata.getColumnClassName(i), meta.fields().get(i - 1).name(), i));
+            firstTypes.add(preparedStatementMetadata.getColumnClassName(i));
+            secondTypes.add(meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString());
         }
+
+        checkParametersTypes(meta, query, firstTypes, secondTypes);
     }
 }

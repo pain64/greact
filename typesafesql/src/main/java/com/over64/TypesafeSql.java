@@ -234,9 +234,9 @@ public class TypesafeSql {
 
     public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
         var meta = Meta.parseClass(klass, reflectionMapper());
-        var query = QueryBuilder.selectQuery(meta);
+        var query = QueryBuilder.selectQuery(meta, expr);
 
-        var exprAndOffsets = mapQueryArgs(query + "\n" + expr, args);
+        var exprAndOffsets = mapQueryArgs(query, args);
         var offsets = exprAndOffsets.offsets;
 
         try {
@@ -330,7 +330,7 @@ public class TypesafeSql {
             for (var i = 0; i < generated.size(); i++)
                 cstmt.registerOutParameter(i + paramValues.size() + 1, Types.BIGINT);
 
-            // cstmt.execute();
+            cstmt.execute();
 
             var constructor = meta.info();
             var consArgs = new Object[constructor.getParameters().length];

@@ -43,18 +43,6 @@ public class CodeViewPlugin {
 
     public void apply(JCTree.JCCompilationUnit cu) {
         cu.accept(new TreeScanner() {
-            JCTree.JCClassDecl currentClass;
-
-            @Override public void visitClassDef(JCTree.JCClassDecl tree) {
-                if (tree.sym.isAnonymous())
-                    super.visitClassDef(tree);
-                else {
-                    var oldClass = currentClass;
-                    currentClass = tree;
-                    super.visitClassDef(tree);
-                    currentClass = oldClass;
-                }
-            }
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
                 if (newClass.type.tsym == symbols.clCodeView) {
                     var viewCompExpression = newClass.args.head;
@@ -78,11 +66,11 @@ public class CodeViewPlugin {
                                 throw new RuntimeException(ex);
                             }
                         } else throw new RuntimeException(
-                            currentClass.sym.fullname + ":" + newClass.pos + "\n" +
+                            util.treeSourcePosition(cu, newClass) + "\n" +
                             "expected new class as CodeView component lambda body but has: " +
                                 lambda.body);
                     else throw new RuntimeException(
-                        currentClass.sym.fullname + ":" + newClass.pos + "\n" +
+                        util.treeSourcePosition(cu, newClass) + "\n" +
                         "expected lambda component as first arg for CodeView but has: " +
                             viewCompExpression);
 

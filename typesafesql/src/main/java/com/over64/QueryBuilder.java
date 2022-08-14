@@ -18,8 +18,7 @@ public class QueryBuilder {
 
         return result.toString();
     }
-    // FIXME: add expr
-    public static <T, V> String selectQuery(Meta.ClassMeta<T, V> meta) {
+    public static <T, V> String selectQuery(Meta.ClassMeta<T, V> meta, String expr) {
         var fromTable = meta.table();
         return " select\n\t%s\n from\n\t%s\n\t%s".formatted(
             meta.fields().stream()
@@ -33,7 +32,7 @@ public class QueryBuilder {
                         (join.table().alias() != null ? " " + join.table().alias() : "");
 
                     return kind + tableExpr + " on " + join.onExpr();
-                }).collect(Collectors.joining("\n\t")));
+                }).collect(Collectors.joining("\n\t"))) + "\n" + expr;
     }
     public static <T, V> String deleteSelfQuery(Meta.ClassMeta<T, V> meta) {
         var idFields = meta.fields().stream()

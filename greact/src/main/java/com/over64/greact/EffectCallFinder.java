@@ -39,7 +39,7 @@ public class EffectCallFinder {
 
     public record Effect(
         JCTree.JCMethodInvocation invocation,
-        Set<Symbol.VarSymbol> effected) {}
+        Set<Symbol.VarSymbol> effected) { }
 
     public LinkedHashMap<JCTree.JCClassDecl, List<Effect>> find(JCTree.JCCompilationUnit cu) {
 
@@ -81,12 +81,12 @@ public class EffectCallFinder {
                                 return (Symbol.VarSymbol) id.sym;
 
                         throw new RuntimeException("""
-                            %s:%s
+                            %s
                             error at: %s
                             for ∀ x is variable expected any of:
                               effect(x)
                               effect(x = expression)
-                              effect(x op= expression)""".formatted(currentClass.sym.fullname, tree.meth.pos ,tree));
+                              effect(x op= expression)""".formatted(util.treeSourcePosition(cu, tree.meth), tree));
                     };
 
                     result.get(currentClass)

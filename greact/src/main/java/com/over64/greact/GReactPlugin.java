@@ -30,6 +30,7 @@ public class GReactPlugin implements Plugin {
 
     long startedAtMillis;
     JavacTask theTask;
+    TypesafeSqlChecker typesafeSqlChecker;
 
     @Override
     public void init(JavacTask task, String... strings) {
@@ -43,8 +44,9 @@ public class GReactPlugin implements Plugin {
         task.addTaskListener(new TaskListener() {
 
             @Override public void started(TaskEvent e) {
-                if (e.getKind() == TaskEvent.Kind.COMPILATION)
+                if (e.getKind() == TaskEvent.Kind.COMPILATION) {
                     startedAtMillis = System.currentTimeMillis();
+                }
             }
             @Override
             public void finished(TaskEvent e) {
@@ -56,13 +58,13 @@ public class GReactPlugin implements Plugin {
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-                        if (TranspilerPlugin.getCmd(strings).getOptionValue("tsql-check-enabled").equals("true")) {
-                            TypesafeSqlChecker.FinderData.executor.shutdown();
-                            var closeAllThread = TypesafeSqlChecker.FinderData.executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
+                        if (typesafeSqlChecker != null) {
+                            typesafeSqlChecker.executor.shutdown();
+                            var closeAllThread = typesafeSqlChecker.executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
 
                             if (!closeAllThread) throw new InterruptedException();
-                            if (TypesafeSqlChecker.FinderData.preparedStatementError != null)
-                                throw TypesafeSqlChecker.FinderData.preparedStatementError;
+                            if (typesafeSqlChecker.preparedStatementError != null)
+                                throw typesafeSqlChecker.preparedStatementError;
                         }
 
                         System.out.println("GREACT COMPILATION DONE!!!");
@@ -74,10 +76,12 @@ public class GReactPlugin implements Plugin {
                 }
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
                     var cmd = TranspilerPlugin.getCmd(strings);
+                    if (cmd.getOptionValue("tsql-check-enabled").equals("true"))
+                        typesafeSqlChecker = new TypesafeSqlChecker(context, cmd);
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
                     var t0 = System.currentTimeMillis();
-                    if (cmd.getOptionValue("tsql-check-enabled").equals("true"))
-                        new TypesafeSqlChecker(context, cmd).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    if (typesafeSqlChecker != null)
+                        typesafeSqlChecker.apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();
