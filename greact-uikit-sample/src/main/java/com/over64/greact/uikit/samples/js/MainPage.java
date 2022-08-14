@@ -16,8 +16,8 @@ import static com.over64.greact.uikit.samples.Main.Server.server;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id int schoolId,
-                                                           String name, String email, int age) { }
+    @TypesafeSql.Table("teachers") public record Teachers(@TypesafeSql.Id int schoolId,
+                                                          String name, String email, int age) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -461,9 +461,9 @@ public class MainPage implements Component0<div> {
 
                             new CodeView<>(() ->
                                 new div() {{
-                                    var data = server(db -> db.select(StudyForm.class));
+                                    var data = server(db -> db.select(Teachers.class, "where name"));
                                     new Grid<>(data) {{
-                                        adjust(StudyForm::schoolId);
+                                        adjust(Teachers::schoolId);
                                         onRowChange = row -> JSExpression.of("console.log(row)");
                                     }};
                                 }}, renderer());

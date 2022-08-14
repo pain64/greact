@@ -18,6 +18,7 @@ public class QueryBuilder {
 
         return result.toString();
     }
+    // FIXME: add expr
     public static <T, V> String selectQuery(Meta.ClassMeta<T, V> meta) {
         var fromTable = meta.table();
         return " select\n\t%s\n from\n\t%s\n\t%s".formatted(

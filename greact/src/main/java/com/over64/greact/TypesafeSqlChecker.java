@@ -10,6 +10,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.cli.CommandLine;
@@ -35,6 +36,7 @@ public class TypesafeSqlChecker {
     final Types types;
     final Util util;
     final CommandLine cmd;
+    final Log javacLog;
 
     public TypesafeSqlChecker(Context context, CommandLine cmd) {
         this.symtab = Symtab.instance(context);
@@ -43,6 +45,7 @@ public class TypesafeSqlChecker {
         this.util = new Util(context);
         this.symbols = new Symbols();
         this.cmd = cmd;
+        this.javacLog = Log.instance(context);
     }
 
     static class FinderData {
@@ -125,6 +128,7 @@ public class TypesafeSqlChecker {
                 throw new RuntimeException(e);
             }
         }
+
         cu.accept(new TreeScanner() {
             @Override public void visitClassDef(JCTree.JCClassDecl newClass) {
                 super.visitClassDef(newClass);
@@ -169,10 +173,8 @@ public class TypesafeSqlChecker {
                                     else if (symbols.arrayMethod.contains((Symbol.MethodSymbol) methodSym) || symbols.uniqueOrNullMethod.contains((Symbol.MethodSymbol) methodSym))
                                         arrayCheck(meta, tree.args);
                                 } catch (Exception e) {
-                                    throw new RuntimeException("""
-                                        %s:%s
-                                        %s
-                                        """.formatted(newClass.sym.fullname, tree.meth.pos, e.getMessage()));
+                                    throw new RuntimeException(
+                                        util.treeSourcePosition(cu, tree.meth) + "\n" + e.getMessage());
                                 }
                             });
                     }
@@ -259,10 +261,12 @@ public class TypesafeSqlChecker {
 
     }
     private void selectCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta) throws SQLException {
+        // TODO: в случае select, к query нужно добавить expr, и делать это на стороне QueryBuilder
         var finalQuery = QueryBuilder.selectQuery(meta);
         typeAndSizeCheck(meta, finalQuery);
     }
     private void execCheck(com.sun.tools.javac.util.List<JCTree.JCExpression> args) throws SQLException {
+        // TODO: multiline strings - не использовать toString
         var query = args.get(0).type.toString().equals("java.lang.String") ? args.get(0) : args.get(1);
         PreparedStatement ps = createPreparedStatement(FinderData.conn, query.toString().substring(1, query.toString().length() - 1));
         ps.getParameterMetaData();
@@ -313,9 +317,11 @@ public class TypesafeSqlChecker {
         }};
     }
     private PreparedStatement createPreparedStatement(Connection conn, String finalQuery) throws SQLException {
+        // TODO: В случае исключения тут печатать query
         return conn.prepareStatement(finalQuery);
     }
     private void typeAndSizeCheck(Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta, String query) throws SQLException {
+        if(true) throw new RuntimeException(query);
         PreparedStatement ps = createPreparedStatement(FinderData.conn, query);
         var preparedStatementMetadata = ps.getMetaData();
 
