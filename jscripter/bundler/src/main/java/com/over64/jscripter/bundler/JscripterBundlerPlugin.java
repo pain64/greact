@@ -74,6 +74,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                     else {
                         var message = new StringBuilder("update");
                         for (var file : changedFiles)
+                            // TODO: использовать \n в качестве разделителя
                             message.append("$").append(file);
 
                         if (!message.toString().equals("update"))
@@ -275,6 +276,8 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             return dest;
         }
 
+        // TODO: сделать функцию debugBuild, которая возвращает список измененных файлов
+
         @TaskAction void reload() throws Exception {
             var currentTime = System.currentTimeMillis();
 
@@ -374,7 +377,9 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             Files.writeString(bundlePath, "\nlivereload", StandardOpenOption.APPEND);
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> { });
+            workerExecutor.noIsolation().submit(WebServer.class,  workServerParams -> {
+
+            });
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
@@ -428,7 +433,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var __ = bundleFile.toFile().delete();
             __ = bundleFile.toFile().createNewFile();
 
-            // TODO: use timestamps instead of SHA-1
             var sha1 = MessageDigest.getInstance("SHA-1");
             var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
             var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
@@ -436,15 +440,58 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             Files.writeString(bundleFile, "main.css " + hashCss + "\nmain.js " + hashJs);
         }
     }
+    // TODO:
+    // 1 - функция для получения содержимого библиотечных js и css
+    //     record LibrariesCode(String js, String css) {}
+    //     LibrariesCode fetchLibrariesCode() {} (строка 323 - 341)
+    // 2 - функция для получения содержимого локального кода js и css (строка 307 - 320)
+    //     LinkedHashSet<RResource<Path>> fetchLocalCode()
+    // 2 - функция Delta debugBuild()
+    //       - stateful - содержимое каталога bundle
+    //       - хранит bundle/latest_lib_mtime
+    //          - файл, mtime которого равен максимальному mtime jar файлов
+    //          - если есть jar файл, mtime которого больше чем
+    //             latest_lib_mtime, то вызывает fetchLibrariesCode() и дампит новые
+    //             версии lib.css и lib.js
+    //       - вызывает fetchLocalCode(), копирует в bundledir, пишет в bundlefile
+    //       - работает с bundleFile (строка 354 - 371)
+    //          - патчит window.classXXX =
+    //          - хранит mtime файлов бандла
+    //       - возвращает список имен измененных файлов и флаг был ли изменен classPath
+    //       record Delta(boolean isLibrariesChanged, List<String> localFilesChanged)
+    // 3 - функция hotReload()
+    //     - вызывает debugBuild и отправляет сообщение по WS
+    //        - если isLibrariesChanged то сообщение "reload"
+    //        - иначе отправляем сообщение:
+    //             update
+    //             file1
+    //             file2
+    //             ...
+    //        - сообщение отправляется не через static поле а как поле класса
+    //            а через поле workerServerParams (строка 381)
+    // 4 - функция productionBuild()
+    //    - stateful - сносит содержимое bundle dir
+    //    - вызывает fetchLibrariesCode()
+    //       - записывает lib.css и lib.js в bundleFile заносит эти файлы с хэшами
+    //    - вызывает fetchLocalCode, склеивает в main.css и main.js, вычисляет хэши и заносит в bundleFile
+    // РЕФАКТОР ФАЙЛОВ
+    // 1 - WebsocketSender
+    // 2 - CodeAnalyze - fetchLibrariesCode, fetchLocalCode, ModuleCode, RResource и т.д.
+    // 3 - JScripterBundlerPlugin - таски, работа с bundle
+    // РЕФАКТОР ТАСКОВ:
+    //  Мотивация: не поднимать websocket просто так если юзер просто скомпилировал проект
+    //    то есть, явно не использовал hot-reload
+    //  1 task: bundler-debug-build
+    //      от него зависит classes
+    //  2 task: bundler-production-build
+    //      от него зависит jar
+    //  3 task: hot-reload
+    //      он зависит от compileJava, processResources
+    // MISC: рефактор loader - починить асинхронность загрузки JS (см Loader:89)
+    // NOTA BENE:
+    //  - используем NIO (zero-copy) для работы с файлами (426-431, 366, 369)
 
     public void apply(Project project) {
-        // add tasks: greact_debug_build
-        //   от него зависит classes
-        //            greact_production_build
-        //   от него зависит jar
-        //            livereload
-        //   он запускается из gradle напрямую
-        //
         project.getPlugins().apply("java");
         var classes = project.getTasks().getByName("classes");
         classes.dependsOn("livereload");

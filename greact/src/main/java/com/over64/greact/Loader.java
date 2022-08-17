@@ -60,7 +60,7 @@ public class Loader {
                          const src = temp[temp.length - 1].split("?t=")[0];
 
                          if(src === filename) {
-                              const localSrc = src + "?t=" + Date.now();
+//                              const localSrc = src + "?t=" + Date.now();
 //                              const xhr = new XMLHttpRequest();
 //                              xhr.open("GET", localSrc, false);
 //                              xhr.send();
@@ -86,6 +86,7 @@ public class Loader {
                       let reload = false;
                       for (let file of event.data.substring(7).split("$")) {
                           if (file.endsWith(".js")) {
+                              // TODO: дождаться загрузки всех файлов а потом делать mount()
                               reloadJs(file);
                               reload = true;
                           } else if (file.endsWith(".css")) {
