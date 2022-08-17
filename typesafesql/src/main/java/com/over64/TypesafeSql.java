@@ -1,5 +1,6 @@
 package com.over64;
 
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
@@ -81,7 +82,7 @@ public class TypesafeSql {
         }
     }
 
-    public <T> T[] array(Connection conn, Class<T> klass, String stmt, Object... args) {
+    public <T> T[] array(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
         var exprAndOffsets = mapQueryArgs(stmt, args);
         var offsets = exprAndOffsets.offsets;
 
@@ -122,20 +123,20 @@ public class TypesafeSql {
         }
     }
 
-    public <T> T[] array(String stmt, Class<T> klass, Object... args) {
+    public <T> T[] array(Class<T> klass, @Language("sql") String stmt, Object... args) {
         return withConnection(conn -> array(conn, klass, stmt, args));
     }
 
-    public <T> T uniqueOrNull(Connection conn, Class<T> klass, String stmt, Object... args) {
+    public <T> T uniqueOrNull(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
         var result = array(conn, klass, stmt, args);
         return result.length == 0 ? null : result[0];
     }
 
-    public <T> T uniqueOrNull(Class<T> klass, String stmt, Object... args) {
+    public <T> T uniqueOrNull(Class<T> klass, @Language("sql") String stmt, Object... args) {
         return withConnection(conn -> uniqueOrNull(conn, klass, stmt, args));
     }
 
-    public Void exec(Connection conn, String stmt, Object... args) {
+    public Void exec(Connection conn, @Language("sql") String stmt, Object... args) {
         try {
             var exprAndOffsets = mapQueryArgs(stmt, args);
             var offsets = exprAndOffsets.offsets;
@@ -232,7 +233,7 @@ public class TypesafeSql {
         };
     }
 
-    public <T> T[] select(Connection conn, Class<T> klass, String expr, Object... args) {
+    public <T> T[] select(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
         var meta = Meta.parseClass(klass, reflectionMapper());
         var query = QueryBuilder.selectQuery(meta, expr);
 
@@ -270,7 +271,7 @@ public class TypesafeSql {
         }
     }
 
-    public <T> T[] select(Class<T> klass, String expr, Object... args) {
+    public <T> T[] select(Class<T> klass, @Language("sql") String expr, Object... args) {
         return withConnection(conn -> select(conn, klass, expr, args));
     }
 
@@ -282,11 +283,11 @@ public class TypesafeSql {
         return select(klass, "");
     }
 
-    public <T> T selectOne(Class<T> klass, String expr, Object... args) {
+    public <T> T selectOne(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
         return null;
     }
 
-    public <T> T selectOne(Class<T> klass) {
+    public <T> T selectOne(Class<T> klass, @Language("sql") String expr, Object... args) {
         return null;
     }
 

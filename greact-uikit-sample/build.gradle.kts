@@ -27,7 +27,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--enable-preview")
     options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.samples.js " +
             "--tsql-check-enabled=true " +
-            "--tsql-driver-class-name=org.postgresql.Driver " +
+            "--tsql-check-driver-classname=org.postgresql.Driver " +
             "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/uikit_sample " +
             "--tsql-check-schema-username=uikit " +
             "--tsql-check-schema-password=1234 ")
