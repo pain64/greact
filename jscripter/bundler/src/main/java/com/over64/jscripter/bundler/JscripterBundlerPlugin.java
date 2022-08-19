@@ -487,7 +487,6 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     //      от него зависит jar
     //  3 task: hot-reload
     //      он зависит от compileJava, processResources
-    // MISC: рефактор loader - починить асинхронность загрузки JS (см Loader:89)
     // NOTA BENE:
     //  - используем NIO (zero-copy) для работы с файлами (426-431, 366, 369)
 

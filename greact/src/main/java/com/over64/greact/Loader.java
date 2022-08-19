@@ -53,30 +53,31 @@ public class Loader {
                     }
                 }
 
-                function reloadJs(filename) {
-                    const scripts = document.getElementsByTagName("script");
+                async function reloadJs(filename) {
+                    return new Promise(function(resolve, reject) {
+                    var myPromise = this;
+                     const scripts = document.getElementsByTagName("script");
+                     var status = [];
                     for (let script of scripts) {
                          const temp = script.src.split("/")
                          const src = temp[temp.length - 1].split("?t=")[0];
 
                          if(src === filename) {
-//                              const localSrc = src + "?t=" + Date.now();
-//                              const xhr = new XMLHttpRequest();
-//                              xhr.open("GET", localSrc, false);
-//                              xhr.send();
-//                              eval(xhr.responseText);
-
+                              status.push(false);
                               script.parentNode.removeChild(script);
                               const newScript = document.createElement('script');
                               newScript.src = script.src;
-                              newScript.onload = function() {
-                                 mount();
-                                 console.log('loaded');
+                              newScript.onload = () => {
+                                 status.pop();
+                                 if (status.length != 0) return;
+                                 resolve(220);
                               }
                               document.body.appendChild(newScript);
                          }
                     }
+                    })
                 }
+               
 
               const ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
               ws.onmessage = function(event) {
@@ -84,19 +85,22 @@ public class Loader {
                       document.location.reload();
                   } else if(event.data.startsWith("update")) {
                       let reload = false;
+                      var jsPromises = [];
                       for (let file of event.data.substring(7).split("$")) {
                           if (file.endsWith(".js")) {
-                              // TODO: дождаться загрузки всех файлов а потом делать mount()
-                              reloadJs(file);
+                              jsPromises.push(reloadJs(file));
                               reload = true;
                           } else if (file.endsWith(".css")) {
                               reloadCss(file);
                           }
                       }
-//                      if (reload) {
-//                          document.body.innerHTML = '';
-//                          mount();
-//                      }
+                      if (reload) {
+                        (async () => {
+                            await Promise.all(jsPromises);
+                            mount();
+                            }
+                        )();
+                      }
                   }
               };
               setInterval(() => ws.send('heartbeat'), 1000 * 60);
