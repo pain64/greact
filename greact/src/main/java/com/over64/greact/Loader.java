@@ -69,6 +69,7 @@ public class Loader {
                               newScript.src = script.src;
                               newScript.onload = () => {
                                  status.pop();
+                                 console.log('load');
                                  if (status.length != 0) return;
                                  resolve(220);
                               }
@@ -97,6 +98,7 @@ public class Loader {
                       if (reload) {
                         (async () => {
                             await Promise.all(jsPromises);
+                            console.log('mount');
                             mount();
                             }
                         )();

@@ -14,6 +14,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
@@ -42,6 +43,7 @@ import java.util.zip.ZipEntry;
 // FIXME: rename to JScripter
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
+    record LibrariesCode(String js, String css) { }
     public static ArrayList<String> changedFiles = new ArrayList<>();
 
     // FIXME: pass changed files with parameters
@@ -145,10 +147,56 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
     }
 
-    public static class Livereload extends DefaultTask {
+    public static class DebugBuild extends DefaultTask {
+        @TaskAction void debug() {
+            System.out.println("DebugBuild");
+        }
+    }
+
+    public static class HotReload extends DefaultTask {
+        LibrariesCode fetchLibrariesCode() {
+            var js = new StringBuilder();
+            var css = new StringBuilder();
+
+            var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
+            StreamSupport.stream(runtimeClassPath.spliterator(), false)
+                .map(cp -> new HotReload.ClassPathWithModule<>(cp, walkOverJar(cp)))
+                .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
+                .forEach(cpWithMod -> {
+                    var libResourcesOrdered = buildDependencies(cpWithMod.mod);
+
+                    var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
+                    var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
+
+                    js.append(String.join("\n", libJs.map(HotReload.RResource::data).toList()));
+                    css.append(String.join("\n", libCss.map(HotReload.RResource::data).toList()));
+                });
+
+            return new LibrariesCode(js.toString(), css.toString());
+        }
+
+        LinkedHashSet<RResource<Path>> fetchLocalCode(SourceSetContainer sourceSets, Path stylesDir) {
+            var localJs = sourceSets.getByName("main")
+                .getOutput().getClassesDirs().getFiles().stream()
+                .map(this::walkOverDirectory)
+                .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
+                    new ModuleCode<>(
+                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
+                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
+
+            var localCss = walkOverDirectory(stylesDir.toFile()).resources;
+
+            // FIXME: make listConcat & mapConcat method
+            var localModule = new ModuleCode<>(
+                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
+                localJs.dependencies);
+
+            return buildDependencies(localModule);
+        }
+
         final WorkerExecutor workerExecutor;
 
-        @Inject public Livereload(WorkerExecutor workerExecutor) {
+        @Inject public HotReload(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
         }
 
@@ -278,7 +326,25 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 
         // TODO: сделать функцию debugBuild, которая возвращает список измененных файлов
 
-        @TaskAction void reload() throws Exception {
+        //функция Delta debugBuild() (task bundler-debug-build)
+        //    //       - stateful - содержимое каталога bundle
+        //    //       - хранит bundle/latest_lib_mtime
+        //    //          - файл, mtime которого равен максимальному mtime jar файлов
+        //    //          - если есть jar файл, mtime которого больше чем
+        //    //             latest_lib_mtime, то вызывает fetchLibrariesCode() и дампит новые
+        //    //             версии lib.css и lib.js
+        //    //       - вызывает fetchLocalCode(), копирует в bundledir, пишет в bundlefile
+        //    //       - работает с bundleFile (строка 354 - 371)
+        //    //          - патчит window.classXXX =
+        //    //          - хранит mtime файлов бандла
+        //    //       - возвращает список имен измененных файлов и флаг был ли изменен classPath
+        //    //       record Delta(boolean isLibrariesChanged, List<String> localFilesChanged)
+        record Delta(boolean isLibrariesChanged, List<String> localFilesChanged) { }
+        Delta debugBuild() {
+            return new Delta(true, null);
+        }
+
+        @TaskAction void hotReload() throws Exception {
             var currentTime = System.currentTimeMillis();
 
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
@@ -304,47 +370,19 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
 //                }
 //            }
 
-            var localJs = sourceSets.getByName("main")
-                .getOutput().getClassesDirs().getFiles().stream()
-                .map(this::walkOverDirectory)
-                .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
-                    new ModuleCode<>(
-                        new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
-                        new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
-            var localCss = walkOverDirectory(stylesDir.toFile()).resources;
-            // FIXME: make listConcat & mapConcat method
-            var localModule = new ModuleCode<>(
-                new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
-                localJs.dependencies);
-            var localResourceOrdered = buildDependencies(localModule);
+            var localResourceOrdered = fetchLocalCode(sourceSets, stylesDir);
 
-            var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
-            var libModules = StreamSupport.stream(runtimeClassPath.spliterator(), false)
-                .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
-                .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
-                .flatMap(cpWithMod -> {
-                    var libResourcesOrdered = buildDependencies(cpWithMod.mod);
+            var libs = fetchLibrariesCode();
 
-                    var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
-                    var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
+            var moduleJsPath = Paths.get(bundleDir + "/lib.js");
+            var moduleCssPath = Paths.get(bundleDir + "/lib.css");
 
-                    var moduleName = removeSuffix(cpWithMod.classPath.toPath().getFileName().toString(), ".jar");
-                    var moduleJsPath = Paths.get(bundleDir + "/" + moduleName + ".js");
-                    var moduleCssPath = Paths.get(bundleDir + "/" + moduleName + ".css");
-
-                    try {
-                        Files.writeString(moduleJsPath, String.join("\n", libJs.map(RResource::data).toList()));
-                        Files.writeString(moduleCssPath, String.join("\n", libCss.map(RResource::data).toList()));
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-
-                    return Stream.of(new RResource<>(moduleName + ".js", moduleJsPath),
-                        new RResource<>(moduleName + ".css", moduleCssPath));
-                }).toList();
+            Files.writeString(moduleJsPath, libs.js);
+            Files.writeString(moduleCssPath, libs.css);
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
+
 
             var bundlePath = bundleDir.resolve(".bundle");
             var bundleFile = bundlePath.toFile();
@@ -369,15 +407,15 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                         Files.copy(res.data, dest, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
-
-            Files.writeString(bundlePath, Stream.of(libModules, localResourceOrdered)
+            Files.writeString(bundlePath, "lib.js\nlib.css\n");
+            Files.writeString(bundlePath, Stream.of(localResourceOrdered)
                 .flatMap(Collection::stream)
                 .map(r -> r.name)
-                .collect(Collectors.joining("\n")));
+                .collect(Collectors.joining("\n")), StandardOpenOption.APPEND);
             Files.writeString(bundlePath, "\nlivereload", StandardOpenOption.APPEND);
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
-            workerExecutor.noIsolation().submit(WebServer.class,  workServerParams -> {
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {
 
             });
         }
@@ -400,7 +438,7 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
 
         @TaskAction
-        void prod() throws IOException, NoSuchAlgorithmException {
+        void productionBuild() throws IOException, NoSuchAlgorithmException {
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
                 ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
 
@@ -441,12 +479,12 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
         }
     }
     // TODO:
-    // 1 - функция для получения содержимого библиотечных js и css
-    //     record LibrariesCode(String js, String css) {}
-    //     LibrariesCode fetchLibrariesCode() {} (строка 323 - 341)
-    // 2 - функция для получения содержимого локального кода js и css (строка 307 - 320)
-    //     LinkedHashSet<RResource<Path>> fetchLocalCode()
-    // 2 - функция Delta debugBuild()
+    // 1 - функция для получения содержимого библиотечных js и css                       +
+    //     record LibrariesCode(String js, String css) {}                                +
+    //     LibrariesCode fetchLibrariesCode() {} (строка 323 - 341)                      +
+    // 2 - функция для получения содержимого локального кода js и css (строка 307 - 320) +
+    //     LinkedHashSet<RResource<Path>> fetchLocalCode()                               +
+    // 2 - функция Delta debugBuild() (task bundler-debug-build)
     //       - stateful - содержимое каталога bundle
     //       - хранит bundle/latest_lib_mtime
     //          - файл, mtime которого равен максимальному mtime jar файлов
@@ -487,19 +525,26 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
     //      от него зависит jar
     //  3 task: hot-reload
     //      он зависит от compileJava, processResources
+
     // NOTA BENE:
     //  - используем NIO (zero-copy) для работы с файлами (426-431, 366, 369)
 
     public void apply(Project project) {
         project.getPlugins().apply("java");
         var classes = project.getTasks().getByName("classes");
-        classes.dependsOn("livereload");
-        project.getTasks().register("livereload", Livereload.class, reload ->
+
+        project.getTasks().register("bundler-debug-build", DebugBuild.class);
+        classes.dependsOn("bundler-debug-build");
+
+        // classes.dependsOn("bundler-debug-build");
+        classes.dependsOn("hot-reload"); // Delete
+
+        project.getTasks().register("hot-reload", HotReload.class, reload ->
             reload.dependsOn("compileJava", "processResources"));
 
-        project.getTasks().register("prodTask", ProductBuild.class, production ->
-            production.dependsOn("compileJava", "processResources"));
-        project.getTasks().getByName("jar").dependsOn("prodTask");
+        project.getTasks().register("bundler-production-build", ProductBuild.class);
+
+        project.getTasks().getByName("jar").dependsOn("bundler-production-build");
     }
 
     private static String byteArrayToHexString(byte[] b) {
