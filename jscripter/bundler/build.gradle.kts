@@ -34,7 +34,7 @@ gradlePlugin {
     // Define the plugin
     val greeting by plugins.creating {
         id = "com.over64.jscripter.bundler"
-        implementationClass = "com.over64.jscripter.bundler.JscripterBundlerPlugin"
+        implementationClass = "com.over64.jscripter.bundler.JScripter"
     }
 }
 

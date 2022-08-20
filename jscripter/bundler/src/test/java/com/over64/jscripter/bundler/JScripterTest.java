@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * A simple unit test for the 'com.over64.jscripter.bundler.greeting' plugin.
  */
-class JscripterBundlerPluginTest {
+class JScripterTest {
     @Test void pluginRegistersATask() {
 //        // Create a test project and apply the plugin
 //        Project project = ProjectBuilder.builder().build();
