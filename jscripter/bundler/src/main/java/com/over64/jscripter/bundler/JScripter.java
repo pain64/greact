@@ -12,12 +12,10 @@ import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -129,20 +127,24 @@ public class JScripter implements Plugin<Project> {
 
             var changedFiles_ = new ArrayList<String>();
 
-            for (var res : localResourceOrdered) { // TODO: Loader
+            for (var res : localResourceOrdered) {
                 if (!bundleExists || res.data().toFile().lastModified() > lastBuild) {
                     changedFiles_.add(res.name());
                     var dest = bundleDir.resolve(res.name());
 
-                    if (bundleExists && res.name().endsWith(".js")) {
+                    if (res.name().endsWith(".js")) {
                         var adopted = replaceClassDeclarationWithWindow(Files.readString(res.data()));
                         var destFile = dest.toFile();
                         if (!destFile.exists()) { var __ = destFile.createNewFile(); }
                         Files.writeString(dest, adopted, StandardOpenOption.TRUNCATE_EXISTING);
-                    } else
-                        Files.copy(res.data(), dest, StandardCopyOption.REPLACE_EXISTING);
+                    } else {
+                        try (var stream_ = new FileOutputStream(dest.toFile(), false)) {
+                            DataAppend.append(stream_, res.data().toFile().getAbsolutePath());
+                        }
+                    }
                 }
             }
+
             Files.writeString(bundlePath, "lib.js\nlib.css\n");
             Files.writeString(bundlePath, Stream.of(localResourceOrdered)
                 .flatMap(Collection::stream)
@@ -164,10 +166,6 @@ public class JScripter implements Plugin<Project> {
         @Inject
         public ProductBuild(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
-        }
-
-        interface Appender {
-            void appendAndDrop(FileOutputStream to, String fileName) throws IOException;
         }
 
         @TaskAction
@@ -203,24 +201,14 @@ public class JScripter implements Plugin<Project> {
 
             var allFileNames = fetchLocalCode(getProject()).stream().map(CodeAnalyze.RResource::data).toList();
 
-            Appender appender = (to, fileName) -> {
-                var inFile = new File(fileName);
-                try (var in = new FileInputStream(inFile)) {
-                    var inCh = in.getChannel();
-                    inCh.transferTo(0, inCh.size(), to.getChannel());
-                }
-                var __ = inFile.delete();
-            };
-
             try (var outJs = new FileOutputStream(mainJsFile, false);
                  var outCss = new FileOutputStream(mainCssFile, false)) {
                 for (var fileName : allFileNames) {
                     var fileName_ = fileName.toFile().getAbsolutePath();
-                    System.out.println(fileName_);
                     if (fileName_.endsWith(".js"))
-                        appender.appendAndDrop(outJs, fileName_);
+                        DataAppend.appendAndDrop(outJs, fileName_);
                     else if (fileName_.endsWith(".css"))
-                        appender.appendAndDrop(outCss, fileName_);
+                        DataAppend.appendAndDrop(outCss, fileName_);
                 }
             }
 
@@ -241,7 +229,6 @@ public class JScripter implements Plugin<Project> {
                     "\nmain.js " + hashJs);
         }
     }
-    //  TODO: используем NIO (zero-copy) для работы с файлами (426-431, 366, 369)
 
     public void apply(Project project) {
         project.getPlugins().apply("java");

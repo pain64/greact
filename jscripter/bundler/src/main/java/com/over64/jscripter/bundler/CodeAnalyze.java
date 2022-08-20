@@ -3,6 +3,8 @@ package com.over64.jscripter.bundler;
 import org.gradle.api.Project;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -207,5 +209,24 @@ public class CodeAnalyze {
             }
         }
         var __ = file.delete();
+    }
+
+
+    static class DataAppend {
+        static public void appendAndDrop(FileOutputStream to, String fileName) throws IOException {
+            var inFile = new File(fileName);
+            try (var in = new FileInputStream(inFile)) {
+                var inCh = in.getChannel();
+                inCh.transferTo(0, inCh.size(), to.getChannel());
+            }
+            var __ = inFile.delete();
+        }
+        static public void append(FileOutputStream to, String fileName) throws IOException {
+            var inFile = new File(fileName);
+            try (var in = new FileInputStream(inFile)) {
+                var inCh = in.getChannel();
+                inCh.transferTo(0, inCh.size(), to.getChannel());
+            }
+        }
     }
 }
