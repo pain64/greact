@@ -69,7 +69,6 @@ public class Loader {
                               newScript.src = script.src;
                               newScript.onload = () => {
                                  status.pop();
-                                 console.log('load');
                                  if (status.length != 0) return;
                                  resolve(220);
                               }
@@ -87,7 +86,7 @@ public class Loader {
                   } else if(event.data.startsWith("update")) {
                       let reload = false;
                       var jsPromises = [];
-                      for (let file of event.data.substring(7).split("$")) {
+                      for (let file of event.data.substring(7).split("\\n")) {
                           if (file.endsWith(".js")) {
                               jsPromises.push(reloadJs(file));
                               reload = true;
@@ -98,7 +97,6 @@ public class Loader {
                       if (reload) {
                         (async () => {
                             await Promise.all(jsPromises);
-                            console.log('mount');
                             mount();
                             }
                         )();

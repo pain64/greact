@@ -44,10 +44,9 @@ import java.util.zip.ZipEntry;
 public class JscripterBundlerPlugin implements Plugin<Project> {
 
     record LibrariesCode(String js, String css) { }
-    public static ArrayList<String> changedFiles = new ArrayList<>();
-
-    // FIXME: pass changed files with parameters
-    public static class WorkServerParams implements WorkParameters { }
+    public static class WorkServerParams implements WorkParameters {
+        static String message;
+    }
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
         @Override public void execute() {
@@ -66,24 +65,10 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 try {
                     client.start();
                     var socket = new ClientHandler();
-                    // FIXME: inline fut
-                    var fut = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/"));
-                    var session = fut.get();
+                    var session = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/")).get();
 
-                    // FIXME: здесь мы должны уже получать конкретный message
-                    if (changedFiles.stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css"))))
-                        session.getRemote().sendString("reload");
-                    else {
-                        var message = new StringBuilder("update");
-                        for (var file : changedFiles)
-                            // TODO: использовать \n в качестве разделителя
-                            message.append("$").append(file);
+                    session.getRemote().sendString(getParameters().message);
 
-                        if (!message.toString().equals("update"))
-                            session.getRemote().sendString(message.toString());
-                    }
-
-                    changedFiles = new ArrayList<>();
                     session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
                 } finally {
@@ -323,34 +308,12 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 pushDependencies2(module, dest, resource);
             return dest;
         }
-
-        // TODO: сделать функцию debugBuild, которая возвращает список измененных файлов
-
-        //функция Delta debugBuild() (task bundler-debug-build)
-        //    //       - stateful - содержимое каталога bundle
-        //    //       - хранит bundle/latest_lib_mtime
-        //    //          - файл, mtime которого равен максимальному mtime jar файлов
-        //    //          - если есть jar файл, mtime которого больше чем
-        //    //             latest_lib_mtime, то вызывает fetchLibrariesCode() и дампит новые
-        //    //             версии lib.css и lib.js
-        //    //       - вызывает fetchLocalCode(), копирует в bundledir, пишет в bundlefile
-        //    //       - работает с bundleFile (строка 354 - 371)
-        //    //          - патчит window.classXXX =
-        //    //          - хранит mtime файлов бандла
-        //    //       - возвращает список имен измененных файлов и флаг был ли изменен classPath
-        //    //       record Delta(boolean isLibrariesChanged, List<String> localFilesChanged)
         record Delta(boolean isLibrariesChanged, List<String> localFilesChanged) { }
-        Delta debugBuild() {
-            return new Delta(true, null);
-        }
-
-        @TaskAction void hotReload() throws Exception {
+        Delta debugBuild(SourceSetContainer sourceSets) throws IOException {
             var currentTime = System.currentTimeMillis();
 
-            var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
-                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
-
             var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
+
             var stylesDir = resourceDir.toPath().resolve("styles");
             var bundleDir = resourceDir.toPath().resolve("bundle");
             if (!bundleDir.toFile().exists()) Files.createDirectory(bundleDir);
@@ -360,26 +323,33 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             if (Files.exists(bundleDir.resolve("main.css")))
                 Files.delete(bundleDir.resolve("main.css"));
 
-//            if(!resourceDir.exists()) {
-//                // at source code src/main/resources dir is empty
-//                try {
-//                    Files.createDirectory(resourceDir.toPath().getParent());
-//                    Files.createDirectory(resourceDir.toPath());
-//                } catch (IOException ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//            }
+            var latestLibMtime = bundleDir.resolve("latest_lib_mtime");
 
+            if (!Files.exists(latestLibMtime)) {
+                Files.createFile(latestLibMtime);
+                if (!latestLibMtime.toFile().setLastModified(0))
+                    throw new IOException("Can't set lastModified");
+            }
+
+            var runtimeClassPath = getProject().getConfigurations().getByName("runtimeClasspath");
+            long maxJarMtime = StreamSupport.stream(runtimeClassPath.spliterator(), false).map(File::lastModified).max(Long::compare).get();
+
+            var classPathIsChanged = maxJarMtime > latestLibMtime.toFile().lastModified();
+
+            if (classPathIsChanged) {
+                if (!latestLibMtime.toFile().setLastModified(maxJarMtime))
+                    throw new IOException("Can't set lastModified");
+
+                var libs = fetchLibrariesCode();
+
+                var moduleJsPath = Paths.get(bundleDir + "/lib.js");
+                var moduleCssPath = Paths.get(bundleDir + "/lib.css");
+
+                Files.writeString(moduleJsPath, libs.js);
+                Files.writeString(moduleCssPath, libs.css);
+            }
 
             var localResourceOrdered = fetchLocalCode(sourceSets, stylesDir);
-
-            var libs = fetchLibrariesCode();
-
-            var moduleJsPath = Paths.get(bundleDir + "/lib.js");
-            var moduleCssPath = Paths.get(bundleDir + "/lib.css");
-
-            Files.writeString(moduleJsPath, libs.js);
-            Files.writeString(moduleCssPath, libs.css);
 
             System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
 
@@ -389,9 +359,11 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
             var bundleExists = bundleFile.exists();
             var lastBuild = bundleFile.lastModified();
 
+            var changedFiles_ = new ArrayList<String>();
+
             for (var res : localResourceOrdered) {
                 if (!bundleExists || res.data.toFile().lastModified() > lastBuild) {
-                    changedFiles.add(res.name);
+                    changedFiles_.add(res.name);
                     var dest = bundleDir.resolve(res.name);
 
                     // При первой сборке просто копируем файлы без
@@ -412,12 +384,43 @@ public class JscripterBundlerPlugin implements Plugin<Project> {
                 .flatMap(Collection::stream)
                 .map(r -> r.name)
                 .collect(Collectors.joining("\n")), StandardOpenOption.APPEND);
+
+            return new Delta(classPathIsChanged, changedFiles_);
+        }
+
+        @TaskAction void hotReload() throws Exception {
+            var currentTime = System.currentTimeMillis();
+
+            var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets");
+
+            var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
+            var bundleDir = resourceDir.toPath().resolve("bundle");
+            var bundlePath = bundleDir.resolve(".bundle");
+
+            var delta = debugBuild((org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject()).getExtensions().getByName("sourceSets"));
+
             Files.writeString(bundlePath, "\nlivereload", StandardOpenOption.APPEND);
 
-            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
-            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> {
+            var message = "";
 
-            });
+            if (delta.isLibrariesChanged || delta.localFilesChanged.stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css"))))
+                message = "reload";
+            else {
+                var messageUpdate = new StringBuilder("update");
+                for (var file : delta.localFilesChanged)
+                    messageUpdate.append("\n").append(file);
+
+                if (!messageUpdate.toString().equals("update"))
+                    message = messageUpdate.toString();
+            }
+
+            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
+
+            var finalMessage = message;
+
+            workerExecutor.noIsolation().submit(WebServer.class, workServerParams -> WorkServerParams.message = finalMessage);
         }
 
         private CharSequence replaceClassDeclarationWithWindow(String readString) {
