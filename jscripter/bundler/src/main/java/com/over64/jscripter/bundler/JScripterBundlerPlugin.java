@@ -58,8 +58,8 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            WebsocketSender.WorkServerParams.message = message;
-            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> { });
+            String finalMessage = message;
+            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> workServerParams.message = finalMessage);
         }
     }
 

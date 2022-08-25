@@ -11,6 +11,7 @@ import org.gradle.api.GradleException;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
 
+import java.io.Serializable;
 import java.net.ConnectException;
 import java.net.URI;
 import java.time.Duration;
@@ -20,8 +21,8 @@ import java.util.concurrent.ExecutionException;
 import static org.eclipse.jetty.websocket.api.StatusCode.NORMAL;
 
 public class WebsocketSender {
-    public static class WorkServerParams implements WorkParameters {
-        static String message;
+    public static class WorkServerParams implements WorkParameters, Serializable {
+        String message;
     }
 
     public abstract static class WebServer implements WorkAction<WorkServerParams> {
@@ -43,7 +44,7 @@ public class WebsocketSender {
                     var socket = new ClientHandler();
                     var session = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/")).get();
 
-                    session.getRemote().sendString(WorkServerParams.message);
+                    session.getRemote().sendString(getParameters().message);
 
                     session.close(NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
