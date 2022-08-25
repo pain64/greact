@@ -28,7 +28,7 @@ import java.util.stream.StreamSupport;
 
 import static com.over64.jscripter.bundler.CodeAnalyze.*;
 
-public class JScripter implements Plugin<Project> {
+public class JScripterBundlerPlugin implements Plugin<Project> {
     public static class HotReload extends DefaultTask {
 
         final WorkerExecutor workerExecutor;
@@ -43,7 +43,9 @@ public class JScripter implements Plugin<Project> {
 
             var message = "";
 
-            if (delta.isLibrariesChanged() || delta.localFilesChanged().stream().anyMatch(n -> !(n.endsWith(".js") || n.endsWith(".css"))))
+            if (delta.isLibrariesChanged() ||
+                delta.localFilesChanged().stream().anyMatch(n -> !(n.endsWith(".js") ||
+                    n.endsWith(".css"))))
                 message = "reload";
             else {
                 var messageUpdate = new StringBuilder("update");
@@ -56,8 +58,8 @@ public class JScripter implements Plugin<Project> {
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
 
-            var finalMessage = message;
-            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> WebsocketSender.WorkServerParams.message = finalMessage);
+            WebsocketSender.WorkServerParams.message = message;
+            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> { });
         }
     }
 
@@ -95,14 +97,16 @@ public class JScripter implements Plugin<Project> {
             }
 
             var runtimeClassPath = project.getConfigurations().getByName("runtimeClasspath");
-            var opt = StreamSupport.stream(runtimeClassPath.spliterator(), false).map(File::lastModified).max(Long::compare);
-            long maxJarMtime = opt.isPresent() ? opt.get() : -1;
+
+            long maxJarMtime = StreamSupport
+                .stream(runtimeClassPath.spliterator(), false)
+                .map(File::lastModified).max(Long::compare).orElse(0L);
 
             if (maxJarMtime < 0) throw new RuntimeException("Can't read jar files");
 
-            var classPathIsChanged = maxJarMtime > latestLibMtime.toFile().lastModified();
+            var isClassPathChanged = maxJarMtime > latestLibMtime.toFile().lastModified();
 
-            if (classPathIsChanged) {
+            if (isClassPathChanged) {
                 if (!latestLibMtime.toFile().setLastModified(maxJarMtime))
                     throw new IOException("Can't set lastModified");
 
@@ -125,11 +129,11 @@ public class JScripter implements Plugin<Project> {
             var bundleExists = bundleFile.exists();
             var lastBuild = bundleFile.lastModified();
 
-            var changedFiles_ = new ArrayList<String>();
+            var changedFiles = new ArrayList<String>();
 
             for (var res : localResourceOrdered) {
                 if (!bundleExists || res.data().toFile().lastModified() > lastBuild) {
-                    changedFiles_.add(res.name());
+                    changedFiles.add(res.name());
                     var dest = bundleDir.resolve(res.name());
 
                     if (res.name().endsWith(".js")) {
@@ -139,7 +143,7 @@ public class JScripter implements Plugin<Project> {
                         Files.writeString(dest, adopted, StandardOpenOption.TRUNCATE_EXISTING);
                     } else {
                         try (var stream_ = new FileOutputStream(dest.toFile(), false)) {
-                            DataAppend.append(stream_, res.data().toFile().getAbsolutePath());
+                            CodeAnalyze.append(stream_, res.data().toFile().getAbsolutePath());
                         }
                     }
                 }
@@ -150,9 +154,9 @@ public class JScripter implements Plugin<Project> {
                 .flatMap(Collection::stream)
                 .map(RResource::name)
                 .collect(Collectors.joining("\n")), StandardOpenOption.APPEND);
-            Files.writeString(bundlePath, "\nlivereload", StandardOpenOption.APPEND);
+            Files.writeString(bundlePath, "\nhot-reload", StandardOpenOption.APPEND);
 
-            return new Delta(classPathIsChanged, changedFiles_);
+            return new Delta(isClassPathChanged, changedFiles);
         }
 
         @TaskAction void debugBuild_() throws Exception {
@@ -206,9 +210,9 @@ public class JScripter implements Plugin<Project> {
                 for (var fileName : allFileNames) {
                     var fileName_ = fileName.toFile().getAbsolutePath();
                     if (fileName_.endsWith(".js"))
-                        DataAppend.appendAndDrop(outJs, fileName_);
+                        CodeAnalyze.appendAndDrop(outJs, fileName_);
                     else if (fileName_.endsWith(".css"))
-                        DataAppend.appendAndDrop(outCss, fileName_);
+                        CodeAnalyze.appendAndDrop(outCss, fileName_);
                 }
             }
 

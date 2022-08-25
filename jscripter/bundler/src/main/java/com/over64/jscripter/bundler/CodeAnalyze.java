@@ -33,7 +33,7 @@ public class CodeAnalyze {
         }
     }
 
-    static String removeDep(String s) {
+    static String removeDepSuffix(String s) {
         return s.endsWith(".dep")
             ? s.substring(0, s.length() - ".dep".length())
             : s;
@@ -57,7 +57,7 @@ public class CodeAnalyze {
                     else {
                         if (name.endsWith(".js.dep")) {
                             var depData = entryContent.apply(e);
-                            var depName = removeDep(name);
+                            var depName = removeDepSuffix(name);
                             if (!depData.isEmpty())
                                 dependencies.put(
                                     depName,
@@ -212,21 +212,17 @@ public class CodeAnalyze {
     }
 
 
-    static class DataAppend {
-        static public void appendAndDrop(FileOutputStream to, String fileName) throws IOException {
-            var inFile = new File(fileName);
-            try (var in = new FileInputStream(inFile)) {
-                var inCh = in.getChannel();
-                inCh.transferTo(0, inCh.size(), to.getChannel());
-            }
-            var __ = inFile.delete();
-        }
-        static public void append(FileOutputStream to, String fileName) throws IOException {
-            var inFile = new File(fileName);
-            try (var in = new FileInputStream(inFile)) {
-                var inCh = in.getChannel();
-                inCh.transferTo(0, inCh.size(), to.getChannel());
-            }
+    static public void appendAndDrop(FileOutputStream to, String fileName) throws IOException {
+        var inFile = new File(fileName);
+        append(to, fileName);
+        var __ = inFile.delete();
+    }
+    static public void append(FileOutputStream to, String fileName) throws IOException {
+        var inFile = new File(fileName);
+        try (var in = new FileInputStream(inFile)) {
+            var inCh = in.getChannel();
+            inCh.transferTo(0, inCh.size(), to.getChannel());
         }
     }
+
 }

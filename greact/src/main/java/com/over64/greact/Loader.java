@@ -16,7 +16,7 @@ public class Loader {
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
 
-        var livereload = bundle.endsWith("\nlivereload");
+        var isHotReload = bundle.endsWith("\nhot-reload");
 
         var resources = Arrays.stream(filesWithCode)
             .map(res -> res.split(" ")).toList();
@@ -37,75 +37,69 @@ public class Loader {
                 mount();
             </script>""".formatted(entry.getName().replace(".", "_"));
 
-        var reloadWS = livereload ? """
+        var reloadWS = isHotReload ? """
             <script>
-                function reloadCss(filename) {
-                    var links = document.getElementsByTagName("link");
-                    for (var cl in links) {
-                        var link = links[cl];
-                        if (link.rel === "stylesheet") {
-                            var temp = link.href.split("/");
-                            var file = temp[temp.length - 1].split("?t=")[0];
-                            if (file === filename) {
-                                link.href = file + "?t=" + Date.now();
-                            }
+            function reloadCss(filename) {
+                var links = document.getElementsByTagName("link");
+                for (var cl in links) {
+                    var link = links[cl];
+                    if (link.rel === "stylesheet") {
+                        var temp = link.href.split("/");
+                        var file = temp[temp.length - 1].split("?t=")[0];
+                        if (file === filename) {
+                            link.href = file + "?t=" + Date.now();
                         }
                     }
                 }
-
-                async function reloadJs(filename) {
-                    return new Promise(function(resolve, reject) {
-                    var myPromise = this;
-                     const scripts = document.getElementsByTagName("script");
-                     var status = [];
+            }
+                        
+            async function reloadJs(filename) {
+                return new Promise(function(resolve, reject) {
+                    const scripts = document.getElementsByTagName("script");
                     for (let script of scripts) {
-                         const temp = script.src.split("/")
-                         const src = temp[temp.length - 1].split("?t=")[0];
-
-                         if(src === filename) {
-                              status.push(false);
-                              script.parentNode.removeChild(script);
-                              const newScript = document.createElement('script');
-                              newScript.src = script.src;
-                              newScript.onload = () => {
-                                 status.pop();
-                                 if (status.length != 0) return;
-                                 resolve(220);
-                              }
-                              document.body.appendChild(newScript);
-                         }
+                        const temp = script.src.split("/")
+                        const src = temp[temp.length - 1].split("?t=")[0];
+                        
+                        if (src === filename) {
+                            script.parentNode.removeChild(script);
+                            const newScript = document.createElement('script');
+                            newScript.src = script.src;
+                            newScript.onload = () => {
+                                resolve();
+                            }
+                            document.body.appendChild(newScript);
+                        }
                     }
-                    })
-                }
-               
-
-              const ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
-              ws.onmessage = function(event) {
-                  if (event.data === "reload") {
-                      document.location.reload();
-                  } else if(event.data.startsWith("update")) {
-                      let reload = false;
-                      var jsPromises = [];
-                      for (let file of event.data.substring(7).split("\\n")) {
-                          if (file.endsWith(".js")) {
-                              jsPromises.push(reloadJs(file));
-                              reload = true;
-                          } else if (file.endsWith(".css")) {
-                              reloadCss(file);
-                          }
-                      }
-                      if (reload) {
+                })
+            }
+                        
+                        
+            const ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+            ws.onmessage = function(event) {
+                if (event.data === "reload") {
+                    document.location.reload();
+                } else if (event.data.startsWith("update")) {
+                    let awaitJsLoad = false;
+                    var jsPromises = [];
+                    for (let file of event.data.substring(7).split("\\n")) {
+                        if (file.endsWith(".js")) {
+                            jsPromises.push(reloadJs(file));
+                            awaitJsLoad = true;
+                        } else if (file.endsWith(".css")) {
+                            reloadCss(file);
+                        }
+                    }
+                    if (awaitJsLoad) {
                         (async () => {
                             await Promise.all(jsPromises);
                             mount();
-                            }
-                        )();
-                      }
-                  }
-              };
-              setInterval(() => ws.send('heartbeat'), 1000 * 60);
+                        })();
+                    }
+                }
+            };
+            setInterval(() => ws.send('heartbeat'), 1000 * 60);
             </script>""" : "";
-        var scripts = livereload ?
+        var scripts = isHotReload ?
             resources.stream()
                 .filter(res -> (res[0].endsWith(".js")))
                 .map(res -> " <script src=\"" + res[0] + "\"" + "></script>")

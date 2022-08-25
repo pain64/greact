@@ -4,15 +4,20 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.gradle.api.GradleException;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+
+import static org.eclipse.jetty.websocket.api.StatusCode.NORMAL;
 
 public class WebsocketSender {
     public static class WorkServerParams implements WorkParameters {
@@ -40,13 +45,13 @@ public class WebsocketSender {
 
                     session.getRemote().sendString(WorkServerParams.message);
 
-                    session.close(org.eclipse.jetty.websocket.api.StatusCode.NORMAL, "I'm done");
+                    session.close(NORMAL, "I'm done");
                     System.out.println("AFTER SEND");
                 } finally {
                     client.stop();
                 }
-            } catch (java.util.concurrent.ExecutionException t) {
-                if (t.getCause() instanceof java.net.ConnectException) {
+            } catch (ExecutionException t) {
+                if (t.getCause() instanceof ConnectException) {
                     System.out.println("start livereload server!");
                     var server = new Server();
                     var connector = new ServerConnector(server);
@@ -70,9 +75,9 @@ public class WebsocketSender {
             }
         }
 
-        public static class ClientHandler implements org.eclipse.jetty.websocket.api.WebSocketListener { }
+        public static class ClientHandler implements WebSocketListener { }
 
-        public static class ServerHandler implements org.eclipse.jetty.websocket.api.WebSocketListener {
+        public static class ServerHandler implements WebSocketListener {
             static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
             volatile Session session = null;
 
