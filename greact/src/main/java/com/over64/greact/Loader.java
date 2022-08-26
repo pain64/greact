@@ -73,7 +73,7 @@ public class Loader {
             }
                         
                         
-            const ws = new WebSocket("ws://localhost:8080/greact_livereload_events")
+            const ws = new WebSocket("ws://localhost:8080/greact_reload_events")
             ws.onmessage = function(event) {
                 if (event.data === "reload") {
                     document.location.reload();

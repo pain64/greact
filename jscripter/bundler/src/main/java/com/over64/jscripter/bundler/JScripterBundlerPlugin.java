@@ -4,9 +4,12 @@
 package com.over64.jscripter.bundler;
 
 
+import com.over64.jscripter.bundler.CodeAnalyze.RResource;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkerExecutor;
 
@@ -27,8 +30,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.over64.jscripter.bundler.CodeAnalyze.*;
-
 public class JScripterBundlerPlugin implements Plugin<Project> {
     public static class HotReload extends DefaultTask {
 
@@ -37,11 +38,11 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
         @Inject public HotReload(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
         }
+
         @TaskAction void reload() throws IOException {
             var currentTime = System.currentTimeMillis();
 
             var delta = DebugBuild.debugBuild(getProject());
-
             final String message;
 
             if (delta.isLibrariesChanged ||
@@ -56,8 +57,11 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
                 message = messageUpdate.toString();
             }
 
-            System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
-            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> workServerParams.message = message);
+            System.out.println("BEFORE WS MESSAGE SEND! TOOK " +
+                (System.currentTimeMillis() - currentTime) + "ms");
+
+            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class,
+                workServerParams -> workServerParams.message = message);
         }
     }
 
@@ -70,8 +74,6 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
         record Delta(boolean isLibrariesChanged, List<String> localFilesChanged) { }
         static Delta debugBuild(Project project) throws IOException {
-            var currentTime = System.currentTimeMillis();
-
             var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
                 ((org.gradle.api.plugins.ExtensionAware) project).getExtensions().getByName("sourceSets");
 
@@ -86,29 +88,28 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
             if (Files.exists(bundleDir.resolve("main.css")))
                 Files.delete(bundleDir.resolve("main.css"));
 
-            var latestLibMtime = bundleDir.resolve("latest_lib_mtime");
-
-            if (!Files.exists(latestLibMtime)) {
-                Files.createFile(latestLibMtime);
-                if (!latestLibMtime.toFile().setLastModified(0))
-                    throw new IOException("Can't set lastModified");
-            }
-
             var runtimeClassPath = project.getConfigurations().getByName("runtimeClasspath");
 
             long maxJarMtime = StreamSupport
                 .stream(runtimeClassPath.spliterator(), false)
                 .map(File::lastModified).max(Long::compare).orElse(0L);
 
-            if (maxJarMtime < 0) throw new RuntimeException("Can't read jar files");
+            var libMtimePath = bundleDir.resolve("latest_lib_mtime");
+            final long libMtime;
 
-            var isClassPathChanged = maxJarMtime > latestLibMtime.toFile().lastModified();
+            if (!Files.exists(libMtimePath)) {
+                Files.createFile(libMtimePath);
+                libMtime = 0L;
+            } else
+                libMtime = libMtimePath.toFile().lastModified();
+
+            var isClassPathChanged = maxJarMtime > libMtime;
 
             if (isClassPathChanged) {
-                if (!latestLibMtime.toFile().setLastModified(maxJarMtime))
+                if (!libMtimePath.toFile().setLastModified(maxJarMtime))
                     throw new IOException("Can't set lastModified");
 
-                var libs = fetchLibrariesCode(project);
+                var libs = CodeAnalyze.fetchLibrariesCode(project);
 
                 var moduleJsPath = Paths.get(bundleDir + "/lib.js");
                 var moduleCssPath = Paths.get(bundleDir + "/lib.css");
@@ -117,10 +118,7 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
                 Files.writeString(moduleCssPath, libs.css());
             }
 
-            var localResourceOrdered = fetchLocalCode(project);
-
-            System.out.println("lib js resolution took: " + (System.currentTimeMillis() - currentTime) + "ms");
-
+            var localResourceOrdered = CodeAnalyze.fetchLocalCode(project);
 
             var bundlePath = bundleDir.resolve(".bundle");
             var bundleFile = bundlePath.toFile();
@@ -135,13 +133,14 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
                     var dest = bundleDir.resolve(res.name());
 
                     if (res.name().endsWith(".js")) {
-                        var adopted = replaceClassDeclarationWithWindow(Files.readString(res.data()));
+                        var adopted = CodeAnalyze
+                            .replaceClassDeclarationWithWindow(Files.readString(res.data()));
                         var destFile = dest.toFile();
                         if (!destFile.exists()) { var __ = destFile.createNewFile(); }
                         Files.writeString(dest, adopted, StandardOpenOption.TRUNCATE_EXISTING);
                     } else {
-                        try (var stream_ = new FileOutputStream(dest.toFile(), false)) {
-                            append(stream_, res.data().toFile().getAbsolutePath());
+                        try (var out = new FileOutputStream(dest.toFile(), false)) {
+                            append(out, res.data().toFile().getAbsolutePath());
                         }
                     }
                 }
@@ -187,7 +186,7 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
             var bundleFile = bundleDir.resolve(".bundle");
             Files.createFile(bundleFile);
 
-            var libs = fetchLibrariesCode(getProject());
+            var libs = CodeAnalyze.fetchLibrariesCode(getProject());
 
             var moduleJsPath = Paths.get(bundleDir + "/lib.js");
             var moduleCssPath = Paths.get(bundleDir + "/lib.css");
@@ -201,7 +200,8 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
             if (!mainJsFile.exists()) { var __ = mainJsFile.createNewFile(); }
             if (!mainCssFile.exists()) { var __ = mainCssFile.createNewFile(); }
 
-            var allFileNames = fetchLocalCode(getProject()).stream().map(CodeAnalyze.RResource::data).toList();
+            var allFileNames = CodeAnalyze.fetchLocalCode(
+                getProject()).stream().map(RResource::data).toList();
 
             try (var outJs = new FileOutputStream(mainJsFile, false);
                  var outCss = new FileOutputStream(mainCssFile, false)) {
@@ -234,16 +234,17 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
     public void apply(Project project) {
         project.getPlugins().apply("java");
-        var classes = project.getTasks().getByName("classes");
 
-        project.getTasks().register("bundler-debug-build", DebugBuild.class, debug -> debug.dependsOn("compileJava", "processResources"));
-        classes.dependsOn("bundler-debug-build");
+        project.getTasks().register("bundlerDebugBuild", DebugBuild.class, debugBuild -> {
+            debugBuild.dependsOn("compileJava", "processResources");
+        });
+        project.getTasks().getByName("classes").dependsOn("bundlerDebugBuild");
+        project.getTasks().register("hotReload", HotReload.class,
+            reload -> reload.dependsOn("compileJava", "processResources"));
 
-        project.getTasks().register("hot-reload", HotReload.class, reload ->
-            reload.dependsOn("compileJava", "processResources"));
-
-        project.getTasks().register("bundler-production-build", ProductBuild.class, productBuild -> productBuild.dependsOn("compileJava", "processResources"));
-        project.getTasks().getByName("jar").dependsOn("bundler-production-build");
+        project.getTasks().register("bundlerProductionBuild", ProductBuild.class,
+            productBuild -> productBuild.dependsOn("classes"));
+        project.getTasks().getByName("jar").dependsOn("bundlerProductionBuild");
     }
 
     static String byteArrayToHexString(byte[] b) {

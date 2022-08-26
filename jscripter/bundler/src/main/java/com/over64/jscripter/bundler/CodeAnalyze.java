@@ -139,6 +139,8 @@ public class CodeAnalyze {
         return dest;
     }
     static LibrariesCode fetchLibrariesCode(Project project) {
+        var currentTime = System.currentTimeMillis();
+
         var js = new StringBuilder();
         var css = new StringBuilder();
 
@@ -155,6 +157,9 @@ public class CodeAnalyze {
                 js.append(String.join("\n", libJs.map(RResource::data).toList()));
                 css.append(String.join("\n", libCss.map(RResource::data).toList()));
             });
+
+        System.out.println("lib js resolution took: " +
+            (System.currentTimeMillis() - currentTime) + "ms");
 
         return new LibrariesCode(js.toString(), css.toString());
     }

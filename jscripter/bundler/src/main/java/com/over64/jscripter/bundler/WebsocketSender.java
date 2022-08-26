@@ -42,18 +42,19 @@ public class WebsocketSender {
                 try {
                     client.start();
                     var socket = new ClientHandler();
-                    var session = client.connect(socket, URI.create("ws://localhost:8080/greact_livereload_events/")).get();
+                    var session = client.connect(socket,
+                        URI.create("ws://localhost:8080/greact_reload_events/")).get();
 
                     session.getRemote().sendString(getParameters().message);
-
                     session.close(NORMAL, "I'm done");
+
                     System.out.println("AFTER SEND");
                 } finally {
                     client.stop();
                 }
             } catch (ExecutionException t) {
                 if (t.getCause() instanceof ConnectException) {
-                    System.out.println("start livereload server!");
+                    System.out.println("start hot-reload server!");
                     var server = new Server();
                     var connector = new ServerConnector(server);
                     connector.setPort(8080);
@@ -63,23 +64,26 @@ public class WebsocketSender {
                     context.setContextPath("/");
                     server.setHandler(context);
 
-                    JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
-                        wsContainer.setMaxTextMessageSize(65535);
-                        wsContainer.setIdleTimeout(Duration.ofHours(1));
-                        wsContainer.addMapping("/greact_livereload_events/*", ServerHandler.class);
-                    });
+                    JettyWebSocketServletContainerInitializer.configure(context,
+                        (servletContext, wsContainer) -> {
+                            wsContainer.setMaxTextMessageSize(65535);
+                            wsContainer.setIdleTimeout(Duration.ofHours(1));
+                            wsContainer.addMapping("/greact_reload_events/*", ServerHandler.class);
+                        });
 
                     server.start();
                 } else throw t;
             } catch (java.io.IOException t) {
-                throw new GradleException("Error: cannot use port 8080 for GReact livereload. Is it available?", t);
+                throw new GradleException(
+                    "Error: cannot use port 8080 for GReact hot reload. Is it available?", t);
             }
         }
 
         public static class ClientHandler implements WebSocketListener { }
 
         public static class ServerHandler implements WebSocketListener {
-            static ConcurrentHashMap.KeySetView<Session, Boolean> sessions = ConcurrentHashMap.newKeySet();
+            static ConcurrentHashMap.KeySetView<Session, Boolean> sessions =
+                ConcurrentHashMap.newKeySet();
             volatile Session session = null;
 
             @Override public void onWebSocketConnect(Session ss) {
@@ -93,7 +97,7 @@ public class WebsocketSender {
             }
 
             @Override public void onWebSocketText(String message) {
-                System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
+                System.out.println("### HAS NEW WEBSOCKET MESSAGE: " + message);
                 if (message.equals("heartbeat")) return;
                 var me = session;
 
@@ -102,7 +106,8 @@ public class WebsocketSender {
                         try {
                             ss.getRemote().sendString(message);
                         } catch (java.lang.Exception ex) {
-                            System.out.println("failed to send livereload message to remote: " + ss.getRemoteAddress());
+                            System.out.println("failed to send livereload message to remote: "
+                                + ss.getRemoteAddress());
                         }
                 });
             }

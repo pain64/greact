@@ -79,6 +79,7 @@ tasks.jar {
         attributes["Main-Class"] = "com.over64.greact.uikit.samples.Main"
     }
 
+//    FIXME: problem with Gradle
 //    duplicatesStrategy = DuplicatesStrategy.WARN
 //    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
