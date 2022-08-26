@@ -24,9 +24,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         var ds = new HikariDataSource() {{
-            setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
-            setUsername("postgres");
-            setPassword("postgres");
+            setJdbcUrl("jdbc:postgresql://localhost:5432/uikit_sample");
+            setUsername("uikit");
+            setPassword("1234");
             setMaximumPoolSize(2);
             setConnectionTimeout(1000);
         }};
