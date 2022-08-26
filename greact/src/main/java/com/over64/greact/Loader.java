@@ -41,8 +41,7 @@ public class Loader {
             <script>
             function reloadCss(filename) {
                 var links = document.getElementsByTagName("link");
-                for (var cl in links) {
-                    var link = links[cl];
+               for(let link of links) {
                     if (link.rel === "stylesheet") {
                         var temp = link.href.split("/");
                         var file = temp[temp.length - 1].split("?t=")[0];

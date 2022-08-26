@@ -3,8 +3,6 @@ package com.over64.jscripter.bundler;
 import org.gradle.api.Project;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -140,13 +138,13 @@ public class CodeAnalyze {
             pushDependencies2(module, dest, resource);
         return dest;
     }
-    static CodeAnalyze.LibrariesCode fetchLibrariesCode(Project project) {
+    static LibrariesCode fetchLibrariesCode(Project project) {
         var js = new StringBuilder();
         var css = new StringBuilder();
 
         var runtimeClassPath = project.getConfigurations().getByName("runtimeClasspath");
         StreamSupport.stream(runtimeClassPath.spliterator(), false)
-            .map(cp -> new CodeAnalyze.ClassPathWithModule<>(cp, walkOverJar(cp)))
+            .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
             .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
             .forEach(cpWithMod -> {
                 var libResourcesOrdered = buildDependencies(cpWithMod.mod);
@@ -154,14 +152,14 @@ public class CodeAnalyze {
                 var libJs = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".js"));
                 var libCss = libResourcesOrdered.stream().filter(r -> r.name.endsWith(".css"));
 
-                js.append(String.join("\n", libJs.map(CodeAnalyze.RResource::data).toList()));
-                css.append(String.join("\n", libCss.map(CodeAnalyze.RResource::data).toList()));
+                js.append(String.join("\n", libJs.map(RResource::data).toList()));
+                css.append(String.join("\n", libCss.map(RResource::data).toList()));
             });
 
-        return new CodeAnalyze.LibrariesCode(js.toString(), css.toString());
+        return new LibrariesCode(js.toString(), css.toString());
     }
 
-    static LinkedHashSet<CodeAnalyze.RResource<Path>> fetchLocalCode(Project project) {
+    static LinkedHashSet<RResource<Path>> fetchLocalCode(Project project) {
         var sourceSets = (org.gradle.api.tasks.SourceSetContainer)
             ((org.gradle.api.plugins.ExtensionAware) project).getExtensions().getByName("sourceSets");
 
@@ -173,15 +171,15 @@ public class CodeAnalyze {
         var localJs = sourceSets.getByName("main")
             .getOutput().getClassesDirs().getFiles().stream()
             .map(CodeAnalyze::walkOverDirectory)
-            .reduce(new CodeAnalyze.ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
-                new CodeAnalyze.ModuleCode<>(
+            .reduce(new ModuleCode<>(List.of(), Map.of()), (m1, m2) ->
+                new ModuleCode<>(
                     new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
                     new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
         var localCss = walkOverDirectory(stylesDir.toFile()).resources;
 
         // FIXME: make listConcat & mapConcat method
-        var localModule = new CodeAnalyze.ModuleCode<>(
+        var localModule = new ModuleCode<>(
             new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
             localJs.dependencies);
 
@@ -192,37 +190,4 @@ public class CodeAnalyze {
     static CharSequence replaceClassDeclarationWithWindow(String readString) {
         return readString.replaceAll("class (\\S*) \\{", "window.$1 = class {");
     }
-
-    static String byteArrayToHexString(byte[] b) {
-        var result = new StringBuilder();
-        for (byte value : b)
-            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
-
-        return result.toString();
-    }
-
-    static void deleteDir(File file) {
-        var contents = file.listFiles();
-        if (contents != null) {
-            for (File f : contents) {
-                deleteDir(f);
-            }
-        }
-        var __ = file.delete();
-    }
-
-
-    static public void appendAndDrop(FileOutputStream to, String fileName) throws IOException {
-        var inFile = new File(fileName);
-        append(to, fileName);
-        var __ = inFile.delete();
-    }
-    static public void append(FileOutputStream to, String fileName) throws IOException {
-        var inFile = new File(fileName);
-        try (var in = new FileInputStream(inFile)) {
-            var inCh = in.getChannel();
-            inCh.transferTo(0, inCh.size(), to.getChannel());
-        }
-    }
-
 }

@@ -94,7 +94,7 @@ public class WebsocketSender {
 
             @Override public void onWebSocketText(String message) {
                 System.out.println("####HAS NEW WEBSOCKET MESSAGE: " + message);
-                if (!message.equals("reload") && !message.startsWith("update")) return;
+                if (message.equals("heartbeat")) return;
                 var me = session;
 
                 sessions.forEach(ss -> {

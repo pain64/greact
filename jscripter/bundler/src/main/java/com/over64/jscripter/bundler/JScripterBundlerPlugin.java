@@ -12,6 +12,7 @@ import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,25 +42,22 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
             var delta = DebugBuild.debugBuild(getProject());
 
-            var message = "";
+            final String message;
 
-            if (delta.isLibrariesChanged() ||
-                delta.localFilesChanged().stream().anyMatch(n -> !(n.endsWith(".js") ||
-                    n.endsWith(".css"))))
+            if (delta.isLibrariesChanged ||
+                delta.localFilesChanged().stream().anyMatch(
+                    n -> !n.endsWith(".js") && !n.endsWith(".css")))
                 message = "reload";
             else {
                 var messageUpdate = new StringBuilder("update");
-                for (var file : delta.localFilesChanged())
+                for (var file : delta.localFilesChanged)
                     messageUpdate.append("\n").append(file);
 
-                if (!messageUpdate.toString().equals("update"))
-                    message = messageUpdate.toString();
+                message = messageUpdate.toString();
             }
 
             System.out.println("BEFORE WS MESSAGE SEND! TOOK " + (System.currentTimeMillis() - currentTime) + "ms");
-
-            String finalMessage = message;
-            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> workServerParams.message = finalMessage);
+            workerExecutor.noIsolation().submit(WebsocketSender.WebServer.class, workServerParams -> workServerParams.message = message);
         }
     }
 
@@ -143,7 +141,7 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
                         Files.writeString(dest, adopted, StandardOpenOption.TRUNCATE_EXISTING);
                     } else {
                         try (var stream_ = new FileOutputStream(dest.toFile(), false)) {
-                            CodeAnalyze.append(stream_, res.data().toFile().getAbsolutePath());
+                            append(stream_, res.data().toFile().getAbsolutePath());
                         }
                     }
                 }
@@ -182,7 +180,7 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
             var bundleDir = resourceDir.toPath().resolve("bundle");
 
             if (bundleDir.toFile().exists())
-                CodeAnalyze.deleteDir(bundleDir.toFile());
+                deleteDir(bundleDir.toFile());
 
             Files.createDirectory(bundleDir);
 
@@ -208,11 +206,11 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
             try (var outJs = new FileOutputStream(mainJsFile, false);
                  var outCss = new FileOutputStream(mainCssFile, false)) {
                 for (var fileName : allFileNames) {
-                    var fileName_ = fileName.toFile().getAbsolutePath();
-                    if (fileName_.endsWith(".js"))
-                        CodeAnalyze.appendAndDrop(outJs, fileName_);
-                    else if (fileName_.endsWith(".css"))
-                        CodeAnalyze.appendAndDrop(outCss, fileName_);
+                    var filePath = fileName.toFile().getAbsolutePath();
+                    if (filePath.endsWith(".js"))
+                        appendAndDrop(outJs, filePath);
+                    else if (filePath.endsWith(".css"))
+                        appendAndDrop(outCss, filePath);
                 }
             }
 
@@ -221,10 +219,10 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
             var sha1 = MessageDigest.getInstance("SHA-1");
 
-            var hashJs = CodeAnalyze.byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
-            var hashCss = CodeAnalyze.byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
-            var hashLibJs = CodeAnalyze.byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("lib.js"))));
-            var hashLibCss = CodeAnalyze.byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("lib.css"))));
+            var hashJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.js"))));
+            var hashCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("main.css"))));
+            var hashLibJs = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("lib.js"))));
+            var hashLibCss = byteArrayToHexString(sha1.digest(Files.readAllBytes(bundleDir.resolve("lib.css"))));
 
             Files.writeString(bundleFile,
                 "lib.js " + hashLibJs +
@@ -246,5 +244,35 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
         project.getTasks().register("bundler-production-build", ProductBuild.class, productBuild -> productBuild.dependsOn("compileJava", "processResources"));
         project.getTasks().getByName("jar").dependsOn("bundler-production-build");
+    }
+
+    static String byteArrayToHexString(byte[] b) {
+        var result = new StringBuilder();
+        for (byte value : b)
+            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
+
+        return result.toString();
+    }
+
+    static void deleteDir(File file) {
+        var contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDir(f);
+            }
+        }
+        var __ = file.delete();
+    }
+    static public void appendAndDrop(FileOutputStream to, String fileName) throws IOException {
+        var inFile = new File(fileName);
+        append(to, fileName);
+        var __ = inFile.delete();
+    }
+    static public void append(FileOutputStream to, String fileName) throws IOException {
+        var inFile = new File(fileName);
+        try (var in = new FileInputStream(inFile)) {
+            var inCh = in.getChannel();
+            inCh.transferTo(0, inCh.size(), to.getChannel());
+        }
     }
 }
