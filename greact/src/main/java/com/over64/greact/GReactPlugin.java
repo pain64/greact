@@ -56,15 +56,15 @@ public class GReactPlugin implements Plugin {
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-                        TypeSafeSQLCallFinder.executor.shutdown();
-                        var closeAllThread = TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
-
-                        if (!closeAllThread) throw new InterruptedException();
-                        if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
+//                        TypeSafeSQLCallFinder.executor.shutdown();
+//                        var closeAllThread = TypeSafeSQLCallFinder.executor.awaitTermination(10, TimeUnit.SECONDS);
+//
+//                        if (!closeAllThread) throw new InterruptedException();
+//                        if (TypeSafeSQLCallFinder.preparedStatementError != null) throw TypeSafeSQLCallFinder.preparedStatementError;
 
                         System.out.println("GREACT COMPILATION DONE!!!");
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException("Too long waiting from database");
+//                    } catch (InterruptedException ex) {
+//                        throw new RuntimeException("Too long waiting from database");
                     } catch (Throwable ex) {
                         throw new RuntimeException(ex);
                     }
@@ -73,7 +73,7 @@ public class GReactPlugin implements Plugin {
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
 
                     var t0 = System.currentTimeMillis();
-                    new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    // new TypeSafeSQLCallFinder(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();

@@ -24,9 +24,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         var ds = new HikariDataSource() {{
-            setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
-            setUsername("postgres");
-            setPassword("postgres");
+            setJdbcUrl("jdbc:postgresql://localhost:5432/uikit_sample");
+            setUsername("uikit");
+            setPassword("1234");
             setMaximumPoolSize(2);
             setConnectionTimeout(1000);
         }};
@@ -47,6 +47,8 @@ public class Main {
             if (found != null) {
                 if (resourceName.endsWith(".css"))
                     res.type("text/css");
+                if (resourceName.endsWith(".js"))
+                    res.type("text/javascript");
                 return found.get();
             } else {
                 res.status(404);

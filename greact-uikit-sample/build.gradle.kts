@@ -28,9 +28,9 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.samples.js " +
             "--tsql-check-enabled=true " +
             "--tsql-driver-class-name=org.postgresql.Driver " +
-            "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/postgres " +
-            "--tsql-check-schema-username=postgres " +
-            "--tsql-check-schema-password=postgres ")
+            "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/uikit_sample " +
+            "--tsql-check-schema-username=uikit " +
+            "--tsql-check-schema-password=1234 ")
     options.fork()
     options.forkOptions.jvmArgs = listOf(
         "--enable-preview",
@@ -79,6 +79,7 @@ tasks.jar {
         attributes["Main-Class"] = "com.over64.greact.uikit.samples.Main"
     }
 
+//    FIXME: problem with Gradle
 //    duplicatesStrategy = DuplicatesStrategy.WARN
 //    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }

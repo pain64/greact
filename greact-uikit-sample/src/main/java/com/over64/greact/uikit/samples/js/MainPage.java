@@ -43,6 +43,7 @@ public class MainPage implements Component0<div> {
     @Override
     public div mount() {
         return new div() {{
+
             new div() {{
                 className = "header";
 
