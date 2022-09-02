@@ -533,17 +533,24 @@ public class _01ExprTest {
             new CompileCase("js.Test", """
                 package js;
                 public class Test {
+                  static class B {}
+
                   void baz(Object x) {
                     boolean y1 = x instanceof String;
                     boolean y2 = x instanceof Integer;
                     boolean y3 = x instanceof Long;
                     boolean y4 = x instanceof String s;
                     boolean y5 = x instanceof A;
+                    boolean y6 = x instanceof B;
                   }
                 }""",
             """
                 class js_Test {
                   constructor() {
+                  }
+                  static B = class {
+                    constructor() {
+                    }
                   }
                   _baz(x) {
                     const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
@@ -551,6 +558,7 @@ public class _01ExprTest {
                     const y3 = typeof x == 'number';
                     const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
                     const y5 = x instanceof js_A;
+                    const y6 = x instanceof js_Test.B;
                   }
                 }
                 """));
