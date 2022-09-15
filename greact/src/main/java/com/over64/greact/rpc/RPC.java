@@ -24,6 +24,9 @@ public class RPC<T> {
         String value();
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface RPCEndPoint { }
+
     public interface Endpoint<T> {
         Object handle(T di, ObjectMapper mapper, List<JsonNode> args);
     }
@@ -74,7 +77,7 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                if (method.getAnnotation(DoNotTranspile.class) == null) throw new RuntimeException("unreachable");
+                if (method.getAnnotation(RPCEndPoint.class) == null) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 if (isRelease) cache.put(fullName, method);
