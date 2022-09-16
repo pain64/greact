@@ -544,24 +544,24 @@ public class _01ExprTest {
                     boolean y6 = x instanceof B;
                   }
                 }""",
-            """
-                class js_Test {
-                  constructor() {
-                  }
-                  static B = class {
-                    constructor() {
+                """
+                    class js_Test {
+                      constructor() {
+                      }
+                      static B = class {
+                        constructor() {
+                        }
+                      }
+                      _baz(x) {
+                        const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
+                        const y2 = typeof x == 'number';
+                        const y3 = typeof x == 'number';
+                        const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
+                        const y5 = x instanceof js_A;
+                        const y6 = x instanceof js_Test.B;
+                      }
                     }
-                  }
-                  _baz(x) {
-                    const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
-                    const y2 = typeof x == 'number';
-                    const y3 = typeof x == 'number';
-                    const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                    const y5 = x instanceof js_A;
-                    const y6 = x instanceof js_Test.B;
-                  }
-                }
-                """));
+                    """));
         // FIXME(generated for instanceof pattern) => const s;
     }
 

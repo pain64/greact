@@ -15,6 +15,7 @@ import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 public class RPCPlugin {
@@ -115,7 +116,7 @@ public class RPCPlugin {
         Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
 
         var localVars = new LinkedHashSet<Symbol.VarSymbol>();
-        var lambdaVars = new ArrayList<Symbol.VarSymbol>();
+        var varSymbols = new HashMap<Symbol.VarSymbol, JCTree.JCIdent>();
         var diSymbol = lambda.params.get(0).sym;
         localVars.add(diSymbol); // di symbol
         var rpcArgs = new Object() {
@@ -143,26 +144,22 @@ public class RPCPlugin {
 
                     if (localVars.contains(varSym)) return;
 
-                    var index = parsedArgs.size();
-
-                    if (lambdaVars.contains(varSym)) {
-                        index = lambdaVars.indexOf(varSym);
-                        var parsedArg = new Symbol.VarSymbol(Flags.FINAL,
-                            names.fromString("$closure" + index),
-                            varSym.type, method);
-                        this.result = maker.Ident(parsedArg);
+                    if (varSymbols.containsKey(varSym)) {
+                        this.result = varSymbols.get(varSym);
                         return;
-                    } else {
-                        lambdaVars.add(varSym);
-                        rpcArgs.list = rpcArgs.list.append(maker.Ident(varSym));
                     }
 
+                    rpcArgs.list = rpcArgs.list.append(maker.Ident(varSym));
                     var parsedArg = new Symbol.VarSymbol(Flags.FINAL,
-                        names.fromString("$closure" + index),
+                        names.fromString("$closure" + parsedArgs.size()),
                         varSym.type, method);
-// PIZDA
+
+                    var parsedId = maker.Ident(parsedArg);
+
+                    varSymbols.put(varSym, parsedId);
                     parsedArgs.add(parsedArg);
-                    this.result = maker.Ident(parsedArg);
+
+                    this.result = parsedId;
                 }
             }
         });
