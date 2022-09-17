@@ -1,5 +1,6 @@
 package com.greact.generate2;
 
+import com.greact.generate.util.CompileException;
 import com.greact.generate2.lookahead.HasSuperConstructorCall;
 import com.greact.model.DoNotTranspile;
 import com.greact.model.JSNativeAPI;
@@ -22,6 +23,10 @@ public class TypeGen extends ClassBodyGen {
     }
 
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
+        if (classDef.extending != null && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
+            throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
+                "Prohibition of inheritance for @JSNativeAPI classes");
+
         var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         if (cssRequire != null)
