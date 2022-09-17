@@ -4,6 +4,7 @@ import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.generate2.lookahead.HasAsyncCalls;
 import com.greact.model.ClassRef;
+import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
@@ -573,7 +574,8 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitTypeTest(JCTree.JCInstanceOf instanceOf) {
-        var ofType = getRightName(TreeInfo.symbol(instanceOf.getType()));
+        var type = instanceOf.getType();
+        var ofType = getRightName(TreeInfo.symbol(type));
 
         // FIXME: disable for arrays (aka x instanceof String[])
         Consumer<Runnable> checkGen = switch (ofType) {
@@ -590,7 +592,8 @@ abstract class ExpressionGen extends VisitorWithContext {
             default -> eGen -> {
                 eGen.run();
                 out.write(" instanceof ");
-                out.write(ofType);
+                if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
+                else out.write(type.type.tsym.name.toString());
             };
         };
 

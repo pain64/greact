@@ -1,8 +1,8 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
-import org.junit.jupiter.api.Assertions;
+import com.greact.model.JSNativeAPI;
 import org.junit.jupiter.api.Test;
+import util.CompileAssert;
 import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
@@ -633,6 +633,36 @@ public class _01ExprTest {
                           this.a = new js_A();
                         };
                         __init__();
+                      }
+                    }
+                    """));
+    }
+
+    @Test
+    void instanceOfForJSNativeAPI() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    import com.greact.model.JSNativeAPI;
+                    
+                    @JSNativeAPI
+                    class A {}""",
+                """
+                    """),
+            new CompileCase("js.Test", """
+                package js;
+                public class Test {
+                  void baz(Object x) {
+                    boolean y1 = x instanceof A;
+                  }
+                }""",
+                """
+                    class js_Test {
+                      constructor() {
+                      }
+                      _baz(x) {
+                        const y1 = x instanceof A;
                       }
                     }
                     """));
