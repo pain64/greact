@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greact.model.DoNotTranspile;
+import com.greact.model.RPCEndPoint;
 
 import java.io.File;
 import java.io.Reader;
@@ -23,9 +24,6 @@ public class RPC<T> {
     public @interface RPCEntryPoint {
         String value();
     }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface RPCEndPoint { }
 
     public interface Endpoint<T> {
         Object handle(T di, ObjectMapper mapper, List<JsonNode> args);

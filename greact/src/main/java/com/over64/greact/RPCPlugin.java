@@ -2,6 +2,7 @@ package com.over64.greact;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.greact.model.RPCEndPoint;
 import com.over64.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -48,7 +49,7 @@ public class RPCPlugin {
         Symbol.ClassSymbol clRPC = lookupClass(RPC.class.getName());
         Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
         Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
-        Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPC.RPCEndPoint.class.getName());
+        Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPCEndPoint.class.getName());
         Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
         Symbol.MethodSymbol mtListGet = lookupMember(clList, "get");
@@ -116,7 +117,7 @@ public class RPCPlugin {
         Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
 
         var localVars = new LinkedHashSet<Symbol.VarSymbol>();
-        var varSymbols = new HashMap<Symbol.VarSymbol, JCTree.JCIdent>();
+        var lambdaCachedVars = new HashMap<Symbol.VarSymbol, JCTree.JCIdent>();
         var diSymbol = lambda.params.get(0).sym;
         localVars.add(diSymbol); // di symbol
         var rpcArgs = new Object() {
@@ -144,8 +145,8 @@ public class RPCPlugin {
 
                     if (localVars.contains(varSym)) return;
 
-                    if (varSymbols.containsKey(varSym)) {
-                        this.result = varSymbols.get(varSym);
+                    if (lambdaCachedVars.containsKey(varSym)) {
+                        this.result = lambdaCachedVars.get(varSym);
                         return;
                     }
 
@@ -156,7 +157,7 @@ public class RPCPlugin {
 
                     var parsedId = maker.Ident(parsedArg);
 
-                    varSymbols.put(varSym, parsedId);
+                    lambdaCachedVars.put(varSym, parsedId);
                     parsedArgs.add(parsedArg);
 
                     this.result = parsedId;

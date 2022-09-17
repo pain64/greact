@@ -19,6 +19,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
@@ -186,9 +187,8 @@ abstract class ExpressionGen extends VisitorWithContext {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
                     out.write(id.sym.owner.toString().replace(".", "_"));
                     out.write("._");
-                } else
-                    if (isStaticMethodCall) out.write("this._");
-                    else out.write("this.constructor._");
+                } else if (isStaticMethodCall) out.write("this._");
+                else out.write("this.constructor._");
                 out.write(id.name.toString());
             } else {
                 out.write("this.");
@@ -617,6 +617,10 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitNewClass(JCTree.JCNewClass newClass) {
+        if (newClass.clazz.type.tsym.getAnnotation(FunctionalInterface.class) != null)
+            throw new CompileException(CompileException.ERROR.CANNOT_BE_CREATED_VIA_NEW,
+                "Instance of interface marked as @FunctionalInterface cannot be created via new");
+
         if (newClass.def != null) {
             out.write("(this");
             out.write(String.valueOf(classDefs.size() - 1));
@@ -658,10 +662,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         if (symbol == null) return "";
         if (symbol.owner == null) return symbol.name.toString();
 
-        if (symbol.owner.getKind().isClass()) {
-            return getName(symbol.owner) + "." + symbol.name;
-        } else {
-            return getName(symbol.owner) + "_" + symbol.name;
-        }
+        if (symbol.owner.getKind().isClass()) return getName(symbol.owner) + "." + symbol.name;
+        else return getName(symbol.owner) + "_" + symbol.name;
     }
 }
