@@ -1,5 +1,6 @@
 package lowering;
 
+import com.greact.model.JSNativeAPI;
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
 import util.CompileAssert.CompileCase;
@@ -544,24 +545,24 @@ public class _01ExprTest {
                     boolean y6 = x instanceof B;
                   }
                 }""",
-            """
-                class js_Test {
-                  constructor() {
-                  }
-                  static B = class {
-                    constructor() {
+                """
+                    class js_Test {
+                      constructor() {
+                      }
+                      static B = class {
+                        constructor() {
+                        }
+                      }
+                      _baz(x) {
+                        const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
+                        const y2 = typeof x == 'number';
+                        const y3 = typeof x == 'number';
+                        const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
+                        const y5 = x instanceof js_A;
+                        const y6 = x instanceof js_Test.B;
+                      }
                     }
-                  }
-                  _baz(x) {
-                    const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
-                    const y2 = typeof x == 'number';
-                    const y3 = typeof x == 'number';
-                    const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                    const y5 = x instanceof js_A;
-                    const y6 = x instanceof js_Test.B;
-                  }
-                }
-                """));
+                    """));
         // FIXME(generated for instanceof pattern) => const s;
     }
 
@@ -632,6 +633,36 @@ public class _01ExprTest {
                           this.a = new js_A();
                         };
                         __init__();
+                      }
+                    }
+                    """));
+    }
+
+    @Test
+    void instanceOfForJSNativeAPI() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    import com.greact.model.JSNativeAPI;
+                    
+                    @JSNativeAPI
+                    class A {}""",
+                """
+                    """),
+            new CompileCase("js.Test", """
+                package js;
+                public class Test {
+                  void baz(Object x) {
+                    boolean y1 = x instanceof A;
+                  }
+                }""",
+                """
+                    class js_Test {
+                      constructor() {
+                      }
+                      _baz(x) {
+                        const y1 = x instanceof A;
                       }
                     }
                     """));

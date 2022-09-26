@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greact.model.DoNotTranspile;
+import com.greact.model.RPCEndPoint;
 
 import java.io.File;
 import java.io.Reader;
@@ -74,7 +75,7 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                if (method.getAnnotation(DoNotTranspile.class) == null) throw new RuntimeException("unreachable");
+                if (method.getAnnotation(RPCEndPoint.class) == null) throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 if (isRelease) cache.put(fullName, method);

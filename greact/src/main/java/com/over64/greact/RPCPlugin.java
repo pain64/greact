@@ -2,7 +2,7 @@ package com.over64.greact;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.greact.model.DoNotTranspile;
+import com.greact.model.RPCEndPoint;
 import com.over64.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -16,6 +16,7 @@ import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 public class RPCPlugin {
@@ -48,7 +49,7 @@ public class RPCPlugin {
         Symbol.ClassSymbol clRPC = lookupClass(RPC.class.getName());
         Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
         Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
-        Symbol.ClassSymbol clDoNotTranspile = lookupClass(DoNotTranspile.class.getName());
+        Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPCEndPoint.class.getName());
         Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
         Symbol.MethodSymbol mtListGet = lookupMember(clList, "get");
@@ -78,7 +79,7 @@ public class RPCPlugin {
 
     static class IdxHolder {
         private int idx = 0;
-        int inc() {return idx++;}
+        int inc() { return idx++; }
     }
 
     JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData,
@@ -116,6 +117,7 @@ public class RPCPlugin {
         Symbol.MethodSymbol method, Symbol.MethodSymbol endpoint, JCTree.JCLambda lambda) {
 
         var localVars = new LinkedHashSet<Symbol.VarSymbol>();
+        var lambdaCachedVars = new HashMap<Symbol.VarSymbol, JCTree.JCIdent>();
         var diSymbol = lambda.params.get(0).sym;
         localVars.add(diSymbol); // di symbol
         var rpcArgs = new Object() {
@@ -143,18 +145,22 @@ public class RPCPlugin {
 
                     if (localVars.contains(varSym)) return;
 
-//                    if (varSym instanceof Symbol.ParamSymbol ||
-//                        varSym.owner == method ||
-//                        varSym.owner == method.owner) {
+                    if (lambdaCachedVars.containsKey(varSym)) {
+                        this.result = lambdaCachedVars.get(varSym);
+                        return;
+                    }
 
                     rpcArgs.list = rpcArgs.list.append(maker.Ident(varSym));
                     var parsedArg = new Symbol.VarSymbol(Flags.FINAL,
                         names.fromString("$closure" + parsedArgs.size()),
                         varSym.type, method);
 
+                    var parsedId = maker.Ident(parsedArg);
+
+                    lambdaCachedVars.put(varSym, parsedId);
                     parsedArgs.add(parsedArg);
-                    this.result = maker.Ident(parsedArg);
-//                    }
+
+                    this.result = parsedId;
                 }
             }
         });
@@ -189,7 +195,7 @@ public class RPCPlugin {
 
             @Override public void visitClassDef(JCTree.JCClassDecl tree) {
                 System.out.println("NEW CLASS DEF: " + tree.sym + " is static: " + tree.sym.isStatic());
-                if(!tree.sym.isStatic()) classDecl = tree;
+                if (!tree.sym.isStatic()) classDecl = tree;
                 withNewClassDecl(tree, () -> super.visitClassDef(tree));
             }
 
@@ -218,7 +224,7 @@ public class RPCPlugin {
                                     classDecl.sym);
 
                                 endpointSymbol.prependAttributes(
-                                    List.of(new Attribute.Compound(symbols.clDoNotTranspile.type, List.nil()))
+                                    List.of(new Attribute.Compound(symbols.clRPCEndPoint.type, List.nil()))
                                 );
 
                                 endpointSymbol.params = List.<Symbol.VarSymbol>nil()

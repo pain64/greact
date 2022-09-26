@@ -26,7 +26,7 @@ public class CallNoArgs {
                                             
                         class Simple {
                            \s
-                            @com.greact.model.DoNotTranspile
+                            @com.greact.model.RPCEndPoint
                             public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                                 return 42;
                             }
