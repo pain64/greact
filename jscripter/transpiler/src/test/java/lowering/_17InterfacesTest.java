@@ -290,20 +290,83 @@ public class _17InterfacesTest {
         }
     }
     @Test void instanceOfForInterface() throws IOException {
-        assertCompiled("""
-            package js;
-                                
-                class Test {
-                  class ClassC {}
-                  interface InterfaceC {
-                    String bar();
-                    default String baz() {
-                      return "baz";
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A",
+                """
+                    package js;
+                    class A {}""",
+                """
+                    class js_A {
+                      constructor() {
+                      }
                     }
+                    """),
+            new CompileAssert.CompileCase("js.InterfaceA",
+                """
+                    package js;
+                    interface InterfaceA {
+                      public void bar();
+                    }""",
+                """
+                    const _js_InterfaceA = (superclass) => class js_InterfaceA extends superclass {
+                      __iface_instance__(iface) {
+                        return (iface === _js_InterfaceA || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
+                      }
+                    };
+                    """),
+            new CompileAssert.CompileCase("js.InterfaceB",
+                """
+                    package js;
+                    interface InterfaceB {
+                      public void foo();
+                    }""",
+                """
+                    const _js_InterfaceB = (superclass) => class js_InterfaceB extends superclass {
+                      __iface_instance__(iface) {
+                        return (iface === _js_InterfaceB || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
+                      }
+                    };
+                    """),
+            new CompileAssert.CompileCase("js.Test", """
+                package js;
+                                
+                class Test extends A implements InterfaceA, InterfaceB {
+                  @Override public void bar() { return; }
+                  @Override public void foo() { return; }
+                }
+                """,
+                """
+                    class js_Test extends js_InterfaceA(js_InterfaceB(js_A)) {
+                      constructor() {
+                        super();
+                      }
+                      _bar() {
+                        return;
+                      }
+                      _foo() {
+                        return;
+                      }
+                    }
+                    """),
+            new CompileAssert.CompileCase("js.Main", """
+                package js;
+                                
+                class Main {
+                  void foo(Object x) {
+                    boolean y1 = x instanceof InterfaceA;
+                    boolean y2 = x instanceof Test;
                   }
                 }
-            """, """
-                        
-            """);
+                """,
+                """
+                    class js_Main {
+                      constructor() {
+                      }
+                      _foo(x) {
+                        const y1 = typeof x.__iface_instance__ !== "undefined" && x.__iface_instance__(js_InterfaceA);
+                        const y2 = x instanceof js_Test;
+                      }
+                    }
+                    """));
     }
 }

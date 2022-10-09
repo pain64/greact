@@ -597,10 +597,20 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(" == 'number'");
             };
             default -> eGen -> {
-                eGen.run();
-                out.write(" instanceof ");
-                if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
-                else out.write(type.type.tsym.name.toString());
+                if (type.type.isInterface()) {
+                    out.write("typeof ");
+                    eGen.run();
+                    out.write(".__iface_instance__ !== \"undefined\" && ");
+                    eGen.run();
+                    out.write(".__iface_instance__(");
+                    out.write(ofType);
+                    out.write(")");
+                } else {
+                    eGen.run();
+                    out.write(" instanceof ");
+                    if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
+                    else out.write(type.type.tsym.name.toString());
+                }
             };
         };
 
