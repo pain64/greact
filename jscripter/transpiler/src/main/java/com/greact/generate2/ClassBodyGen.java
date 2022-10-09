@@ -36,7 +36,7 @@ abstract class ClassBodyGen extends StatementGen {
             // skip class fields & delegate to StatementGen
             super.visitVarDef(varDef);
         } else if (isEnclosingClassIsNested && varDef.sym.isStatic()) {
-            if(varDef.sym.owner.isEnum())
+            if (varDef.sym.owner.isEnum())
                 out.write(getRightName(varDef.sym));
             else {
                 out.write("static ");
@@ -81,8 +81,8 @@ abstract class ClassBodyGen extends StatementGen {
             ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
             : method.body.stats;
 
-        withStaticMethodCall(method.sym.isStatic(), () -> {
-            withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
+        withStaticMethodCall(method.sym.isStatic(),
+            () -> withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
                 if (!statements.isEmpty()) // super constructor invocation
                     statements.get(0).accept(this);
 
@@ -90,8 +90,7 @@ abstract class ClassBodyGen extends StatementGen {
                 initRecordFields(method);
 
                 statements.stream().skip(1).forEach(stmt -> stmt.accept(this));
-            });
-        });
+            }));
     }
 
     void visitGroup(OverloadTable table, boolean isStatic,
@@ -100,7 +99,8 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.isEmpty()) return;
         if (methods.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE)))
             return;
-        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) return;
+        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault()))
+            return;
 
         var name = methods.get(0).snd.name.toString();
         var isConstructor = name.equals("<init>");

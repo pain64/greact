@@ -15,7 +15,6 @@ import javax.lang.model.element.Name;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TypeGen extends ClassBodyGen {
     @Override public void visitPackageDef(JCTree.JCPackageDecl __) { }
@@ -44,7 +43,7 @@ public class TypeGen extends ClassBodyGen {
                     ((JCTree.JCMethodDecl) n).sym.getAnnotation(DoNotTranspile.class) == null))
                     throw new CompileException(CompileException.ERROR.THE_METHOD_MUST_BE_DECLARED_AS_DO_NOT_TRANSPILE,
                         """
-                            In @Erased Interface each default method should be annotated with @DoNotTranspile
+                            In @ErasedInterface each default method should be annotated with @DoNotTranspile
                             """);
                 if (!classDef.implementing.isEmpty() &&
                     classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) == null)
@@ -55,7 +54,7 @@ public class TypeGen extends ClassBodyGen {
                 return;
             }
 
-            var interfaceName = classDef.getSimpleName().toString();
+            var interfaceName = classDef.type.tsym.toString().replace(".", "_");
 
             out.write("const _" + interfaceName + " = (superclass) => class "
                 + interfaceName
@@ -68,7 +67,7 @@ public class TypeGen extends ClassBodyGen {
                         """
                             Erased interface can be inherited only from erased interface
                             """);
-                out.write("_" + classDef.implementing.get(0).type.tsym.name.toString() + "(superclass)");
+                out.write("_" + classDef.implementing.get(0).type.tsym.toString().replace(".", "_") + "(superclass)");
             }
 
             out.writeCBOpen(true);
@@ -139,11 +138,27 @@ public class TypeGen extends ClassBodyGen {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
         var extendClause = classDef.extending;
+        var implementClause = classDef.implementing;
+
+        if (implementClause.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) != null))
+            throw new CompileException(CompileException.ERROR.CLASS_CANNOT_BE_INHERITED_FROM_ERASED_INTERFACE, """
+                Class cannot be inherited from ErasedInterface
+                """);
+
         if (extendClause != null) {
             var superClass = extendClause.type.tsym.toString().replace(".", "_");
             out.addDependency(extendClause.type.tsym.toString() + ".js");
             out.write(" extends ");
-            out.write(superClass);
+            if (!implementClause.isEmpty()) {
+                implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
+                out.write(superClass);
+                implementClause.forEach(n -> out.write(")"));
+            } else out.write(superClass);
+        } else if (!implementClause.isEmpty()) {
+            out.write(" extends ");
+            implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
+            out.write("Object");
+            implementClause.forEach(n -> out.write(")"));
         } else {
             var constructors = groups.get(names.fromString("<init>"));
             if (constructors != null) {

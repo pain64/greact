@@ -173,13 +173,17 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
-                    import com.greact.model.ErasedInterface;
                     import com.greact.model.async;
-                    @ErasedInterface
+                    
                     public interface A {
                       @async void foo();
                     }""",
                 """
+                    const _js_A = (superclass) => class js_A extends superclass {
+                      __iface_instance__(iface) {
+                        return (iface === _js_A || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
+                      }
+                    };
                     """),
             new CompileAssert.CompileCase("js.B",
                 """
@@ -189,7 +193,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js_B {
+                    class js_B extends js_A(Object) {
                       constructor() {
                       }
                       _foo() {
@@ -204,8 +208,6 @@ public class _08AsyncAwait {
                 new CompileAssert.CompileCase("js.A",
                     """
                         package js;
-                        import com.greact.model.ErasedInterface;
-                        @ErasedInterface
                         public interface A {
                           void foo();
                         }""",
