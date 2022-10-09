@@ -218,13 +218,16 @@ public class _03CallAndRefLocalTest {
         assertCompiled(
             """
                 package js;
+                import com.greact.model.ErasedInterface;
                 import java.util.function.Function;
                 import java.util.function.Consumer;
                 public class Test {
+                  @ErasedInterface
                   @FunctionalInterface
                   interface HInt {
                     void handle(int x);
                   }
+                  @ErasedInterface
                   @FunctionalInterface
                   interface HLong {
                     void handle(long x);
@@ -295,7 +298,9 @@ public class _03CallAndRefLocalTest {
         assertCompiled(
             """
                 package js;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   @FunctionalInterface
                   interface HInt {
                     void handle(int x);

@@ -3,6 +3,7 @@ package com.greact.generate2;
 import com.greact.generate.util.CompileException;
 import com.greact.generate2.lookahead.HasSuperConstructorCall;
 import com.greact.model.DoNotTranspile;
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.Require;
 import com.sun.source.tree.Tree;
@@ -14,6 +15,7 @@ import javax.lang.model.element.Name;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TypeGen extends ClassBodyGen {
     @Override public void visitPackageDef(JCTree.JCPackageDecl __) { }
@@ -29,11 +31,80 @@ public class TypeGen extends ClassBodyGen {
 
         var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
+        var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
+        var erasedInterface = classDef.sym.getAnnotation(ErasedInterface.class);
+
         if (cssRequire != null)
             for (var dep : cssRequire.value())
                 out.addDependency(dep);
 
-        if (classDef.getKind() == Tree.Kind.INTERFACE) return;
+        if (isInterface) {
+            if (erasedInterface != null) {
+                if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault() &&
+                    ((JCTree.JCMethodDecl) n).sym.getAnnotation(DoNotTranspile.class) == null))
+                    throw new CompileException(CompileException.ERROR.THE_METHOD_MUST_BE_DECLARED_AS_DO_NOT_TRANSPILE,
+                        """
+                            In @Erased Interface each default method should be annotated with @DoNotTranspile
+                            """);
+                if (!classDef.implementing.isEmpty() &&
+                    classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) == null)
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE,
+                        """
+                            Erased interface can be inherited only from erased interface
+                            """);
+                return;
+            }
+
+            var interfaceName = classDef.getSimpleName().toString();
+
+            out.write("const _" + interfaceName + " = (superclass) => class "
+                + interfaceName
+                + " extends ");
+
+            if (classDef.implementing.isEmpty()) out.write("superclass");
+            else {
+                if (classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) != null)
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE,
+                        """
+                            Erased interface can be inherited only from erased interface
+                            """);
+                out.write("_" + classDef.implementing.get(0).type.tsym.name.toString() + "(superclass)");
+            }
+
+            out.writeCBOpen(true);
+            out.write("__iface_instance__(iface)");
+            out.writeCBOpen(true);
+            out.write("return (iface === _"
+                + interfaceName
+                + " || (typeof super.__iface_instance__ !== \"undefined\" && super.__iface_instance__(iface)));");
+            out.writeNL();
+            out.deepOut();
+            out.write("}");
+            out.writeNL();
+
+            var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
+            classDef.defs.forEach(def -> def.accept(new TreeScanner() {
+                @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
+                    if (method.sym.getAnnotation(DoNotTranspile.class) != null || !method.sym.isDefault())
+                        return;
+
+                    var name = method.getName();
+                    var group = groups.computeIfAbsent(name, __ -> new ArrayList<>());
+                    group.add(method);
+                }
+
+                @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
+            }));
+
+            withClass(classDef, groups, () -> classDef.defs.forEach(d -> d.accept(this)));
+
+            out.deepOut();
+            out.write("};");
+            out.writeNL();
+
+            return;
+        }
+
         if (classDef.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
         if (!classDef.type.tsym.isAnonymous() &&
@@ -54,7 +125,7 @@ public class TypeGen extends ClassBodyGen {
                 out.write(classDef.getSimpleName().toString());
             }
         }
-        // -----
+
         var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
         classDef.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
@@ -84,11 +155,9 @@ public class TypeGen extends ClassBodyGen {
 
         out.writeCBOpen(true);
 
-        withClass(classDef, groups, () -> {
-            classDef.defs.stream()
-                .filter(d -> !(d instanceof JCTree.JCBlock)).filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
-                .forEach(d -> d.accept(this));
-        });
+        withClass(classDef, groups, () -> classDef.defs.stream()
+            .filter(d -> !(d instanceof JCTree.JCBlock)).filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
+            .forEach(d -> d.accept(this)));
 
         out.writeCBEnd(!classDef.sym.isAnonymous());
 

@@ -77,7 +77,7 @@ abstract class ClassBodyGen extends StatementGen {
     }
 
     void writeMethodStatements(JCTree.JCMethodDecl method, boolean hasInit) {
-        var statements = method.sym.isAbstract()
+        var statements = method.sym.isAbstract() && !method.sym.isDefault()
             ? com.sun.tools.javac.util.List.<JCTree.JCStatement>nil()
             : method.body.stats;
 
@@ -100,7 +100,7 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.isEmpty()) return;
         if (methods.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE)))
             return;
-        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract())) return;
+        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) return;
 
         var name = methods.get(0).snd.name.toString();
         var isConstructor = name.equals("<init>");

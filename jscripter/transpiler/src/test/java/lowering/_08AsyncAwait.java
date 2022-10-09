@@ -115,7 +115,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -171,7 +173,9 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
+                    import com.greact.model.ErasedInterface;
                     import com.greact.model.async;
+                    @ErasedInterface
                     public interface A {
                       @async void foo();
                     }""",
@@ -200,6 +204,8 @@ public class _08AsyncAwait {
                 new CompileAssert.CompileCase("js.A",
                     """
                         package js;
+                        import com.greact.model.ErasedInterface;
+                        @ErasedInterface
                         public interface A {
                           void foo();
                         }""",
@@ -226,7 +232,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public abstract class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -254,7 +262,9 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
+                    import com.greact.model.ErasedInterface;
                     public class Test {
+                      @ErasedInterface
                       interface Foo {
                         @async void foo();
                       }
@@ -286,7 +296,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }

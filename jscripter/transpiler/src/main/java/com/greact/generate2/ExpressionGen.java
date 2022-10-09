@@ -4,6 +4,7 @@ import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.generate2.lookahead.HasAsyncCalls;
 import com.greact.model.ClassRef;
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 import com.sun.tools.javac.code.Flags;
@@ -576,6 +577,12 @@ abstract class ExpressionGen extends VisitorWithContext {
     @Override public void visitTypeTest(JCTree.JCInstanceOf instanceOf) {
         var type = instanceOf.getType();
         var ofType = getRightName(TreeInfo.symbol(type));
+
+        if (type.type.tsym.getAnnotation(ErasedInterface.class) != null)
+            throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_NOT_USE_OPERATOR_INSTANCE_OF,
+                """
+                    Erased interface not use operator instanceOf
+                    """);
 
         // FIXME: disable for arrays (aka x instanceof String[])
         Consumer<Runnable> checkGen = switch (ofType) {
