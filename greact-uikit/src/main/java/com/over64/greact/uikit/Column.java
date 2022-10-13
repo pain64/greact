@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.Component1;
@@ -29,6 +30,7 @@ public class Column<T, U> {
     public Component2<td, U, T> view = (value, row) ->
         new td(isNullOrUndefined(value) ? "" : value.toString());
 
+    @ErasedInterface
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
     }

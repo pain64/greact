@@ -193,7 +193,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js_B extends js_A(Object) {
+                    class js_B extends _js_A(Object) {
                       constructor() {
                       }
                       _foo() {

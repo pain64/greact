@@ -1,33 +1,44 @@
 package com.over64.greact.dom;
 
+import com.greact.model.DoNotTranspile;
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 
 public class HTMLNativeElements {
+    @ErasedInterface
     public interface Component<T extends HTMLElement> {
+        @DoNotTranspile
         default void effect(Object expression) {}
     }
 
+    @ErasedInterface
     public interface Component0<T extends HTMLElement> extends Component<T> {
         @async Component0<T> mount();
     }
+    @ErasedInterface
     public interface Component1<T extends HTMLElement, U> extends Component<T> {
         @async Component0<T> mount(U u);
     }
 
     // FIXME: for remove
+    @ErasedInterface
     public interface Component2<T extends HTMLElement, U, V>  extends Component<T> {
         @async Component0<T> mount(U u, V v);
     }
+    @ErasedInterface
     public interface Component3<T extends HTMLElement, A1, A2, A3>  extends Component<T> {
         @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
+    @ErasedInterface
 
     public @interface DomProperty {
         String value();
     }
+    @ErasedInterface
 
     public interface NativeElementAsComponent<T extends HTMLElement> extends Component0<T> {
+        @DoNotTranspile
         @Override default Component0<T> mount() { return null; }
     }
 

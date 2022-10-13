@@ -229,7 +229,7 @@ public class _17InterfacesTest {
                 }
                 """,
                 """
-                    class js_Test extends js_InterfaceA(js_InterfaceB(js_A)) {
+                    class js_Test extends _js_InterfaceA(js_InterfaceB(js_A)) {
                       constructor() {
                         super();
                       }
@@ -313,7 +313,7 @@ public class _17InterfacesTest {
                 }
                 """,
                 """
-                    class js_Test extends js_InterfaceA(js_InterfaceB(js_A)) {
+                    class js_Test extends _js_InterfaceA(js_InterfaceB(js_A)) {
                       constructor() {
                         super();
                       }

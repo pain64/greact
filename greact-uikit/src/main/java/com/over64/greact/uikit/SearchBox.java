@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSExpression;
 import com.greact.model.Require;
 import com.greact.model.async;
@@ -16,22 +17,29 @@ public class SearchBox implements Component0<div> {
     AsyncSupplier<Component0<div>> loader;
     Component0<div> loaded;
 
+    @ErasedInterface
+
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T load();
     }
+
+    @ErasedInterface
 
     @FunctionalInterface public interface AsyncFunc1<A1, R> {
         @async R load(A1 a1);
     }
 
+    @ErasedInterface
     @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
         @async R load(A1 a1, A2 a2);
     }
 
+    @ErasedInterface
     @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
         @async R load(A1 a1, A2 a2, A3 a3);
     }
 
+    @ErasedInterface
     @FunctionalInterface public interface AsyncFunc4<A1, A2, A3, A4, R> {
         @async R load(A1 a1, A2 a2, A3 a3, A4 a4);
     }

@@ -1,10 +1,12 @@
 package com.over64.greact.uikit.controls;
 
+import com.greact.model.ErasedInterface;
 import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.dom.HTMLNativeElements.slot;
 
 public class Cascade<T> extends Control<T> {
     //FIXME: duplicate with SearchBox
+    @ErasedInterface
     @FunctionalInterface public interface Func1<U1, T> {
         T apply(U1 u1);
     }

@@ -9,6 +9,7 @@ import com.greact.model.Require;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 
 import javax.lang.model.element.Name;
@@ -31,7 +32,7 @@ public class TypeGen extends ClassBodyGen {
         var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
-        var isErasedInterface = classDef.sym.getAnnotation(ErasedInterface.class) != null;
+        var isErasedInterface = isAnnotatedErasedInterface(classDef.sym);
 
         if (cssRequire != null)
             for (var dep : cssRequire.value())
@@ -40,13 +41,13 @@ public class TypeGen extends ClassBodyGen {
         if (isInterface) {
             if (isErasedInterface) {
                 if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault() &&
-                    ((JCTree.JCMethodDecl) n).sym.getAnnotation(DoNotTranspile.class) == null))
+                    !isMethodAnnotatedDoNotTranspile((JCTree.JCMethodDecl) n)))
                     throw new CompileException(CompileException.ERROR.THE_METHOD_MUST_BE_DECLARED_AS_DO_NOT_TRANSPILE,
                         """
                             In @ErasedInterface each default method must be annotated with @DoNotTranspile
                             """);
                 if (!classDef.implementing.isEmpty() &&
-                    classDef.implementing.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) == null))
+                    classDef.implementing.stream().anyMatch(n -> !isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(n))))
                     throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
                         """
                             Erased interface can be inherited only from erased interface
@@ -62,7 +63,7 @@ public class TypeGen extends ClassBodyGen {
 
             if (classDef.implementing.isEmpty()) out.write("superclass");
             else {
-                if (classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) != null)
+                if (isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(classDef.implementing.get(0))))
                     throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
                         """
                             Erased interface can be inherited only from erased interface
@@ -84,7 +85,7 @@ public class TypeGen extends ClassBodyGen {
             var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
             classDef.defs.forEach(def -> def.accept(new TreeScanner() {
                 @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
-                    if (method.sym.getAnnotation(DoNotTranspile.class) != null || !method.sym.isDefault())
+                    if (isMethodAnnotatedDoNotTranspile(method) || !method.sym.isDefault())
                         return;
 
                     var name = method.getName();
@@ -128,7 +129,7 @@ public class TypeGen extends ClassBodyGen {
         var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
         classDef.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
-                if (method.sym.getAnnotation(DoNotTranspile.class) != null) return;
+                if (isMethodAnnotatedDoNotTranspile(method)) return;
 
                 var name = method.getName();
                 var group = groups.computeIfAbsent(name, __ -> new ArrayList<>());
@@ -139,25 +140,21 @@ public class TypeGen extends ClassBodyGen {
         }));
         var extendClause = classDef.extending;
         var implementClause = classDef.implementing.stream()
-            .filter(n -> n.type.tsym.getAnnotation(ErasedInterface.class) == null)
+            .filter(n -> !isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(n)))
             .toList();
-
-//        if (implementClause.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) != null))
-//            throw new CompileException(CompileException.ERROR.CLASS_CANNOT_BE_INHERITED_FROM_ERASED_INTERFACE, """
-//                Class cannot be inherited from ErasedInterface
-//                """);
 
         if (extendClause != null) {
             var superClass = extendClause.type.tsym.toString().replace(".", "_");
             out.addDependency(extendClause.type.tsym.toString() + ".js");
             out.write(" extends ");
             if (!implementClause.isEmpty()) {
+                out.write("_");
                 implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
                 out.write(superClass);
                 implementClause.forEach(n -> out.write(")"));
             } else out.write(superClass);
         } else if (!implementClause.isEmpty()) {
-            out.write(" extends ");
+            out.write(" extends _");
             implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
             out.write("Object");
             implementClause.forEach(n -> out.write(")"));
@@ -189,5 +186,13 @@ public class TypeGen extends ClassBodyGen {
                 .forEach(d -> d.accept(this)));
             out.writeCBEnd(!classDef.sym.isAnonymous());
         }
+    }
+
+    boolean isMethodAnnotatedDoNotTranspile(JCTree.JCMethodDecl methodDeclaration) {
+        return methodDeclaration.sym.getAnnotation(DoNotTranspile.class) != null;
+    }
+
+    boolean isAnnotatedErasedInterface(Symbol.ClassSymbol classSymbol) {
+        return classSymbol.getAnnotation(ErasedInterface.class) != null;
     }
 }
