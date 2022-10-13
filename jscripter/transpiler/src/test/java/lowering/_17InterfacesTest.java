@@ -75,7 +75,6 @@ public class _17InterfacesTest {
                     class Test {
                       @ErasedInterface
                       interface InterfaceA {
-                        String bar();
                         default String baz() {
                           return "baz";
                         }
@@ -94,12 +93,7 @@ public class _17InterfacesTest {
                 package js;
                                 
                 class Test {
-                  interface InterfaceC {
-                    String bar();
-                    default String baz() {
-                      return "baz";
-                    }
-                  }
+                  interface InterfaceC { }
                   interface InterfaceD extends InterfaceC { }
                 }
                 """,
@@ -110,9 +104,6 @@ public class _17InterfacesTest {
                   const _js_Test_InterfaceC = (superclass) => class js_Test_InterfaceC extends superclass {
                     __iface_instance__(iface) {
                       return (iface === _js_Test_InterfaceC || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
-                    }
-                    _baz() {
-                      return 'baz';
                     }
                   };
                   const _js_Test_InterfaceD = (superclass) => class js_Test_InterfaceD extends _js_Test_InterfaceC(superclass) {
@@ -134,19 +125,13 @@ public class _17InterfacesTest {
                     class Test {
                       interface A { }
                       @ErasedInterface
-                      interface InterfaceA extends A {
-                        String bar();
-                        @DoNotTranspile
-                        default String baz() {
-                          return "baz";
-                        }
-                      }
+                      interface InterfaceA extends A { }
                     }""",
                 """
                     """);
         } catch (Exception ex) {
             var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE, ce.error);
+            Assertions.assertSame(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE, ce.error);
         }
     }
     @Test void erasedInterfaceInheritedFromErasedInterface() {
@@ -159,20 +144,14 @@ public class _17InterfacesTest {
                                         
                     class Test {
                       @ErasedInterface
-                      interface InterfaceA {
-                        String bar();
-                        @DoNotTranspile
-                        default String baz() {
-                          return "baz";
-                        }
-                      }
+                      interface InterfaceA { }
                       interface B extends InterfaceA { }
                     }""",
                 """
                     """);
         } catch (Exception ex) {
             var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE, ce.error);
+            Assertions.assertSame(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE, ce.error);
         }
     }
     @Test void instanceOfForErasedInterface() {
@@ -200,7 +179,7 @@ public class _17InterfacesTest {
                     """);
         } catch (Exception ex) {
             var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(CompileException.ERROR.ERASED_INTERFACE_NOT_USE_OPERATOR_INSTANCE_OF, ce.error);
+            Assertions.assertSame(CompileException.ERROR.INSTANCE_OF_NOT_APPLICABLE_TO_ERASED_INTERFACE, ce.error);
         }
     }
     @Test void classImplementingInterfaces() throws IOException {
@@ -263,32 +242,30 @@ public class _17InterfacesTest {
                     }
                     """));
     }
-    @Test void implementErasedInterface() {
-        try {
-            assertCompiled(
-                """
-                    package js;
-                    import com.greact.model.ErasedInterface;
-                    import com.greact.model.DoNotTranspile;
-                                        
-                    class Test {
-                      @ErasedInterface
-                      interface InterfaceA {
-                        String bar();
-                        @DoNotTranspile
-                        default String baz() {
-                          return "baz";
-                        }
-                      }
-                      static class A implements InterfaceA { }
-                    }""",
-                """
-                    """);
-        } catch (Exception ex) {
-            var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(CompileException.ERROR.CLASS_CANNOT_BE_INHERITED_FROM_ERASED_INTERFACE, ce.error);
-        }
+    @Test void implementErasedInterface() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import com.greact.model.ErasedInterface;
+                import com.greact.model.DoNotTranspile;
+                                    
+                class Test {
+                  @ErasedInterface
+                  interface InterfaceA { }
+                  static class A implements InterfaceA { }
+                }""",
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
+                    constructor() {
+                    }
+                  }
+                }
+                """);
     }
+
     @Test void instanceOfForInterface() throws IOException {
         assertCompiledMany(
             new CompileAssert.CompileCase("js.A",
@@ -363,7 +340,7 @@ public class _17InterfacesTest {
                       constructor() {
                       }
                       _foo(x) {
-                        const y1 = typeof x.__iface_instance__ !== "undefined" && x.__iface_instance__(js_InterfaceA);
+                        const y1 = (n => (typeof n.__iface_instance__ !== "undefined" && n.__iface_instance__( js_InterfaceA)))(x);
                         const y2 = x instanceof js_Test;
                       }
                     }

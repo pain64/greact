@@ -82,15 +82,17 @@ abstract class ClassBodyGen extends StatementGen {
             : method.body.stats;
 
         withStaticMethodCall(method.sym.isStatic(),
-            () -> withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
-                if (!statements.isEmpty()) // super constructor invocation
-                    statements.get(0).accept(this);
+            () -> {
+                withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
+                    if (!statements.isEmpty()) // super constructor invocation
+                        statements.get(0).accept(this);
 
-                if (hasInit) out.writeLn("__init__();");
-                initRecordFields(method);
+                    if (hasInit) out.writeLn("__init__();");
+                    initRecordFields(method);
 
-                statements.stream().skip(1).forEach(stmt -> stmt.accept(this));
-            }));
+                    statements.stream().skip(1).forEach(stmt -> stmt.accept(this));
+                });
+            });
     }
 
     void visitGroup(OverloadTable table, boolean isStatic,
@@ -99,7 +101,7 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.isEmpty()) return;
         if (methods.stream().allMatch(m -> m.snd.sym.getModifiers().contains(Modifier.NATIVE)))
             return;
-        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault()))
+        if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) // isAbstract для defoult методов возвращает true
             return;
 
         var name = methods.get(0).snd.name.toString();

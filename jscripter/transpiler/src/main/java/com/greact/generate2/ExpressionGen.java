@@ -579,9 +579,9 @@ abstract class ExpressionGen extends VisitorWithContext {
         var ofType = getRightName(TreeInfo.symbol(type));
 
         if (type.type.tsym.getAnnotation(ErasedInterface.class) != null)
-            throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_NOT_USE_OPERATOR_INSTANCE_OF,
+            throw new CompileException(CompileException.ERROR.INSTANCE_OF_NOT_APPLICABLE_TO_ERASED_INTERFACE,
                 """
-                    Erased interface not use operator instanceOf
+                    Cannot apply instanceof operator to @ErasedInterface
                     """);
 
         // FIXME: disable for arrays (aka x instanceof String[])
@@ -597,13 +597,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(" == 'number'");
             };
             default -> eGen -> {
-                if (type.type.isInterface()) {
-                    out.write("typeof ");
-                    eGen.run();
-                    out.write(".__iface_instance__ !== \"undefined\" && ");
-                    eGen.run();
-                    out.write(".__iface_instance__(");
+                if (type.type.isInterface()) { // (n => (typeof n.__iface_instance__ !== "undefined" && n.__iface_instance__(_InterfaceC)))(c)
+                    out.write("(n => (typeof n.__iface_instance__ !== \"undefined\" && n.__iface_instance__( ");
                     out.write(ofType);
+                    out.write(")))(");
+                    eGen.run();
                     out.write(")");
                 } else {
                     eGen.run();

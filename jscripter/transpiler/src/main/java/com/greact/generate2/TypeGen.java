@@ -31,23 +31,23 @@ public class TypeGen extends ClassBodyGen {
         var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
-        var erasedInterface = classDef.sym.getAnnotation(ErasedInterface.class);
+        var isErasedInterface = classDef.sym.getAnnotation(ErasedInterface.class) != null;
 
         if (cssRequire != null)
             for (var dep : cssRequire.value())
                 out.addDependency(dep);
 
         if (isInterface) {
-            if (erasedInterface != null) {
+            if (isErasedInterface) {
                 if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault() &&
                     ((JCTree.JCMethodDecl) n).sym.getAnnotation(DoNotTranspile.class) == null))
                     throw new CompileException(CompileException.ERROR.THE_METHOD_MUST_BE_DECLARED_AS_DO_NOT_TRANSPILE,
                         """
-                            In @ErasedInterface each default method should be annotated with @DoNotTranspile
+                            In @ErasedInterface each default method must be annotated with @DoNotTranspile
                             """);
                 if (!classDef.implementing.isEmpty() &&
-                    classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) == null)
-                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE,
+                    classDef.implementing.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) == null))
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
                         """
                             Erased interface can be inherited only from erased interface
                             """);
@@ -63,7 +63,7 @@ public class TypeGen extends ClassBodyGen {
             if (classDef.implementing.isEmpty()) out.write("superclass");
             else {
                 if (classDef.implementing.get(0).type.tsym.getAnnotation(ErasedInterface.class) != null)
-                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_BE_INHERITED_ONLY_FROM_ERASED_INTERFACE,
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
                         """
                             Erased interface can be inherited only from erased interface
                             """);
@@ -138,12 +138,14 @@ public class TypeGen extends ClassBodyGen {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
         var extendClause = classDef.extending;
-        var implementClause = classDef.implementing;
+        var implementClause = classDef.implementing.stream()
+            .filter(n -> n.type.tsym.getAnnotation(ErasedInterface.class) == null)
+            .toList();
 
-        if (implementClause.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) != null))
-            throw new CompileException(CompileException.ERROR.CLASS_CANNOT_BE_INHERITED_FROM_ERASED_INTERFACE, """
-                Class cannot be inherited from ErasedInterface
-                """);
+//        if (implementClause.stream().anyMatch(n -> n.type.tsym.getAnnotation(ErasedInterface.class) != null))
+//            throw new CompileException(CompileException.ERROR.CLASS_CANNOT_BE_INHERITED_FROM_ERASED_INTERFACE, """
+//                Class cannot be inherited from ErasedInterface
+//                """);
 
         if (extendClause != null) {
             var superClass = extendClause.type.tsym.toString().replace(".", "_");
@@ -171,7 +173,8 @@ public class TypeGen extends ClassBodyGen {
         out.writeCBOpen(true);
 
         withClass(classDef, groups, () -> classDef.defs.stream()
-            .filter(d -> !(d instanceof JCTree.JCBlock)).filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
+            .filter(d -> !(d instanceof JCTree.JCBlock))
+            .filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
             .forEach(d -> d.accept(this)));
 
         out.writeCBEnd(!classDef.sym.isAnonymous());
