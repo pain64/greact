@@ -25,7 +25,8 @@ public class TypeGen extends ClassBodyGen {
     }
 
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
-        if (classDef.extending != null && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
+        if (classDef.extending != null && classDef.sym.getAnnotation(JSNativeAPI.class) == null
+            && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
             throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
                 "Prohibition of inheritance for @JSNativeAPI classes");
 
