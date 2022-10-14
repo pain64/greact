@@ -1,5 +1,7 @@
 package com.over64.greact.dom;
 
+import com.greact.model.ErasedInterface;
+
 public class Fragment {
     @FunctionalInterface
     public interface ViewFragment {

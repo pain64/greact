@@ -1,5 +1,6 @@
 package com.over64.greact.uikit;
 
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSExpression;
 import com.greact.model.MemberRef;
 import com.over64.greact.dom.HTMLNativeElements.Component1;

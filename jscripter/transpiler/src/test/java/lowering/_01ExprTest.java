@@ -412,7 +412,9 @@ public class _01ExprTest {
         assertCompiled(
             """
                 package js;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   @FunctionalInterface
                   interface My {
                     int apply(int i);
@@ -441,7 +443,9 @@ public class _01ExprTest {
         assertCompiled(
             """
                 package js;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   @FunctionalInterface
                   interface My {
                     void apply();

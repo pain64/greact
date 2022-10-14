@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RPC<T> {
 
+
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RPCEntryPoint {
         String value();

@@ -1,5 +1,6 @@
 package com.over64.greact.dom;
 
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSExpression;
 import com.greact.model.async;
 import com.over64.greact.dom.HTMLNativeElements.Component;

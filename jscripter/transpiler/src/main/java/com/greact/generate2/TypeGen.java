@@ -3,11 +3,13 @@ package com.greact.generate2;
 import com.greact.generate.util.CompileException;
 import com.greact.generate2.lookahead.HasSuperConstructorCall;
 import com.greact.model.DoNotTranspile;
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.Require;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 
 import javax.lang.model.element.Name;
@@ -23,17 +25,102 @@ public class TypeGen extends ClassBodyGen {
     }
 
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
-        if (classDef.extending != null && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
+        if (classDef.extending != null && classDef.sym.getAnnotation(JSNativeAPI.class) == null
+            && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
             throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
                 "Prohibition of inheritance for @JSNativeAPI classes");
 
         var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
+        var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
+        var isErasedInterface = isAnnotatedErasedInterface(classDef.sym);
+        var isFunctionalInterface = classDef.sym.getAnnotation(FunctionalInterface.class) != null;
+
         if (cssRequire != null)
             for (var dep : cssRequire.value())
                 out.addDependency(dep);
 
-        if (classDef.getKind() == Tree.Kind.INTERFACE) return;
+        if (isInterface) {
+            if (isErasedInterface) {
+                if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault() &&
+                    !isMethodAnnotatedDoNotTranspile((JCTree.JCMethodDecl) n)))
+                    throw new CompileException(CompileException.ERROR.THE_METHOD_MUST_BE_DECLARED_AS_DO_NOT_TRANSPILE,
+                        """
+                            In @ErasedInterface each default method must be annotated with @DoNotTranspile
+                            """);
+                if (!classDef.implementing.isEmpty() &&
+                    classDef.implementing.stream().anyMatch(n -> !isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(n))))
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
+                        """
+                            Erased interface can be inherited only from erased interface
+                            """);
+                return;
+            }
+
+            if (isFunctionalInterface) {
+                if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault()))
+                    throw new CompileException(CompileException.ERROR.THE_METHOD_CANNOT_BE_DECLARED_DEFAULT,
+                        """
+                            The method cannot be declared as default
+                            """);
+                if (classDef.implementing.stream().anyMatch(n -> n.type.tsym.getAnnotation(FunctionalInterface.class) == null))
+                    throw new CompileException(CompileException.ERROR.FUNCTIONAL_INTERFACE_CAN_EXTEND_ONLY_FUNCTIONAL_INTERFACE,
+                        """
+                            Functional interface can extend only functional interface
+                            """);
+                return;
+            }
+
+            var interfaceName = classDef.type.tsym.toString().replace(".", "_");
+
+            out.write("const _" + interfaceName + " = (superclass) => class "
+                + interfaceName
+                + " extends ");
+
+            if (classDef.implementing.isEmpty()) out.write("superclass");
+            else {
+                if (isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(classDef.implementing.get(0))))
+                    throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
+                        """
+                            Erased interface can be inherited only from erased interface
+                            """);
+                out.write("_" + classDef.implementing.get(0).type.tsym.toString().replace(".", "_") + "(superclass)");
+            }
+
+            out.writeCBOpen(true);
+            out.write("__iface_instance__(iface)");
+            out.writeCBOpen(true);
+            out.write("return (iface === _"
+                + interfaceName
+                + " || (typeof super.__iface_instance__ !== \"undefined\" && super.__iface_instance__(iface)));");
+            out.writeNL();
+            out.deepOut();
+            out.write("}");
+            out.writeNL();
+
+            var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
+            classDef.defs.forEach(def -> def.accept(new TreeScanner() {
+                @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
+                    if (isMethodAnnotatedDoNotTranspile(method) || !method.sym.isDefault())
+                        return;
+
+                    var name = method.getName();
+                    var group = groups.computeIfAbsent(name, __ -> new ArrayList<>());
+                    group.add(method);
+                }
+
+                @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
+            }));
+
+            withClass(classDef, groups, () -> classDef.defs.forEach(d -> d.accept(this)));
+
+            out.deepOut();
+            out.write("};");
+            out.writeNL();
+
+            return;
+        }
+
         if (classDef.sym.getAnnotation(JSNativeAPI.class) != null) return;
 
         if (!classDef.type.tsym.isAnonymous() &&
@@ -54,11 +141,11 @@ public class TypeGen extends ClassBodyGen {
                 out.write(classDef.getSimpleName().toString());
             }
         }
-        // -----
+
         var groups = new HashMap<Name, List<JCTree.JCMethodDecl>>();
         classDef.defs.forEach(def -> def.accept(new TreeScanner() {
             @Override public void visitMethodDef(JCTree.JCMethodDecl method) {
-                if (method.sym.getAnnotation(DoNotTranspile.class) != null) return;
+                if (isMethodAnnotatedDoNotTranspile(method)) return;
 
                 var name = method.getName();
                 var group = groups.computeIfAbsent(name, __ -> new ArrayList<>());
@@ -68,11 +155,25 @@ public class TypeGen extends ClassBodyGen {
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
         var extendClause = classDef.extending;
+        var implementClause = classDef.implementing.stream()
+            .filter(n -> !isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(n)))
+            .toList();
+
         if (extendClause != null) {
             var superClass = extendClause.type.tsym.toString().replace(".", "_");
             out.addDependency(extendClause.type.tsym.toString() + ".js");
             out.write(" extends ");
-            out.write(superClass);
+            if (!implementClause.isEmpty()) {
+                out.write("_");
+                implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
+                out.write(superClass);
+                implementClause.forEach(n -> out.write(")"));
+            } else out.write(superClass);
+        } else if (!implementClause.isEmpty()) {
+            out.write(" extends _");
+            implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
+            out.write("Object");
+            implementClause.forEach(n -> out.write(")"));
         } else {
             var constructors = groups.get(names.fromString("<init>"));
             if (constructors != null) {
@@ -84,11 +185,10 @@ public class TypeGen extends ClassBodyGen {
 
         out.writeCBOpen(true);
 
-        withClass(classDef, groups, () -> {
-            classDef.defs.stream()
-                .filter(d -> !(d instanceof JCTree.JCBlock)).filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
-                .forEach(d -> d.accept(this));
-        });
+        withClass(classDef, groups, () -> classDef.defs.stream()
+            .filter(d -> !(d instanceof JCTree.JCBlock))
+            .filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
+            .forEach(d -> d.accept(this)));
 
         out.writeCBEnd(!classDef.sym.isAnonymous());
 
@@ -102,5 +202,13 @@ public class TypeGen extends ClassBodyGen {
                 .forEach(d -> d.accept(this)));
             out.writeCBEnd(!classDef.sym.isAnonymous());
         }
+    }
+
+    boolean isMethodAnnotatedDoNotTranspile(JCTree.JCMethodDecl methodDeclaration) {
+        return methodDeclaration.sym.getAnnotation(DoNotTranspile.class) != null;
+    }
+
+    boolean isAnnotatedErasedInterface(Symbol.ClassSymbol classSymbol) {
+        return classSymbol.getAnnotation(ErasedInterface.class) != null;
     }
 }

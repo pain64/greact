@@ -4,6 +4,7 @@ import com.greact.generate.util.CompileException;
 import com.greact.generate.util.Overloads;
 import com.greact.generate2.lookahead.HasAsyncCalls;
 import com.greact.model.ClassRef;
+import com.greact.model.ErasedInterface;
 import com.greact.model.JSNativeAPI;
 import com.greact.model.async;
 import com.sun.tools.javac.code.Flags;
@@ -577,6 +578,12 @@ abstract class ExpressionGen extends VisitorWithContext {
         var type = instanceOf.getType();
         var ofType = getRightName(TreeInfo.symbol(type));
 
+        if (type.type.tsym.getAnnotation(ErasedInterface.class) != null)
+            throw new CompileException(CompileException.ERROR.INSTANCE_OF_NOT_APPLICABLE_TO_ERASED_INTERFACE,
+                """
+                    Cannot apply instanceof operator to @ErasedInterface
+                    """);
+
         // FIXME: disable for arrays (aka x instanceof String[])
         Consumer<Runnable> checkGen = switch (ofType) {
             case "java_lang_String" -> eGen -> {
@@ -590,10 +597,18 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(" == 'number'");
             };
             default -> eGen -> {
-                eGen.run();
-                out.write(" instanceof ");
-                if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
-                else out.write(type.type.tsym.name.toString());
+                if (type.type.isInterface()) { // (n => (typeof n.__iface_instance__ !== "undefined" && n.__iface_instance__(_InterfaceC)))(c)
+                    out.write("(n => (typeof n.__iface_instance__ !== \"undefined\" && n.__iface_instance__( ");
+                    out.write(ofType);
+                    out.write(")))(");
+                    eGen.run();
+                    out.write(")");
+                } else {
+                    eGen.run();
+                    out.write(" instanceof ");
+                    if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
+                    else out.write(type.type.tsym.name.toString());
+                }
             };
         };
 

@@ -1,5 +1,6 @@
 package com.over64.greact.uikit.controls;
 
+import com.greact.model.ErasedInterface;
 import com.over64.greact.dom.HTMLNativeElements.div;
 import com.over64.greact.dom.HTMLNativeElements.slot;
 

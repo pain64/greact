@@ -115,7 +115,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -172,10 +174,16 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
+                    
                     public interface A {
                       @async void foo();
                     }""",
                 """
+                    const _js_A = (superclass) => class js_A extends superclass {
+                      __iface_instance__(iface) {
+                        return (iface === _js_A || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
+                      }
+                    };
                     """),
             new CompileAssert.CompileCase("js.B",
                 """
@@ -185,7 +193,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js_B {
+                    class js_B extends _js_A(Object) {
                       constructor() {
                       }
                       _foo() {
@@ -226,7 +234,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public abstract class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -254,7 +264,9 @@ public class _08AsyncAwait {
                 """
                     package js;
                     import com.greact.model.async;
+                    import com.greact.model.ErasedInterface;
                     public class Test {
+                      @ErasedInterface
                       interface Foo {
                         @async void foo();
                       }
@@ -286,7 +298,9 @@ public class _08AsyncAwait {
             """
                 package js;
                 import com.greact.model.async;
+                import com.greact.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
