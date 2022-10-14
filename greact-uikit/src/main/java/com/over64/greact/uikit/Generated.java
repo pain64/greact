@@ -5,7 +5,6 @@ import com.greact.model.MemberRef;
 import com.greact.model.async;
 
 public class Generated<T, U> {
-    @ErasedInterface
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T supply();
     }

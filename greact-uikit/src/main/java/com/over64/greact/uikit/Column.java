@@ -30,7 +30,6 @@ public class Column<T, U> {
     public Component2<td, U, T> view = (value, row) ->
         new td(isNullOrUndefined(value) ? "" : value.toString());
 
-    @ErasedInterface
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
     }

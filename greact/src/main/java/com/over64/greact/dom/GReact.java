@@ -60,8 +60,7 @@ public class GReact {
 
         return el;
     }
-    @ErasedInterface
+
     @FunctionalInterface public interface AsyncRunnable { @async void run(); }
-    @ErasedInterface
     @FunctionalInterface public interface AsyncCallable<T> { @async T call(); }
 }

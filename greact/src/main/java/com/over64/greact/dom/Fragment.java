@@ -3,12 +3,10 @@ package com.over64.greact.dom;
 import com.greact.model.ErasedInterface;
 
 public class Fragment {
-    @ErasedInterface
     @FunctionalInterface
     public interface ViewFragment {
         void apply();
     }
-    @ErasedInterface
     @FunctionalInterface
     public interface Renderer {
         void render();

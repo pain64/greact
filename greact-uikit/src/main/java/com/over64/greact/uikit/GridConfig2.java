@@ -8,11 +8,9 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 import java.util.function.BiFunction;
 
 public class GridConfig2<T> {
-    @ErasedInterface
     @FunctionalInterface public interface AsyncHandler<T> {
         @async void handle(T value);
     }
-    @ErasedInterface
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T supply(T value);
     }

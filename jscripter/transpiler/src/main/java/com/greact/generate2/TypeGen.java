@@ -34,6 +34,7 @@ public class TypeGen extends ClassBodyGen {
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
         var isErasedInterface = isAnnotatedErasedInterface(classDef.sym);
+        var isFunctionalInterface = classDef.sym.getAnnotation(FunctionalInterface.class) != null;
 
         if (cssRequire != null)
             for (var dep : cssRequire.value())
@@ -52,6 +53,20 @@ public class TypeGen extends ClassBodyGen {
                     throw new CompileException(CompileException.ERROR.ERASED_INTERFACE_CAN_EXTEND_ONLY_ERASED_INTERFACE,
                         """
                             Erased interface can be inherited only from erased interface
+                            """);
+                return;
+            }
+
+            if (isFunctionalInterface) {
+                if (classDef.defs.stream().anyMatch(n -> ((JCTree.JCMethodDecl) n).sym.isDefault()))
+                    throw new CompileException(CompileException.ERROR.THE_METHOD_CANNOT_BE_DECLARED_DEFAULT,
+                        """
+                            The method cannot be declared as default
+                            """);
+                if (classDef.implementing.stream().anyMatch(n -> n.type.tsym.getAnnotation(FunctionalInterface.class) == null))
+                    throw new CompileException(CompileException.ERROR.FUNCTIONAL_INTERFACE_CAN_EXTEND_ONLY_FUNCTIONAL_INTERFACE,
+                        """
+                            Functional interface can extend only functional interface
                             """);
                 return;
             }

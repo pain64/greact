@@ -30,13 +30,13 @@ public class HTMLNativeElements {
     public interface Component3<T extends HTMLElement, A1, A2, A3>  extends Component<T> {
         @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
-    @ErasedInterface
 
+    @ErasedInterface
     public @interface DomProperty {
         String value();
     }
-    @ErasedInterface
 
+    @ErasedInterface
     public interface NativeElementAsComponent<T extends HTMLElement> extends Component0<T> {
         @DoNotTranspile
         @Override default Component0<T> mount() { return null; }

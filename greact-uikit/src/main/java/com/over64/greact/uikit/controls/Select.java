@@ -8,7 +8,6 @@ import com.over64.greact.dom.HTMLNativeElements.*;
 
 @Require.CSS("select.css")
 public class Select<T> extends Control<T> {
-    @ErasedInterface
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
     }
