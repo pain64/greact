@@ -2,7 +2,6 @@ package com.greact.generate2;
 
 import com.sun.tools.javac.util.Name;
 
-import javax.imageio.IIOException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -30,6 +29,11 @@ public class Output {
 
     public void write(byte[] bytes) {
         try {
+            if (newLine) {
+                for (var i = 0; i < deep; i++)
+                    jsOut.write(' ');
+                newLine = false;
+            }
             jsOut.write(bytes);
         } catch (IOException e) {
             throw new RuntimeException("Write error");
