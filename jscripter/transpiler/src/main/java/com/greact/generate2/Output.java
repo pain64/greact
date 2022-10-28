@@ -27,45 +27,29 @@ public class Output {
     public void deepIn() { deep += 2; newLine = true; }
     public void deepOut() { deep -= 2; newLine = true; }
 
-    public void write(byte[] bytes) {
+    public void write(byte[] bytes, int off, int len) {
         try {
             if (newLine) {
                 for (var i = 0; i < deep; i++)
                     jsOut.write(' ');
                 newLine = false;
             }
-            jsOut.write(bytes);
+            jsOut.write(bytes, off, len);
         } catch (IOException e) {
             throw new RuntimeException("Write error");
         }
+    }
+
+    public void write(byte[] bytes) {
+        write(bytes, 0, bytes.length);
     }
 
     public void write(String code) {
-        try {
-            if (newLine) {
-                for (var i = 0; i < deep; i++)
-                    jsOut.write(' ');
-                newLine = false;
-            }
-
-            jsOut.write(code.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException("Write error");
-        }
+        write(code.getBytes(StandardCharsets.UTF_8));
     }
 
     public void write(Name name) {
-        try {
-            if (newLine) {
-                for (var i = 0; i < deep; i++)
-                    jsOut.write(' ');
-                newLine = false;
-            }
-
-            jsOut.write(name.getByteArray(), name.getByteOffset(), name.getByteLength());
-        } catch (IOException e) {
-            throw new RuntimeException("Write error");
-        }
+        write(name.getByteArray(), name.getByteOffset(), name.getByteLength());
     }
 
     public void writeLn(String code) {
