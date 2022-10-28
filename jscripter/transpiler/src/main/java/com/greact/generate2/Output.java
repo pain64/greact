@@ -28,6 +28,14 @@ public class Output {
     public void deepIn() { deep += 2; newLine = true; }
     public void deepOut() { deep -= 2; newLine = true; }
 
+    public void write(byte[] bytes) {
+        try {
+            jsOut.write(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException("Write error");
+        }
+    }
+
     public void write(String code) {
         try {
             if (newLine) {

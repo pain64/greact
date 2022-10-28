@@ -206,7 +206,7 @@ abstract class StatementGen extends ExpressionGen {
                 out.mkString(alternatives, alt -> {
                     out.write(firstCatchVar);
                     out.write(" instanceof ");
-                    out.write(replaceOneSymbolInName(alt.type.tsym.getQualifiedName(), ".", "_"));
+                    out.write(replaceOneSymbolInName(alt.type.tsym.getQualifiedName(), '.', '_'));
                 }, "", " || ", "");
 
                 out.write(")");

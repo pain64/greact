@@ -182,19 +182,19 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (id.sym instanceof Symbol.ClassSymbol) {
             var owner = id.sym.owner;
             if (owner != null) {
-                out.write(replaceOneSymbolInName(owner.getQualifiedName(), ".", "_"));
+                out.write(replaceOneSymbolInName(owner.getQualifiedName(), '.', '_'));
                 var delim = id.sym.isStatic() ? "." : "_";
                 out.write(delim);
                 out.write(id.name);
             } else
-                out.write(replaceOneSymbolInName(id.sym.getQualifiedName(), ".", "_"));
+                out.write(replaceOneSymbolInName(id.sym.getQualifiedName(), '.', '_'));
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             var isStatic_ = id.sym.isStatic();
 
             if (id.name.toString().equals("super")) out.write("super");
             else if (isStatic_) {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
-                    out.write(replaceOneSymbolInName(id.sym.owner.getQualifiedName(), ".", "_"));
+                    out.write(replaceOneSymbolInName(id.sym.owner.getQualifiedName(), '.', '_'));
                     out.write("._");
                 } else if (isStaticMethodCall) out.write("this._");
                 else out.write("this.constructor._");
@@ -463,11 +463,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (onType.tsym.isStatic() &&
                         onType.tsym.owner instanceof Symbol.ClassSymbol owner) {
                         // static inner class
-                        out.write(replaceOneSymbolInName(owner.getQualifiedName(), ".", "_"));
+                        out.write(replaceOneSymbolInName(owner.getQualifiedName(), '.', '_'));
                         out.write(".");
                         out.write(onType.tsym.name);
                     } else
-                        out.write(replaceOneSymbolInName(onType.tsym.getQualifiedName(), ".", "_"));
+                        out.write(replaceOneSymbolInName(onType.tsym.getQualifiedName(), '.', '_'));
                     out.write("._");
                     out.write(prop.name);
 
@@ -681,14 +681,21 @@ abstract class ExpressionGen extends VisitorWithContext {
         return getName(symbol).substring(1);
     }
 
-    private static String getName(Symbol symbol) {
-        if (symbol == null) return "";
-        if (symbol.owner == null) return symbol.name.toString();
+    private static StringBuilder getName(Symbol symbol) {
+        if (symbol == null) return new StringBuilder();
+        if (symbol.owner == null) return new StringBuilder(symbol.name);
 
-        if (symbol.owner.getKind().isClass()) return getName(symbol.owner) + "." + symbol.name;
-        else return getName(symbol.owner) + "_" + symbol.name;
+        if (symbol.owner.getKind().isClass())
+            return new StringBuilder(getName(symbol.owner)).append(".").append(symbol.name);
+        else
+            return new StringBuilder(getName(symbol.owner)).append("_").append(symbol.name);
     }
-    public static String replaceOneSymbolInName(Name name, String target, String replacement) {
-        return name.toString().replace(target, replacement);
+    public static byte[] replaceOneSymbolInName(Name name, int target, int replacement) {
+        var nameBytes = name.toUtf();
+
+        for (int i = 0; i < nameBytes.length; i++)
+            if (nameBytes[i] == target) nameBytes[i] = (byte) replacement;
+
+        return nameBytes;
     }
 }
