@@ -25,7 +25,7 @@ abstract class StatementGen extends ExpressionGen {
         out.write("break");
         if (brk.label != null) {
             out.write(" ");
-            out.write(brk.label.toString());
+            out.write(brk.label);
         }
         out.writeLn(";");
     }
@@ -34,7 +34,7 @@ abstract class StatementGen extends ExpressionGen {
         out.write("continue");
         if (cont.label != null) {
             out.write(" ");
-            out.write(cont.label.toString());
+            out.write(cont.label);
         }
         out.writeLn(";");
     }
@@ -43,7 +43,7 @@ abstract class StatementGen extends ExpressionGen {
         var isConst = varDef.sym.isFinal() ||
             (varDef.sym.flags_field & Flags.EFFECTIVELY_FINAL) != 0;
         out.write(isConst ? "const " : "let ");
-        out.write(varDef.getName().toString());
+        out.write(varDef.getName());
         out.write(" = ");
 
         if (varDef.init != null) varDef.init.accept(this);
@@ -110,7 +110,7 @@ abstract class StatementGen extends ExpressionGen {
         else
             out.mkString(forStmt.init, init -> {
                 var varDef = (JCTree.JCVariableDecl) init;
-                out.write(varDef.name.toString());
+                out.write(varDef.name);
                 out.write(" = ");
                 varDef.init.accept(this);
             }, "(let ", ", ", "; ");
@@ -129,7 +129,7 @@ abstract class StatementGen extends ExpressionGen {
     @Override public void visitForeachLoop(JCTree.JCEnhancedForLoop forEach) {
         var varDef = forEach.getVariable();
         out.write("for(let ");
-        out.write(varDef.getName().toString());
+        out.write(varDef.getName());
         out.write(" of ");
         forEach.expr.accept(this);
         out.write(")");
@@ -137,7 +137,7 @@ abstract class StatementGen extends ExpressionGen {
     }
 
     @Override public void visitLabelled(JCTree.JCLabeledStatement lStmt) {
-        out.write(lStmt.label.toString());
+        out.write(lStmt.label);
         out.writeLn(":");
         lStmt.body.accept(this);
     }
@@ -187,14 +187,14 @@ abstract class StatementGen extends ExpressionGen {
         if (!catchList.isEmpty()) {
             out.write(" catch(");
             var firstCatchVar = tryStmt.getCatches().get(0)
-                .getParameter().getName().toString();
+                .getParameter().getName();
             out.write(firstCatchVar);
             out.write(")");
             out.writeCBOpen(true);
 
             for (var i = 0; i < catchList.size(); i++) {
                 var ct = catchList.get(i);
-                var catchVar = ct.getParameter().getName().toString();
+                var catchVar = ct.getParameter().getName();
                 var catchType = ct.getParameter().getType();
                 var alternatives = catchType instanceof JCTree.JCTypeUnion
                     ? ((JCTree.JCTypeUnion) catchType).alternatives
@@ -206,8 +206,7 @@ abstract class StatementGen extends ExpressionGen {
                 out.mkString(alternatives, alt -> {
                     out.write(firstCatchVar);
                     out.write(" instanceof ");
-                    out.write(alt.type.tsym.getQualifiedName().toString()
-                        .replace(".", "_"));
+                    out.write(replaceOneSymbolInName(alt.type.tsym.getQualifiedName(), ".", "_"));
                 }, "", " || ", "");
 
                 out.write(")");

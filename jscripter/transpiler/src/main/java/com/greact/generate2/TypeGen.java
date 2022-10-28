@@ -130,7 +130,7 @@ public class TypeGen extends ClassBodyGen {
                 throw new RuntimeException("Cannot compile non static inner classes yet");
 
             out.write("static ");
-            out.write(classDef.getSimpleName().toString());
+            out.write(classDef.getSimpleName());
             out.write(" = class");
         } else {
             out.write("class");
@@ -138,7 +138,7 @@ public class TypeGen extends ClassBodyGen {
                 out.write(" ");
                 out.write(cu.getPackage().getPackageName().toString().replace(".", "_"));
                 out.write("_");
-                out.write(classDef.getSimpleName().toString());
+                out.write(classDef.getSimpleName());
             }
         }
 

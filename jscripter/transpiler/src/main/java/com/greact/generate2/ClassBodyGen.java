@@ -26,7 +26,7 @@ abstract class ClassBodyGen extends StatementGen {
         var isEnclosingClassIsNested = varDef.sym.owner.owner.getKind().isClass();
         if (varDef.sym.isStatic() && !isEnclosingClassIsNested) {
             out.write("static ");
-            out.write(varDef.getName().toString());
+            out.write(varDef.getName());
             out.write(" = ");
 
             if (varDef.init != null) varDef.init.accept(this);
@@ -40,7 +40,7 @@ abstract class ClassBodyGen extends StatementGen {
                 out.write(getRightName(varDef.sym));
             else {
                 out.write("static ");
-                out.write(varDef.sym.getSimpleName().toString());
+                out.write(varDef.sym.getSimpleName());
             }
             out.write(" = ");
 
@@ -52,7 +52,7 @@ abstract class ClassBodyGen extends StatementGen {
 
     void initField(JCTree.JCVariableDecl varDef) {
         out.write("this.");
-        out.write(varDef.getName().toString());
+        out.write(varDef.getName());
         out.write(" = ");
 
         if (varDef.getInitializer() != null)
@@ -69,9 +69,9 @@ abstract class ClassBodyGen extends StatementGen {
         if (((Symbol.ClassSymbol) method.sym.owner).isRecord())
             method.params.forEach(varDef -> {
                 out.write("this.");
-                out.write(varDef.getName().toString());
+                out.write(varDef.getName());
                 out.write(" = ");
-                out.write(varDef.getName().toString());
+                out.write(varDef.getName());
                 out.writeLn(";");
             });
     }
@@ -155,7 +155,7 @@ abstract class ClassBodyGen extends StatementGen {
             out.mkString(params, param -> {
                 if ((param.sym.flags_field & Flags.VARARGS) != 0)
                     out.write("...");
-                out.write(param.name.toString());
+                out.write(param.name);
             }, "(", ", ", ")");
         else
             out.write("($over, ...__args)");
@@ -219,7 +219,7 @@ abstract class ClassBodyGen extends StatementGen {
                     out.mkString(m.snd.params, varDef -> {
                         if ((varDef.sym.flags_field & Flags.VARARGS) != 0)
                             out.write("...");
-                        out.write(varDef.name.toString());
+                        out.write(varDef.name);
                     }, "const [", ", ", "] = __args;");
                     out.writeNL();
                 }

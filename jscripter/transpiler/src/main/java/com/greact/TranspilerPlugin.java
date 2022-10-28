@@ -16,6 +16,7 @@ import org.apache.commons.cli.*;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -110,7 +111,7 @@ public class TranspilerPlugin implements Plugin {
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js.dep");
 
-                        try (var writer = new PrintWriter(jsFile.openWriter());
+                        try (var writer = new DataOutputStream(jsFile.openOutputStream());
                              var depWriter = new PrintWriter(depFile.openWriter())) {
 
                             var typeGen = new com.greact.generate2.TypeGen();

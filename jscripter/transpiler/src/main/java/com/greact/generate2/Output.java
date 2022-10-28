@@ -1,20 +1,26 @@
 package com.greact.generate2;
 
+import com.sun.tools.javac.util.Name;
+
+import javax.imageio.IIOException;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class Output {
-    final PrintWriter jsOut;
+    final DataOutputStream jsOut;
     final PrintWriter jsDeps;
     final Set<String> dependencies = new HashSet<>();
 
     private int deep = 0;
     private boolean newLine = false;
 
-    public Output(PrintWriter jsOut, PrintWriter jsDeps) {
+    public Output(DataOutputStream jsOut, PrintWriter jsDeps) {
         this.jsOut = jsOut;
         this.jsDeps = jsDeps;
     }
@@ -23,28 +29,54 @@ public class Output {
     public void deepOut() { deep -= 2; newLine = true; }
 
     public void write(String code) {
-        if (newLine) {
-            for (var i = 0; i < deep; i++)
-                jsOut.print(' ');
-            newLine = false;
-        }
+        try {
+            if (newLine) {
+                for (var i = 0; i < deep; i++)
+                    jsOut.write(' ');
+                newLine = false;
+            }
 
-        jsOut.write(code);
+            jsOut.write(code.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Write error");
+        }
+    }
+
+    public void write(Name name) {
+        try {
+            if (newLine) {
+                for (var i = 0; i < deep; i++)
+                    jsOut.write(' ');
+                newLine = false;
+            }
+
+            jsOut.write(name.getByteArray(), name.getByteOffset(), name.getByteLength());
+        } catch (IOException e) {
+            throw new RuntimeException("Write error");
+        }
     }
 
     public void writeLn(String code) {
-        write(code);
-        jsOut.print("\n");
-        newLine = true;
+        try {
+            write(code);
+            jsOut.write('\n');
+            newLine = true;
+        } catch (IOException e) {
+            throw new RuntimeException("Write error");
+        }
     }
 
     public void writeNL() {
-        jsOut.print("\n");
-        newLine = true;
+        try {
+            jsOut.write('\n');
+            newLine = true;
+        } catch (IOException e) {
+            throw new RuntimeException("Write error");
+        }
     }
 
     public void writeCBOpen(boolean spaceBefore) {
-        if(spaceBefore) write(" ");
+        if (spaceBefore) write(" ");
         writeLn("{"); deep += 2;
     }
     public void writeCBEnd(boolean newLine) {

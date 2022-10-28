@@ -13,15 +13,16 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
@@ -65,6 +66,12 @@ abstract class ExpressionGen extends VisitorWithContext {
         return tsym.getQualifiedName().equals(super.names.fromString("com.greact.model.MemberRef"));
     }
 
+    boolean isNotNativeSymbol(Symbol.TypeSymbol tsym) {
+        return !tsym.getQualifiedName().equals(super.names.fromString("java.lang.Object")) &&
+            !tsym.getQualifiedName().equals(super.names.fromString("java.lang.String")) && // smart check native?
+            !tsym.getQualifiedName().equals(super.names.fromString("java.lang.Integer"));
+    }
+
     void reflectWriteClassMembers(Type classType) {
         if (classType.tsym instanceof Symbol.ClassSymbol classSym) {
             out.writeCBOpen(false);
@@ -89,7 +96,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.writeCBOpen(false);
                 if (comp.type.tsym instanceof Symbol.ClassSymbol) {
                     out.write("_name: () => '");
-                    out.write(comp.name.toString());
+                    out.write(comp.name);
                     out.writeLn("',");
                     out.write("___class__: () => (");
                     reflectWriteClassMembers(comp.type);
@@ -151,7 +158,7 @@ abstract class ExpressionGen extends VisitorWithContext {
     @Override public void visitIdent(JCTree.JCIdent id) {
         if (id.sym instanceof Symbol.VarSymbol varSym) {
             if (varSym.owner instanceof Symbol.MethodSymbol)
-                out.write(id.getName().toString());
+                out.write(id.getName());
             else {
                 if (id.getName().toString().equals("this"))
                     out.write("this");
@@ -169,37 +176,37 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (index != classDefs.size() - 1 && index != -1)
                         out.write(String.valueOf(index));
                     out.write(".");
-                    out.write(id.getName().toString());
+                    out.write(id.getName());
                 }
             }
         } else if (id.sym instanceof Symbol.ClassSymbol) {
             var owner = id.sym.owner;
             if (owner != null) {
-                out.write(owner.toString().replace(".", "_"));
+                out.write(replaceOneSymbolInName(owner.getQualifiedName(), ".", "_"));
                 var delim = id.sym.isStatic() ? "." : "_";
                 out.write(delim);
-                out.write(id.name.toString());
+                out.write(id.name);
             } else
-                out.write(id.sym.toString().replace(".", "_"));
+                out.write(replaceOneSymbolInName(id.sym.getQualifiedName(), ".", "_"));
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             var isStatic_ = id.sym.isStatic();
 
             if (id.name.toString().equals("super")) out.write("super");
-            else if (id.sym.isStatic()) {
+            else if (isStatic_) {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
-                    out.write(id.sym.owner.toString().replace(".", "_"));
+                    out.write(replaceOneSymbolInName(id.sym.owner.getQualifiedName(), ".", "_"));
                     out.write("._");
                 } else if (isStaticMethodCall) out.write("this._");
                 else out.write("this.constructor._");
-                out.write(id.name.toString());
+                out.write(id.name);
             } else {
                 out.write("this.");
                 if ((id.sym.flags_field & Flags.NATIVE) == 0) out.write("_");
-                out.write(id.name.toString());
+                out.write(id.name);
             }
             // withStaticMethodCall(isStatic_, () -> ); // TODO: Make this
         } else
-            out.write(id.name.toString());
+            out.write(id.name);
     }
 
     @Override public void visitConditional(JCTree.JCConditional ternary) {
@@ -283,7 +290,7 @@ abstract class ExpressionGen extends VisitorWithContext {
     @Override public void visitSelect(JCTree.JCFieldAccess select) {
         select.selected.accept(this);
         out.write(select.selected.type instanceof Type.PackageType ? "_" : ".");
-        out.write(select.name.toString());
+        out.write(select.name);
     }
 
     @Override public void visitTypeCast(JCTree.JCTypeCast cast) {
@@ -321,7 +328,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (isAsync && visitor.hasAsyncCalls) out.write("async ");
 
             out.mkString(lmb.params, arg ->
-                out.write(arg.getName().toString()), "(", ", ", ") => ");
+                out.write(arg.getName()), "(", ", ", ") => ");
 
             super.lambdaAsyncInference.put(lmb, visitor.hasAsyncCalls);
             withAsyncContext(isAsync, () -> lmb.body.accept(this));
@@ -444,12 +451,10 @@ abstract class ExpressionGen extends VisitorWithContext {
 
                             if (!isRecordAccessor &&
                                 (prop.sym.flags_field & Flags.NATIVE) == 0 &&
-                                !prop.sym.owner.toString().equals("java.lang.Object") &&
-                                !prop.sym.owner.toString().equals("java.lang.String") && // How smart check native?
-                                !prop.sym.owner.toString().equals("java.lang.Integer")
+                                isNotNativeSymbol(prop.sym.owner.type.tsym)
                             ) out.write("_");
 
-                            out.write(prop.name.toString());
+                            out.write(prop.name);
                         }
                     }
                     if (!isRecordAccessor) out.write("(");
@@ -458,13 +463,13 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (onType.tsym.isStatic() &&
                         onType.tsym.owner instanceof Symbol.ClassSymbol owner) {
                         // static inner class
-                        out.write(owner.toString().replace(".", "_"));
+                        out.write(replaceOneSymbolInName(owner.getQualifiedName(), ".", "_"));
                         out.write(".");
-                        out.write(onType.tsym.name.toString());
+                        out.write(onType.tsym.name);
                     } else
-                        out.write(onType.tsym.toString().replace(".", "_"));
+                        out.write(replaceOneSymbolInName(onType.tsym.getQualifiedName(), ".", "_"));
                     out.write("._");
-                    out.write(prop.name.toString());
+                    out.write(prop.name);
 
                     if (info.mode() == Overloads.Mode.AS_STATIC) {
                         out.write(".call(");
@@ -522,9 +527,9 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else throw memberRefUsedIncorrect();
 
             out.write("{_memberNames: () => ['");
-            out.write(ref.name.toString());
+            out.write(ref.name);
             out.write("'], _value: (v) => v.");
-            out.write(ref.name.toString());
+            out.write(ref.name);
             out.write(", _className: () => '");
             out.write(((Symbol.ClassSymbol) ref.type.allparams().get(1).tsym).className());
             out.write("'}");
@@ -539,7 +544,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     "_" + ref.expr;
                 out.write(fullClassName);
                 out.write("._");
-                out.write(ref.name.toString());
+                out.write(ref.name);
                 out.write(".bind(");
                 out.write(fullClassName);
             } else if (ref.toString().endsWith("new")) {
@@ -558,12 +563,12 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else {
                 if (ref.expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
                     out.write("((self) => self._");
-                    out.write(ref.name.toString());
+                    out.write(ref.name);
                     out.write("()");
                 } else {
                     ref.expr.accept(this);
                     out.write("._");
-                    out.write(ref.name.toString());
+                    out.write(ref.name);
                     out.write(".bind(");
                     ref.expr.accept(this);
                 }
@@ -607,7 +612,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     eGen.run();
                     out.write(" instanceof ");
                     if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
-                    else out.write(type.type.tsym.name.toString());
+                    else out.write(type.type.tsym.name);
                 }
             };
         };
@@ -619,7 +624,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             //  1. before method body gen
             //    - find all insanceof
             //    - write all pattern vars at function begin
-            var name = ((JCTree.JCBindingPattern) pattern).var.name.toString();
+            var name = ((JCTree.JCBindingPattern) pattern).var.name;
             out.write("(");
             out.write(name);
             out.write(" = ");
@@ -682,5 +687,8 @@ abstract class ExpressionGen extends VisitorWithContext {
 
         if (symbol.owner.getKind().isClass()) return getName(symbol.owner) + "." + symbol.name;
         else return getName(symbol.owner) + "_" + symbol.name;
+    }
+    public static String replaceOneSymbolInName(Name name, String target, String replacement) {
+        return name.toString().replace(target, replacement);
     }
 }
