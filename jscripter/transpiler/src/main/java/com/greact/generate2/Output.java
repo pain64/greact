@@ -122,8 +122,8 @@ public class Output {
                     jsOut.write((byte) (128 | c & 63));
                 } else if (Character.isSurrogate(c)) {
                     var uc = -1;
-                    char c2;
-                    if (Character.isHighSurrogate(c) && sp < sl && Character.isLowSurrogate(c2 = getCharFromByteArray(val, sp))) {
+                    var c2 = getCharFromByteArray(val, sp);
+                    if (Character.isHighSurrogate(c) && sp < sl && Character.isLowSurrogate(c2)) {
                         uc = Character.toCodePoint(c, c2);
                     }
                     jsOut.write((byte) (240 | uc >> 18));
