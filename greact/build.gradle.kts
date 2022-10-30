@@ -40,6 +40,7 @@ tasks.withType<JavaCompile> {
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
     jvmArgs = listOf("--enable-preview",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",

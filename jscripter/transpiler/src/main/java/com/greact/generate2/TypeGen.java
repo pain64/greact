@@ -71,12 +71,10 @@ public class TypeGen extends ClassBodyGen {
                 return;
             }
 
-            var interfaceName = replaceOneSymbolInName(classDef.type.tsym.getQualifiedName(), '.', '_');
-
             out.write("const _");
-            out.write(interfaceName);
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
             out.write(" = (superclass) => class ");
-            out.write(interfaceName);
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
             out.write(" extends ");
 
             if (classDef.implementing.isEmpty()) out.write("superclass");
@@ -87,7 +85,7 @@ public class TypeGen extends ClassBodyGen {
                             Erased interface can be inherited only from erased interface
                             """);
                 out.write("_");
-                out.write(replaceOneSymbolInName(classDef.implementing.get(0).type.tsym.getQualifiedName(), '.', '_'));
+                out.replaceSymbolAndWrite(classDef.implementing.get(0).type.tsym.getQualifiedName(), '.', '_');
                 out.write("(superclass)");
             }
 
@@ -95,7 +93,7 @@ public class TypeGen extends ClassBodyGen {
             out.write("__iface_instance__(iface)");
             out.writeCBOpen(true);
             out.write("return (iface === _");
-            out.write(interfaceName);
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
             out.write(" || (typeof super.__iface_instance__ !== \"undefined\" && super.__iface_instance__(iface)));");
             out.writeNL();
             out.deepOut();
@@ -140,7 +138,7 @@ public class TypeGen extends ClassBodyGen {
             out.write("class");
             if (!classDef.type.tsym.isAnonymous()) {
                 out.write(" ");
-                out.write(replaceOneSymbolInName(cu.getPackage().getPackageName().type.tsym.getQualifiedName(), '.', '_'));
+                out.replaceSymbolAndWrite(cu.getPackage().getPackageName().type.tsym.getQualifiedName(), '.', '_');
                 out.write("_");
                 out.write(classDef.getSimpleName());
             }
@@ -164,22 +162,21 @@ public class TypeGen extends ClassBodyGen {
             .toList();
 
         if (extendClause != null) {
-            var superClass = replaceOneSymbolInName(extendClause.type.tsym.getQualifiedName(), '.', '_');
             out.addDependency(extendClause.type.tsym.toString() + ".js");
             out.write(" extends ");
             if (!implementClause.isEmpty()) {
                 out.write("_");
                 implementClause.forEach(n -> {
-                    out.write(replaceOneSymbolInName(n.type.tsym.getQualifiedName(), '.', '_'));
+                    out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
                     out.write("(");
                 });
-                out.write(superClass);
+                out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
                 implementClause.forEach(n -> out.write(")"));
-            } else out.write(superClass);
+            } else out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
         } else if (!implementClause.isEmpty()) {
             out.write(" extends _");
             implementClause.forEach(n -> {
-                out.write(replaceOneSymbolInName(n.type.tsym.getQualifiedName(), '.', '_'));
+                out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
                 out.write("(");
             });
             out.write("Object");

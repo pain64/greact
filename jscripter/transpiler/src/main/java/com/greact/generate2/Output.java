@@ -1,15 +1,13 @@
 package com.greact.generate2;
 
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.util.Name;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -64,6 +62,41 @@ public class Output {
 
     public void write(Name name) {
         write(name.getByteArray(), name.getByteOffset(), name.getByteLength());
+    }
+
+    public void replaceSymbolAndWrite(Name name, int target, int replacement) {
+        try {
+            if (newLine) {
+                for (var i = 0; i < deep; i++)
+                    jsOut.write(' ');
+                newLine = false;
+            }
+            for (var i = 0; i < name.getByteLength(); i++) {
+                var byte_ = name.getByteArray()[name.getByteOffset() + i];
+                if (byte_ == target) jsOut.write(replacement);
+                else jsOut.write(byte_);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void writeRightName(Symbol symbol) {
+        if (symbol == null) return;
+        if (symbol.owner == null || symbol.owner.name.getByteLength() == 0) {
+            write(symbol.name);
+            return;
+        }
+
+        if (symbol.owner.getKind().isClass()) {
+            writeRightName(symbol.owner);
+            write(".");
+            write(symbol.name);
+        } else {
+            writeRightName(symbol.owner);
+            write("_");
+            write(symbol.name);
+        }
     }
 
     public void writeLn(String code) {

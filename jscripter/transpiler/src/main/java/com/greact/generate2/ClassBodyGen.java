@@ -38,7 +38,7 @@ abstract class ClassBodyGen extends StatementGen {
             super.visitVarDef(varDef);
         } else if (isEnclosingClassIsNested && varDef.sym.isStatic()) {
             if (varDef.sym.owner.isEnum())
-                out.write(getRightName(varDef.sym));
+                out.writeRightName(varDef.sym);
             else {
                 out.write("static ");
                 out.write(varDef.sym.getSimpleName());
@@ -105,9 +105,12 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) // isAbstract для defoult методов возвращает true
             return;
 
-        var name = methods.get(0).snd.name.toString(); // TODO
-        var isConstructor = name.equals("<init>");
+        var method_ = methods.get(0);
+        var name = method_.snd.name;
+
+        var isConstructor = method_.snd.sym.isConstructor();
         var isAsStatic = methods.stream().anyMatch(m -> m.snd.sym.getAnnotation(Static.class) != null);
+
         if (isStatic || isAsStatic) out.write("static ");
 
         var anyMethodHasAsyncCalls = false;
@@ -179,13 +182,13 @@ abstract class ClassBodyGen extends StatementGen {
 
             var fields = classDefs.lastElement().sym.members_field
                 .getSymbols(sym -> {
-                    if(sym.getKind() != ElementKind.FIELD) return false;
+                    if (sym.getKind() != ElementKind.FIELD) return false;
                     var varSym = (Symbol.VarSymbol) sym;
                     return !varSym.getModifiers().contains(Modifier.STATIC);
                 });
 
             var fieldsList = new ArrayList<Symbol>();
-            for(var field : fields) fieldsList.add(field);
+            for (var field : fields) fieldsList.add(field);
 
 //            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
 //                .filter(el -> el.getKind() == ElementKind.FIELD)
@@ -204,7 +207,7 @@ abstract class ClassBodyGen extends StatementGen {
                 withAsyncContext(false, () -> { // constructor cannot be async in JS
                     out.write("const __init__ = () =>");
                     out.writeCBOpen(true);
-                    for(var i = fieldsList.size() - 1; i >= 0; i--) {
+                    for (var i = fieldsList.size() - 1; i >= 0; i--) {
                         var field = fieldsList.get(i);
                         var varDef = (JCTree.JCVariableDecl) trees.getTree(field);
                         initField(varDef);

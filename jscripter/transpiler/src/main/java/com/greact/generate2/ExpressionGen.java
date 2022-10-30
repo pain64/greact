@@ -17,11 +17,14 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -161,10 +164,10 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (varSym.owner instanceof Symbol.MethodSymbol)
                 out.write(id.getName());
             else {
-                if (id.getName().toString().equals("this")) // TODO
+                if (equalsNameAndString(varSym.getQualifiedName(), "this"))
                     out.write("this");
                 else if (id.sym.getModifiers().contains(Modifier.STATIC))
-                    out.write(getRightName(id.sym));
+                    out.writeRightName(id.sym);
                 else {
                     var index = -1;
                     for (var i = classDefs.size() - 1; i >= 0; i--)
@@ -183,19 +186,19 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (id.sym instanceof Symbol.ClassSymbol) {
             var owner = id.sym.owner;
             if (owner != null) {
-                out.write(replaceOneSymbolInName(owner.getQualifiedName(), '.', '_'));
+                out.replaceSymbolAndWrite(owner.getQualifiedName(), '.', '_');
                 var delim = id.sym.isStatic() ? "." : "_";
                 out.write(delim);
                 out.write(id.name);
             } else
-                out.write(replaceOneSymbolInName(id.sym.getQualifiedName(), '.', '_'));
+                out.replaceSymbolAndWrite(id.sym.getQualifiedName(), '.', '_');
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             var isStatic_ = id.sym.isStatic();
 
-            if (id.name.toString().equals("super")) out.write("super"); // TODO
+            if (id.sym.getKind() == ElementKind.CONSTRUCTOR) out.write("super");
             else if (isStatic_) {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
-                    out.write(replaceOneSymbolInName(id.sym.owner.getQualifiedName(), '.', '_'));
+                    out.replaceSymbolAndWrite(id.sym.owner.getQualifiedName(), '.', '_');
                     out.write("._");
                 } else if (isStaticMethodCall) out.write("this._");
                 else out.write("this.constructor._");
@@ -441,7 +444,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                         EQUALS_METHOD_NAME, m -> m.getMetadata() != null
                     ) == null;
 
-                    if (methodSym.name.toString().equals("equals") && isNotOverEquals) // TODO
+                    if (equalsNameAndString(methodSym.getQualifiedName(), "equals") && isNotOverEquals)
                         out.write(prop.toString().replace(".equals", " == ")); // TODO
                     else {
                         if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null) {
@@ -464,11 +467,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                     if (onType.tsym.isStatic() &&
                         onType.tsym.owner instanceof Symbol.ClassSymbol owner) {
                         // static inner class
-                        out.write(replaceOneSymbolInName(owner.getQualifiedName(), '.', '_'));
+                        out.replaceSymbolAndWrite(owner.getQualifiedName(), '.', '_');
                         out.write(".");
                         out.write(onType.tsym.name);
                     } else
-                        out.write(replaceOneSymbolInName(onType.tsym.getQualifiedName(), '.', '_'));
+                        out.replaceSymbolAndWrite(onType.tsym.getQualifiedName(), '.', '_');
                     out.write("._");
                     out.write(prop.name);
 
@@ -541,19 +544,18 @@ abstract class ExpressionGen extends VisitorWithContext {
             boolean flagNew = true; // FIXME: сделать иммутабельным
 
             if (info.mode() == Overloads.Mode.STATIC) {
-                var fullClassName = tSym.packge().toString().replace(".", "_") +
-                    "_" + ref.expr; // TODO
-                out.write(fullClassName);
+                out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
+
                 out.write("._");
                 out.write(ref.name);
                 out.write(".bind(");
-                out.write(fullClassName);
+
+                out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
             } else if (ref.toString().endsWith("new")) {
-                // FIXME: piece of shit
-                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "_")); // TODO
-                stringBuilder.setCharAt(stringBuilder.lastIndexOf("_"), '.');
                 out.write("((x) => new ");
-                out.write(stringBuilder.toString());
+                out.replaceSymbolAndWrite(tSym.owner.getQualifiedName(), '.', '_');
+                out.write(".");
+                out.write(tSym.type.tsym.getSimpleName());
                 out.write("(");
                 if (info.isOverloaded()) {
                     out.write(String.valueOf(info.n()));
@@ -575,14 +577,16 @@ abstract class ExpressionGen extends VisitorWithContext {
                 }
             }
 
-            if (flagNew && info.isOverloaded()) out.write(", " + info.n() + ")"); // TODO String.valueOf(n)
-            else out.write(")");
+            if (flagNew && info.isOverloaded()) {
+                out.write(", ");
+                out.write(String.valueOf(info.n()));
+                out.write(")");
+            } else out.write(")");
         }
     }
 
     @Override public void visitTypeTest(JCTree.JCInstanceOf instanceOf) {
         var type = instanceOf.getType();
-        var ofType = getRightName(TreeInfo.symbol(type));
 
         if (type.type.tsym.getAnnotation(ErasedInterface.class) != null)
             throw new CompileException(CompileException.ERROR.INSTANCE_OF_NOT_APPLICABLE_TO_ERASED_INTERFACE,
@@ -591,13 +595,13 @@ abstract class ExpressionGen extends VisitorWithContext {
                     """);
 
         // FIXME: disable for arrays (aka x instanceof String[])
-        Consumer<Runnable> checkGen = switch (ofType) {
-            case "java_lang_String" -> eGen -> {
+        Consumer<Runnable> checkGen = switch (type.type.tsym.getQualifiedName().toString()) {
+            case "java.lang.String" -> eGen -> {
                 out.write("(($x) => {return typeof $x === 'string' || $x instanceof String})(");
                 eGen.run();
                 out.write(")");
             };
-            case "java_lang_Integer", "java_lang_Long", "java_lang_Float" -> eGen -> {
+            case "java.lang.Integer", "java.lang.Long", "java.lang.Float" -> eGen -> {
                 out.write("typeof ");
                 eGen.run();
                 out.write(" == 'number'");
@@ -605,14 +609,15 @@ abstract class ExpressionGen extends VisitorWithContext {
             default -> eGen -> {
                 if (type.type.isInterface()) { // (n => (typeof n.__iface_instance__ !== "undefined" && n.__iface_instance__(_InterfaceC)))(c)
                     out.write("(n => (typeof n.__iface_instance__ !== \"undefined\" && n.__iface_instance__( ");
-                    out.write(ofType);
+                    out.writeRightName(TreeInfo.symbol(type));
                     out.write(")))(");
                     eGen.run();
                     out.write(")");
                 } else {
                     eGen.run();
                     out.write(" instanceof ");
-                    if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null) out.write(ofType);
+                    if (type.type.tsym.getAnnotation(JSNativeAPI.class) == null)
+                        out.writeRightName(TreeInfo.symbol(type));
                     else out.write(type.type.tsym.name);
                 }
             };
@@ -678,25 +683,12 @@ abstract class ExpressionGen extends VisitorWithContext {
         }
     }
 
-    public static String getRightName(Symbol symbol) { // TODO
-        return getName(symbol).substring(1);
-    }
+    public boolean equalsNameAndString(Name name, String string) {
+        var thisBytes = (byte[]) Output.STRING_VALUE_HANDLE.get(string);
 
-    private static StringBuilder getName(Symbol symbol) { // TODO
-        if (symbol == null) return new StringBuilder();
-        if (symbol.owner == null) return new StringBuilder(symbol.name);
-
-        if (symbol.owner.getKind().isClass())
-            return new StringBuilder(getName(symbol.owner)).append(".").append(symbol.name);
-        else
-            return new StringBuilder(getName(symbol.owner)).append("_").append(symbol.name);
-    }
-    public static byte[] replaceOneSymbolInName(Name name, int target, int replacement) { // TODO
-        var nameBytes = name.toUtf();
-
-        for (int i = 0; i < nameBytes.length; i++)
-            if (nameBytes[i] == target) nameBytes[i] = (byte) replacement;
-
-        return nameBytes;
+        return name.getByteLength() == thisBytes.length &&
+            Arrays.equals(name.getByteArray(), name.getByteOffset(),
+                name.getByteOffset() + name.getByteLength(),
+                thisBytes, 0, name.getByteLength());
     }
 }
