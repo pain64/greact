@@ -16,6 +16,7 @@ import org.apache.commons.cli.*;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -111,6 +112,23 @@ public class TranspilerPlugin implements Plugin {
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js.dep");
 
+//                        for(int i = 0; i < 1000 00; i++) {
+//                            try (var writer = new DataOutputStream(new ByteArrayOutputStream());
+//                                 var depWriter = new PrintWriter(new ByteArrayOutputStream())) {
+//
+//                                var typeGen = new com.greact.generate2.TypeGen();
+//                                typeGen.out = new Output(writer, depWriter);
+//                                typeGen.names = Names.instance(context);
+//                                typeGen.stdShim = new JavaStdShim(types, shimConversions);
+//                                typeGen.types = types;
+//                                typeGen.trees = Trees.instance(env);
+//                                typeGen.cu = cu;
+//                                typeGen.EQUALS_METHOD_NAME = typeGen.names.fromString("equals");
+//
+//                                cu.accept(typeGen);
+//                            }
+//                        }
+
                         try (var writer = new DataOutputStream(jsFile.openOutputStream());
                              var depWriter = new PrintWriter(depFile.openWriter())) {
 
@@ -121,6 +139,7 @@ public class TranspilerPlugin implements Plugin {
                             typeGen.types = types;
                             typeGen.trees = Trees.instance(env);
                             typeGen.cu = cu;
+                            typeGen.EQUALS_METHOD_NAME = typeGen.names.fromString("equals");
 
                             cu.accept(typeGen);
 

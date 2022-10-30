@@ -5,6 +5,7 @@ import com.sun.tools.javac.util.Name;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,6 +13,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class Output {
+    static final Field STRING_VALUE_FIELD;
+    static {
+        STRING_VALUE_FIELD = String.class.getDeclaredFields()[0];
+        STRING_VALUE_FIELD.setAccessible(true);
+    }
+
     final DataOutputStream jsOut;
     final PrintWriter jsDeps;
     final Set<String> dependencies = new HashSet<>();
@@ -45,7 +52,11 @@ public class Output {
     }
 
     public void write(String code) {
-        write(code.getBytes(StandardCharsets.UTF_8));
+        try {
+            write( (byte[]) STRING_VALUE_FIELD.get(code));
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void write(Name name) {

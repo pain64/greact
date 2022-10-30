@@ -14,6 +14,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.ExecutableElement;
@@ -318,9 +319,11 @@ abstract class ExpressionGen extends VisitorWithContext {
             out.write(((Symbol.ClassSymbol) lmb.type.allparams().get(1).tsym).className());
             out.write("'}");
         } else {
-            var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
-                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
-                .findFirst().get(); // FIXME
+            var invokeMethod = ((Symbol.ClassSymbol) lmb.type.tsym)
+                .members_field.getSymbols().iterator().next();
+//          var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
+//                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
+//                .findFirst().get(); // FIXME
 
             var isAsync = invokeMethod.getAnnotation(async.class) != null;
             var visitor = new HasAsyncCalls(super.stdShim, super.types);
@@ -434,12 +437,10 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write("(");
             } else if (call.meth instanceof JCTree.JCFieldAccess prop) {
                 if (info.mode() == Overloads.Mode.INSTANCE) {
-                    boolean isNotOverEquals = true; // FIXME: сделать immutable
-                    for (var enclosedElement : methodOwnerSym.getEnclosedElements()) {
-                        // FIXME: написать нормально
-                        if (enclosedElement.name.toString().equals("equals") && !(enclosedElement.getMetadata() == null))
-                            isNotOverEquals = false;
-                    }
+                    var isNotOverEquals = methodOwnerSym.members_field.findFirst(
+                        EQUALS_METHOD_NAME, m -> m.getMetadata() != null
+                    ) == null;
+
                     if (methodSym.name.toString().equals("equals") && isNotOverEquals)
                         out.write(prop.toString().replace(".equals", " == "));
                     else {

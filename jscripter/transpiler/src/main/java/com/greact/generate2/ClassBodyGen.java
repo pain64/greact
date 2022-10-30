@@ -16,6 +16,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -176,27 +177,42 @@ abstract class ClassBodyGen extends StatementGen {
                 out.writeCBOpen(true);
             }
 
-            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.FIELD)
-                .map(el -> (VariableElement) el)
-                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
+            var fields = classDefs.lastElement().sym.members_field
+                .getSymbols(sym -> {
+                    if(sym.getKind() != ElementKind.FIELD) return false;
+                    var varSym = (Symbol.VarSymbol) sym;
+                    return !varSym.getModifiers().contains(Modifier.STATIC);
+                });
+
+            var fieldsList = new ArrayList<Symbol>();
+            for(var field : fields) fieldsList.add(field);
+
+//            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
+//                .filter(el -> el.getKind() == ElementKind.FIELD)
+//                .map(el -> (VariableElement) el)
+//                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
 
             var initBlock = classDefs.lastElement().defs.stream()
                 .filter(def -> def instanceof JCTree.JCBlock)
                 .map(def -> (JCTree.JCBlock) def)
                 .findFirst();
 
-            hasInit = (fields.hasNext() && !classDefs.lastElement().sym.isRecord())
+            hasInit = (!fieldsList.isEmpty() && !classDefs.lastElement().sym.isRecord())
                 || initBlock.isPresent();
 
             if (hasInit) {
                 withAsyncContext(false, () -> { // constructor cannot be async in JS
                     out.write("const __init__ = () =>");
                     out.writeCBOpen(true);
-                    fields.forEachRemaining(field -> {
+                    for(var i = fieldsList.size() - 1; i >= 0; i--) {
+                        var field = fieldsList.get(i);
                         var varDef = (JCTree.JCVariableDecl) trees.getTree(field);
                         initField(varDef);
-                    });
+                    }
+//                    fields.forEachRemaining(field -> {
+//                        var varDef = (JCTree.JCVariableDecl) trees.getTree(field);
+//                        initField(varDef);
+//                    });
                     initBlock.ifPresent(block -> block.stats.forEach(stmt -> stmt.accept(this)));
                     out.writeCBEnd(false);
                     out.writeLn(";");
