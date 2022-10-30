@@ -112,8 +112,8 @@ public class TranspilerPlugin implements Plugin {
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js.dep");
 
-//                        for(int i = 0; i < 1000 00; i++) {
-//                            try (var writer = new DataOutputStream(new ByteArrayOutputStream());
+//                        for(int i = 0; i < 100000; i++) {
+//                            try (var writer = new ByteArrayOutputStream();
 //                                 var depWriter = new PrintWriter(new ByteArrayOutputStream())) {
 //
 //                                var typeGen = new com.greact.generate2.TypeGen();
@@ -129,7 +129,7 @@ public class TranspilerPlugin implements Plugin {
 //                            }
 //                        }
 
-                        try (var writer = new DataOutputStream(jsFile.openOutputStream());
+                        try (var writer = jsFile.openOutputStream();
                              var depWriter = new PrintWriter(depFile.openWriter())) {
 
                             var typeGen = new com.greact.generate2.TypeGen();

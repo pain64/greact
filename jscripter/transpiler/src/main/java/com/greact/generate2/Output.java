@@ -4,7 +4,10 @@ import com.sun.tools.javac.util.Name;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -13,20 +16,24 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class Output {
-    static final Field STRING_VALUE_FIELD;
+    static final VarHandle STRING_VALUE_HANDLE;
     static {
-        STRING_VALUE_FIELD = String.class.getDeclaredFields()[0];
-        STRING_VALUE_FIELD.setAccessible(true);
+        try {
+            var mhLookup = MethodHandles.privateLookupIn(String.class, MethodHandles.lookup());
+            STRING_VALUE_HANDLE = mhLookup.findVarHandle(String.class, "value", byte[].class);
+        } catch (ReflectiveOperationException ex) {
+            throw new ExceptionInInitializerError(ex);
+        }
     }
 
-    final DataOutputStream jsOut;
+    final OutputStream jsOut;
     final PrintWriter jsDeps;
     final Set<String> dependencies = new HashSet<>();
 
     private int deep = 0;
     private boolean newLine = false;
 
-    public Output(DataOutputStream jsOut, PrintWriter jsDeps) {
+    public Output(OutputStream jsOut, PrintWriter jsDeps) {
         this.jsOut = jsOut;
         this.jsDeps = jsDeps;
     }
@@ -52,11 +59,7 @@ public class Output {
     }
 
     public void write(String code) {
-        try {
-            write( (byte[]) STRING_VALUE_FIELD.get(code));
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        }
+        write((byte[]) STRING_VALUE_HANDLE.get(code));
     }
 
     public void write(Name name) {
