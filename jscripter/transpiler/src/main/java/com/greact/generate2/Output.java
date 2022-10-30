@@ -15,10 +15,12 @@ import java.util.function.Consumer;
 
 public class Output {
     static final VarHandle STRING_VALUE_HANDLE;
+    static final VarHandle STRING_CODER_HANDLE;
     static {
         try {
             var mhLookup = MethodHandles.privateLookupIn(String.class, MethodHandles.lookup());
             STRING_VALUE_HANDLE = mhLookup.findVarHandle(String.class, "value", byte[].class);
+            STRING_CODER_HANDLE = mhLookup.findVarHandle(String.class, "coder", byte.class);
         } catch (ReflectiveOperationException ex) {
             throw new ExceptionInInitializerError(ex);
         }
@@ -41,11 +43,7 @@ public class Output {
 
     public void write(byte[] bytes, int off, int len) {
         try {
-            if (newLine) {
-                for (var i = 0; i < deep; i++)
-                    jsOut.write(' ');
-                newLine = false;
-            }
+            writeSpacesIfNewLine();
             jsOut.write(bytes, off, len);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -57,7 +55,11 @@ public class Output {
     }
 
     public void write(String code) {
-        write((byte[]) STRING_VALUE_HANDLE.get(code));
+        var codeBytes = (byte[]) STRING_VALUE_HANDLE.get(code);
+
+        if ((byte) STRING_CODER_HANDLE.get(code) == 1)
+            encodeAndWriteUTF8_UTF16(codeBytes);
+        else write(codeBytes);
     }
 
     public void write(Name name) {
@@ -66,11 +68,8 @@ public class Output {
 
     public void replaceSymbolAndWrite(Name name, int target, int replacement) {
         try {
-            if (newLine) {
-                for (var i = 0; i < deep; i++)
-                    jsOut.write(' ');
-                newLine = false;
-            }
+            writeSpacesIfNewLine();
+
             for (var i = 0; i < name.getByteLength(); i++) {
                 var byte_ = name.getByteArray()[name.getByteOffset() + i];
                 if (byte_ == target) jsOut.write(replacement);
@@ -96,6 +95,67 @@ public class Output {
             writeRightName(symbol.owner);
             write("_");
             write(symbol.name);
+        }
+    }
+
+    private void encodeAndWriteUTF8_UTF16(byte[] val) {
+        try {
+            writeSpacesIfNewLine();
+
+            var sp = 0;
+            var sl = val.length >> 1;
+
+            for (; sp < sl; ++sp) {
+                var c = getCharFromByteArray(val, sp);
+                if (c >= 128) {
+                    break;
+                }
+                jsOut.write(c);
+            }
+
+            while (sp < sl) {
+                var c = getCharFromByteArray(val, sp++);
+                if (c < 128) {
+                    jsOut.write(c);
+                } else if (c < 2048) {
+                    jsOut.write((byte) (192 | c >> 6));
+                    jsOut.write((byte) (128 | c & 63));
+                } else if (Character.isSurrogate(c)) {
+                    var uc = -1;
+                    char c2;
+                    if (Character.isHighSurrogate(c) && sp < sl && Character.isLowSurrogate(c2 = getCharFromByteArray(val, sp))) {
+                        uc = Character.toCodePoint(c, c2);
+                    }
+                    jsOut.write((byte) (240 | uc >> 18));
+                    jsOut.write((byte) (128 | uc >> 12 & 63));
+                    jsOut.write((byte) (128 | uc >> 6 & 63));
+                    jsOut.write((byte) (128 | uc & 63));
+                    ++sp;
+                } else {
+                    jsOut.write((byte) (224 | c >> 12));
+                    jsOut.write((byte) (128 | c >> 6 & 63));
+                    jsOut.write((byte) (128 | c & 63));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private char getCharFromByteArray(byte[] val, int index) {
+        index <<= 1;
+        return (char) ((val[index++] & 255) | (val[index] & 255) << 8);
+    }
+
+    private void writeSpacesIfNewLine() {
+        try {
+            if (newLine) {
+                for (var i = 0; i < deep; i++)
+                    jsOut.write(' ');
+                newLine = false;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
