@@ -105,7 +105,7 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) // isAbstract для defoult методов возвращает true
             return;
 
-        var name = methods.get(0).snd.name.toString();
+        var name = methods.get(0).snd.name.toString(); // TODO
         var isConstructor = name.equals("<init>");
         var isAsStatic = methods.stream().anyMatch(m -> m.snd.sym.getAnnotation(Static.class) != null);
         if (isStatic || isAsStatic) out.write("static ");

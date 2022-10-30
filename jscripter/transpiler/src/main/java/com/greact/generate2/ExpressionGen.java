@@ -161,7 +161,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (varSym.owner instanceof Symbol.MethodSymbol)
                 out.write(id.getName());
             else {
-                if (id.getName().toString().equals("this"))
+                if (id.getName().toString().equals("this")) // TODO
                     out.write("this");
                 else if (id.sym.getModifiers().contains(Modifier.STATIC))
                     out.write(getRightName(id.sym));
@@ -192,7 +192,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (id.sym instanceof Symbol.MethodSymbol) {
             var isStatic_ = id.sym.isStatic();
 
-            if (id.name.toString().equals("super")) out.write("super");
+            if (id.name.toString().equals("super")) out.write("super"); // TODO
             else if (isStatic_) {
                 if (id.sym.owner != super.classDefs.lastElement().sym) { // import static symbol
                     out.write(replaceOneSymbolInName(id.sym.owner.getQualifiedName(), '.', '_'));
@@ -441,8 +441,8 @@ abstract class ExpressionGen extends VisitorWithContext {
                         EQUALS_METHOD_NAME, m -> m.getMetadata() != null
                     ) == null;
 
-                    if (methodSym.name.toString().equals("equals") && isNotOverEquals)
-                        out.write(prop.toString().replace(".equals", " == "));
+                    if (methodSym.name.toString().equals("equals") && isNotOverEquals) // TODO
+                        out.write(prop.toString().replace(".equals", " == ")); // TODO
                     else {
                         if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null) {
                             prop.selected.accept(this);
@@ -542,7 +542,7 @@ abstract class ExpressionGen extends VisitorWithContext {
 
             if (info.mode() == Overloads.Mode.STATIC) {
                 var fullClassName = tSym.packge().toString().replace(".", "_") +
-                    "_" + ref.expr;
+                    "_" + ref.expr; // TODO
                 out.write(fullClassName);
                 out.write("._");
                 out.write(ref.name);
@@ -550,7 +550,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 out.write(fullClassName);
             } else if (ref.toString().endsWith("new")) {
                 // FIXME: piece of shit
-                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "_"));
+                var stringBuilder = new StringBuilder(tSym.toString().replace(".", "_")); // TODO
                 stringBuilder.setCharAt(stringBuilder.lastIndexOf("_"), '.');
                 out.write("((x) => new ");
                 out.write(stringBuilder.toString());
@@ -575,7 +575,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 }
             }
 
-            if (flagNew && info.isOverloaded()) out.write(", " + info.n() + ")");
+            if (flagNew && info.isOverloaded()) out.write(", " + info.n() + ")"); // TODO String.valueOf(n)
             else out.write(")");
         }
     }
@@ -678,11 +678,11 @@ abstract class ExpressionGen extends VisitorWithContext {
         }
     }
 
-    public static String getRightName(Symbol symbol) {
+    public static String getRightName(Symbol symbol) { // TODO
         return getName(symbol).substring(1);
     }
 
-    private static StringBuilder getName(Symbol symbol) {
+    private static StringBuilder getName(Symbol symbol) { // TODO
         if (symbol == null) return new StringBuilder();
         if (symbol.owner == null) return new StringBuilder(symbol.name);
 
@@ -691,7 +691,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         else
             return new StringBuilder(getName(symbol.owner)).append("_").append(symbol.name);
     }
-    public static byte[] replaceOneSymbolInName(Name name, int target, int replacement) {
+    public static byte[] replaceOneSymbolInName(Name name, int target, int replacement) { // TODO
         var nameBytes = name.toUtf();
 
         for (int i = 0; i < nameBytes.length; i++)
