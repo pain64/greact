@@ -36,7 +36,7 @@ public class Output {
             }
             jsOut.write(bytes, off, len);
         } catch (IOException e) {
-            throw new RuntimeException("Write error");
+            throw new RuntimeException(e);
         }
     }
 
@@ -58,7 +58,7 @@ public class Output {
             jsOut.write('\n');
             newLine = true;
         } catch (IOException e) {
-            throw new RuntimeException("Write error");
+            throw new RuntimeException(e);
         }
     }
 
@@ -67,7 +67,7 @@ public class Output {
             jsOut.write('\n');
             newLine = true;
         } catch (IOException e) {
-            throw new RuntimeException("Write error");
+            throw new RuntimeException(e);
         }
     }
 
