@@ -20,6 +20,7 @@ abstract class VisitorWithContext extends JCTree.Visitor {
     public Types types;
     public Trees trees;
     public JCTree.JCCompilationUnit cu;
+    public com.sun.tools.javac.util.Name EQUALS_METHOD_NAME;
 
     Map<JCTree.JCLambda, Boolean> lambdaAsyncInference = new HashMap<>();
 

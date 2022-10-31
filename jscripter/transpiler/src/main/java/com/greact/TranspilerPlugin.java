@@ -16,6 +16,8 @@ import org.apache.commons.cli.*;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -110,7 +112,24 @@ public class TranspilerPlugin implements Plugin {
                             cu.getPackageName().toString(),
                             e.getTypeElement().getSimpleName() + ".js.dep");
 
-                        try (var writer = new PrintWriter(jsFile.openWriter());
+//                        for(int i = 0; i < 100000; i++) {
+//                            try (var writer = new ByteArrayOutputStream();
+//                                 var depWriter = new PrintWriter(new ByteArrayOutputStream())) {
+//
+//                                var typeGen = new com.greact.generate2.TypeGen();
+//                                typeGen.out = new Output(writer, depWriter);
+//                                typeGen.names = Names.instance(context);
+//                                typeGen.stdShim = new JavaStdShim(types, shimConversions);
+//                                typeGen.types = types;
+//                                typeGen.trees = Trees.instance(env);
+//                                typeGen.cu = cu;
+//                                typeGen.EQUALS_METHOD_NAME = typeGen.names.fromString("equals");
+//
+//                                cu.accept(typeGen);
+//                            }
+//                        }
+
+                        try (var writer = jsFile.openOutputStream();
                              var depWriter = new PrintWriter(depFile.openWriter())) {
 
                             var typeGen = new com.greact.generate2.TypeGen();
@@ -120,6 +139,7 @@ public class TranspilerPlugin implements Plugin {
                             typeGen.types = types;
                             typeGen.trees = Trees.instance(env);
                             typeGen.cu = cu;
+                            typeGen.EQUALS_METHOD_NAME = typeGen.names.fromString("equals");
 
                             cu.accept(typeGen);
 

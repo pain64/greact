@@ -2,6 +2,7 @@ package com.greact.generate.util;
 
 import com.greact.model.Static;
 import com.greact.model.async;
+import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -28,9 +29,7 @@ public class Overloads {
         }
     }
 
-    record Section(TypeElement klass,
-                          List<Entry> entries) {
-    }
+    record Section(TypeElement klass, List<Entry> entries) { }
 
     static void pushSupertype(List<Section> sections, TypeElement klass,
                               Name methodName, boolean withInterfaces) {

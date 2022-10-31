@@ -71,11 +71,11 @@ public class TypeGen extends ClassBodyGen {
                 return;
             }
 
-            var interfaceName = classDef.type.tsym.toString().replace(".", "_");
-
-            out.write("const _" + interfaceName + " = (superclass) => class "
-                + interfaceName
-                + " extends ");
+            out.write("const _");
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
+            out.write(" = (superclass) => class ");
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
+            out.write(" extends ");
 
             if (classDef.implementing.isEmpty()) out.write("superclass");
             else {
@@ -84,15 +84,17 @@ public class TypeGen extends ClassBodyGen {
                         """
                             Erased interface can be inherited only from erased interface
                             """);
-                out.write("_" + classDef.implementing.get(0).type.tsym.toString().replace(".", "_") + "(superclass)");
+                out.write("_");
+                out.replaceSymbolAndWrite(classDef.implementing.get(0).type.tsym.getQualifiedName(), '.', '_');
+                out.write("(superclass)");
             }
 
             out.writeCBOpen(true);
             out.write("__iface_instance__(iface)");
             out.writeCBOpen(true);
-            out.write("return (iface === _"
-                + interfaceName
-                + " || (typeof super.__iface_instance__ !== \"undefined\" && super.__iface_instance__(iface)));");
+            out.write("return (iface === _");
+            out.replaceSymbolAndWrite(classDef.type.tsym.getQualifiedName(), '.', '_');
+            out.write(" || (typeof super.__iface_instance__ !== \"undefined\" && super.__iface_instance__(iface)));");
             out.writeNL();
             out.deepOut();
             out.write("}");
@@ -130,15 +132,15 @@ public class TypeGen extends ClassBodyGen {
                 throw new RuntimeException("Cannot compile non static inner classes yet");
 
             out.write("static ");
-            out.write(classDef.getSimpleName().toString());
+            out.write(classDef.getSimpleName());
             out.write(" = class");
         } else {
             out.write("class");
             if (!classDef.type.tsym.isAnonymous()) {
                 out.write(" ");
-                out.write(cu.getPackage().getPackageName().toString().replace(".", "_"));
+                out.replaceSymbolAndWrite(cu.getPackage().getPackageName().type.tsym.getQualifiedName(), '.', '_');
                 out.write("_");
-                out.write(classDef.getSimpleName().toString());
+                out.write(classDef.getSimpleName());
             }
         }
 
@@ -160,18 +162,23 @@ public class TypeGen extends ClassBodyGen {
             .toList();
 
         if (extendClause != null) {
-            var superClass = extendClause.type.tsym.toString().replace(".", "_");
             out.addDependency(extendClause.type.tsym.toString() + ".js");
             out.write(" extends ");
             if (!implementClause.isEmpty()) {
                 out.write("_");
-                implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
-                out.write(superClass);
+                implementClause.forEach(n -> {
+                    out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
+                    out.write("(");
+                });
+                out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
                 implementClause.forEach(n -> out.write(")"));
-            } else out.write(superClass);
+            } else out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
         } else if (!implementClause.isEmpty()) {
             out.write(" extends _");
-            implementClause.forEach(n -> out.write(n.type.tsym.toString().replace(".", "_") + "("));
+            implementClause.forEach(n -> {
+                out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
+                out.write("(");
+            });
             out.write("Object");
             implementClause.forEach(n -> out.write(")"));
         } else {

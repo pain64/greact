@@ -16,6 +16,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -26,7 +27,7 @@ abstract class ClassBodyGen extends StatementGen {
         var isEnclosingClassIsNested = varDef.sym.owner.owner.getKind().isClass();
         if (varDef.sym.isStatic() && !isEnclosingClassIsNested) {
             out.write("static ");
-            out.write(varDef.getName().toString());
+            out.write(varDef.getName());
             out.write(" = ");
 
             if (varDef.init != null) varDef.init.accept(this);
@@ -37,10 +38,10 @@ abstract class ClassBodyGen extends StatementGen {
             super.visitVarDef(varDef);
         } else if (isEnclosingClassIsNested && varDef.sym.isStatic()) {
             if (varDef.sym.owner.isEnum())
-                out.write(getRightName(varDef.sym));
+                out.writeRightName(varDef.sym);
             else {
                 out.write("static ");
-                out.write(varDef.sym.getSimpleName().toString());
+                out.write(varDef.sym.getSimpleName());
             }
             out.write(" = ");
 
@@ -52,7 +53,7 @@ abstract class ClassBodyGen extends StatementGen {
 
     void initField(JCTree.JCVariableDecl varDef) {
         out.write("this.");
-        out.write(varDef.getName().toString());
+        out.write(varDef.getName());
         out.write(" = ");
 
         if (varDef.getInitializer() != null)
@@ -69,9 +70,9 @@ abstract class ClassBodyGen extends StatementGen {
         if (((Symbol.ClassSymbol) method.sym.owner).isRecord())
             method.params.forEach(varDef -> {
                 out.write("this.");
-                out.write(varDef.getName().toString());
+                out.write(varDef.getName());
                 out.write(" = ");
-                out.write(varDef.getName().toString());
+                out.write(varDef.getName());
                 out.writeLn(";");
             });
     }
@@ -104,9 +105,12 @@ abstract class ClassBodyGen extends StatementGen {
         if (methods.stream().allMatch(m -> m.snd.sym.isAbstract() && !m.snd.sym.isDefault())) // isAbstract для defoult методов возвращает true
             return;
 
-        var name = methods.get(0).snd.name.toString();
-        var isConstructor = name.equals("<init>");
+        var method_ = methods.get(0);
+        var name = method_.snd.name;
+
+        var isConstructor = method_.snd.sym.isConstructor();
         var isAsStatic = methods.stream().anyMatch(m -> m.snd.sym.getAnnotation(Static.class) != null);
+
         if (isStatic || isAsStatic) out.write("static ");
 
         var anyMethodHasAsyncCalls = false;
@@ -155,7 +159,7 @@ abstract class ClassBodyGen extends StatementGen {
             out.mkString(params, param -> {
                 if ((param.sym.flags_field & Flags.VARARGS) != 0)
                     out.write("...");
-                out.write(param.name.toString());
+                out.write(param.name);
             }, "(", ", ", ")");
         else
             out.write("($over, ...__args)");
@@ -176,27 +180,42 @@ abstract class ClassBodyGen extends StatementGen {
                 out.writeCBOpen(true);
             }
 
-            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.FIELD)
-                .map(el -> (VariableElement) el)
-                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
+            var fields = classDefs.lastElement().sym.members_field
+                .getSymbols(sym -> {
+                    if (sym.getKind() != ElementKind.FIELD) return false;
+                    var varSym = (Symbol.VarSymbol) sym;
+                    return !varSym.getModifiers().contains(Modifier.STATIC);
+                });
+
+            var fieldsList = new ArrayList<Symbol>();
+            for (var field : fields) fieldsList.add(field);
+
+//            var fields = classDefs.lastElement().sym.getEnclosedElements().stream()
+//                .filter(el -> el.getKind() == ElementKind.FIELD)
+//                .map(el -> (VariableElement) el)
+//                .filter(el -> !el.getModifiers().contains(Modifier.STATIC)).iterator();
 
             var initBlock = classDefs.lastElement().defs.stream()
                 .filter(def -> def instanceof JCTree.JCBlock)
                 .map(def -> (JCTree.JCBlock) def)
                 .findFirst();
 
-            hasInit = (fields.hasNext() && !classDefs.lastElement().sym.isRecord())
+            hasInit = (!fieldsList.isEmpty() && !classDefs.lastElement().sym.isRecord())
                 || initBlock.isPresent();
 
             if (hasInit) {
                 withAsyncContext(false, () -> { // constructor cannot be async in JS
                     out.write("const __init__ = () =>");
                     out.writeCBOpen(true);
-                    fields.forEachRemaining(field -> {
+                    for (var i = fieldsList.size() - 1; i >= 0; i--) {
+                        var field = fieldsList.get(i);
                         var varDef = (JCTree.JCVariableDecl) trees.getTree(field);
                         initField(varDef);
-                    });
+                    }
+//                    fields.forEachRemaining(field -> {
+//                        var varDef = (JCTree.JCVariableDecl) trees.getTree(field);
+//                        initField(varDef);
+//                    });
                     initBlock.ifPresent(block -> block.stats.forEach(stmt -> stmt.accept(this)));
                     out.writeCBEnd(false);
                     out.writeLn(";");
@@ -219,7 +238,7 @@ abstract class ClassBodyGen extends StatementGen {
                     out.mkString(m.snd.params, varDef -> {
                         if ((varDef.sym.flags_field & Flags.VARARGS) != 0)
                             out.write("...");
-                        out.write(varDef.name.toString());
+                        out.write(varDef.name);
                     }, "const [", ", ", "] = __args;");
                     out.writeNL();
                 }
