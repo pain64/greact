@@ -9,8 +9,12 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.tasks.Classpath;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.tasks.*;
+import org.gradle.work.Incremental;
+import org.gradle.work.InputChanges;
 import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
@@ -26,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -67,6 +72,24 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
 
     public static class DebugBuild extends DefaultTask {
         final WorkerExecutor workerExecutor;
+
+        @Incremental
+        @InputFiles
+        Set<File> getInputDir() {
+            return ((org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject())
+                    .getExtensions().getByName("sourceSets"))
+                .getByName("main")
+                .getAllSource().getSourceDirectories().getFiles();
+        }
+
+        @OutputDirectory
+        File getOutputDir() {
+            return ((org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject())
+                    .getExtensions().getByName("sourceSets"))
+                .getByName("main").getOutput().getResourcesDir();
+        }
 
         @Inject public DebugBuild(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
@@ -164,6 +187,23 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
     public static class ProductBuild extends DefaultTask {
         final WorkerExecutor workerExecutor;
 
+        @Incremental
+        @InputFiles
+        Set<File> getInputDir() {
+            return ((org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject())
+                    .getExtensions().getByName("sourceSets"))
+                .getByName("main")
+                .getAllSource().getSourceDirectories().getFiles();
+        }
+
+        @OutputDirectory
+        File getOutputDir() {
+            return ((org.gradle.api.tasks.SourceSetContainer)
+                ((org.gradle.api.plugins.ExtensionAware) getProject())
+                    .getExtensions().getByName("sourceSets"))
+                .getByName("main").getOutput().getResourcesDir();
+        }
         @Inject
         public ProductBuild(WorkerExecutor workerExecutor) {
             this.workerExecutor = workerExecutor;
@@ -235,15 +275,17 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply("java");
 
-        project.getTasks().register("bundlerDebugBuild", DebugBuild.class, debugBuild -> {
-            debugBuild.dependsOn("compileJava", "processResources");
-        });
+        project.getTasks().register("bundlerDebugBuild", DebugBuild.class,
+            debugBuild -> debugBuild.dependsOn("compileJava", "processResources"));
+
         project.getTasks().getByName("classes").dependsOn("bundlerDebugBuild");
+
         project.getTasks().register("hotReload", HotReload.class,
             reload -> reload.dependsOn("compileJava", "processResources"));
 
         project.getTasks().register("bundlerProductionBuild", ProductBuild.class,
-            productBuild -> productBuild.dependsOn("classes"));
+            productBuild -> productBuild.dependsOn("compileJava", "processResources"));
+
         project.getTasks().getByName("jar").dependsOn("bundlerProductionBuild");
     }
 
