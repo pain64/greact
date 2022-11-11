@@ -278,6 +278,8 @@ public class JScripterBundlerPlugin implements Plugin<Project> {
         project.getTasks().register("bundlerDebugBuild", DebugBuild.class,
             debugBuild -> debugBuild.dependsOn("compileJava", "processResources"));
 
+        project.getTasks().getByName("classes").dependsOn("bundlerDebugBuild");
+
         project.getTasks().register("hotReload", HotReload.class,
             reload -> reload.dependsOn("compileJava", "processResources"));
 
