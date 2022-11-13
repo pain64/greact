@@ -69,7 +69,32 @@ public class HTMLNativeElements {
         }
     }
 
+    @JSNativeAPI public static class i extends HTMLElement implements NativeElementAsComponent<i>{
+        public String dataFeather;
+        public i() {};
+    }
+
+    @JSNativeAPI public static class canvas extends HTMLElement implements NativeElementAsComponent<canvas> {
+        public  String width;
+        public  String height;
+        public canvas() {};
+    }
+
+    @JSNativeAPI public static class pre extends HTMLElement implements NativeElementAsComponent<pre> {
+    }
+
+    @JSNativeAPI public static class code extends HTMLElement implements NativeElementAsComponent<code> {
+    }
+
+    @JSNativeAPI public static class form extends HTMLElement implements NativeElementAsComponent<form> {
+        public String action;
+        public String name;
+        public String method;
+        public String acceptCharset;
+    }
+
     @JSNativeAPI public static  class button extends HTMLElement implements NativeElementAsComponent<button> {
+        public String type;
         public button() {}
         public button(@DomProperty("innerText") String innerText) { }
     }
@@ -84,6 +109,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class input extends HTMLElement implements NativeElementAsComponent<input> {
         public boolean autofocus = false;
+        public boolean required;
         public boolean readOnly;
         public enum Autocomplete {OFF, ON}
         public Autocomplete autocomplete;
@@ -91,6 +117,8 @@ public class HTMLNativeElements {
         //public InputType type;
         public String name;
         public String type;
+        public String minLength;
+        public String maxLength;
         public String placeholder;
         public String value;
         public long valueAsNumber;
@@ -99,6 +127,7 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class select extends HTMLElement implements NativeElementAsComponent<select> {
+        public String name;
         public String value;
     }
     @JSNativeAPI public static class option extends HTMLElement implements NativeElementAsComponent<option> {
@@ -183,6 +212,7 @@ public class HTMLNativeElements {
     }
 
     @JSNativeAPI public static class iframe extends HTMLElement implements NativeElementAsComponent<iframe> {
+        public String sandbox;
         public String src;
     }
     @JSNativeAPI public static class html extends HTMLElement implements NativeElementAsComponent<html> {
