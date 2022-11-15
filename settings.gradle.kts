@@ -2,10 +2,10 @@ rootProject.name = "jstack"
 include(
     "jscripter:transpiler",
     "jscripter:std",
-    "greact",
-    "greact-uikit",
-    "greact-uikit-sample:demo",
-    "greact-uikit-sample:greact-uikit-docs",
+    "greact:greact",
+    "greact:greact-uikit",
+    "greact:greact-uikit-sample:demo",
+    "greact:greact-uikit-sample:greact-uikit-docs",
     "tsql"
 )
 
@@ -16,5 +16,3 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-include("greact-uikit-sample:demo")
-findProject(":greact-uikit-sample:demo")?.name = "demo"
