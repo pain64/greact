@@ -1,8 +1,7 @@
-package com.over64.greact.uikit.samples.js;
+package com.over64.greact.uikit.docs.js;
 
 import com.greact.model.JSExpression;
 import com.greact.model.Require;
-import com.over64.TypesafeSql;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLElement;
@@ -12,11 +11,9 @@ import com.over64.greact.uikit.Tab;
 import com.over64.greact.uikit.Tabs;
 import com.over64.greact.uikit.controls.CheckBox;
 
-import static com.over64.greact.uikit.samples.Main.Server.server;
-
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id long school_id, String name, String email, int age) {}
+    public record Data(int x, String y) {}
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -57,7 +54,7 @@ public class MainPage implements Component0<div> {
                 """);
             new div() {{
                 className = "context";
-                new h1("Greact UIKit Sample");
+                new h1("Greact UIKit Docs");
             }};
 
             new div() {{
@@ -457,12 +454,15 @@ public class MainPage implements Component0<div> {
                             new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
-
                             new CodeView<>(() ->
                                 new div() {{
-                                    var data = server(db -> db.select(StudyForm.class));
+                                    var data = new Data[] {
+                                        new Data(1, "one"),
+                                        new Data(2, "two"),
+                                        new Data(3, "three")
+                                    };
                                     new Grid<>(data) {{
-                                        adjust(StudyForm::school_id);
+                                        adjust(Data::x);
                                         onRowChange = row -> JSExpression.of("console.log(row)");
                                     }};
                                 }}, renderer());
@@ -511,7 +511,7 @@ public class MainPage implements Component0<div> {
             }};
             JSExpression.of("hljs.highlightAll();" +
                 "hljs.initLineNumbersOnLoad();" +
-                "document.title='Greact UIKit Sample';");
+                "document.title='Greact UIKit Docs';");
         }};
     }
 }

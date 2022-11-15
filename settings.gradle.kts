@@ -4,8 +4,9 @@ include(
     "jscripter:std",
     "greact",
     "greact-uikit",
-    "greact-uikit-sample",
-    "typesafesql"
+    "greact-uikit-sample:demo",
+    "greact-uikit-sample:greact-uikit-docs",
+    "tsql"
 )
 
 pluginManagement {
@@ -15,3 +16,5 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+include("greact-uikit-sample:demo")
+findProject(":greact-uikit-sample:demo")?.name = "demo"

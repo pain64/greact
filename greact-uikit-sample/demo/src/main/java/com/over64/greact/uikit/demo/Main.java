@@ -1,9 +1,9 @@
-package com.over64.greact.uikit.samples;
+package com.over64.greact.uikit.demo;
 
 import com.over64.TypesafeSql;
 import com.over64.greact.Loader;
 import com.over64.greact.rpc.RPC;
-import com.over64.greact.uikit.samples.js.MainPage;
+import com.over64.greact.uikit.demo.js.MainPage;
 import com.zaxxer.hikari.HikariDataSource;
 import spark.Spark;
 
@@ -14,7 +14,7 @@ public class Main {
     static final String RPC_BASE_URL = "/rpc";
 
     public static class Server extends RPC<TypesafeSql> {
-        Server() {super("com.over64.greact.uikit.samples.js");}
+        Server() {super("com.over64.greact.uikit.demo.js");}
         @RPCEntryPoint(RPC_BASE_URL)
         public static <T> T server(Function<TypesafeSql, T> onServer) {
             throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
