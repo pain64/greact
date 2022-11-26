@@ -1,6 +1,6 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.CompileException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -7,7 +7,7 @@
  */
 
 allprojects {
-    group = "com.over64"
+    group = "jstack.jscripter"
     version = "0.0.1"
 }
 
@@ -33,8 +33,8 @@ dependencies {
 gradlePlugin {
     // Define the plugin
     val greeting by plugins.creating {
-        id = "com.over64.jscripter.bundler"
-        implementationClass = "com.over64.jscripter.bundler.JScripterBundlerPlugin"
+        id = "jstack.jscripter.bundler"
+        implementationClass = "jstack.jscripter.bundler.JScripterBundlerPlugin"
     }
 }
 

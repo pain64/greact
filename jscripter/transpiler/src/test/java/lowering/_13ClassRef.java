@@ -11,8 +11,8 @@ public class _13ClassRef {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ClassRef;
-                import com.greact.model.ClassRef.Reflexive;
+                import jstack.jscripter.transpiler.model.ClassRef;
+                import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
                                     
                 class Test {
                   record A(long x1, int x2){}
@@ -74,8 +74,8 @@ public class _13ClassRef {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ClassRef;
-                import com.greact.model.ClassRef.Reflexive;
+                import jstack.jscripter.transpiler.model.ClassRef;
+                import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
                                 
                 class Test {
                   <T> void bar(@Reflexive T[] obj) { var ref = ClassRef.of(obj); }

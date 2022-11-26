@@ -1,6 +1,6 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.CompileException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
@@ -44,8 +44,8 @@ public class _17InterfacesTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
-                import com.greact.model.DoNotTranspile;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.DoNotTranspile;
                                 
                 class Test {
                   @ErasedInterface
@@ -70,7 +70,7 @@ public class _17InterfacesTest {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.ErasedInterface;
+                    import jstack.jscripter.transpiler.model.ErasedInterface;
                                     
                     class Test {
                       @ErasedInterface
@@ -119,8 +119,8 @@ public class _17InterfacesTest {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.ErasedInterface;
-                    import com.greact.model.DoNotTranspile;
+                    import jstack.jscripter.transpiler.model.ErasedInterface;
+                    import jstack.jscripter.transpiler.model.DoNotTranspile;
                                         
                     class Test {
                       interface A { }
@@ -139,8 +139,8 @@ public class _17InterfacesTest {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.ErasedInterface;
-                    import com.greact.model.DoNotTranspile;
+                    import jstack.jscripter.transpiler.model.ErasedInterface;
+                    import jstack.jscripter.transpiler.model.DoNotTranspile;
                                         
                     class Test {
                       @ErasedInterface
@@ -159,8 +159,8 @@ public class _17InterfacesTest {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.ErasedInterface;
-                    import com.greact.model.DoNotTranspile;
+                    import jstack.jscripter.transpiler.model.ErasedInterface;
+                    import jstack.jscripter.transpiler.model.DoNotTranspile;
                                         
                     class Test {
                       @ErasedInterface
@@ -246,8 +246,8 @@ public class _17InterfacesTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
-                import com.greact.model.DoNotTranspile;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.DoNotTranspile;
                                     
                 class Test {
                   @ErasedInterface

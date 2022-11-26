@@ -43,10 +43,10 @@ Built with:
   - Libgrid
  
 ``` java
-import com.over64.greact.dom.HTMLNativeElements.*;
-import com.over64.greact.libgrid.Grid;
-import com.over64.greact.TypesafeSql.Id;
-import com.over64.greact.TypesafeSql.Table;
+import dom.jstack.greact.HTMLNativeElements.*;
+import jstack.greact.libgrid.Grid;
+import jstack.greact.TypesafeSql.Id;
+import jstack.greact.TypesafeSql.Table;
 
 import static iias.web.Main.Server.server;
 

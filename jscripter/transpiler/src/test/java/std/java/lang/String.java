@@ -1,7 +1,7 @@
 package std.java.lang;
 
-import com.greact.model.JSExpression;
-import com.greact.model.Static;
+import jstack.jscripter.transpiler.model.JSExpression;
+import jstack.jscripter.transpiler.model.Static;
 
 public class String {
     @Static int compareTo(java.lang.String anotherString) {

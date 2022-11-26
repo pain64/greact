@@ -218,7 +218,7 @@ public class _03CallAndRefLocalTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 import java.util.function.Function;
                 import java.util.function.Consumer;
                 public class Test {
@@ -298,7 +298,7 @@ public class _03CallAndRefLocalTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
                   @ErasedInterface
                   @FunctionalInterface

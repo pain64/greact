@@ -1,10 +1,10 @@
 plugins {
     id("java")
-    id("com.over64.jscripter.bundler") version "0.0.1"
+    id("jstack.jscripter.bundler") version "0.0.1"
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack.greact.uikit.docs"
     version = "0.0.1"
     repositories {
         jcenter()
@@ -25,7 +25,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.docs.js")
+    options.compilerArgs.add("-Xplugin:GReact --js-src-package=jstack.greact.uikit.docs.js")
     options.fork()
     options.forkOptions.jvmArgs = listOf(
         "--enable-preview",
@@ -71,7 +71,7 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.over64.greact.uikit.docs.Main"
+        attributes["Main-Class"] = "jstack.greact.uikit.docs.Main"
     }
 
 //    FIXME: problem with Gradle

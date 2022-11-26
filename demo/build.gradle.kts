@@ -1,10 +1,10 @@
 plugins {
     id("java")
-    id("com.over64.jscripter.bundler") version "0.0.1"
+    id("jstack.jscripter.bundler") version "0.0.1"
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack.demo"
     version = "0.0.1"
     repositories {
         jcenter()
@@ -25,7 +25,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit.demo.js " +
+    options.compilerArgs.add("-Xplugin:GReact --js-src-package=jstack.demo.js " +
             "--tsql-check-enabled=true " +
             "--tsql-driver-class-name=org.postgresql.Driver " +
             "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/uikit_sample " +
@@ -76,7 +76,7 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.over64.greact.uikit.demo.Main"
+        attributes["Main-Class"] = "jstack.demo.Main"
     }
 
 //    FIXME: problem with Gradle
