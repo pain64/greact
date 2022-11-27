@@ -13,7 +13,7 @@ import jstack.greact.uikit.controls.CheckBox;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    public record Data(int x, String y) {}
+    public record Data(int x, String y) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -456,7 +456,7 @@ public class MainPage implements Component0<div> {
                             }};
                             new CodeView<>(() ->
                                 new div() {{
-                                    var data = new Data[] {
+                                    var data = new Data[]{
                                         new Data(1, "one"),
                                         new Data(2, "two"),
                                         new Data(3, "three")

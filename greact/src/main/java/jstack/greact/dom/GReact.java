@@ -6,6 +6,8 @@ import jstack.greact.dom.HTMLNativeElements.Component;
 
 import java.util.function.Consumer;
 
+import static jstack.greact.dom.Globals.document;
+
 public class GReact {
     public static HTMLElement element;
     public static <T extends HTMLElement> T entry(java.lang.Runnable maker) {
@@ -29,24 +31,24 @@ public class GReact {
     }
 
     public static <T extends HTMLElement> void mmount(T dest, Component<T> newEl, Object... args) {
-        var placeholder = dest.appendChild(Globals.document.createElement("div"));
+        var placeholder = dest.appendChild(document.createElement("div"));
         JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => dest.replaceChild(v, placeholder))");
     }
 
     public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(U dest, Component<T> newEl, Consumer<T> before, Object... args) {
-        var placeholder = dest.appendChild(Globals.document.createElement("div"));
+        var placeholder = dest.appendChild(document.createElement("div"));
         JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => { before(v); dest.replaceChild(v, placeholder); })");
     }
 
 
     public static <U extends HTMLElement> void make(HTMLElement parent, String name, Consumer<U> maker) {
-        U el = Globals.document.createElement(name);
+        U el = document.createElement(name);
         maker.accept(el);
         parent.appendChild(el);
     }
 
     public static <T extends HTMLElement> T mountMe(String htmlElName) {
-        T newEl = Globals.document.createElement(htmlElName);
+        T newEl = document.createElement(htmlElName);
         element.appendChild(newEl);
         return newEl;
     }

@@ -1,9 +1,9 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.*;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.MemberRef;
-import jstack.greact.dom.HTMLNativeElements;
 
 @Require.CSS("select.css")
 public class Select<T> extends Control<T> {
@@ -47,29 +47,29 @@ public class Select<T> extends Control<T> {
     @Override public Control<?> child() { return null; }
 
     @Override
-    public HTMLNativeElements.div mount() {
+    public div mount() {
         var self = this;
 //        if(self.value != null && self.variants.length > 0) {
 //            self.value = variants[0].element;
 //            self.onReadyChanged.run();
 //        }
 
-        return new HTMLNativeElements.div() {{
+        return new div() {{
             //  style.padding = "0px 2px";
             //   style.margin = "0px 10px";
 
-            new HTMLNativeElements.label() {{
+            new label() {{
                 className = "select";
 
-                new HTMLNativeElements.span(label) {{
+                new span(label) {{
                     className = "select-span";
                 }};
 
-                new HTMLNativeElements.select() {{
+                new select() {{
                     id = "select-body";
                     className = "form-control";
                     for (var variant : variants)
-                        new HTMLNativeElements.option(variant.caption) {{
+                        new option(variant.caption) {{
                             selected = self.value == variant.element;
                             value = "" + variant.i;
                         }};

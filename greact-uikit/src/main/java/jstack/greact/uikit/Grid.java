@@ -1,17 +1,19 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.ClassRef;
 import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.MemberRef;
-import jstack.greact.dom.HTMLNativeElements;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Require.CSS("grid.css")
-public class Grid<T> extends GridConfig2<T> implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
     static <A> boolean strictEqual(A lhs, A rhs) {return JSExpression.of("lhs === rhs");}
 
@@ -106,21 +108,21 @@ public class Grid<T> extends GridConfig2<T> implements HTMLNativeElements.Compon
     }
 
 
-    @Override public HTMLNativeElements.div mount() {
+    @Override public div mount() {
         var conf = (GridConfig2<T>) this;
 
-        return new HTMLNativeElements.div() {{
+        return new div() {{
             className = "grid-main";
 
             new GridFilter<>(data, conf, rowData ->
                     effect(selectedRowData = rowData));
 
-            new HTMLNativeElements.div() {{ /* redraw point */
+            new div() {{ /* redraw point */
                 if (selectedRow != null && selectedRowData != null) {
                     className = "grid";
-                    new HTMLNativeElements.div() {{
+                    new div() {{
                         className = "grid-body";
-                        new HTMLNativeElements.slot<>(selectedRow, selectedRowData);
+                        new slot<>(selectedRow, selectedRowData);
                     }};
                 }
             }};

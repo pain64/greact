@@ -1,12 +1,13 @@
 package jstack.greact.uikit.routing;
 
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.greact.dom.GReact;
 import jstack.greact.dom.Globals;
-import jstack.greact.dom.HTMLNativeElements;
 
-public class Router implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
-    record View(String href, HTMLNativeElements.Component0<HTMLNativeElements.div> slot){}
+public class Router implements Component0<div> {
+    record View(String href, Component0<div> slot){}
     final View[] views = new View[]{};
 
     private View findView() {
@@ -17,12 +18,12 @@ public class Router implements HTMLNativeElements.Component0<HTMLNativeElements.
         return null;
     }
 
-    @Override public HTMLNativeElements.div mount() {
-        HTMLNativeElements.div root = Globals.document.createElement("div");
+    @Override public div mount() {
+        div root = Globals.document.createElement("div");
 
         Runnable onLocationChange = () -> {
             var view = findView();
-            var element = view != null ? view.slot : new HTMLNativeElements.div();
+            var element = view != null ? view.slot : new div();
             root.innerHTML = "";
             GReact.mmount(root, element, new Object[]{});
         };

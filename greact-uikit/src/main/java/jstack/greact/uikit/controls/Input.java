@@ -1,8 +1,11 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.input;
+import jstack.greact.dom.HTMLNativeElements.label;
+import jstack.greact.dom.HTMLNativeElements.span;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
-import jstack.greact.dom.HTMLNativeElements;
 
 @Require.CSS("input.css")
 public abstract class Input<T> extends Control<T> {
@@ -17,7 +20,7 @@ public abstract class Input<T> extends Control<T> {
             this.onReadyChanged.run();
         }
     }
-    protected abstract T parseValueOpt(HTMLNativeElements.input src);
+    protected abstract T parseValueOpt(input src);
     protected String valueToHtmlValue() {
         return  value.toString();
     }
@@ -28,13 +31,13 @@ public abstract class Input<T> extends Control<T> {
 
     @Override public Control child() { return null; }
 
-    @Override public HTMLNativeElements.div mount() {
+    @Override public div mount() {
         var self = this;
-        return new HTMLNativeElements.div() {{
+        return new div() {{
 //            style.alignItems = "center";
             //style.padding = "0px 2px";
          //   style.margin = "0px 10px 0px 0px";
-            new HTMLNativeElements.label() {{
+            new label() {{
                 className = "input-body";
 //                if(self instanceof CheckBox)
 //                    style.margin = "3px 0px 0px 0px";
@@ -46,11 +49,11 @@ public abstract class Input<T> extends Control<T> {
                 style.display = "flex";
                 style.alignItems = "center";
 
-                new HTMLNativeElements.span(label) {{
+                new span(label) {{
                     style.whiteSpace = "nowrap";
                     style.margin = "0px 5px 0px 0px";
                 }};
-                new HTMLNativeElements.input() {{
+                new input() {{
                     //className = "form-check-input";
                     // FIXME: вот это вот - костыль для CheckBox
                     if(self.type != "checkbox") className = "input-body-checkbox";
@@ -60,7 +63,7 @@ public abstract class Input<T> extends Control<T> {
                     // FIXME: вот это вот - костыль для CheckBox
                     checked = (Boolean) self.value;
                     onchange = ev -> {
-                        self.value = parseValueOpt((HTMLNativeElements.input) ev.target);
+                        self.value = parseValueOpt((input) ev.target);
                         self.ready = self.optional || self.value != null;
                         self.onReadyChanged.run();
                     };

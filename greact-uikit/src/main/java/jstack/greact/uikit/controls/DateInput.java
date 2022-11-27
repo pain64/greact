@@ -1,8 +1,11 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.input;
+import jstack.greact.dom.HTMLNativeElements.label;
+import jstack.greact.dom.HTMLNativeElements.span;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.greact.uikit.Dates;
-import jstack.greact.dom.HTMLNativeElements;
 
 import java.util.Date;
 
@@ -10,28 +13,28 @@ import java.util.Date;
 public class DateInput extends Control<Date> {
     @Override public Control child() {return null;}
 
-    @Override public HTMLNativeElements.div mount() {
+    @Override public div mount() {
         var self = this;
 
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.label() {{
+        return new div() {{
+            new label() {{
                 className = "date-input";
 
-                new HTMLNativeElements.span(label) {{
+                new span(label) {{
                     className = "date-input-span";
                 }};
-                new HTMLNativeElements.input() {{
+                new input() {{
                     className = "date-input-body";
                     type = "date";
                     valueAsNumber = Dates.getTime(self.value);
 
 
                     onchange = ev -> {
-                        value = ((HTMLNativeElements.input) ev.target).value;
+                        value = ((input) ev.target).value;
                         ready = optional || value != null;
                         onReadyChanged.run();
 
-                        self.value = Dates.fromUnixTime(((HTMLNativeElements.input) ev.target).valueAsNumber);
+                        self.value = Dates.fromUnixTime(((input) ev.target).valueAsNumber);
                     };
                 }};
             }};

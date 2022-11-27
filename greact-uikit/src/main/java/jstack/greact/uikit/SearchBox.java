@@ -1,20 +1,23 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.Component;
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.async;
 import jstack.greact.uikit.controls.Control;
-import jstack.greact.dom.HTMLNativeElements;
 
 @Require.CSS("search_box.css")
-public class SearchBox implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+public class SearchBox implements Component0<div> {
     public String controlsClassName = null;
     Control[] controls;
     Control[] controlsWithChildren;
     boolean canSearch = false;
     boolean doSearch = false;
-    AsyncSupplier<HTMLNativeElements.Component0<HTMLNativeElements.div>> loader;
-    HTMLNativeElements.Component0<HTMLNativeElements.div> loaded;
+    AsyncSupplier<Component0<div>> loader;
+    Component0<div> loaded;
 
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T load();
@@ -82,37 +85,37 @@ public class SearchBox implements HTMLNativeElements.Component0<HTMLNativeElemen
         calcChildren();
     }
 
-    public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, HTMLNativeElements.Component0<HTMLNativeElements.div>> view) {
+    public <U1> SearchBox(Control<U1> in1, AsyncFunc1<U1, Component0<div>> view) {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, HTMLNativeElements.Component<HTMLNativeElements.div>> view) {
+    public <U1, U2> SearchBox(Control<U1> in1, Control<U2> in2, AsyncFunc2<U1, U2, Component<div>> view) {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, HTMLNativeElements.Component0<HTMLNativeElements.div>> view) {
+    public <U1, U2, U3> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, AsyncFunc3<U1, U2, U3, Component0<div>> view) {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    public <U1, U2, U3, U4> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, Control<U4> in4, AsyncFunc4<U1, U2, U3, U4, HTMLNativeElements.Component0<HTMLNativeElements.div>> view) {
+    public <U1, U2, U3, U4> SearchBox(Control<U1> in1, Control<U2> in2, Control<U3> in3, Control<U4> in4, AsyncFunc4<U1, U2, U3, U4, Component0<div>> view) {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    @Override @async public HTMLNativeElements.div mount() {
+    @Override @async public div mount() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();
             doSearch = true;
         }
 
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.div() {{
+        return new div() {{
+            new div() {{
                 className = "search-box";
                 if(controlsClassName != null)
                     className += " " + controlsClassName;
 
                 for (var control : controlsWithChildren)
-                    new HTMLNativeElements.slot<HTMLNativeElements.div>(control);
+                    new slot<div>(control);
 
                 /* FIXME: make autosearch */
 
@@ -128,7 +131,7 @@ public class SearchBox implements HTMLNativeElements.Component0<HTMLNativeElemen
 
             if (canSearch) {
                 // doSearch = false;
-                new HTMLNativeElements.slot<>(loaded);
+                new slot<>(loaded);
             }
         }};
     }

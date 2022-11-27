@@ -1,15 +1,15 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.*;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.greact.dom.GReact;
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-@Require.CSS("grid.css") class GridTable<T> implements HTMLNativeElements.Component0<HTMLNativeElements.table> {
+@Require.CSS("grid.css") class GridTable<T> implements Component0<table> {
     static class RowData<T> {
         final T data;
         boolean expanded = false;
@@ -43,7 +43,7 @@ import java.util.function.Consumer;
         this.onFilterEnableDisable = onFilterEnableDisable;
     }
 
-    @Override public HTMLNativeElements.table mount() {
+    @Override public table mount() {
         clearSizes();
 
         if (rows.length != 0 && conf.selectedRow != null) {
@@ -51,26 +51,26 @@ import java.util.function.Consumer;
             selectedRow = rows[0];
         }
 
-        return new HTMLNativeElements.table() {{
+        return new table() {{
             theTable = this;
 
             className = "table table-striped";
             id = "grid-table";
 
-            new HTMLNativeElements.thead() {{
-                new HTMLNativeElements.tr() {{
+            new thead() {{
+                new tr() {{
                     for (var colWithSize : Array.zip(Array.filter(conf.columns, c -> !c.hidden), columnSizes))
-                        new HTMLNativeElements.td() {{
+                        new td() {{
                             if (colWithSize.b != 0)
                                 style.width = colWithSize.b + "px";
-                            new HTMLNativeElements.span(colWithSize.a.header);
+                            new span(colWithSize.a.header);
                         }};
-                    new HTMLNativeElements.td() {{
+                    new td() {{
                         className = "grid-table-td";
-                        new HTMLNativeElements.div() {{
+                        new div() {{
                             id = "grid-table-td-body";
                             className = "toolbox-header";
-                            new HTMLNativeElements.div() {{
+                            new div() {{
                                 className = "grid-table-td-content";
                                 innerHTML = """
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
@@ -79,7 +79,7 @@ import java.util.function.Consumer;
                             }};
 
                             if (conf.onRowAdd != null)
-                                new HTMLNativeElements.div() {{
+                                new div() {{
                                     className = "grid-table-td-content";
                                     innerHTML = """
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -95,7 +95,7 @@ import java.util.function.Consumer;
                     }};
                 }};
             }};
-            new HTMLNativeElements.tbody() {{
+            new tbody() {{
                 if (addNewRowMode)
                     new GridRowAdd<>(conf,
                         newRowData -> {
@@ -117,7 +117,7 @@ import java.util.function.Consumer;
                             effect(row);
                         });
                     else
-                        new HTMLNativeElements.tr() {{
+                        new tr() {{
                             className = "grid-table-tbody-tr";
                             if ((conf.selectedRow != null && selectedRow == row) || row.expanded)
                                 id = "grid-table-tbody-tr-background";
@@ -137,14 +137,14 @@ import java.util.function.Consumer;
                                     }, colValue, row.data);
                                 }
 
-                            new HTMLNativeElements.td() {{ /* toolbox */
+                            new td() {{ /* toolbox */
                                 className = "grid-table-toolbox";
-                                new HTMLNativeElements.div() {{
+                                new div() {{
                                     id = "grid-table-toolbox-body";
                                     className = "toolbox";
 
                                     if (conf.onRowDelete != null)
-                                        new HTMLNativeElements.div() {{ /* delete */
+                                        new div() {{ /* delete */
                                             innerHTML = """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                 """;
@@ -157,7 +157,7 @@ import java.util.function.Consumer;
                                             };
                                         }};
                                     if (conf.onRowChange != null)
-                                        new HTMLNativeElements.div() {{ /* edit */
+                                        new div() {{ /* edit */
                                             innerHTML = """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 """;
@@ -172,7 +172,7 @@ import java.util.function.Consumer;
                                             };
                                         }};
                                     if (conf.expandedRow != null)
-                                        new HTMLNativeElements.div() {{ /* expand */
+                                        new div() {{ /* expand */
                                             innerHTML = row.expanded
                                                 ? """
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"/></svg>
@@ -192,20 +192,20 @@ import java.util.function.Consumer;
                         }};
 
                     if (row.expanded) {
-                        new HTMLNativeElements.tr(); // fake for stripe color save
-                        new HTMLNativeElements.tr() {{
+                        new tr(); // fake for stripe color save
+                        new tr() {{
                             className = "expansion-row";
                             id = "grid-table-expansion-f";
 //                            if (selectedRow == row) style.backgroundColor = "#acea9f";
-                            new HTMLNativeElements.td() {{
+                            new td() {{
                                 colSpan = conf.columns.length + 1;
                                 className = "grid-table-expansion-td";
 
-                                new HTMLNativeElements.div() {{
+                                new div() {{
                                     className = "grid-table-expansion-td-body";
-                                    new HTMLNativeElements.div() {{
+                                    new div() {{
                                         className = "grid-table-expansion-td-content";
-                                        new HTMLNativeElements.slot<>(conf.expandedRow, row.data);
+                                        new slot<>(conf.expandedRow, row.data);
                                     }};
                                 }};
                             }};

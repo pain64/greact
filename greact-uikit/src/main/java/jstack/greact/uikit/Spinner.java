@@ -1,17 +1,19 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.span;
 import jstack.jscripter.transpiler.model.Require;
-import jstack.greact.dom.HTMLNativeElements;
 
 @Require.CSS("spinner.css")
-public class Spinner implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
-    @Override public HTMLNativeElements.div mount() {
-        return new HTMLNativeElements.div() {{
+public class Spinner implements Component0<div> {
+    @Override public div mount() {
+        return new div() {{
             className = "spinner";
-            new HTMLNativeElements.span("working") {{ className = "spinner-span"; }};
-            new HTMLNativeElements.div() {{ className = "bounce1"; }};
-            new HTMLNativeElements.div() {{ className = "bounce2"; }};
-            new HTMLNativeElements.div() {{ className = "bounce3"; }};
+            new span("working") {{ className = "spinner-span"; }};
+            new div() {{ className = "bounce1"; }};
+            new div() {{ className = "bounce2"; }};
+            new div() {{ className = "bounce3"; }};
         }};
     }
 }

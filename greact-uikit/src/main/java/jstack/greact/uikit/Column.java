@@ -1,16 +1,19 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.Component1;
+import jstack.greact.dom.HTMLNativeElements.Component2;
+import jstack.greact.dom.HTMLNativeElements.input;
+import jstack.greact.dom.HTMLNativeElements.td;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.MemberRef;
 import jstack.greact.uikit.controls.*;
-import jstack.greact.dom.HTMLNativeElements;
 
 import java.sql.Date;
 import java.util.function.BiFunction;
 
 public class Column<T, U> {
-    public static final HTMLNativeElements.Component1<HTMLNativeElements.td, String> TEXT_AT_LEFT = value ->
-        new HTMLNativeElements.td(value == null ? "" : value) {{
+    public static final Component1<td, String> TEXT_AT_LEFT = value ->
+        new td(value == null ? "" : value) {{
             style.textAlign = "left";
         }};
 
@@ -23,8 +26,8 @@ public class Column<T, U> {
     public boolean hidden = false;
     public Control<U> editor = null;
     public BiFunction<U, T, String> backgroundColor = null;
-    public HTMLNativeElements.Component2<HTMLNativeElements.td, U, T> view = (value, row) ->
-        new HTMLNativeElements.td(isNullOrUndefined(value) ? "" : value.toString());
+    public Component2<td, U, T> view = (value, row) ->
+        new td(isNullOrUndefined(value) ? "" : value.toString());
 
     @FunctionalInterface public interface Mapper<V, U> {
         U map(V kv);
@@ -55,10 +58,10 @@ public class Column<T, U> {
         };
 
         this.view = switch (className) {
-            case "java.util.Date" -> (d, row) -> new HTMLNativeElements.td(d == null ? "" : Dates.toLocaleDateString((Date) d));
-            case "boolean", "java.lang.Boolean" -> (d, row) -> new HTMLNativeElements.td() {{
+            case "java.util.Date" -> (d, row) -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            case "boolean", "java.lang.Boolean" -> (d, row) -> new td() {{
                 // FIXME: fix css - CheckBox и нативные чекбоксы должны выглядеть одинаково?
-                new HTMLNativeElements.input() {{
+                new input() {{
                     type = "checkbox";
                     checked = (boolean) d;
                     readOnly = true;
@@ -85,18 +88,18 @@ public class Column<T, U> {
     }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
-        this.view = (value, row) -> new HTMLNativeElements.td(mapper.map(value));
+        this.view = (value, row) -> new td(mapper.map(value));
         return this;
     }
 
-    public Column<T, U> viewCell(HTMLNativeElements.Component1<HTMLNativeElements.td, U> newView) {
+    public Column<T, U> viewCell(Component1<td, U> newView) {
         @SuppressWarnings("unchecked")
-        var casted = (HTMLNativeElements.Component2<HTMLNativeElements.td, U, T>) newView;
+        var casted = (Component2<td, U, T>) newView;
         this.view = casted;
         return this;
     }
 
-    public Column<T, U> viewCell(HTMLNativeElements.Component2<HTMLNativeElements.td, U, T> newView) {
+    public Column<T, U> viewCell(Component2<td, U, T> newView) {
         this.view = newView;
         return this;
     }

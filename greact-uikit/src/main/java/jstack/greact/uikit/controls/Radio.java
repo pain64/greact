@@ -1,7 +1,10 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.input;
+import jstack.greact.dom.HTMLNativeElements.label;
+import jstack.greact.dom.HTMLNativeElements.span;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.greact.dom.HTMLNativeElements;
 
 public class Radio<T> extends Control<T> {
     public record Variant<T>(String label, T value){}
@@ -20,14 +23,14 @@ public class Radio<T> extends Control<T> {
 
     @Override public Control<T> child() {return null;}
 
-    @Override public HTMLNativeElements.div mount() {
+    @Override public div mount() {
         var self = this;
 
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.span(label + " ");
+        return new div() {{
+            new span(label + " ");
             for (var variant : variants) {
-                new HTMLNativeElements.label() {{
-                    new HTMLNativeElements.input() {{
+                new label() {{
+                    new input() {{
                         type = "radio";
                         checked = self.value == variant.value;
                         onchange = ev -> {
@@ -35,7 +38,7 @@ public class Radio<T> extends Control<T> {
                             onReadyChanged.run();
                         };
                     }};
-                    new HTMLNativeElements.span(" " + variant.label + " ");
+                    new span(" " + variant.label + " ");
                 }};
             }
         }};

@@ -1,6 +1,6 @@
 package jstack.greact;
 
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.dom.HTMLNativeElements.Component0;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Loader {
-    public static Map<String, Supplier<String>> bundle(Class<? extends HTMLNativeElements.Component0<?>> entry) throws IOException {
+    public static Map<String, Supplier<String>> bundle(Class<? extends Component0<?>> entry) throws IOException {
         var bundleFile = Objects.requireNonNull(Loader.class.getResourceAsStream("/bundle/.bundle"));
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");

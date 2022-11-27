@@ -1,8 +1,9 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
 
-public abstract class Control<T> implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+public abstract class Control<T> implements Component0<div> {
     public Runnable onReadyChanged = () -> {};
     public boolean ready = false;
     public boolean optional = false;

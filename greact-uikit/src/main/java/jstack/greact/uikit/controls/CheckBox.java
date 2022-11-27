@@ -1,7 +1,7 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.input;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.greact.dom.HTMLNativeElements;
 
 public class CheckBox extends Input<Boolean> {
 
@@ -12,7 +12,7 @@ public class CheckBox extends Input<Boolean> {
         return this;
     }
 
-    @Override protected Boolean parseValueOpt(HTMLNativeElements.input src) {
+    @Override protected Boolean parseValueOpt(input src) {
         return JSExpression.of("src.checked");
     }
 

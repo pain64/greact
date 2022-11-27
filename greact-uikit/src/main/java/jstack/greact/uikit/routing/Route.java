@@ -1,20 +1,22 @@
 package jstack.greact.uikit.routing;
 
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.a;
+import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.uikit.Array;
-import jstack.greact.dom.HTMLNativeElements;
 
-public class Route implements HTMLNativeElements.Component0<HTMLNativeElements.a> {
+public class Route implements Component0<a> {
     final String _href;
     final String caption;
 
-    public Route(Router router, String href, String caption, HTMLNativeElements.Component0<HTMLNativeElements.div> view) {
+    public Route(Router router, String href, String caption, Component0<div> view) {
         this._href = href;
         this.caption = caption;
         Array.push(router.views, new Router.View(href, view));
     }
 
-    @Override public HTMLNativeElements.a mount() {
-        return new HTMLNativeElements.a() {{
+    @Override public a mount() {
+        return new a() {{
             innerText = caption;
             href = _href;
         }};

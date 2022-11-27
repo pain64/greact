@@ -1,10 +1,13 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.dom.HTMLNativeElements.span;
 import jstack.jscripter.transpiler.model.Require;
-import jstack.greact.dom.HTMLNativeElements;
 
 @Require.CSS("tabs.css")
-public class Tabs implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+public class Tabs implements Component0<div> {
     final Tab[] tabs;
     private Tab selected;
 
@@ -14,12 +17,12 @@ public class Tabs implements HTMLNativeElements.Component0<HTMLNativeElements.di
             this.selected = this.tabs[0];
     }
 
-    @Override public HTMLNativeElements.div mount() {
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.div() {{
+    @Override public div mount() {
+        return new div() {{
+            new div() {{
                 className = "tabs";
                 for (var tab : tabs)
-                    new HTMLNativeElements.span(tab.caption) {{
+                    new span(tab.caption) {{
                         className = "tabs-content";
                         onclick = ev -> effect(selected = tab);
 
@@ -27,9 +30,9 @@ public class Tabs implements HTMLNativeElements.Component0<HTMLNativeElements.di
                             className += " tabs-content-selected";
                     }};
             }};
-            new HTMLNativeElements.div() {{
+            new div() {{
                 className = "tabs-body";
-                new HTMLNativeElements.slot<>(selected.view);
+                new slot<>(selected.view);
             }};
         }};
     }

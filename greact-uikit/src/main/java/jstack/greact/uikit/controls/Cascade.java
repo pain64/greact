@@ -1,6 +1,7 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.slot;
 
 public class Cascade<T> extends Control<T> {
     //FIXME: duplicate with SearchBox
@@ -28,9 +29,9 @@ public class Cascade<T> extends Control<T> {
         };
     }
 
-    @Override public HTMLNativeElements.div mount() {
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.slot<HTMLNativeElements.div>(in1);
+    @Override public div mount() {
+        return new div() {{
+            new slot<div>(in1);
         }};
     }
 }

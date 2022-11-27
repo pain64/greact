@@ -22,7 +22,7 @@ public class FindEffectCallsTest {
        return fetchData() + fetchData();
     }
 
-    public static class MyPage implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+    public static class MyPage implements Component0<HTMLNativeElements.div> {
         @Override public div mount() {
             return new div() {{
                 new h1("hello, world");

@@ -1,5 +1,6 @@
 package jstack.greact;
 
+import jstack.greact.EffectCallFinder.Effect;
 import jstack.jscripter.transpiler.model.JSExpression;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
@@ -127,7 +128,7 @@ public class NewClassPatcher2 {
 
     int nextViewRenderId = 0;
 
-    public void patch(JCTree.JCClassDecl classDecl, java.util.List<EffectCallFinder.Effect> effects) {
+    public void patch(JCTree.JCClassDecl classDecl, java.util.List<Effect> effects) {
         var allEffectedVars = effects.stream()
             .flatMap(ef -> ef.effected().stream())
             .collect(Collectors.toCollection(LinkedHashSet::new));

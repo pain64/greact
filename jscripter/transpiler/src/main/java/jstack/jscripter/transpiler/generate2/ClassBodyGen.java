@@ -1,7 +1,9 @@
 package jstack.jscripter.transpiler.generate2;
 
 import jstack.jscripter.transpiler.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.CompileException.ERROR;
 import jstack.jscripter.transpiler.generate.util.Overloads;
+import jstack.jscripter.transpiler.generate.util.Overloads.OverloadTable;
 import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
 import jstack.jscripter.transpiler.generate2.lookahead.HasSelfConstructorCall;
 import jstack.jscripter.transpiler.model.Static;
@@ -92,7 +94,7 @@ abstract class ClassBodyGen extends StatementGen {
             });
     }
 
-    void visitGroup(Overloads.OverloadTable table, boolean isStatic,
+    void visitGroup(OverloadTable table, boolean isStatic,
                     List<Pair<Integer, JCTree.JCMethodDecl>> methods) {
 
         if (methods.isEmpty()) return;
@@ -115,7 +117,7 @@ abstract class ClassBodyGen extends StatementGen {
             if (isAsync && isConstructor) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
-                throw new CompileException(CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC, """
+                throw new CompileException(ERROR.CANNOT_BE_DECLARED_AS_ASYNC, """
                     At %s:%d:%d
                     constructor cannot be declared as @async"""
                     .formatted(super.cu.sourcefile.getName(), line, col));
@@ -126,7 +128,7 @@ abstract class ClassBodyGen extends StatementGen {
             if (!visitor.hasAsyncCalls && isAsync) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
-                throw new CompileException(CompileException.ERROR.CANNOT_BE_DECLARED_AS_ASYNC, """
+                throw new CompileException(ERROR.CANNOT_BE_DECLARED_AS_ASYNC, """
                     At %s:%d:%d
                     method cannot be declared as @async due to:
                     - is not abstract or interface or native (OR)

@@ -1,7 +1,7 @@
 package jstack.greact.uikit.controls;
 
+import jstack.greact.dom.HTMLNativeElements.input;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.greact.dom.HTMLNativeElements;
 
 public class StrInput extends Input<String> {
     public StrInput() {super("text");}
@@ -17,7 +17,7 @@ public class StrInput extends Input<String> {
         return this;
     }
 
-    @Override protected String parseValueOpt(HTMLNativeElements.input src) {
+    @Override protected String parseValueOpt(input src) {
         return JSExpression.of("src.value === ''") ? null : src.value;
     }
 }

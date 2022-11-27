@@ -9,7 +9,9 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.GReactExceptions.NewClassDeniedHere;
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.Component1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +35,8 @@ public class ViewEntryFinder {
     }
 
     class Symbols {
-        Symbol.ClassSymbol clComponent0 = util.lookupClass(HTMLNativeElements.Component0.class);
-        Symbol.ClassSymbol clComponent1 = util.lookupClass(HTMLNativeElements.Component1.class);
+        Symbol.ClassSymbol clComponent0 = util.lookupClass(Component0.class);
+        Symbol.ClassSymbol clComponent1 = util.lookupClass(Component1.class);
     }
     final Symbols symbols;
 
@@ -135,7 +137,7 @@ public class ViewEntryFinder {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
                 if (!(util.classifyView(newClass.type) instanceof Util.IsNotComponent))
                     if (!allViewEntries.contains(newClass))
-                        throw new GReactExceptions.NewClassDeniedHere(cu.getSourceFile().getName() + ":" +
+                        throw new NewClassDeniedHere(cu.getSourceFile().getName() + ":" +
                             cu.getLineMap().getLineNumber(newClass.getStartPosition()) + ":" +
                             cu.getLineMap().getColumnNumber(newClass.getStartPosition()));
             }

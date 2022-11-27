@@ -1,11 +1,11 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLNativeElements.*;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.greact.dom.HTMLNativeElements;
 
 import java.util.function.Consumer;
 
-class GridFilter<T> implements HTMLNativeElements.Component0<HTMLNativeElements.div> {
+class GridFilter<T> implements Component0<div> {
     int[] pageSizes = new int[]{10, 20, 50, 100}; // FIXME: move to config ???
     int currentPage = 1;
     int currentSize = pageSizes[0];
@@ -50,9 +50,9 @@ class GridFilter<T> implements HTMLNativeElements.Component0<HTMLNativeElements.
     }
 
     @Override
-    public HTMLNativeElements.div mount() {
-        return new HTMLNativeElements.div() {{
-            new HTMLNativeElements.div() {{
+    public div mount() {
+        return new div() {{
+            new div() {{
                 var filterWords = Array.filter(
                     stringSplit(filterValue, " "),
                     s -> stringLength(s) != 0);
@@ -71,45 +71,45 @@ class GridFilter<T> implements HTMLNativeElements.Component0<HTMLNativeElements.
                 if (filtered.length > pageSizes[0] || conf.title != null) {
                     T[] finalFiltered = filtered;
                     T[] finalFiltered1 = filtered;
-                    new HTMLNativeElements.div() {{
+                    new div() {{
                         className = "grid-filter";
 
-                        new HTMLNativeElements.div() {{
+                        new div() {{
                             if (finalFiltered.length > pageSizes[0]) {
-                                new HTMLNativeElements.select() {{
+                                new select() {{
                                     onchange = ev -> {
                                         // FIXME: move to one effect
                                         effect(currentSize = Integer.parseInt(
-                                            ((HTMLNativeElements.select) ev.target).value));
+                                            ((select) ev.target).value));
                                         effect(currentPage = 1);
                                     };
 
                                     for (var size : pageSizes)
-                                        new HTMLNativeElements.option("" + size) {{
+                                        new option("" + size) {{
                                             value = "" + size;
                                             selected = size == currentSize;
                                         }};
                                     className = "grid-filter-select";
                                 }};
 
-                                new HTMLNativeElements.span("записей на странице " + currentPage + " из " + nPages);
+                                new span("записей на странице " + currentPage + " из " + nPages);
                             }
                         }};
 
-                        new HTMLNativeElements.span(conf.title) {{
+                        new span(conf.title) {{
                             className = "grid-filter-span";
                         }};
 
-                        new HTMLNativeElements.div() {{
+                        new div() {{
                             if (finalFiltered1.length > pageSizes[0]) {
-                                new HTMLNativeElements.div() {{
+                                new div() {{
                                     innerHTML = """
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left"><polyline points="15 18 9 12 15 6"/></svg>
                                         """;
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
                                 }};
-                                new HTMLNativeElements.div() {{
+                                new div() {{
                                     innerHTML = """
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
                                         """;
@@ -123,28 +123,28 @@ class GridFilter<T> implements HTMLNativeElements.Component0<HTMLNativeElements.
             }};
             if (filterEnabled) {
                 if (showHint) {
-                    new HTMLNativeElements.h4("Помощь в использовании фильтра") {{ style.color = "#0c3383"; style.paddingLeft = "10px"; style.marginBottom = "10px"; }};
-                    new HTMLNativeElements.div() {{
+                    new h4("Помощь в использовании фильтра") {{ style.color = "#0c3383"; style.paddingLeft = "10px"; style.marginBottom = "10px"; }};
+                    new div() {{
                         style.textAlign = "left";
                         style.padding = "20px";
                         style.backgroundColor = "#dff8ff";
-                        new HTMLNativeElements.h5("- слово сопоставляется полностью: если ищем слово abc, то ищем полное совпадение (не abcd)");
-                        new HTMLNativeElements.h5("- % - последовательность любых символов: abc% или %abc или %abc%");
-                        new HTMLNativeElements.h5("- операторы: & и |") {{ }};
-                        new HTMLNativeElements.h5("- приоритет задается через скобки: a & (b | (c | d))");
-                        new HTMLNativeElements.h5("- экранирование спецсимволов: \\\\( или \\\\) или \\\\& или \\\\| или \\\\% или \\\\\\\\  или \\\\пробел");
-                        new HTMLNativeElements.h5("- ошибки выражения поиска отображаются ниже фильтра");
+                        new h5("- слово сопоставляется полностью: если ищем слово abc, то ищем полное совпадение (не abcd)");
+                        new h5("- % - последовательность любых символов: abc% или %abc или %abc%");
+                        new h5("- операторы: & и |") {{ }};
+                        new h5("- приоритет задается через скобки: a & (b | (c | d))");
+                        new h5("- экранирование спецсимволов: \\\\( или \\\\) или \\\\& или \\\\| или \\\\% или \\\\\\\\  или \\\\пробел");
+                        new h5("- ошибки выражения поиска отображаются ниже фильтра");
                     }};
                 }
-                new HTMLNativeElements.div() {{
+                new div() {{
                     className = "grid-filter-enabled";
-                    new HTMLNativeElements.input() {{
+                    new input() {{
 //                        value = filterValue; // one wat bindind
                         placeholder = "фильтр...";
                         className = "grid-filter-input";
-                        onkeyup = ev -> effect(filterValue = ((HTMLNativeElements.input) ev.target).value);
+                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
-                    new HTMLNativeElements.div() {{
+                    new div() {{
                         className = "grid-filter-hint";
                         innerHTML = """
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -153,17 +153,17 @@ class GridFilter<T> implements HTMLNativeElements.Component0<HTMLNativeElements.
                     }};
                 }};
             }
-            new HTMLNativeElements.div() {{
+            new div() {{
                 if (isError && filterEnabled && !filterValue.equals("")) {
-                    new HTMLNativeElements.div() {{
-                        new HTMLNativeElements.h5(errorMessage) {{
+                    new div() {{
+                        new h5(errorMessage) {{
                             this.className = "error";
                             this.style.color = "red";
                         }};
                     }};
                 }
                 var hint = pageData;
-                new HTMLNativeElements.slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
+                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
                     effect(filterEnabled = !filterEnabled);
                     effect(currentPage = 1);
                     effect(filterValue = "");
