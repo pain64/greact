@@ -50,7 +50,7 @@ public class _06ShimJavaAPI {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.JSExpression;
+                import jstack.jscripter.transpiler.model.JSExpression;
                 public class Test {
                   int x = JSExpression.of("1 + 1");
                 }""",
@@ -70,7 +70,7 @@ public class _06ShimJavaAPI {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.JSExpression;
+                import jstack.jscripter.transpiler.model.JSExpression;
                 public class Test {
                   int x = JSExpression.of(""\"
                      1 
@@ -93,7 +93,7 @@ public class _06ShimJavaAPI {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.JSExpression;
+                import jstack.jscripter.transpiler.model.JSExpression;
                 public class Test {
                   static int of() { return 42; }
                   int x = of();

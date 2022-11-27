@@ -4,8 +4,9 @@ include(
     "jscripter:std",
     "greact",
     "greact-uikit",
-    "greact-uikit-sample",
-    "typesafesql"
+    "demo",
+    "greact-uikit-docs",
+    "tsql"
 )
 
 pluginManagement {

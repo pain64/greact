@@ -1,8 +1,6 @@
 package lowering;
 
-import com.greact.model.JSNativeAPI;
 import org.junit.jupiter.api.Test;
-import util.CompileAssert;
 import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
@@ -412,7 +410,7 @@ public class _01ExprTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
                   @ErasedInterface
                   @FunctionalInterface
@@ -443,7 +441,7 @@ public class _01ExprTest {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.ErasedInterface;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
                   @ErasedInterface
                   @FunctionalInterface
@@ -648,7 +646,7 @@ public class _01ExprTest {
             new CompileCase("js.A",
                 """
                     package js;
-                    import com.greact.model.JSNativeAPI;
+                    import jstack.jscripter.transpiler.model.JSNativeAPI;
                     
                     @JSNativeAPI
                     class A {}""",

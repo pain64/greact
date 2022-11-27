@@ -26,7 +26,7 @@ public class _11MemberRef {
             new CompileAssert.CompileCase("js.B",
                 """
                     package js;
-                    import com.greact.model.MemberRef;
+                    import jstack.jscripter.transpiler.model.MemberRef;
                     class B {
                       MemberRef<A, Long> ref1 = A::age;
                       MemberRef<A, Long> ref3 = a -> a.age();
@@ -79,7 +79,7 @@ public class _11MemberRef {
             new CompileAssert.CompileCase("js.C",
                 """
                     package js;
-                    import com.greact.model.MemberRef;
+                    import jstack.jscripter.transpiler.model.MemberRef;
                     class C {
                       MemberRef<A, Long> ref1 = a -> a.age;
                       MemberRef<B, Long> ref2 = b -> b.a.age;

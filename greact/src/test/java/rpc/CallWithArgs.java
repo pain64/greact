@@ -12,7 +12,7 @@ public class CallWithArgs {
             new CompileAssert.CompileCase("js.Simple",
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
@@ -30,12 +30,12 @@ public class CallWithArgs {
                 """
                     package js;
 
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     import static util.TestServer.server;
 
                     class Simple {
                        \s
-                        @com.greact.model.RPCEndPoint
+                        @jstack.jscripter.transpiler.model.RPCEndPoint
                         public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             final int $closure1 = x1.treeToValue(x2.get(1), java.lang.Integer.class);
                             final int $closure0 = x1.treeToValue(x2.get(0), java.lang.Integer.class);
@@ -51,7 +51,7 @@ public class CallWithArgs {
                         @async
                         void simple() {
                             int y = 1;
-                            com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", x, y);
+                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", x, y);
                         }
                     }"""));
 
@@ -63,7 +63,7 @@ public class CallWithArgs {
             new CompileAssert.CompileCase("js.Simple",
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
@@ -79,12 +79,12 @@ public class CallWithArgs {
                 """
                     package js;
 
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     import static util.TestServer.server;
 
                     class Simple {
                        \s
-                        @com.greact.model.RPCEndPoint
+                        @jstack.jscripter.transpiler.model.RPCEndPoint
                         public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             final int $closure0 = x1.treeToValue(x2.get(0), java.lang.Integer.class);
                             int z = $closure0 + $closure0 + $closure0 + $closure0 + $closure0;
@@ -99,7 +99,7 @@ public class CallWithArgs {
                         @async
                         void simple() {
                             int y = 1;
-                            com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", y);
+                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", y);
                         }
                     }"""));
 

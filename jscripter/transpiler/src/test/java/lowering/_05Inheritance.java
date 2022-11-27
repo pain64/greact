@@ -1,9 +1,8 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.CompileException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import util.CompileAssert;
 import util.CompileAssert.CompileCase;
 
 import java.io.IOException;
@@ -98,7 +97,7 @@ public class _05Inheritance {
                 new CompileCase("js.A",
                     """
                         package js;
-                        import com.greact.model.JSNativeAPI;
+                        import jstack.jscripter.transpiler.model.JSNativeAPI;
                                             
                         @JSNativeAPI
                         public class A { }""",

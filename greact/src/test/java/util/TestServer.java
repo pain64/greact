@@ -1,6 +1,6 @@
 package util;
 
-import com.over64.greact.rpc.RPC;
+import jstack.greact.rpc.RPC;
 
 import java.util.function.Function;
 

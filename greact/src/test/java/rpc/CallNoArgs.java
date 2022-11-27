@@ -11,8 +11,8 @@ public class CallNoArgs {
             new CompileAssert.CompileCase("js.Simple",
                 """
                     package js;
-                    import com.greact.model.async;
                     import static util.TestServer.server;
+                    import jstack.jscripter.transpiler.model.async;
                     class Simple {
                       @async void simple() {
                         int x = server(none -> 42);
@@ -21,12 +21,12 @@ public class CallNoArgs {
                 """
                         package js;
                                             
-                        import com.greact.model.async;
                         import static util.TestServer.server;
+                        import jstack.jscripter.transpiler.model.async;
                                             
                         class Simple {
                            \s
-                            @com.greact.model.RPCEndPoint
+                            @jstack.jscripter.transpiler.model.RPCEndPoint
                             public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                                 return 42;
                             }
@@ -37,7 +37,7 @@ public class CallNoArgs {
                            \s
                             @async
                             void simple() {
-                                int x = com.over64.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
+                                int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
                             }
                         }"""));
 

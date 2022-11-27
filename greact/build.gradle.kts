@@ -4,7 +4,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack.greact"
     version = "0.0.1"
     repositories {
         jcenter()
@@ -25,7 +25,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=com.over64.greact.dom")
+    options.compilerArgs.add("-Xplugin:jScripter --js-src-package=jstack.greact.dom")
     options.fork()
     options.forkOptions.jvmArgs = listOf("--enable-preview",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
@@ -53,7 +53,7 @@ dependencies {
     implementation("org.jetbrains:annotations:20.1.0")
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
-    implementation(project(":typesafesql"))
+    implementation(project(":tsql"))
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")

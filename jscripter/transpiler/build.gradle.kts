@@ -8,7 +8,7 @@ repositories {
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack"
     version = "0.0.1"
 }
 
