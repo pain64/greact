@@ -4,7 +4,7 @@ plugins {
 }
 
 allprojects {
-    group = "jstack.jscripter"
+    group = "jstack"
     version = "0.0.1"
     repositories {
         jcenter()
