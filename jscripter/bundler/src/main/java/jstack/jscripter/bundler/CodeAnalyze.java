@@ -181,7 +181,9 @@ public class CodeAnalyze {
                     new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
                     new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
-        var localCss = walkOverDirectory(stylesDir.toFile()).resources;
+        var localCss = stylesDir.toFile().exists()
+            ? walkOverDirectory(stylesDir.toFile()).resources
+            : new ArrayList<RResource<Path>>();
 
         // FIXME: make listConcat & mapConcat method
         var localModule = new ModuleCode<>(
