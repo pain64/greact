@@ -11,6 +11,7 @@ import com.over64.greact.uikit.Grid;
 import com.over64.greact.uikit.Tab;
 import com.over64.greact.uikit.Tabs;
 import com.over64.greact.uikit.controls.CheckBox;
+import com.over64.greact.uikit.samples.Main;
 
 import static com.over64.greact.uikit.samples.Main.Server.server;
 
@@ -127,6 +128,7 @@ public class MainPage implements Component0<div> {
                             className = "menu-item";
                             href = "#select";
                         }};
+
 
                         new a("Textarea") {{
                             className = "menu-item";
@@ -461,7 +463,12 @@ public class MainPage implements Component0<div> {
 
                             new CodeView<>(() ->
                                 new div() {{
-                                    var data = server(db -> db.select(Teachers.class));
+                                    server(db -> {
+                                        db.exec("update teachers set age = 18 where age = 18");
+                                        // db.array(Teachers.class, "select 1 as x, 2 as y, 3 as z, 4 as a from teachers");
+                                        return null;
+                                    });
+                                    var data = server(db -> db.select(Teachers.class, "where age < :1", 42));
                                     new Grid<>(data) {{
                                         adjust(Teachers::schoolId);
                                         onRowChange = row -> JSExpression.of("console.log(row)");

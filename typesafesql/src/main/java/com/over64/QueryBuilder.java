@@ -54,13 +54,11 @@ public class QueryBuilder {
         var params = new ArrayList<String>();
 
 
-        for (var field : nonJoinedFields) {
-            if (field.sequence() != null) {
+        for (var field : nonJoinedFields)
+            if (field.sequence() != null)
                 params.add(field.sequence() + ".nextval");
-            } else {
+            else
                 params.add("?");
-            }
-        }
 
         return "insert into " + meta.table().name() + values + " values " +
             params.stream().collect(Collectors.joining(", ", "(", ")"));

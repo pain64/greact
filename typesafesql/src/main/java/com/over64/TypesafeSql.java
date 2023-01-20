@@ -83,7 +83,7 @@ public class TypesafeSql {
     }
 
     public <T> T[] array(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
-        var exprAndOffsets = mapQueryArgs(stmt, args);
+        var exprAndOffsets = mapQueryArgs(stmt, args.length);
         var offsets = exprAndOffsets.offsets;
 
         try {
@@ -138,7 +138,7 @@ public class TypesafeSql {
 
     public Void exec(Connection conn, @Language("sql") String stmt, Object... args) {
         try {
-            var exprAndOffsets = mapQueryArgs(stmt, args);
+            var exprAndOffsets = mapQueryArgs(stmt, args.length);
             var offsets = exprAndOffsets.offsets;
 
             System.out.println("### EXEC QUERY:\n" + exprAndOffsets.newExpr);
@@ -175,12 +175,12 @@ public class TypesafeSql {
         return length;
     }
 
-    record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) { }
+    public record ExprAndOffsets(String newExpr, List<ArgOffset> offsets) { }
 
-    public static ExprAndOffsets mapQueryArgs(String expr, Object... args) {
+    public static ExprAndOffsets mapQueryArgs(String expr, int argumentCount) {
         var offsets = new ArrayList<ArgOffset>();
 
-        for (var i = args.length - 1; i >= 0; i--) {
+        for (var i = argumentCount - 1; i >= 0; i--) {
             for (; ; ) {
                 var offset = expr.indexOf(":" + (i + 1));
                 var iLength = nDigits(i + 1);
@@ -237,7 +237,7 @@ public class TypesafeSql {
         var meta = Meta.parseClass(klass, reflectionMapper());
         var query = QueryBuilder.selectQuery(meta, expr);
 
-        var exprAndOffsets = mapQueryArgs(query, args);
+        var exprAndOffsets = mapQueryArgs(query, args.length);
         var offsets = exprAndOffsets.offsets;
 
         try {

@@ -62,6 +62,7 @@ public class EffectCallFinder {
 
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
+                //util.writeCompilationError(cu, tree, "error, bitch!");
                 final Symbol methodSym;
                 if (tree.meth instanceof JCTree.JCIdent ident)
                     methodSym = ident.sym;

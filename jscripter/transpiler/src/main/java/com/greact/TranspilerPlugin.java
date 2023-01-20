@@ -50,7 +50,7 @@ public class TranspilerPlugin implements Plugin {
             .addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url for validation TypesafeSql calls"))
             .addOption(new Option(null, "tsql-check-schema-username", true, "username for validation TypesafeSql calls"))
             .addOption(new Option(null, "tsql-check-schema-password", true, "password for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-driver-class-name", true, "driver name for validation TypesafeSql calls"))
+            .addOption(new Option(null, "tsql-check-driver-classname", true, "driver name for validation TypesafeSql calls"))
             .addOption(new Option(null, "tsql-check-enabled", true, "flag for validation TypesafeSql calls") {{
                 setType(Boolean.TYPE);
             }})

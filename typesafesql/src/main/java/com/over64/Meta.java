@@ -29,11 +29,12 @@ public class Meta {
     }
 
     static TableRef parseTableRef(String tableName) {
-        if (tableName.isEmpty()) throw new IllegalStateException("@Table: table name cannot be empty");
+        if (tableName.isEmpty()) throw new
+            IllegalStateException("@Table: table name cannot be empty");
 
         var nameAndAlias = tableName.split(" ");
-        if (nameAndAlias.length > 2)
-            throw new IllegalStateException("@Table: expected: 'tableName [alias]', but has: " + tableName);
+        if (nameAndAlias.length > 2) throw new
+            IllegalStateException("@Table: expected 'tableName [alias]', but has: " + tableName);
 
         var alias = nameAndAlias.length == 2 ? nameAndAlias[1] : null;
 
@@ -48,14 +49,14 @@ public class Meta {
         var className = mapper.className(klass);
         var tableAnn = mapper.classAnnotation(klass, TypesafeSql.Table.class);
         if (tableAnn == null) throw new IllegalStateException(
-            className + ": class o record must be annotated with @Table");
+            className + ": class or record must be annotated with @Table");
 
         var tableRef = parseTableRef(tableAnn.value());
         var joinAnn = mapper.classAnnotation(klass, TypesafeSql.Join.class);
         var joinsAnn = mapper.classAnnotation(klass, TypesafeSql.Joins.class);
 
         if (joinAnn != null && joinsAnn != null) throw new IllegalStateException(
-            className + ": cannot use @Join and @Joins annotation on the same time");
+            className + ": cannot use @Join and @Joins annotation at same time");
 
         var joins = joinAnn != null ? new TypesafeSql.Join[]{joinAnn} :
             (joinsAnn != null ? joinsAnn.value() : new TypesafeSql.Join[]{});

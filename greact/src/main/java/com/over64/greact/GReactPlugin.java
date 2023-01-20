@@ -48,40 +48,36 @@ public class GReactPlugin implements Plugin {
                     startedAtMillis = System.currentTimeMillis();
                 }
             }
+
             @Override
             public void finished(TaskEvent e) {
                 if (e.getKind() == TaskEvent.Kind.COMPILATION) {
 
                     try {
+                        typesafeSqlChecker.close();
                         //comp.log.
                         var result = comp.errorCount() == 0 ? "success" : "fail";
                         Files.write(Paths.get("/tmp/greact_compiled"),
                             result.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-                        if (typesafeSqlChecker != null) {
-                            typesafeSqlChecker.executor.shutdown();
-                            var closeAllThread = typesafeSqlChecker.executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
-
-                            if (!closeAllThread) throw new InterruptedException();
-                            if (typesafeSqlChecker.preparedStatementError != null)
-                                throw typesafeSqlChecker.preparedStatementError;
-                        }
-
                         System.out.println("GREACT COMPILATION DONE!!!");
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException("Too long waiting from database");
                     } catch (Throwable ex) {
                         throw new RuntimeException(ex.getMessage());
                     }
                 }
+
                 if (e.getKind() == TaskEvent.Kind.ANALYZE) {
-                    var cmd = TranspilerPlugin.getCmd(strings);
-                    if (cmd.getOptionValue("tsql-check-enabled").equals("true"))
-                        typesafeSqlChecker = new TypesafeSqlChecker(context, cmd);
-                    // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
                     var t0 = System.currentTimeMillis();
+                    // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
+                    var cmd = TranspilerPlugin.getCmd(strings);
+                    if (cmd.getOptionValue("tsql-check-enabled").equals("true") &&
+                        typesafeSqlChecker == null
+                    )
+                        typesafeSqlChecker = new TypesafeSqlChecker(context, cmd);
+
                     if (typesafeSqlChecker != null)
                         typesafeSqlChecker.apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
                     var t2 = System.currentTimeMillis();
@@ -108,7 +104,7 @@ public class GReactPlugin implements Plugin {
                     var t5 = System.currentTimeMillis();
 
                     System.out.println("for " + e.getCompilationUnit().getSourceFile() +
-                        "\ntypesafe_finder_plugin: " + (t1 - t0) + "ms" +
+                        "\nssql_checker_plugin: " + (t1 - t0) + "ms" +
                         "\ncode_view_plugin: " + (t2 - t1) + "ms" +
                         "\nrpc_plugin      : " + (t3 - t2) + "ms" +
                         "\nmarkup_plugin   : " + (t4 - t3) + "ms" +

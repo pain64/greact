@@ -6,14 +6,10 @@ import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.DiagnosticSource;
-import com.sun.tools.javac.util.Log;
-import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.*;
 
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 public class Util {
     final Symtab symtab;
@@ -21,6 +17,8 @@ public class Util {
     final Types types;
     final Symbols symbols;
     final Log javacLog;
+    final JCDiagnostic.Factory diagnosticsFactory;
+    final JavacMessages javacMessages;
 
     public Util(Context context) {
         this.symtab = Symtab.instance(context);
@@ -28,6 +26,10 @@ public class Util {
         this.types = Types.instance(context);
         this.symbols = new Symbols();
         this.javacLog = Log.instance(context);
+        this.diagnosticsFactory = JCDiagnostic.Factory.instance(context);
+        this.javacMessages = JavacMessages.instance(context);
+        javacMessages.add(locale ->
+            ResourceBundle.getBundle("com.over64.greact.MessagesBundle_en", new Locale("en", "US")));
     }
 
     class Symbols {
@@ -107,9 +109,19 @@ public class Util {
             });
     }
 
+    public void writeCompilationError(JCTree.JCCompilationUnit cu, JCTree tree, String error) {
+        var pos = new JCDiagnostic.SimpleDiagnosticPosition(tree.pos);
+        javacLog.useSource(cu.getSourceFile());
+        javacLog.error(
+            JCDiagnostic.DiagnosticFlag.API,
+            pos, diagnosticsFactory.errorKey("ssql", error)
+        );
+    }
+
+    // FIXME: use writeCompilationError instead
     public String treeSourcePosition(JCTree.JCCompilationUnit cu, JCTree tree) {
         var src = new DiagnosticSource(cu.getSourceFile(), javacLog);
-        return "%s:%d:%d" .formatted(
+        return "%s:%d:%d".formatted(
             src.getFile().getName(),
             src.getLineNumber(tree.pos),
             src.getColumnNumber(tree.pos, true));
