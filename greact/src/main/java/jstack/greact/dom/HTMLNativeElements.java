@@ -206,6 +206,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class img extends HTMLElement implements NativeElementAsComponent<img> {
         public String src;
+        public String align;
     }
 
     @JSNativeAPI public static class textarea extends HTMLElement implements NativeElementAsComponent<textarea> {
