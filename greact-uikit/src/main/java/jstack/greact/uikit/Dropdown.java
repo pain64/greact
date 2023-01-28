@@ -36,7 +36,7 @@ public class Dropdown implements Component0<div> {
                 className = "dropdown-menu";
 
                 for (var item : items) {
-                    new a() {{
+                    new div() {{
                         className = "dropdown-item";
                         new slot<>(item);
                     }};

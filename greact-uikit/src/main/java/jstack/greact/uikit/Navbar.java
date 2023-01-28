@@ -33,7 +33,7 @@ public class Navbar implements Component0<nav> {
             }};
 
             for (var item : content) {
-                JSExpression.of("var c = null;"); // ?
+                JSExpression.of("var c = null;"); // FIXME: instanceof
                 if (item instanceof Collapse c) {
                     Array.push(collapses, c);
                     new slot<>(c);
