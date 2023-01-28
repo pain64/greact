@@ -2,9 +2,10 @@ package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLElement;
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 
-@Require.CSS("navbar_and_dropdown.css")
+@Require.CSS("navbar.css")
 public class Navbar implements Component0<nav> {
     public a brand;
     public Component0<? extends HTMLElement>[] content;
@@ -12,8 +13,8 @@ public class Navbar implements Component0<nav> {
     @Override
     public Component0<nav> mount() {
         return new nav() {{
-            className = "navbar navbar-expand-lg navbar-light";
-            final div[] hideDiv = {new div()};
+            className = "navbar navbar-expand-lg bg-light";
+            Collapse[] collapses = {};
 
             if (brand != null) {
                 brand.className = "navbar-brand";
@@ -26,20 +27,16 @@ public class Navbar implements Component0<nav> {
                     className = "navbar-toggler-icon";
                 }};
                 onclick = (ev) -> {
-                    if (hideDiv[0].style.display.equals("none"))
-                        hideDiv[0].style.display = "block";
-                    else
-                        hideDiv[0].style.display = "none";
+                    for (var collapse : collapses)
+                        collapse.changeVisible();
                 };
             }};
 
             for (var item : content) {
-                if (item instanceof Collapse) {
-                    hideDiv[0] = new div() {{
-                        className = "navbar-collapse";
-                        new slot<>(item);
-                    }};
-                    new slot<>(hideDiv[0]);
+                JSExpression.of("var c = null;"); // ?
+                if (item instanceof Collapse c) {
+                    Array.push(collapses, c);
+                    new slot<>(c);
                 } else {
                     new slot<>(item);
                 }

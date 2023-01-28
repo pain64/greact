@@ -7,7 +7,7 @@ import jstack.greact.dom.HTMLNativeElements.ul;
 import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.jscripter.transpiler.model.Require;
 
-@Require.CSS("navbar_and_dropdown.css")
+@Require.CSS("navbar.css")
 public class NavbarNav implements Component0<ul> {
     private final Component0<? extends HTMLElement>[] items;
 
@@ -18,11 +18,14 @@ public class NavbarNav implements Component0<ul> {
     @Override
     public Component0<ul> mount() {
         return new ul() {{
-            className = "navbar-nav";
+            className = "navbar-nav mr-auto";
             for (var item : items) {
                 new li() {{
                     className = "nav-item";
-                    new slot<>(item);
+                    new a() {{
+                        className = "nav-link";
+                        new slot<>(item);
+                    }};
                 }};
             }
 
