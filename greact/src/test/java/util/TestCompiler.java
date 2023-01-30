@@ -1,6 +1,6 @@
 package util;
 
-import com.over64.greact.GReactPlugin;
+import jstack.greact.GReactPlugin;
 import com.sun.tools.javac.api.BasicJavacTask;
 
 import javax.tools.ToolProvider;

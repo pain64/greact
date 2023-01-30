@@ -14,7 +14,7 @@ public class _14Bundle {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.Require;
+                import jstack.jscripter.transpiler.model.Require;
                                     
                 @Require.CSS({"test.css"}) class Test {}
                 """,

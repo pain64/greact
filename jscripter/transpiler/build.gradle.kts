@@ -8,7 +8,7 @@ repositories {
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack"
     version = "0.0.1"
 }
 
@@ -29,6 +29,7 @@ java {
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
     jvmArgs = listOf("--enable-preview",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",

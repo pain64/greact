@@ -1,14 +1,11 @@
 package ui.transform;
 
-import com.over64.greact.EffectCallFinder;
-import com.over64.greact.NewClassPatcher2;
-import com.over64.greact.ViewEntryFinder;
+import jstack.greact.EffectCallFinder;
+import jstack.greact.NewClassPatcher2;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import org.junit.jupiter.api.Test;
 import util.AnalyzeAssertionsCompiler;
-
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static util.AnalyzeAssertionsCompiler.withAssert;
@@ -27,7 +24,7 @@ public class _02EffectsTest {
 
     @Test void simple() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     int n = 0;
                     @Override public div mount() {
@@ -39,7 +36,7 @@ public class _02EffectsTest {
                 }""",
             """
   
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                  
                 class A implements Component0<div> {
                    \s
@@ -51,13 +48,13 @@ public class _02EffectsTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            com.over64.greact.dom.HTMLNativeElements.div _holder0 = null;
+                            jstack.greact.dom.HTMLNativeElements.div _holder0 = null;
                             {
                                 (_render0 = ()->{
-                                    final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                                    final jstack.greact.dom.HTMLNativeElements.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                                     _el0.innerText = "clicked " + n + " times";
                                     _el0.onclick = (ev)->_effect0(n += 1);
-                                    _holder0 = com.over64.greact.dom.GReact.replace(_el0, _holder0);
+                                    _holder0 = jstack.greact.dom.GReact.replace(_el0, _holder0);
                                 }).run();
                             }
                             return _holder0;

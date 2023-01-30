@@ -1,6 +1,6 @@
 package lowering;
 
-import com.greact.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.CompileException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import util.CompileAssert;
@@ -15,7 +15,7 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.async;
+                import jstack.jscripter.transpiler.model.async;
                 public abstract class Test {
                   @async abstract void bar();
                   void foo() {}
@@ -41,7 +41,7 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     public abstract class Test {
                       @async abstract void bar();
                       @async void foo() {}
@@ -60,7 +60,7 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     public class Test {
                       @async Test() {}
                     }""",
@@ -76,7 +76,7 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.async;
+                import jstack.jscripter.transpiler.model.async;
                 public abstract class Test {
                   @async abstract void foo();
                   @async void bar() { foo(); }
@@ -97,7 +97,7 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     public abstract class Test {
                       @async abstract void foo();
                       void bar() { foo(); }
@@ -114,8 +114,10 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.async;
+                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -138,7 +140,7 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
                     public abstract class A {
                       @async abstract void foo();
                     }""",
@@ -171,11 +173,17 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
+                    
                     public interface A {
                       @async void foo();
                     }""",
                 """
+                    const _js_A = (superclass) => class js_A extends superclass {
+                      __iface_instance__(iface) {
+                        return (iface === _js_A || (typeof super.__iface_instance__ !== "undefined" && super.__iface_instance__(iface)));
+                      }
+                    };
                     """),
             new CompileAssert.CompileCase("js.B",
                 """
@@ -185,7 +193,7 @@ public class _08AsyncAwait {
                       }
                     }""",
                 """
-                    class js_B {
+                    class js_B extends _js_A(Object) {
                       constructor() {
                       }
                       _foo() {
@@ -208,7 +216,7 @@ public class _08AsyncAwait {
                 new CompileAssert.CompileCase("js.B",
                     """
                         package js;
-                        import com.greact.model.async;
+                        import jstack.jscripter.transpiler.model.async;
                         class B implements A {
                           @async @Override public void foo() {
                           }
@@ -225,8 +233,10 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.async;
+                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public abstract class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }
@@ -253,8 +263,10 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import com.greact.model.async;
+                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.ErasedInterface;
                     public class Test {
+                      @ErasedInterface
                       interface Foo {
                         @async void foo();
                       }
@@ -285,8 +297,10 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import com.greact.model.async;
+                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
+                  @ErasedInterface
                   interface Foo {
                     @async void foo();
                   }

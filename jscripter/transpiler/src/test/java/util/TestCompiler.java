@@ -1,6 +1,6 @@
 package util;
 
-import com.greact.TranspilerPlugin;
+import jstack.jscripter.transpiler.TranspilerPlugin;
 import com.sun.tools.javac.api.BasicJavacTask;
 import std.StdTypeConversion;
 

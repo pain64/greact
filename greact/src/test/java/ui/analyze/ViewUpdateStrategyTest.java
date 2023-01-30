@@ -1,10 +1,10 @@
 package ui.analyze;
 
-import com.over64.greact.EffectCallFinder;
-import com.over64.greact.Util;
-import com.over64.greact.ViewEntryFinder;
-import com.over64.greact.ViewUpdateStrategy;
-import com.over64.greact.dom.HTMLNativeElements;
+import jstack.greact.EffectCallFinder;
+import jstack.greact.Util;
+import jstack.greact.ViewEntryFinder;
+import jstack.greact.ViewUpdateStrategy;
+import jstack.greact.dom.HTMLNativeElements;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
@@ -93,7 +93,7 @@ public class ViewUpdateStrategyTest {
 
     @Test void simple_unconditional_all() {
         withAssert(AssertNodeTree.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div() {{
@@ -112,7 +112,7 @@ public class ViewUpdateStrategyTest {
 
     @Test void conditional_if() {
         withAssert(AssertNodeTree.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     record AAA(int field){};
                     boolean cond = false;
@@ -129,7 +129,7 @@ public class ViewUpdateStrategyTest {
 
     @Test void effected_vars_for_transitive_and_conditional() {
         withAssert(AssertNodeTree.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     boolean cond = false;
                     boolean eA = false;
@@ -175,7 +175,7 @@ public class ViewUpdateStrategyTest {
 
     @Test void find_views_for_update() {
         withAssert(AssertNodesForUpdate.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     boolean cond = false;
                     boolean eA = false;
@@ -225,7 +225,7 @@ public class ViewUpdateStrategyTest {
 
     @Test void find_view_for_update_slot() {
         withAssert(AssertNodesForUpdate.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     String text = "hello";
                     Component1<div, String> slotValue = null;

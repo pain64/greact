@@ -1,14 +1,11 @@
 package ui.transform;
 
-import com.over64.greact.EffectCallFinder;
-import com.over64.greact.NewClassPatcher2;
-import com.over64.greact.ViewEntryFinder;
+import jstack.greact.EffectCallFinder;
+import jstack.greact.NewClassPatcher2;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import org.junit.jupiter.api.Test;
 import util.AnalyzeAssertionsCompiler;
-
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +24,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_entry() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div();
@@ -35,7 +32,7 @@ public class _01PatchNewClassTest {
                 }""",
             """
                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                   
                 class A implements Component0<div> {
                    \s
@@ -46,7 +43,7 @@ public class _01PatchNewClassTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            final jstack.greact.dom.HTMLNativeElements.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             return _el0;
                         }).call();
                     }
@@ -55,7 +52,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_as_local_expression() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         var b = new button("lol");
@@ -64,7 +61,7 @@ public class _01PatchNewClassTest {
                 }""",
             """    
                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                  
                 class A implements Component0<div> {
                    \s
@@ -74,13 +71,13 @@ public class _01PatchNewClassTest {
                    \s
                     @Override
                     public div mount() {
-                        com.over64.greact.dom.HTMLNativeElements.button b = (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.button _el0 = com.greact.model.JSExpression.of("document.createElement(\\'button\\')");
+                        jstack.greact.dom.HTMLNativeElements.button b = (()->{
+                            final jstack.greact.dom.HTMLNativeElements.button _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'button\\')");
                             _el0.innerText = "lol";
                             return _el0;
                         }).call();
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _el1 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            final jstack.greact.dom.HTMLNativeElements.div _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             return _el1;
                         }).call();
                     }
@@ -89,7 +86,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_as_new_class_argument() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     static class B implements Component0<div> {
                         final h1 some;
@@ -105,7 +102,7 @@ public class _01PatchNewClassTest {
                 }""",
             """    
                                       
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                  
                 class A implements Component0<div> {
                    \s
@@ -124,7 +121,7 @@ public class _01PatchNewClassTest {
                         @Override
                         public div mount() {
                             return (()->{
-                                final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                                final jstack.greact.dom.HTMLNativeElements.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                                 return _el0;
                             }).call();
                         }
@@ -133,7 +130,7 @@ public class _01PatchNewClassTest {
                     @Override
                     public B mount() {
                         return new B((()->{
-                            final com.over64.greact.dom.HTMLNativeElements.h1 _el1 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                            final jstack.greact.dom.HTMLNativeElements.h1 _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                             return _el1;
                         }).call());
                     }
@@ -142,7 +139,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_new_html_element_this_to_element_name() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div() {{
@@ -153,7 +150,7 @@ public class _01PatchNewClassTest {
                 }""",
             """
                                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 class A implements Component0<div> {
                    \s
@@ -164,7 +161,7 @@ public class _01PatchNewClassTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            final jstack.greact.dom.HTMLNativeElements.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             _el0.innerText = "hello";
                             _el0.innerText = "world";
                             return _el0;
@@ -175,7 +172,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_new_html_element_to_GReact_make() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div() {{
@@ -190,7 +187,7 @@ public class _01PatchNewClassTest {
                 }""",
             """
                                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 class A implements Component0<div> {
                    \s
@@ -201,12 +198,12 @@ public class _01PatchNewClassTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _el0 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            final jstack.greact.dom.HTMLNativeElements.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             {
-                                final com.over64.greact.dom.HTMLNativeElements.h1 _el1 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                                final jstack.greact.dom.HTMLNativeElements.h1 _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                                 _el1.innerText = "hello";
                                 {
-                                    final com.over64.greact.dom.HTMLNativeElements.h2 _el2 = com.greact.model.JSExpression.of("document.createElement(\\'h2\\')");
+                                    final jstack.greact.dom.HTMLNativeElements.h2 _el2 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h2\\')");
                                     _el2.innerText = "world";
                                     _el1.appendChild(_el2);
                                 }
@@ -220,7 +217,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_new_html_element_args_to_statements() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<h1> {
                     @Override public h1 mount() {
                         return new h1("hello") {{
@@ -230,7 +227,7 @@ public class _01PatchNewClassTest {
                 }""",
             """
                                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 class A implements Component0<h1> {
                    \s
@@ -241,10 +238,10 @@ public class _01PatchNewClassTest {
                     @Override
                     public h1 mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.h1 _el0 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                            final jstack.greact.dom.HTMLNativeElements.h1 _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                             _el0.innerText = "hello";
                             {
-                                final com.over64.greact.dom.HTMLNativeElements.h1 _el1 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                                final jstack.greact.dom.HTMLNativeElements.h1 _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                                 _el1.innerText = "world";
                                 _el0.appendChild(_el1);
                             }
@@ -256,7 +253,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_new_custom_component_to_GReact_mount() {
         withAssert(PatchedLikeAssert.class, """
-            import com.over64.greact.dom.HTMLNativeElements.*;
+            import jstack.greact.dom.HTMLNativeElements.*;
                                 
             class Demo implements Component0<h1> {
               static class Child implements Component0<h1> {
@@ -267,7 +264,7 @@ public class _01PatchNewClassTest {
             }""",
             """
                                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 class Demo implements Component0<h1> {
                    \s
@@ -284,7 +281,7 @@ public class _01PatchNewClassTest {
                         @Override
                         public h1 mount() {
                             return (()->{
-                                final com.over64.greact.dom.HTMLNativeElements.h1 _el0 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                                final jstack.greact.dom.HTMLNativeElements.h1 _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                                 _el0.innerText = "hello";
                                 return _el0;
                             }).call();
@@ -300,7 +297,7 @@ public class _01PatchNewClassTest {
 
     @Test void map_new_slot_to_GReact_mountSlot() {
         withAssert(PatchedLikeAssert.class, """
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                    
                 class ListDecorator implements Component0<div> {
                     final String[] list;
@@ -322,12 +319,12 @@ public class _01PatchNewClassTest {
                 }""",
             """
                                 
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 class ListDecorator implements Component0<div> {
                     final String[] list;
                     Component1<h1, String> forDecorate = (s)->(()->{
-                        final com.over64.greact.dom.HTMLNativeElements.h1 _el0 = com.greact.model.JSExpression.of("document.createElement(\\'h1\\')");
+                        final jstack.greact.dom.HTMLNativeElements.h1 _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                         _el0.innerText = s + "hello";
                         return _el0;
                     }).call();
@@ -340,13 +337,13 @@ public class _01PatchNewClassTest {
                     @Override
                     public div mount() {
                         return (()->{
-                            final com.over64.greact.dom.HTMLNativeElements.div _el1 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                            final jstack.greact.dom.HTMLNativeElements.div _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             _el1.style.border = "1px red solid";
                             for (java.lang.String s : list) {
                                 {
-                                    final com.over64.greact.dom.HTMLNativeElements.div _el2 = com.greact.model.JSExpression.of("document.createElement(\\'div\\')");
+                                    final jstack.greact.dom.HTMLNativeElements.div _el2 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                                     _el2.style.border = "1px green solid";
-                                    com.over64.greact.dom.GReact.mmount(_el2, forDecorate, s);
+                                    jstack.greact.dom.GReact.mmount(_el2, forDecorate, s);
                                     _el1.appendChild(_el2);
                                 }
                             }

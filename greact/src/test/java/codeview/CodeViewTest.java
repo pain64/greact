@@ -1,6 +1,6 @@
 package codeview;
 
-import com.over64.greact.CodeViewPlugin;
+import jstack.greact.CodeViewPlugin;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import org.junit.jupiter.api.Test;
@@ -19,9 +19,9 @@ public class CodeViewTest {
 
     @Test void sampleTest() {
         withAssert(PatchedLikeAssert.class, """            
-                import com.over64.greact.dom.CodeView;
-                import com.over64.greact.dom.CodeView.CodeAndView;
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.CodeView;
+                import jstack.greact.dom.CodeView.CodeAndView;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                   
                 public class A implements Component0<div> {
                     Component1<div, CodeAndView> renderer = codeAndView ->
@@ -42,9 +42,9 @@ public class CodeViewTest {
                 }""",
             """
                                 
-                import com.over64.greact.dom.CodeView;
-                import com.over64.greact.dom.CodeView.CodeAndView;
-                import com.over64.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.dom.CodeView;
+                import jstack.greact.dom.CodeView.CodeAndView;
+                import jstack.greact.dom.HTMLNativeElements.*;
                                 
                 public class A implements Component0<div> {
                    \s

@@ -4,7 +4,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.over64"
+    group = "jstack"
     version = "0.0.1"
     repositories {
         jcenter()
@@ -25,8 +25,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:GReact --js-src-package=com.over64.greact.uikit " +
-            "--tsql-check-enabled=false")
+    options.compilerArgs.add("-Xplugin:GReact --js-src-package=jstack.greact.uikit")
     options.fork()
     options.forkOptions.jvmArgs = listOf(
         "--enable-preview",
@@ -56,7 +55,6 @@ dependencies {
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
     implementation(project(":greact"))
-    implementation(project(":typesafesql"))
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
