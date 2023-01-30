@@ -1,18 +1,22 @@
 package jstack.demo.js;
 
-import jstack.greact.dom.HTMLNativeElements.*;
-import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.Require;
-import jstack.tsql.TypesafeSql;
 import jstack.greact.dom.CodeView;
 import jstack.greact.dom.CodeView.CodeAndView;
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.uikit.Grid;
+import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.uikit.*;
+import jstack.greact.uikit.routing.Route;
+import jstack.greact.uikit.routing.Router;
+import jstack.jscripter.transpiler.model.JSExpression;
+import jstack.jscripter.transpiler.model.Require;
+import jstack.tsql.TypesafeSql;
+
 import static jstack.demo.Main.Server.server;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id long school_id, String name, String email, int age) {}
+    @TypesafeSql.Table("teachers") public record StudyForm(@TypesafeSql.Id long school_id,
+                                                           String name, String email, int age) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
