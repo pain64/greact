@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("org.flywaydb.flyway") version "9.8.1"
     id("jstack.jscripter.bundler") version "0.0.1"
 }
 
@@ -16,6 +17,12 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
 }
 
+val devDbName = "jstack_demo"
+val devDbUser = "jstack"
+val devDbPassword = "1234"
+
+val compileTimeSqlCheckEnabled = file("compile_time_sql_checks_enabled").exists()
+
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
@@ -25,14 +32,19 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
-    options.compilerArgs.add("-Xplugin:GReact --js-src-package=jstack.demo.js " +
-            "--tsql-check-enabled=true " +
-            "--tsql-driver-class-name=org.postgresql.Driver " +
-            "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/uikit_sample " +
-            "--tsql-check-schema-username=uikit " +
-            "--tsql-check-schema-password=1234 ")
+    options.compilerArgs.add(
+        "-Xplugin:GReact --js-src-package=jstack.demo.js " +
+                if (compileTimeSqlCheckEnabled) {
+                    "--tsql-check-enabled=true " +
+                            "--tsql-check-driver-classname=org.postgresql.Driver " +
+                            "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/$devDbName " +
+                            "--tsql-check-schema-username=$devDbUser " +
+                            "--tsql-check-schema-password=$devDbPassword "
+                } else ""
+    )
     options.fork()
     options.forkOptions.jvmArgs = listOf(
+        // "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
         "--enable-preview",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
@@ -59,7 +71,7 @@ val test by tasks.getting(Test::class) {
 dependencies {
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
-    implementation(project(":tsql"))
+    implementation(project(":ssql"))
     implementation(project(":greact"))
     implementation(project(":greact-uikit"))
     implementation("com.zaxxer:HikariCP:4.0.3")
@@ -82,4 +94,12 @@ tasks.jar {
 //    FIXME: problem with Gradle
 //    duplicatesStrategy = DuplicatesStrategy.WARN
 //    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
+flyway {
+    driver = "org.postgresql.Driver"
+    url = "jdbc:postgresql://localhost:5432/$devDbName"
+    user = devDbUser
+    password = devDbPassword
+    cleanDisabled = false
 }

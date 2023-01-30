@@ -54,7 +54,6 @@ val test by tasks.getting(Test::class) {
 dependencies {
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
-    implementation(project(":tsql"))
     implementation(project(":greact"))
     implementation(project(":greact-uikit"))
     implementation("com.zaxxer:HikariCP:4.0.3")

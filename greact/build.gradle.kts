@@ -50,10 +50,11 @@ val test by tasks.getting(Test::class) {
 }
 
 dependencies {
+    implementation("commons-cli:commons-cli:1.3.1")
     implementation("org.jetbrains:annotations:20.1.0")
     implementation(project(":jscripter:transpiler"))
     implementation(project(":jscripter:std"))
-    implementation(project(":tsql"))
+    implementation(project(":ssql"))
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")

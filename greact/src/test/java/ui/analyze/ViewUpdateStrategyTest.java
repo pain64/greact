@@ -114,6 +114,7 @@ public class ViewUpdateStrategyTest {
         withAssert(AssertNodeTree.class, """
                 import jstack.greact.dom.HTMLNativeElements.*;
                 class A implements Component0<div> {
+                    record AAA(int field){};
                     boolean cond = false;
                     @Override public div mount() {
                         return new div() {{

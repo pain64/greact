@@ -19,8 +19,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,7 +31,6 @@ public class TranspilerPlugin implements Plugin {
 
     String jsCodePackage = null;
     String[] stdConversionClass = null;
-    public static List<String> argsData;
 
     @Override
     public String getName() {
@@ -46,34 +43,40 @@ public class TranspilerPlugin implements Plugin {
             Names.instance(context).fromString(className));
     }
 
-    @Override
-    public void init(JavacTask task, String... args) {
-        argsData = Arrays.asList(args);
+    public static CommandLine getCmd(String... args) {
         var options = new Options()
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
-            }}).addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url for validation TypesafeSql calls"))
+            }})
+            .addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url for validation TypesafeSql calls"))
             .addOption(new Option(null, "tsql-check-schema-username", true, "username for validation TypesafeSql calls"))
             .addOption(new Option(null, "tsql-check-schema-password", true, "password for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-driver-class-name", true, "driver name for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-check-enabled", true, "flag for validation TypesafeSql calls"){{
+            .addOption(new Option(null, "tsql-check-driver-classname", true, "driver name for validation TypesafeSql calls"))
+            .addOption(new Option(null, "tsql-check-enabled", true, "flag for validation TypesafeSql calls") {{
                 setType(Boolean.TYPE);
             }})
             .addOption(new Option(null, "tsql-check-schema-dialect", true, "dialect"))
             .addOption(new Option(null, "std-conv-class", true, "java standard library type conversion"));
 
         try {
-            var cmd = new DefaultParser().parse(options, args);
-            jsCodePackage = cmd.getOptionValue("js-src-package");
-            stdConversionClass = Optional.ofNullable(cmd.getOptionValue("std-conv-class"))
-                .map(opt -> opt.split("\\."))
-                .orElse(DEFAULT_STD_CONVERSION_CLASS);
+            return new DefaultParser().parse(options, args);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             new HelpFormatter().printHelp("jScripter plugin", options);
 
             System.exit(1);
         }
+        return null;
+    }
+
+    @Override
+    public void init(JavacTask task, String... args) {
+        var cmd = getCmd(args);
+        jsCodePackage = cmd.getOptionValue("js-src-package");
+        stdConversionClass = Optional.ofNullable(cmd.getOptionValue("std-conv-class"))
+            .map(opt -> opt.split("\\."))
+            .orElse(DEFAULT_STD_CONVERSION_CLASS);
+
 
         var context = ((BasicJavacTask) task).getContext();
         var symTab = Symtab.instance(context);

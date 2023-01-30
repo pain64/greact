@@ -46,6 +46,7 @@ public class HTMLNativeElements {
         public h1() {};
         public h1(@DomProperty("innerText") String innerText) { }
     }
+
     @JSNativeAPI public static class h2 extends HTMLElement implements NativeElementAsComponent<h2> {
         public h2() {};
         public h2(@DomProperty("innerText") String innerText) { }
@@ -86,13 +87,6 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class code extends HTMLElement implements NativeElementAsComponent<code> {
     }
 
-    @JSNativeAPI public static class form extends HTMLElement implements NativeElementAsComponent<form> {
-        public String action;
-        public String name;
-        public String method;
-        public String acceptCharset;
-    }
-
     @JSNativeAPI public static  class button extends HTMLElement implements NativeElementAsComponent<button> {
         public String type;
         public button() {}
@@ -102,6 +96,7 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class body extends HTMLElement implements NativeElementAsComponent<body> { }
     @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
     }
+
     @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}
     @JSNativeAPI public static class section extends HTMLElement implements NativeElementAsComponent<section> { }
     @JSNativeAPI public static class header extends HTMLElement implements NativeElementAsComponent<header> { }
@@ -121,9 +116,18 @@ public class HTMLNativeElements {
         public String maxLength;
         public String placeholder;
         public String value;
+        public String minlength;
+        public String maxlength;
         public long valueAsNumber;
         public Boolean checked;
         public native void setCustomValidity(String text);
+    }
+
+    @JSNativeAPI public static class form extends HTMLElement implements NativeElementAsComponent<form> {
+        public String action;
+        public String name;
+        public String method;
+        public String acceptCharset;
     }
 
     @JSNativeAPI public static class select extends HTMLElement implements NativeElementAsComponent<select> {

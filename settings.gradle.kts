@@ -6,7 +6,7 @@ include(
     "greact-uikit",
     "demo",
     "greact-uikit-docs",
-    "tsql"
+    "ssql"
 )
 
 pluginManagement {

@@ -66,9 +66,11 @@ public class CodeViewPlugin {
                                 throw new RuntimeException(ex);
                             }
                         } else throw new RuntimeException(
+                            util.treeSourcePosition(cu, newClass) + "\n" +
                             "expected new class as CodeView component lambda body but has: " +
                                 lambda.body);
                     else throw new RuntimeException(
+                        util.treeSourcePosition(cu, newClass) + "\n" +
                         "expected lambda component as first arg for CodeView but has: " +
                             viewCompExpression);
 

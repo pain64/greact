@@ -129,6 +129,7 @@ public class RPCPlugin {
             @Override
             public void visitVarDef(JCTree.JCVariableDecl varDef) {
                 localVars.add(varDef.sym);
+                varDef.sym.owner = endpoint;
             }
         });
 
@@ -149,6 +150,7 @@ public class RPCPlugin {
                         this.result = lambdaCachedVars.get(varSym);
                         return;
                     }
+
 
                     rpcArgs.list = rpcArgs.list.append(maker.Ident(varSym));
                     var parsedArg = new Symbol.VarSymbol(Flags.FINAL,
