@@ -1,14 +1,16 @@
 package com.over64.greact;
 
 import com.over64.Meta;
+import com.over64.Meta.ClassMeta;
 import com.over64.QueryBuilder;
-import com.over64.TypesafeSql;
+import com.over64.QueryBuilder.FieldArgument;
+import com.over64.QueryBuilder.FieldResult;
+import com.over64.QueryBuilder.PositionalArgument;
+import com.over64.SafeSql;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
@@ -16,7 +18,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.cli.CommandLine;
 import org.jetbrains.annotations.Nullable;
 
-import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
 import java.sql.*;
 import java.util.*;
@@ -25,7 +26,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class TypesafeSqlChecker implements AutoCloseable {
+public class SafeSqlChecker implements AutoCloseable {
 
     static class SchemaCheckException extends RuntimeException {
         final JCTree tree;
@@ -53,12 +54,14 @@ public class TypesafeSqlChecker implements AutoCloseable {
     final Map<Symbol.MethodSymbol, CheckHandler> checkHandlers = new HashMap<>();
 
     class Symbols {
-        Symbol.ClassSymbol clTsql = util.lookupClass(TypesafeSql.class);
+        Symbol.ClassSymbol clTsql = util.lookupClass(SafeSql.class);
         Symbol.ClassSymbol clConnection = util.lookupClass(Connection.class);
+        Symbol.ClassSymbol clClass = util.lookupClass(Class.class);
 
         List<Symbol.MethodSymbol> mtExec = util.lookupMemberAll(clTsql, "exec");
-        List<Symbol.MethodSymbol> mtArray = util.lookupMemberAll(clTsql, "array");
-        List<Symbol.MethodSymbol> mtUniqueOrNull = util.lookupMemberAll(clTsql, "uniqueOrNull");
+        List<Symbol.MethodSymbol> mtQuery = util.lookupMemberAll(clTsql, "query");
+        List<Symbol.MethodSymbol> mtQueryOne = util.lookupMemberAll(clTsql, "queryOne");
+        List<Symbol.MethodSymbol> mtQueryOneOrNull = util.lookupMemberAll(clTsql, "queryOneOrNull");
         List<Symbol.MethodSymbol> mtSelect = util.lookupMemberAll(clTsql, "select");
         List<Symbol.MethodSymbol> mtSelectOne = util.lookupMemberAll(clTsql, "selectOne");
         List<Symbol.MethodSymbol> mtUpdateSelf = util.lookupMemberAll(clTsql, "updateSelf");
@@ -66,7 +69,7 @@ public class TypesafeSqlChecker implements AutoCloseable {
         List<Symbol.MethodSymbol> mtInsertSelf = util.lookupMemberAll(clTsql, "insertSelf");
     }
 
-    public TypesafeSqlChecker(Context context, CommandLine cmd) {
+    public SafeSqlChecker(Context context, CommandLine cmd) {
         this.symtab = Symtab.instance(context);
         this.names = Names.instance(context);
         this.types = Types.instance(context);
@@ -101,8 +104,9 @@ public class TypesafeSqlChecker implements AutoCloseable {
         };
 
         add.accept(symbols.mtExec, this::checkExec);
-        add.accept(symbols.mtArray, this::checkArray);
-        add.accept(symbols.mtUniqueOrNull, this::checkArray);
+        add.accept(symbols.mtQuery, this::checkQuery);
+        add.accept(symbols.mtQueryOne, this::checkQuery);
+        add.accept(symbols.mtQueryOneOrNull, this::checkQuery);
         add.accept(symbols.mtSelect, this::checkSelect);
         add.accept(symbols.mtSelectOne, this::checkSelect);
         add.accept(symbols.mtInsertSelf, this::checkInsertSelf);
@@ -118,7 +122,7 @@ public class TypesafeSqlChecker implements AutoCloseable {
 
     Meta.Mapper<
         Symbol.ClassSymbol, Symbol.RecordComponent,
-        Symbol.ClassSymbol, JCTree.JCMethodDecl> finderMapper() {
+        Symbol.ClassSymbol, Symbol.RecordComponent> finderMapper() {
 
         return new Meta.Mapper<>() {
             @Override public String className(Symbol.ClassSymbol symbol) {
@@ -130,6 +134,7 @@ public class TypesafeSqlChecker implements AutoCloseable {
             }
 
             @Override public Stream<Symbol.RecordComponent> readFields(Symbol.ClassSymbol symbol) {
+
                 return symbol.getRecordComponents().stream().map(n -> (Symbol.RecordComponent) n);
             }
 
@@ -149,8 +154,8 @@ public class TypesafeSqlChecker implements AutoCloseable {
                 return klass;
             }
 
-            @Override public JCTree.JCMethodDecl mapField(Symbol.RecordComponent field) {
-                return field.accessorMeth;
+            @Override public Symbol.RecordComponent mapField(Symbol.RecordComponent field) {
+                return field;
             }
         };
     }
@@ -207,18 +212,22 @@ public class TypesafeSqlChecker implements AutoCloseable {
             }
     }
 
-    Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl>
-    extractMeta(JCTree.JCMethodInvocation invoke) {
+    Symbol.ClassSymbol extractClass(JCTree.JCMethodInvocation invoke) {
         var tableClass = invoke.args.head.type.tsym == symbols.clConnection
             ? invoke.args.get(1)
             : invoke.args.head;
 
-        // FIXME: wtf???
-        var classSymbol = TreeInfo.symbol(tableClass) == null ?
-            tableClass.getTree().type.asElement().enclClass() :
-            (Symbol.ClassSymbol) TreeInfo.symbol(tableClass).owner;
+        if (tableClass instanceof JCTree.JCFieldAccess &&
+            tableClass.type.tsym == symbols.clClass) {
+            System.out.println("####HAS " + (Symbol.ClassSymbol) ((JCTree.JCFieldAccess) tableClass).selected.type.tsym);
+            return (Symbol.ClassSymbol) ((JCTree.JCFieldAccess) tableClass).selected.type.tsym;
+        } else
+            return (Symbol.ClassSymbol) tableClass.type.tsym;
+    }
 
-        return Meta.parseClass(classSymbol, finderMapper());
+    ClassMeta<Symbol.ClassSymbol, Symbol.RecordComponent>
+    extractMeta(JCTree.JCMethodInvocation invoke) {
+        return Meta.parseClass(extractClass(invoke), finderMapper());
     }
 
     String extractQuery(JCTree.JCMethodInvocation invoke, int argumentIndex) {
@@ -287,78 +296,140 @@ public class TypesafeSqlChecker implements AutoCloseable {
         };
     }
 
-    // TODO:
-    //   2. реализация insertSelf
-    //   3. реализация updateSelf
-    //   4. реализация deleteSelf
-    //   5. уточнение номера поля если это field (важно для insertSelf и т.д)
-    //   8. убрать аннотации в пакет
-    //   9. смержить с master
-    //   10. сделать файл compile_time_sql_checks_enabled,
-    //      наличие которого включает проверки sql при сборке
-    //   11. переделать Meta с records на классы
+    private void checkPositionalArguments(
+        JCTree.JCMethodInvocation invoke, String query, QueryInfo info,
+        List<PositionalArgument> positionalArguments,
+        List<JCTree.JCExpression> javaArguments
+    ) throws SQLException {
 
-    private void checkResultSetTypes(
-        JCTree.JCMethodInvocation invoke,
-        Meta.ClassMeta<Symbol.ClassSymbol, JCTree.JCMethodDecl> meta,
-        String query, QueryInfo info
-    ) throws SQLException, SchemaCheckException {
-
-        int parameterCount = info.rsMetadata.getColumnCount();
-        if (parameterCount != meta.fields().size())
+        int parameterCount = info.paramMetadata.getParameterCount();
+        if (parameterCount != positionalArguments.size())
             throw new SchemaCheckException(
                 invoke, """
                 %s
-                ^^^ column count mismatch
+                ^^^ argument count mismatch
                     expected %s has %s"""
-                .formatted(query, parameterCount, meta.fields().size())
+                .formatted(query, parameterCount, positionalArguments.size())
             );
 
-        for (int i = 1; i <= info.rsMetadata.getColumnCount(); i++) {
-            var from = info.rsMetadata.getColumnClassName(i);
-            var to = meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString();
+        for (var argument : positionalArguments) {
+            var javaArgument = javaArguments.get(argument.javaArgumentIndex);
+            var to = info.paramMetadata.getParameterClassName(argument.sqlParameterNumber);
+            var from = javaArgument.type.tsym.getQualifiedName().toString();
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(
-                    invoke, """
+                    javaArgument, """
                     %s
-                    ^^^ result type mismatch for column %d (%s --> %s)
+                    ^^^ type mismatch for java argument %d to sql parameter %d
                         expected %s has %s"""
                     .formatted(
-                        query, i - 1, info.rsMetadata.getColumnName(i),
-                        meta.fields().get(i - 1).name(), from, to
+                        query, argument.javaArgumentIndex, argument.sqlParameterNumber, to, from
                     )
                 );
         }
     }
 
-    private void checkArgumentsTypes(
-        JCTree.JCMethodInvocation invoke, String query,
-        QueryInfo info, List<JCTree.JCExpression> arguments
+    // FIXME: объеденить с checkPositionalArguments???
+    private void checkFieldArguments(
+        JCTree.JCMethodInvocation invoke, String query, QueryInfo info,
+        List<FieldArgument<Symbol.RecordComponent>> fieldArguments
     ) throws SQLException {
 
         int parameterCount = info.paramMetadata.getParameterCount();
-        if (parameterCount != arguments.size())
+        if (parameterCount != fieldArguments.size())
             throw new SchemaCheckException(
                 invoke, """
                 %s
-                ^^^ parameter count mismatch
+                ^^^ field argument count mismatch
                     expected %s has %s"""
-                .formatted(query, parameterCount, arguments.size())
+                .formatted(query, parameterCount, fieldArguments.size())
             );
 
-        for (int i = 1; i <= info.paramMetadata().getParameterCount(); i++) {
-            var argument = arguments.get(i - 1);
-            var from = info.paramMetadata.getParameterClassName(i);
-            var to = argument.type.tsym.getQualifiedName().toString();
+        for (var argument : fieldArguments) {
+            var from = info.paramMetadata.getParameterClassName(argument.sqlParameterNumber);
+            var to = argument.field.type.tsym.getQualifiedName().toString();
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(
-                    argument, """
+                    invoke, """
                     %s
-                    ^^^ type mismatch for parameter %d
+                    ^^^ type mismatch for java field `%s` to sql parameter %d
                         expected %s has %s"""
-                    .formatted(query, i - 1, from, to)
+                    .formatted(
+                        query, argument.field.name.toString(), argument.sqlParameterNumber, from, to
+                    )
+                );
+        }
+    }
+
+    private void checkResultSetScalar(
+        JCTree.JCMethodInvocation invoke,
+        Symbol.ClassSymbol toClass,
+        String query, QueryInfo info
+    ) throws SQLException, SchemaCheckException {
+
+        if (info.rsMetadata.getColumnCount() != 1)
+            throw new SchemaCheckException(
+                invoke, """
+                %s
+                ^^^ expected 1 column in result set for scalar result"""
+                .formatted(query)
+            );
+
+        var from = info.rsMetadata.getColumnClassName(1);
+        var to = toClass.getQualifiedName().toString();
+
+        if (!isTypeAssignable(from, to))
+            throw new SchemaCheckException(
+                invoke, """
+                %s
+                ^^^ result type mismatch from sql column %s(1)
+                    expected %s has %s"""
+                .formatted(
+                    query, info.rsMetadata.getColumnName(1), to, from
+                )
+            );
+    }
+
+    private void checkResultSetTuple(
+        JCTree.JCMethodInvocation invoke,
+        List<FieldResult<Symbol.RecordComponent>> resultFields,
+        String query, QueryInfo info
+    ) throws SQLException, SchemaCheckException {
+        if (info.rsMetadata == null)
+            if (resultFields.isEmpty()) return;
+            else throw new SchemaCheckException(
+                invoke, "result set has no output columns, but expected"
+            );
+
+
+        int columnCount = info.rsMetadata.getColumnCount();
+        if (columnCount != resultFields.size())
+            throw new SchemaCheckException(
+                invoke, """
+                %s
+                ^^^ column count mismatch
+                    expected %s has %s"""
+                .formatted(query, columnCount, resultFields.size())
+            );
+
+        for (var fResult : resultFields) {
+            var from = info.rsMetadata.getColumnClassName(fResult.sqlColumnNumber);
+            var to = fResult.field.accessorMeth.getReturnType()
+                .type.tsym.getQualifiedName().toString();
+
+            if (!isTypeAssignable(from, to))
+                throw new SchemaCheckException(
+                    invoke, """
+                    %s
+                    ^^^ type mismatch for field `%s` from sql column `%s`(%d)
+                        expected %s has %s"""
+                    .formatted(
+                        query, fResult.field.name.toString(),
+                        info.rsMetadata.getColumnName(fResult.sqlColumnNumber),
+                        fResult.sqlColumnNumber, to, from
+                    )
                 );
         }
     }
@@ -370,30 +441,41 @@ public class TypesafeSqlChecker implements AutoCloseable {
             default -> throw new RuntimeException("unreachable");
         };
 
-        var query = extractQuery(invoke, queryParameterIndex);
-        var arguments = extractArguments(invoke, queryParameterIndex + 1);
-        var mapped = TypesafeSql.mapQueryArgs(query, arguments.size());
+        var javaArguments = extractArguments(invoke, queryParameterIndex + 1);
+        var query = QueryBuilder.forExec(
+            extractQuery(invoke, queryParameterIndex), javaArguments.size()
+        );
 
-        validateQuery(invoke, mapped.newExpr(), info ->
-            checkArgumentsTypes(invoke, query, info, arguments));
+        validateQuery(invoke, query.text, info ->
+            checkPositionalArguments(invoke, query.text, info, query.arguments, javaArguments));
     }
 
-    void checkArray(int parameterCount, JCTree.JCMethodInvocation invoke) {
+    void checkQuery(int parameterCount, JCTree.JCMethodInvocation invoke) {
         var queryParameterIndex = switch (parameterCount) {
             case 4 -> 2;
             case 3 -> 1;
             default -> throw new RuntimeException("unreachable");
         };
 
-        var meta = extractMeta(invoke);
-        var query = extractQuery(invoke, queryParameterIndex);
-        var arguments = extractArguments(invoke, queryParameterIndex + 1);
-        var mapped = TypesafeSql.mapQueryArgs(query, arguments.size());
-
-        validateQuery(invoke, mapped.newExpr(), info -> {
-            checkArgumentsTypes(invoke, query, info, arguments);
-            checkResultSetTypes(invoke, meta, query, info);
-        });
+        var toClass = extractClass(invoke);
+        var expression = extractQuery(invoke, queryParameterIndex);
+        var javaArguments = extractArguments(invoke, queryParameterIndex + 1);
+        if (!toClass.isRecord()) {
+            var query = QueryBuilder.forQueryScalar(toClass, expression, javaArguments.size());
+            validateQuery(invoke, query.text, info -> {
+                checkPositionalArguments(invoke, query.text, info, query.arguments, javaArguments);
+                checkResultSetScalar(invoke, toClass, expression, info);
+            });
+        } else {
+            var query = QueryBuilder.forQueryTuple(
+                ((List<Symbol.RecordComponent>) toClass.getRecordComponents()).stream().toList(),
+                expression, javaArguments.size()
+            );
+            validateQuery(invoke, query.text, info -> {
+                checkPositionalArguments(invoke, query.text, info, query.arguments, javaArguments);
+                checkResultSetTuple(invoke, query.results, expression, info);
+            });
+        }
     }
 
     void checkSelect(int parameterCount, JCTree.JCMethodInvocation invoke) {
@@ -406,112 +488,46 @@ public class TypesafeSqlChecker implements AutoCloseable {
         };
 
         if (queryParameterIndex == -1) {
-            var query = QueryBuilder.selectQuery(meta, "");
-            validateQuery(invoke, query,
-                info -> checkResultSetTypes(invoke, meta, query, info)
+            var query = QueryBuilder.forSelect(meta, "", 0);
+            validateQuery(invoke, query.text,
+                info -> checkResultSetTuple(invoke, query.results, query.text, info)
             );
         } else {
             var expression = extractQuery(invoke, queryParameterIndex);
-            var query = QueryBuilder.selectQuery(meta, expression);
-            var arguments = extractArguments(invoke, queryParameterIndex + 1);
-            var mapped = TypesafeSql.mapQueryArgs(query, arguments.size());
+            var javaArguments = extractArguments(invoke, queryParameterIndex + 1);
+            var query = QueryBuilder.forSelect(meta, expression, javaArguments.size());
 
-            validateQuery(invoke, mapped.newExpr(), info -> {
-                checkArgumentsTypes(invoke, mapped.newExpr(), info, arguments);
-                checkResultSetTypes(invoke, meta, mapped.newExpr(), info);
+            validateQuery(invoke, query.text, info -> {
+                checkPositionalArguments(invoke, query.text, info, query.arguments, javaArguments);
+                checkResultSetTuple(invoke, query.results, query.text, info);
             });
         }
     }
 
     void checkInsertSelf(int parameterCount, JCTree.JCMethodInvocation invoke) {
         var meta = extractMeta(invoke);
-        var query = QueryBuilder.insertSelfQuery(meta);
-        validateQuery(invoke, query,
-            info -> checkResultSetTypes(invoke, meta, query, info));
+        var query = QueryBuilder.forInsertSelf(meta);
+        validateQuery(invoke, query.text, info -> {
+            checkFieldArguments(invoke, query.text, info, query.arguments);
+            checkResultSetTuple(invoke, query.results, query.text, info);
+        });
     }
 
-    // in - paramsMetadata - instance field data, where id
-    // also check that entity has at least one id
     void checkUpdateSelf(int parameterCount, JCTree.JCMethodInvocation invoke) {
-//        var meta = extractMeta(invoke);
-//        var query = QueryBuilder.updateSelfQuery(meta);
-//        var ps = createPreparedStatement(query);
-//        var parameterMetadata = ps.getParameterMetaData();
-//
-//        int parameterCount = parameterMetadata.getParameterCount();
-//        if (parameterCount != meta.fields().size())
-//            throw new SchemaCheckException("""
-//                %s
-//                ^^^ column count mismatch
-//                    expected %s has %s
-//                """
-//                .formatted(query, parameterCount, meta.fields().size())
-//            );
-//
-//        var isId = "";
-//        var typeVar = new ArrayList<String>();
-//        var typeVar2 = new ArrayList<String>();
-//
-//        for (int i = 0; i < meta.fields().size(); i++) {
-//            typeVar2.add(parameterMetadata.getParameterClassName(i + 1));
-//            if (meta.fields().get(i).isId())
-//                isId = meta.fields().get(i).info().getReturnType().type.tsym.
-//                    getQualifiedName().toString();
-//            else
-//                typeVar.add(meta.fields().get(i).info().getReturnType().type.tsym.
-//                    getQualifiedName().toString());
-//
-//        }
-//
-//        typeVar.add(isId);
-//
-//        for (int i = 1; i <= ((QueryInfo) typeVar2).rsMetadata.getColumnCount(); i++) {
-//            var from = ((QueryInfo) typeVar2).rsMetadata.getColumnClassName(i);
-//            var to = meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString();
-//
-//            if (typeEquals(from, to))
-//                throw new SchemaCheckException("""
-//                    %s
-//                    ^^^ row type mismatch for %s(%s)
-//                        expected %s has %s
-//                    """
-//                    .formatted(
-//                        query, meta.fields().get(i).name(), i, from, to
-//                    )
-//                );
-//        }
+        var meta = extractMeta(invoke);
+        var query = QueryBuilder.forUpdateSelf(meta);
+        validateQuery(invoke, query.text, info -> {
+            checkFieldArguments(invoke, query.text, info, query.arguments);
+            checkResultSetTuple(invoke, query.results, query.text, info);
+        });
     }
 
-    // in - paramsMetadata - id of entity
-    // also check that entity has at least one id
     void checkDeleteSelf(int parameterCount, JCTree.JCMethodInvocation invoke) {
-//        var meta = extractMeta(invoke);
-//        var query = QueryBuilder.deleteSelfQuery(meta);
-//
-//        var ps = createPreparedStatement(query);
-//        var parameterMetadata = ps.getParameterMetaData();
-//        var varId = Objects.requireNonNull(meta.fields().stream()
-//                .filter(Meta.FieldRef::isId)
-//                .findFirst()
-//                .orElse(null))
-//            .info().getReturnType().type.tsym.getQualifiedName().toString();
-//
-//        QueryInfo info = List.of(varId);
-//
-//        for (int i = 1; i <= info.rsMetadata.getColumnCount(); i++) {
-//            var from = info.rsMetadata.getColumnClassName(i);
-//            var to = meta.fields().get(i - 1).info().getReturnType().type.tsym.getQualifiedName().toString();
-//
-//            if (typeEquals(from, to))
-//                throw new SchemaCheckException("""
-//                    %s
-//                    ^^^ row type mismatch for %s(%s)
-//                        expected %s has %s
-//                    """
-//                    .formatted(
-//                        query, meta.fields().get(i).name(), i, from, to
-//                    )
-//                );
-//        }
+        var meta = extractMeta(invoke);
+        var query = QueryBuilder.forDeleteSelf(meta);
+        validateQuery(invoke, query.text, info -> {
+            checkFieldArguments(invoke, query.text, info, query.arguments);
+            checkResultSetTuple(invoke, query.results, query.text, info);
+        });
     }
 }

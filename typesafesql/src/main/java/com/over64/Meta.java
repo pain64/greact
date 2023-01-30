@@ -10,9 +10,10 @@ import java.util.stream.Stream;
 
 public class Meta {
     public record TableRef(String name, @Nullable String alias) { }
-    public record JoinedTable(TypesafeSql.Mode mode, TableRef table, String onExpr) { }
+    public record JoinedTable(SafeSql.Mode mode, TableRef table, String onExpr) { }
     public record FieldRef<FI>(FI info, String name, TableRef atTable, String atColumn,
-                               boolean isId, @Nullable String sequence) { }
+                               boolean isId, @Nullable String sequence) {
+    }
     public record ClassMeta<CI, FI>(CI info, TableRef table,
                                     List<JoinedTable> joins, List<FieldRef<FI>> fields) { }
 
@@ -41,32 +42,32 @@ public class Meta {
         return new TableRef(nameAndAlias[0], alias);
     }
 
-    static JoinedTable parseJoin(TypesafeSql.Join join) {
+    static JoinedTable parseJoin(SafeSql.Join join) {
         return new JoinedTable(join.mode(), parseTableRef(join.table()), join.on());
     }
 
     public static <C, F, CI, FI> ClassMeta<CI, FI> parseClass(C klass, Mapper<C, F, CI, FI> mapper) {
         var className = mapper.className(klass);
-        var tableAnn = mapper.classAnnotation(klass, TypesafeSql.Table.class);
+        var tableAnn = mapper.classAnnotation(klass, SafeSql.Table.class);
         if (tableAnn == null) throw new IllegalStateException(
             className + ": class or record must be annotated with @Table");
 
         var tableRef = parseTableRef(tableAnn.value());
-        var joinAnn = mapper.classAnnotation(klass, TypesafeSql.Join.class);
-        var joinsAnn = mapper.classAnnotation(klass, TypesafeSql.Joins.class);
+        var joinAnn = mapper.classAnnotation(klass, SafeSql.Join.class);
+        var joinsAnn = mapper.classAnnotation(klass, SafeSql.Joins.class);
 
         if (joinAnn != null && joinsAnn != null) throw new IllegalStateException(
             className + ": cannot use @Join and @Joins annotation at same time");
 
-        var joins = joinAnn != null ? new TypesafeSql.Join[]{joinAnn} :
-            (joinsAnn != null ? joinsAnn.value() : new TypesafeSql.Join[]{});
+        var joins = joinAnn != null ? new SafeSql.Join[]{joinAnn} :
+            (joinsAnn != null ? joinsAnn.value() : new SafeSql.Join[]{});
         var joinTables = Arrays.stream(joins).map(Meta::parseJoin).toList();
 
         var fields = mapper.readFields(klass)
             .map(f -> {
-                var isId = mapper.fieldAnnotation(f, TypesafeSql.Id.class) != null;
-                var seqAnn = mapper.fieldAnnotation(f, TypesafeSql.Sequence.class);
-                var atAnn = mapper.fieldAnnotation(f, TypesafeSql.At.class);
+                var isId = mapper.fieldAnnotation(f, SafeSql.Id.class) != null;
+                var seqAnn = mapper.fieldAnnotation(f, SafeSql.Sequence.class);
+                var atAnn = mapper.fieldAnnotation(f, SafeSql.At.class);
 
                 var sequence = seqAnn != null ? seqAnn.value() : null;
                 var fieldName = mapper.fieldName(f);

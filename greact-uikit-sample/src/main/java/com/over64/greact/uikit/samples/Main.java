@@ -1,6 +1,6 @@
 package com.over64.greact.uikit.samples;
 
-import com.over64.TypesafeSql;
+import com.over64.SafeSql;
 import com.over64.greact.Loader;
 import com.over64.greact.rpc.RPC;
 import com.over64.greact.uikit.samples.js.MainPage;
@@ -13,10 +13,10 @@ import java.util.function.Function;
 public class Main {
     static final String RPC_BASE_URL = "/rpc";
 
-    public static class Server extends RPC<TypesafeSql> {
+    public static class Server extends RPC<SafeSql> {
         Server() {super("com.over64.greact.uikit.samples.js");}
         @RPCEntryPoint(RPC_BASE_URL)
-        public static <T> T server(Function<TypesafeSql, T> onServer) {
+        public static <T> T server(Function<SafeSql, T> onServer) {
             throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
         }
     }
@@ -31,7 +31,7 @@ public class Main {
             setConnectionTimeout(1000);
         }};
 
-        var db = new TypesafeSql(ds);
+        var db = new SafeSql(ds);
         var server = new Server();
 
         var resources = Loader.bundle(MainPage.class);

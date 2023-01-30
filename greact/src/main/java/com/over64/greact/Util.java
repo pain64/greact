@@ -10,6 +10,7 @@ import com.sun.tools.javac.util.*;
 
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Util {
     final Symtab symtab;
@@ -28,8 +29,10 @@ public class Util {
         this.javacLog = Log.instance(context);
         this.diagnosticsFactory = JCDiagnostic.Factory.instance(context);
         this.javacMessages = JavacMessages.instance(context);
-        javacMessages.add(locale ->
-            ResourceBundle.getBundle("com.over64.greact.MessagesBundle_en", new Locale("en", "US")));
+        var bundle = ResourceBundle.getBundle(
+            "com.over64.greact.MessagesBundle_en", new Locale("en", "US")
+        );
+        javacMessages.add(locale -> bundle);
     }
 
     class Symbols {

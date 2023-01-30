@@ -16,7 +16,7 @@ public class CallWithArgs {
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
-                      @async void simple() {                        
+                      @async void simple() {
                         var y = 1;
                         
                        // java.util.function.Consumer<Integer> c = e -> {

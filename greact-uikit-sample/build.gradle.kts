@@ -33,6 +33,7 @@ tasks.withType<JavaCompile> {
             "--tsql-check-schema-password=1234 ")
     options.fork()
     options.forkOptions.jvmArgs = listOf(
+        // "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
         "--enable-preview",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",

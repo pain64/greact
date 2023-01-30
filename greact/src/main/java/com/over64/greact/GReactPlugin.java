@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.TimeUnit;
 
 
 public class GReactPlugin implements Plugin {
@@ -30,7 +29,7 @@ public class GReactPlugin implements Plugin {
 
     long startedAtMillis;
     JavacTask theTask;
-    TypesafeSqlChecker typesafeSqlChecker;
+    SafeSqlChecker safeSqlChecker;
 
     @Override
     public void init(JavacTask task, String... strings) {
@@ -54,7 +53,8 @@ public class GReactPlugin implements Plugin {
                 if (e.getKind() == TaskEvent.Kind.COMPILATION) {
 
                     try {
-                        typesafeSqlChecker.close();
+                        if (safeSqlChecker != null)
+                            safeSqlChecker.close();
                         //comp.log.
                         var result = comp.errorCount() == 0 ? "success" : "fail";
                         Files.write(Paths.get("/tmp/greact_compiled"),
@@ -70,13 +70,14 @@ public class GReactPlugin implements Plugin {
                     var t0 = System.currentTimeMillis();
                     // FIXME: делаем дорогую инициализацию для каждого CompilationUnit???
                     var cmd = TranspilerPlugin.getCmd(strings);
-                    if (cmd.getOptionValue("tsql-check-enabled").equals("true") &&
-                        typesafeSqlChecker == null
+                    if (cmd.getOptionValue("tsql-check-enabled") != null &&
+                        cmd.getOptionValue("tsql-check-enabled").equals("true") &&
+                        safeSqlChecker == null
                     )
-                        typesafeSqlChecker = new TypesafeSqlChecker(context, cmd);
+                        safeSqlChecker = new SafeSqlChecker(context, cmd);
 
-                    if (typesafeSqlChecker != null)
-                        typesafeSqlChecker.apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
+                    if (safeSqlChecker != null)
+                        safeSqlChecker.apply((JCTree.JCCompilationUnit) e.getCompilationUnit());
 
                     var t1 = System.currentTimeMillis();
                     new CodeViewPlugin(context).apply((JCTree.JCCompilationUnit) e.getCompilationUnit());

@@ -2,7 +2,7 @@ package com.over64.greact.uikit.samples.js;
 
 import com.greact.model.JSExpression;
 import com.greact.model.Require;
-import com.over64.TypesafeSql;
+import com.over64.SafeSql;
 import com.over64.greact.dom.CodeView;
 import com.over64.greact.dom.CodeView.CodeAndView;
 import com.over64.greact.dom.HTMLElement;
@@ -11,14 +11,14 @@ import com.over64.greact.uikit.Grid;
 import com.over64.greact.uikit.Tab;
 import com.over64.greact.uikit.Tabs;
 import com.over64.greact.uikit.controls.CheckBox;
-import com.over64.greact.uikit.samples.Main;
 
 import static com.over64.greact.uikit.samples.Main.Server.server;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    @TypesafeSql.Table("teachers") public record Teachers(@TypesafeSql.Id int schoolId,
-                                                          String name, String email, int age) { }
+    @SafeSql.Table("teachers") public record Teachers(
+        @SafeSql.Sequence("school_id_seq") @SafeSql.Id int schoolId,
+        String name, String email, int age) { }
     private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
@@ -464,8 +464,12 @@ public class MainPage implements Component0<div> {
                             new CodeView<>(() ->
                                 new div() {{
                                     server(db -> {
-                                        db.exec("update teachers set age = 18 where age = 18");
-                                        // db.array(Teachers.class, "select 1 as x, 2 as y, 3 as z, 4 as a from teachers");
+                                        db.exec("update teachers set age = 18 where age = :1 and age = :1", 14);
+                                        db.query(Teachers.class, "select * from teachers");
+                                        db.query(Integer.class, "select min(age) from teachers where age > :1", 42);
+                                        var t = db.insertSelf(new Teachers(1, "John", "some", 40));
+                                        db.updateSelf(t);
+                                        db.deleteSelf(t);
                                         return null;
                                     });
                                     var data = server(db -> db.select(Teachers.class, "where age < :1", 42));
