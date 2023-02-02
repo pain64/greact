@@ -144,6 +144,30 @@ public class NewClassPatcher2 {
         var allViewsForUpdate = new ArrayList<JCTree.JCNewClass>();
         var allViewRenderSymbols = new ArrayList<Symbol.VarSymbol>();
 
+        var effectMethods = new HashMap<JCTree.JCMethodInvocation, JCTree.JCMethodDecl>();
+
+        for (var i = 0; i < effects.size(); i++) {
+            var effect = effects.get(i);
+
+            var methodSym = new Symbol.MethodSymbol(
+                Flags.PRIVATE,
+                names.fromString("_effect" + i),
+                new Type.MethodType(
+                    com.sun.tools.javac.util.List.of(symbols.clObject.type),
+                    new Type.JCVoidType(), com.sun.tools.javac.util.List.nil(), classDecl.sym),
+                classDecl.sym);
+
+            methodSym.params = com.sun.tools.javac.util.List.of(new Symbol.VarSymbol(
+                0, names.fromString("x0"), symbols.clObject.type, methodSym));
+            classDecl.sym.members_field.enterIfAbsent(methodSym);
+            effect.invocation().meth = maker.Ident(methodSym);
+
+            var method = maker.MethodDef(methodSym, maker.Block(Flags.BLOCK, List.nil()));
+            method.mods = maker.Modifiers(Flags.PRIVATE);
+            classDecl.defs = classDecl.defs.append(method);
+            effectMethods.put(effect.invocation(), method);
+        }
+
         for (var viewEntry : allViewEntries) {
             var unconditionalTree = viewUpdateStrategy.buildTree(viewEntry, allEffectedVars,
                 symbols.clSlot);
@@ -170,57 +194,42 @@ public class NewClassPatcher2 {
                 }).toList();
             allViewRenderSymbols.addAll(viewRenderSymbols);
 
-            for (var i = 0; i < effects.size(); i++) {
-                var effect = effects.get(i);
-                var methodSym = new Symbol.MethodSymbol(
-                    Flags.PRIVATE,
-                    names.fromString("_effect" + i),
-                    new Type.MethodType(
-                        com.sun.tools.javac.util.List.of(symbols.clObject.type),
-                        new Type.JCVoidType(), com.sun.tools.javac.util.List.nil(), classDecl.sym),
-                    classDecl.sym);
-
-                methodSym.params = com.sun.tools.javac.util.List.of(new Symbol.VarSymbol(
-                    0, names.fromString("x0"), symbols.clObject.type, methodSym));
-                classDecl.sym.members_field.enterIfAbsent(methodSym);
-                effect.invocation().meth = maker.Ident(methodSym);
-
+            for (var effect : effects) {
                 var effectedNodes = viewUpdateStrategy.findNodesForUpdate
                     (unconditionalTree, effect.effected());
-                com.sun.tools.javac.util.List<JCTree.JCStatement> renderCalls = effectedNodes.stream()
-                    .map(node -> {
-                        var forRender = viewRenderSymbols.get(nodesForUpdate.indexOf(node));
-                        var checkNotNull = maker.Binary(JCTree.Tag.NE, maker.Ident(forRender), maker.Literal(TypeTag.BOT, null).setType(symtab.botType));
-                        checkNotNull.operator = new Symbol.OperatorSymbol(
-                            names.fromString("!="),
-                            new Type.MethodType(
-                                com.sun.tools.javac.util.List.of(
-                                    symbols.clObject.type, symbols.clObject.type),
-                                new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym),
-                                com.sun.tools.javac.util.List.nil(),
-                                symtab.methodClass.type.tsym
-                            ),
-                            166 /* don't ask why */,
-                            classDecl.sym);
-                        checkNotNull.type = new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym);
+                effectedNodes.forEach(node -> {
+                    var forRender = viewRenderSymbols.get(nodesForUpdate.indexOf(node));
+                    var checkNotNull = maker.Binary(
+                        JCTree.Tag.NE, maker.Ident(forRender),
+                        maker.Literal(TypeTag.BOT, null).setType(symtab.botType)
+                    );
+                    checkNotNull.operator = new Symbol.OperatorSymbol(
+                        names.fromString("!="),
+                        new Type.MethodType(
+                            List.of(
+                                symbols.clObject.type, symbols.clObject.type),
+                            new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym),
+                            List.nil(),
+                            symtab.methodClass.type.tsym
+                        ),
+                        166 /* don't ask why */,
+                        classDecl.sym);
+                    checkNotNull.type = new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym);
 
-                        return maker.If(
-                            maker.Parens(checkNotNull).setType(new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym)),
-                            maker.Exec(
-                                maker.App(
-                                    maker.Select(
-                                        maker.Ident(forRender), symbols.mtRunnableRun))),
-                            null);
-                    }).reduce(
-                        com.sun.tools.javac.util.List.nil(),
-                        com.sun.tools.javac.util.List::append,
-                        com.sun.tools.javac.util.List::appendList);
+                    var renderCall = maker.If(
+                        maker.Parens(checkNotNull).setType(
+                            new Type.JCPrimitiveType(TypeTag.BOOLEAN, symtab.booleanType.tsym)
+                        ),
+                        maker.Exec(
+                            maker.App(
+                                maker.Select(
+                                    maker.Ident(forRender), symbols.mtRunnableRun))),
+                        null
+                    );
 
-                var method = maker.MethodDef(methodSym,
-                    maker.Block(Flags.BLOCK, renderCalls));
-
-                method.mods = maker.Modifiers(Flags.PRIVATE);
-                classDecl.defs = classDecl.defs.append(method);
+                    var method = effectMethods.get(effect.invocation());
+                    method.body.stats = method.body.stats.append(renderCall);
+                });
             }
         }
 

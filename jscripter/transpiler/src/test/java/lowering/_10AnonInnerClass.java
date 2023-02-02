@@ -53,14 +53,18 @@ public class _10AnonInnerClass {
             """
                 package js;
                 class Test {
+                  void bar() {}
+
                   static class A {
                     int y;
                   }
+
                   int x = 42;
                   void foo() {
                     new A() {{
                       y = x;
                       var z = x;
+                      bar();
                     }};
                   }
                 }
@@ -72,6 +76,8 @@ public class _10AnonInnerClass {
                       this.x = 42;
                     };
                     __init__();
+                  }
+                  _bar() {
                   }
                   static A = class {
                     constructor() {
@@ -88,6 +94,7 @@ public class _10AnonInnerClass {
                           const __init__ = () => {
                             this.y = this0.x;
                             const z = this0.x;
+                            this0._bar();
                           };
                           super();
                           __init__();

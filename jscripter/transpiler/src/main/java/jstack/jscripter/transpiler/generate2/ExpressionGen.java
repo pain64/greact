@@ -157,6 +157,21 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitIdent(JCTree.JCIdent id) {
+        Runnable writeThisConsideringClosure = () -> {
+            out.write("this");
+
+            var index = -1;
+            for (var i = classDefs.size() - 1; i >= 0; i--)
+                if (classDefs.get(i).sym == id.sym.owner) {
+                    index = i;
+                    break;
+                }
+            if (index != classDefs.size() - 1 && index != -1)
+                out.write(String.valueOf(index));
+
+            out.write(".");
+        };
+
         if (id.sym instanceof Symbol.VarSymbol varSym) {
             if (varSym.owner instanceof Symbol.MethodSymbol)
                 out.write(id.getName());
@@ -166,17 +181,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 else if (id.sym.getModifiers().contains(Modifier.STATIC))
                     out.writeRightName(id.sym);
                 else {
-                    var index = -1;
-                    for (var i = classDefs.size() - 1; i >= 0; i--)
-                        if (classDefs.get(i).sym == id.sym.owner) {
-                            index = i;
-                            break;
-                        }
-
-                    out.write("this");
-                    if (index != classDefs.size() - 1 && index != -1)
-                        out.write(String.valueOf(index));
-                    out.write(".");
+                    writeThisConsideringClosure.run();
                     out.write(id.getName());
                 }
             }
@@ -201,7 +206,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                 else out.write("this.constructor._");
                 out.write(id.name);
             } else {
-                out.write("this.");
+                writeThisConsideringClosure.run();
                 if ((id.sym.flags_field & Flags.NATIVE) == 0) out.write("_");
                 out.write(id.name);
             }

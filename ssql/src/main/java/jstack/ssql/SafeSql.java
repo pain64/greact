@@ -101,7 +101,7 @@ public class SafeSql {
         }
     }
 
-    public Void exec(String stmt, Object... args) {
+    public Void exec(@Language("sql") String stmt, Object... args) {
         return withConnection(conn -> exec(conn, stmt, args));
     }
 
