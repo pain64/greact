@@ -8,7 +8,11 @@ import jstack.jscripter.transpiler.model.Require;
 @Require.CSS("navbar.css")
 public class Navbar implements Component0<nav> {
     public a brand;
-    public Component0<? extends HTMLElement>[] content;
+    private final Component0<? extends HTMLElement>[] content;
+
+    @SafeVarargs public Navbar(Component0<? extends HTMLElement>... content) {
+        this.content = content;
+    }
 
     @Override
     public Component0<nav> mount() {
