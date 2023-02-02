@@ -1,6 +1,7 @@
 package jstack.greact.uikit.controls;
 
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.uikit.GridConfig2;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.MemberRef;
@@ -44,6 +45,8 @@ public class Select<T> extends Control<T> {
         return this;
     }
 
+    public GridConfig2.AsyncHandler<T> onchange = null;
+
     @Override public Control<?> child() { return null; }
 
     @Override
@@ -76,6 +79,8 @@ public class Select<T> extends Control<T> {
                     onchange = ev -> {
                         self.valueIdx = JSExpression.of("parseInt(ev.target.value)");
                         self.value = variants[self.valueIdx].element;
+                        if (self.onchange != null)
+                            self.onchange.handle(self.value);
                         self.ready = true;
                         self.onReadyChanged.run();
                     };

@@ -13,7 +13,7 @@ import static jstack.demo.Main.Server.server;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    @Table("teachers") public record Teacher(
+    @Table("teachers") record Teacher(
         @Id @Sequence("teacher_id_seq") long id, String name, String email, int age
     ) { }
 

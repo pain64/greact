@@ -60,11 +60,11 @@ public class _02EffectsTest {
                             return _holder0;
                         }).call();
                     }
-                    private java.lang.Runnable _render0;
                    \s
                     private void _effect0(java.lang.Object x0) {
                         if (_render0 != null) _render0.run();
                     }
+                    private java.lang.Runnable _render0;
                 }"""
         );
     }
