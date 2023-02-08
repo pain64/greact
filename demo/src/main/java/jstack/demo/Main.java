@@ -35,7 +35,7 @@ public class Main {
         var db = new SafeSql(ds);
         var server = new Server();
 
-        var resources = Loader.bundle(MainPage.class);
+        var resources = Loader.bundle("", MainPage.class);
 
         // FIXME: fix websocket timeouts
 
