@@ -266,24 +266,30 @@ public class SafeSql {
         return select(klass, "");
     }
 
-    public <T> T selectOne(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
-        return null;
-    }
-
-    public <T> T selectOne(Class<T> klass, @Language("sql") String expr, Object... args) {
-        return null;
-    }
-
     @Nullable public <T> T selectOneOrNull(
         Connection conn, Class<T> klass, @Language("sql") String expr, Object... args
     ) {
-        return null;
+        var rows = select(conn, klass, expr, args);
+
+        if (rows.length == 0) return null;
+        else if (rows.length == 1) return rows[0];
+        else throw new RuntimeException("expected 0 or 1 row but has " + rows.length);
     }
 
     @Nullable public <T> T selectOneOrNull(
         Class<T> klass, @Language("sql") String expr, Object... args
     ) {
-        return null;
+        return withConnection(conn -> selectOneOrNull(conn, klass, expr, args));
+    }
+
+    public <T> T selectOne(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
+        var row = selectOneOrNull(conn, klass, expr, args);
+        if (row == null) throw new RuntimeException("unexpected empty result");
+        return row;
+    }
+
+    public <T> T selectOne(Class<T> klass, @Language("sql") String expr, Object... args) {
+        return withConnection(conn -> selectOne(conn, klass, expr, args));
     }
 
     public <T> T insertSelf(Connection conn, T entity) {

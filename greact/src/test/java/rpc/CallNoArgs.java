@@ -19,27 +19,66 @@ public class CallNoArgs {
                       }
                     }""",
                 """
-                        package js;
-                                            
-                        import static util.TestServer.server;
-                        import jstack.jscripter.transpiler.model.async;
-                                            
-                        class Simple {
-                           \s
-                            @jstack.jscripter.transpiler.model.RPCEndPoint
-                            public static java.lang.Object $endpoint0(java.lang.Void x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
-                                return 42;
-                            }
-                           \s
-                            Simple() {
-                                super();
-                            }
-                           \s
-                            @async
-                            void simple() {
-                                int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
-                            }
-                        }"""));
+                    package js;
+
+                    import static util.TestServer.server;
+                    import jstack.jscripter.transpiler.model.async;
+
+                    class Simple {
+                       \s
+                        @jstack.jscripter.transpiler.model.RPCEndPoint
+                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                            return 42;
+                        }
+                       \s
+                        Simple() {
+                            super();
+                        }
+                       \s
+                        @async
+                        void simple() {
+                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
+                        }
+                    }"""));
+
+    }
+
+    @Test void methodReference() throws IOException {
+        CompileAssert.assertCompiledMany(
+            new CompileAssert.CompileCase("js.Simple",
+                """
+                    package js;
+                    import static util.TestServer.server;
+                    import static util.TestServer.DI;
+                    import jstack.jscripter.transpiler.model.async;
+                    class Simple {
+                      @async void simple() {
+                        int x = server(DI::method);
+                      }
+                    }""",
+                """
+                    package js;
+
+                    import static util.TestServer.server;
+                    import static util.TestServer.DI;
+                    import jstack.jscripter.transpiler.model.async;
+
+                    class Simple {
+                       \s
+                        @jstack.jscripter.transpiler.model.RPCEndPoint
+                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                            return x0.method();
+                        }
+                       \s
+                        Simple() {
+                            super();
+                        }
+                       \s
+                        @async
+                        void simple() {
+                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
+                        }
+                    }"""));
 
     }
 }
