@@ -239,9 +239,29 @@ public class RPCPlugin {
 
                                 classDecl.sym.members_field.enterIfAbsent(endpointSymbol);
 
+                                var rpcInvocation = invoke.args.get(0);
+                                final Pair<List<JCTree.JCExpression>, JCTree.JCBlock> argsAndBlock;
 
-                                var argsAndBlock = mapLambdaBody(methodDecl.sym, endpointSymbol,
-                                    (JCTree.JCLambda) invoke.args.get(0));
+                                if (rpcInvocation instanceof JCTree.JCMemberReference mRef) {
+                                    var methodSymbol = (Symbol.MethodSymbol) mRef.sym;
+                                    argsAndBlock = Pair.of(
+                                        List.nil(),
+                                        maker.Block(Flags.BLOCK, List.of(
+                                            maker.Return(maker.Apply(
+                                                List.nil(),
+                                                maker.Select(
+                                                    maker.Ident(endpointSymbol.params.get(0)),
+                                                    methodSymbol
+                                                ),
+                                                List.nil()
+                                            ).setType(methodSymbol.getReturnType()))
+                                        ))
+                                    );
+                                } else if (rpcInvocation instanceof JCTree.JCLambda lmb)
+                                    argsAndBlock = mapLambdaBody(methodDecl.sym, endpointSymbol, lmb);
+                                else throw new RuntimeException(
+                                        "unexpected expression for rpc invocation: " + rpcInvocation
+                                    );
 
                                 invoke.meth = buildStatic(symbols.mtDoRemoteCall);
                                 invoke.varargsElement = symbols.clObject.type;
