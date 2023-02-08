@@ -9,7 +9,7 @@ public class HTMLNativeElements {
     @ErasedInterface
     public interface Component<T extends HTMLElement> {
         @DoNotTranspile
-        default void effect(Object expression) {}
+        default void effect(Object expression) { }
     }
 
     @ErasedInterface

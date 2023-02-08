@@ -174,11 +174,15 @@ abstract class ExpressionGen extends VisitorWithContext {
 
         if (id.sym instanceof Symbol.VarSymbol varSym) {
             if (varSym.owner instanceof Symbol.MethodSymbol)
-                out.write(id.getName());
+                out.write(id.name);
             else {
                 if (equalsNameAndString(varSym.getQualifiedName(), "this"))
                     out.write("this");
-                else if (id.sym.getModifiers().contains(Modifier.STATIC))
+                else if (varSym.owner.isEnum() && varSym.isStatic()) {
+                    out.write("'");
+                    out.write(id.name);
+                    out.write("'");
+                } else if (id.sym.getModifiers().contains(Modifier.STATIC))
                     out.writeRightName(id.sym);
                 else {
                     writeThisConsideringClosure.run();
@@ -294,9 +298,15 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitSelect(JCTree.JCFieldAccess select) {
-        select.selected.accept(this);
-        out.write(select.selected.type instanceof Type.PackageType ? "_" : ".");
-        out.write(select.name);
+        if (select.type.tsym.isEnum()) {
+            out.write("'");
+            out.write(select.name);
+            out.write("'");
+        } else {
+            select.selected.accept(this);
+            out.write(select.selected.type instanceof Type.PackageType ? "_" : ".");
+            out.write(select.name);
+        }
     }
 
     @Override public void visitTypeCast(JCTree.JCTypeCast cast) {

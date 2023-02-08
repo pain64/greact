@@ -45,6 +45,10 @@ public class Util {
         return symtab.enterClass(symtab.unnamedModule, names.fromString(klass.getName()));
     }
 
+    public Symbol.ClassSymbol lookupClass(String name) {
+        return symtab.enterClass(symtab.unnamedModule, names.fromString(name));
+    }
+
     public <T extends Symbol> Optional<T> lookupMemberOpt(Symbol.ClassSymbol from, String name) {
         @SuppressWarnings("unchecked")
         var res = (Optional<T>) from.getEnclosedElements().stream()

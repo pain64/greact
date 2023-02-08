@@ -35,7 +35,8 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
             var col = columns[idx];
             if (col.memberNames.length != ref.memberNames().length) continue;
             for (var i = 0; i < col.memberNames.length; i++) {
-                if (!col.memberNames[i].equals(ref.memberNames()[i])) continue;
+                // FIXME: https://trello.com/c/zJarOuQl/140-bug-equals
+                if (col.memberNames[i] != ref.memberNames()[i]) continue;
                 return idx;
             }
         }
