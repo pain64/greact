@@ -1,15 +1,15 @@
 package jstack.ssql;
 
 import jstack.ssql.QueryBuilder.PositionalArgument;
+import jstack.ssql.schema.Ordinal;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.lang.reflect.Array;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,22 +17,47 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class SafeSql {
-
-    interface FieldFetcher {
-        Object fetch(ResultSet rs, int idx) throws SQLException;
+    interface RSReader {
+        Object read(ResultSet rs, int idx) throws SQLException;
     }
 
-    static FieldFetcher fetcherForFieldType(Class<?> fieldType) {
-        if (fieldType == byte.class || fieldType == Byte.class) return ResultSet::getByte;
-        if (fieldType == short.class || fieldType == Short.class) return ResultSet::getShort;
-        if (fieldType == int.class || fieldType == Integer.class) return ResultSet::getInt;
-        if (fieldType == long.class || fieldType == Long.class) return ResultSet::getLong;
-        if (fieldType == boolean.class || fieldType == Boolean.class) return ResultSet::getBoolean;
-        if (fieldType == String.class) return ResultSet::getString;
+    interface RSWriter {
+        void write(PreparedStatement stmt, int idx, Object value) throws SQLException;
+    }
+
+    static RSReader readerForType(Class<?> type) {
+        if (type.isEnum())
+            if (type.getAnnotation(Ordinal.class) != null)
+                return (rs, i) -> type.getEnumConstants()[rs.getInt(i)];
+            else
+                return (rs, i) -> {
+                    @SuppressWarnings({"unchecked", "rawtypes"})
+                    var result = Enum.valueOf((Class<? extends Enum>) type, rs.getString(i));
+                    return result;
+                };
+
+        if (type == byte.class || type == Byte.class) return ResultSet::getByte;
+        if (type == short.class || type == Short.class) return ResultSet::getShort;
+        if (type == int.class || type == Integer.class) return ResultSet::getInt;
+        if (type == long.class || type == Long.class) return ResultSet::getLong;
+        if (type == boolean.class || type == Boolean.class) return ResultSet::getBoolean;
+        if (type == String.class) return ResultSet::getString;
         return ResultSet::getObject;
     }
 
-    record FieldInfo(Method accessor, FieldFetcher fetcher) { }
+    static RSWriter writerForType(Class<?> type) {
+        if (type.isEnum()) {
+            if (type.getAnnotation(Ordinal.class) != null)
+                return (stmt, idx, value) ->
+                    stmt.setObject(idx, ((Enum<?>) value).ordinal());
+            else
+                return (stmt, idx, value) ->
+                    stmt.setObject(idx, ((Enum<?>) value).name());
+        } else
+            return PreparedStatement::setObject;
+    }
+
+    record FieldInfo(Method accessor, RSReader reader, RSWriter writer) { }
 
     public static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
         return new Meta.Mapper<>() {
@@ -63,7 +88,10 @@ public class SafeSql {
             @Override public FieldInfo mapField(RecordComponent field) {
                 var accessor = field.getAccessor();
                 accessor.setAccessible(true);
-                return new FieldInfo(accessor, fetcherForFieldType(field.getType()));
+                return new FieldInfo(
+                    accessor, readerForType(field.getType()),
+                    writerForType(field.getType())
+                );
             }
         };
     }
@@ -90,8 +118,11 @@ public class SafeSql {
         try {
             var procCall = conn.prepareCall(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++)
-                procCall.setObject(i + 1, args[query.arguments.get(i).javaArgumentIndex]);
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var javaArg = args[query.arguments.get(i).javaArgumentIndex];
+                var writer = writerForType(javaArg.getClass());
+                writer.write(procCall, i + 1, javaArg);
+            }
 
             procCall.executeUpdate();
             return null;
@@ -110,8 +141,11 @@ public class SafeSql {
     ) throws SQLException {
         var pstmt = conn.prepareStatement(queryText);
 
-        for (var i = 0; i < arguments.size(); i++)
-            pstmt.setObject(i + 1, javaArgs[arguments.get(i).javaArgumentIndex]);
+        for (var i = 0; i < arguments.size(); i++) {
+            var javaArg = javaArgs[arguments.get(i).javaArgumentIndex];
+            var writer = writerForType(javaArg.getClass());
+            writer.write(pstmt, i + 1, javaArg);
+        }
 
         pstmt.execute();
         return pstmt.getResultSet();
@@ -122,8 +156,10 @@ public class SafeSql {
 
         try {
             if (klass.isRecord()) {
+                var mapper = reflectionMapper();
                 var query = QueryBuilder.forQueryTuple(
-                    Arrays.asList(klass.getRecordComponents()), stmt, args.length
+                    Arrays.stream(klass.getRecordComponents())
+                        .map(mapper::mapField).toList(), stmt, args.length
                 );
                 System.out.println("### EXEC QUERY:\n" + query.text);
 
@@ -135,10 +171,9 @@ public class SafeSql {
                 var consArgs = new Object[cons.getParameters().length];
 
                 while (rs.next()) {
-                    var fetchArgId = 1;
-                    for (var i = 0; i < consArgs.length; i++) {
-                        var fetcher = fetcherForFieldType(cons.getParameters()[i].getType());
-                        consArgs[i] = fetcher.fetch(rs, fetchArgId++);
+                    for (var i = 0; i < query.results.size(); i++) {
+                        var field = query.results.get(i).field;
+                        consArgs[i] = field.reader.read(rs, i + 1);
                     }
 
                     data.add(cons.newInstance(consArgs));
@@ -190,8 +225,11 @@ public class SafeSql {
         try {
             var pstmt = conn.prepareStatement(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++)
-                pstmt.setObject(i + 1, args[query.arguments.get(i).javaArgumentIndex]);
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var javaArg = args[query.arguments.get(i).javaArgumentIndex];
+                var writer = writerForType(javaArg.getClass());
+                writer.write(pstmt, i + 1, javaArg);
+            }
 
             pstmt.execute();
             var rs = pstmt.getResultSet();
@@ -203,7 +241,7 @@ public class SafeSql {
                 var fetchArgId = 1;
                 for (var i = 0; i < consArgs.length; i++) {
                     var field = meta.fields().get(i);
-                    consArgs[i] = field.info().fetcher.fetch(rs, fetchArgId++);
+                    consArgs[i] = field.info().reader.read(rs, fetchArgId++);
                 }
 
                 data.add(constructor.newInstance(consArgs));
@@ -268,8 +306,10 @@ public class SafeSql {
 
             var cstmt = conn.prepareStatement(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++)
-                cstmt.setObject(i + 1, query.arguments.get(i).field.accessor.invoke(entity));
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var field = query.arguments.get(i).field;
+                field.writer.write(cstmt, i + 1, field.accessor.invoke(entity));
+            }
 
             cstmt.execute();
             var rs = cstmt.getResultSet();
@@ -285,7 +325,7 @@ public class SafeSql {
                     .findFirst().orElse(null);
 
                 if (result != null)
-                    consArgs[i] = result.field.fetcher.fetch(rs, result.sqlColumnNumber);
+                    consArgs[i] = result.field.reader.read(rs, result.sqlColumnNumber);
                 else
                     consArgs[i] = fieldRef.info().accessor.invoke(entity);
             }
@@ -309,8 +349,10 @@ public class SafeSql {
         try {
             var pstmt = conn.prepareStatement(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++)
-                pstmt.setObject(i + 1, query.arguments.get(i).field.accessor.invoke(entity));
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var field = query.arguments.get(i).field;
+                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
+            }
 
             pstmt.execute();
 
@@ -334,8 +376,10 @@ public class SafeSql {
         try {
             var pstmt = conn.prepareStatement(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++)
-                pstmt.setObject(i + 1, query.arguments.get(i).field.accessor.invoke(entity));
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var field = query.arguments.get(i).field;
+                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
+            }
 
             pstmt.execute();
 

@@ -15,6 +15,7 @@ import jstack.ssql.QueryBuilder.FieldArgument;
 import jstack.ssql.QueryBuilder.FieldResult;
 import jstack.ssql.QueryBuilder.PositionalArgument;
 import jstack.ssql.SafeSql;
+import jstack.ssql.schema.Ordinal;
 import org.apache.commons.cli.CommandLine;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,6 +58,12 @@ public class SafeSqlChecker implements AutoCloseable {
         Symbol.ClassSymbol clTsql = util.lookupClass(SafeSql.class);
         Symbol.ClassSymbol clConnection = util.lookupClass(Connection.class);
         Symbol.ClassSymbol clClass = util.lookupClass(Class.class);
+        Symbol.ClassSymbol clString = util.lookupClass(String.class);
+        Symbol.ClassSymbol clBoolean = util.lookupClass(Boolean.class);
+        Symbol.ClassSymbol clByte = util.lookupClass(Byte.class);
+        Symbol.ClassSymbol clShort = util.lookupClass(Short.class);
+        Symbol.ClassSymbol clInteger = util.lookupClass(Integer.class);
+        Symbol.ClassSymbol clLong = util.lookupClass(Long.class);
 
         List<Symbol.MethodSymbol> mtExec = util.lookupMemberAll(clTsql, "exec");
         List<Symbol.MethodSymbol> mtQuery = util.lookupMemberAll(clTsql, "query");
@@ -280,20 +287,39 @@ public class SafeSqlChecker implements AutoCloseable {
         }
     }
 
-    private boolean isTypeAssignable(String from, String to) {
-        return from.equals(to) || switch (from) {
-            case "java.lang.Byte" -> to.equals("byte");
-            case "byte" -> to.equals("java.lang.Byte");
-            case "java.lang.Short" -> to.equals("short");
-            case "short" -> to.equals("java.lang.Short");
-            case "java.lang.Boolean" -> to.equals("boolean");
-            case "boolean" -> to.equals("java.lang.Boolean");
-            case "java.lang.Integer" -> to.equals("int");
-            case "int" -> to.equals("java.lang.Integer");
-            case "java.lang.Long" -> to.equals("long");
-            case "long" -> to.equals("java.lang.Long");
-            default -> false;
-        };
+    private boolean isTypeAssignable(Symbol.ClassSymbol from, Symbol.ClassSymbol to) {
+        if (from == to) return true;
+
+        if (from.isEnum()) {
+            if (from.getAnnotation(Ordinal.class) != null)
+                return to == symbols.clInteger || to == symtab.intType.tsym;
+            else
+                return to == symbols.clString;
+        }
+
+        if (to.isEnum()) {
+            if (to.getAnnotation(Ordinal.class) != null)
+                return from == symbols.clInteger || from == symtab.intType.tsym;
+            else
+                return from == symbols.clString;
+        }
+
+        if (from == symbols.clBoolean) return to == symtab.booleanType.tsym;
+        if (from == symtab.booleanType.tsym) return to == symbols.clBoolean;
+
+        if (from == symbols.clByte) return to == symtab.byteType.tsym;
+        if (from == symtab.byteType.tsym) return to == symbols.clByte;
+
+        if (from == symbols.clShort) return to == symtab.shortType.tsym;
+        if (from == symtab.shortType.tsym) return to == symbols.clShort;
+
+        if (from == symbols.clInteger) return to == symtab.intType.tsym;
+        if (from == symtab.intType.tsym) return to == symbols.clInteger;
+
+        if (from == symbols.clLong) return to == symtab.longType.tsym;
+        if (from == symtab.longType.tsym) return to == symbols.clLong;
+
+        return false;
     }
 
     private void checkPositionalArguments(
@@ -314,8 +340,10 @@ public class SafeSqlChecker implements AutoCloseable {
 
         for (var argument : positionalArguments) {
             var javaArgument = javaArguments.get(argument.javaArgumentIndex);
-            var to = info.paramMetadata.getParameterClassName(argument.sqlParameterNumber);
-            var from = javaArgument.type.tsym.getQualifiedName().toString();
+            var to = util.lookupClass(
+                info.paramMetadata.getParameterClassName(argument.sqlParameterNumber)
+            );
+            var from = (Symbol.ClassSymbol) javaArgument.type.tsym;
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(
@@ -347,8 +375,10 @@ public class SafeSqlChecker implements AutoCloseable {
             );
 
         for (var argument : fieldArguments) {
-            var from = info.paramMetadata.getParameterClassName(argument.sqlParameterNumber);
-            var to = argument.field.type.tsym.getQualifiedName().toString();
+            var from = util.lookupClass(
+                info.paramMetadata.getParameterClassName(argument.sqlParameterNumber)
+            );
+            var to = (Symbol.ClassSymbol) argument.field.type.tsym;
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(
@@ -377,17 +407,16 @@ public class SafeSqlChecker implements AutoCloseable {
                 .formatted(query)
             );
 
-        var from = info.rsMetadata.getColumnClassName(1);
-        var to = toClass.getQualifiedName().toString();
+        var from = util.lookupClass(info.rsMetadata.getColumnClassName(1));
 
-        if (!isTypeAssignable(from, to))
+        if (!isTypeAssignable(from, toClass))
             throw new SchemaCheckException(
                 invoke, """
                 %s
                 ^^^ result type mismatch from sql column %s(1)
                     expected %s has %s"""
                 .formatted(
-                    query, info.rsMetadata.getColumnName(1), to, from
+                    query, info.rsMetadata.getColumnName(1), toClass, from
                 )
             );
     }
@@ -415,9 +444,10 @@ public class SafeSqlChecker implements AutoCloseable {
             );
 
         for (var fResult : resultFields) {
-            var from = info.rsMetadata.getColumnClassName(fResult.sqlColumnNumber);
-            var to = fResult.field.accessorMeth.getReturnType()
-                .type.tsym.getQualifiedName().toString();
+            var from = util.lookupClass(
+                info.rsMetadata.getColumnClassName(fResult.sqlColumnNumber)
+            );
+            var to = (Symbol.ClassSymbol) fResult.field.accessorMeth.getReturnType().type.tsym;
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(

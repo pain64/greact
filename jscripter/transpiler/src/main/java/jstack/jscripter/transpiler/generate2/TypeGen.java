@@ -30,7 +30,7 @@ public class TypeGen extends ClassBodyGen {
             throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
                 "Prohibition of inheritance for @JSNativeAPI classes");
 
-        var isInnerEnum = classDef.sym.isEnum() && classDef.sym.owner.getKind().isClass();
+        var isEnum = classDef.sym.isEnum();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
         var isErasedInterface = isAnnotatedErasedInterface(classDef.sym);
@@ -192,23 +192,77 @@ public class TypeGen extends ClassBodyGen {
 
         out.writeCBOpen(true);
 
-        withClass(classDef, groups, () -> classDef.defs.stream()
-            .filter(d -> !(d instanceof JCTree.JCBlock))
-            .filter(d -> !(isInnerEnum && d.type.tsym.isStatic() && d.type.tsym.isFinal()))
-            .forEach(d -> d.accept(this)));
+        if (isEnum) {
+            out.write("static __Inst = class extends Object");
+            out.writeCBOpen(true);
+        }
+
+        withClass(classDef, groups, () ->
+            classDef.defs.stream()
+                .filter(d -> !(d instanceof JCTree.JCBlock))
+                .filter(d ->
+                    !(isEnum && d instanceof JCTree.JCVariableDecl)
+                )
+                .forEach(d -> d.accept(this))
+        );
+
+        if (isEnum) {
+            out.writeCBEnd(true);
+
+            classDef.defs.forEach(d -> {
+                if (!(d instanceof JCTree.JCVariableDecl vd)) return;
+
+                if (vd.sym.isStatic()) {
+                    out.write("static ");
+                    out.write(((JCTree.JCVariableDecl) d).name);
+                    out.write(" = new this.__Inst");
+                    out.mkString(
+                        ((JCTree.JCNewClass) vd.init).args,
+                        arg -> arg.accept(this),
+                        "(", ", ", ");"
+                    );
+                    out.writeNL();
+                }
+            });
+            out.writeNL();
+            out.write("static __match(self)");
+            out.writeCBOpen(true);
+            out.write("switch(self)");
+            out.writeCBOpen(true);
+
+            classDef.defs.forEach(d -> {
+                if (!(d instanceof JCTree.JCVariableDecl vd)) return;
+
+                if (vd.sym.isStatic()) {
+                    out.write("case '");
+                    out.write(vd.name);
+                    out.write("': return this.");
+                    out.write(vd.name);
+                    out.write(";");
+                    out.writeNL();
+                }
+            });
+
+            out.writeCBEnd(true);
+            out.writeCBEnd(true);
+
+            classDef.defs.forEach(d -> {
+                if (!(d instanceof JCTree.JCVariableDecl vd)) return;
+                if (vd.sym.isStatic()) return;
+
+                out.write("static ");
+                out.write(vd.name);
+                out.write("(self)");
+                out.writeCBOpen(true);
+                out.write("return __match(self).");
+                out.write(vd.name);
+                out.writeLn(";");
+                out.writeCBEnd(true);
+            });
+            // TODO: сделать поддержку методов (с учетом перегрузки)
+        }
 
         out.writeCBEnd(!classDef.sym.isAnonymous());
-
-        if (isInnerEnum && classDef.defs.stream()
-            .filter(d -> !(d instanceof JCTree.JCBlock)).anyMatch(d -> d.type.tsym.isStatic() && d.type.tsym.isFinal())) {
-
-            out.write("static {\n");
-            out.deepIn();
-            withClass(classDef, groups, () -> classDef.defs.stream()
-                .filter(d -> !(d instanceof JCTree.JCBlock)).filter(d -> d.type.tsym.isStatic() && d.type.tsym.isFinal())
-                .forEach(d -> d.accept(this)));
-            out.writeCBEnd(!classDef.sym.isAnonymous());
-        }
     }
 
     boolean isMethodAnnotatedDoNotTranspile(JCTree.JCMethodDecl methodDeclaration) {
