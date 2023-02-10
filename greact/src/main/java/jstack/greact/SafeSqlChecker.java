@@ -55,7 +55,7 @@ public class SafeSqlChecker implements AutoCloseable {
     final Map<Symbol.MethodSymbol, CheckHandler> checkHandlers = new HashMap<>();
 
     class Symbols {
-        Symbol.ClassSymbol clTsql = util.lookupClass(SafeSql.class);
+        Symbol.ClassSymbol clSsql = util.lookupClass(SafeSql.class);
         Symbol.ClassSymbol clConnection = util.lookupClass(Connection.class);
         Symbol.ClassSymbol clClass = util.lookupClass(Class.class);
         Symbol.ClassSymbol clString = util.lookupClass(String.class);
@@ -65,15 +65,16 @@ public class SafeSqlChecker implements AutoCloseable {
         Symbol.ClassSymbol clInteger = util.lookupClass(Integer.class);
         Symbol.ClassSymbol clLong = util.lookupClass(Long.class);
 
-        List<Symbol.MethodSymbol> mtExec = util.lookupMemberAll(clTsql, "exec");
-        List<Symbol.MethodSymbol> mtQuery = util.lookupMemberAll(clTsql, "query");
-        List<Symbol.MethodSymbol> mtQueryOne = util.lookupMemberAll(clTsql, "queryOne");
-        List<Symbol.MethodSymbol> mtQueryOneOrNull = util.lookupMemberAll(clTsql, "queryOneOrNull");
-        List<Symbol.MethodSymbol> mtSelect = util.lookupMemberAll(clTsql, "select");
-        List<Symbol.MethodSymbol> mtSelectOne = util.lookupMemberAll(clTsql, "selectOne");
-        List<Symbol.MethodSymbol> mtUpdateSelf = util.lookupMemberAll(clTsql, "updateSelf");
-        List<Symbol.MethodSymbol> mtDeleteSelf = util.lookupMemberAll(clTsql, "deleteSelf");
-        List<Symbol.MethodSymbol> mtInsertSelf = util.lookupMemberAll(clTsql, "insertSelf");
+        List<Symbol.MethodSymbol> mtExec = util.lookupMemberAll(clSsql, "exec");
+        List<Symbol.MethodSymbol> mtQuery = util.lookupMemberAll(clSsql, "query");
+        List<Symbol.MethodSymbol> mtQueryOne = util.lookupMemberAll(clSsql, "queryOne");
+        List<Symbol.MethodSymbol> mtQueryOneOrNull = util.lookupMemberAll(clSsql, "queryOneOrNull");
+        List<Symbol.MethodSymbol> mtSelect = util.lookupMemberAll(clSsql, "select");
+        List<Symbol.MethodSymbol> mtSelectOne = util.lookupMemberAll(clSsql, "selectOne");
+        List<Symbol.MethodSymbol> mtUpdateSelf = util.lookupMemberAll(clSsql, "updateSelf");
+        List<Symbol.MethodSymbol> mtDeleteSelf = util.lookupMemberAll(clSsql, "deleteSelf");
+        List<Symbol.MethodSymbol> mtInsertSelf = util.lookupMemberAll(clSsql, "insertSelf");
+        List<Symbol.MethodSymbol> mtUpsert = util.lookupMemberAll(clSsql, "upsert");
     }
 
     public SafeSqlChecker(Context context, CommandLine cmd) {
@@ -117,6 +118,7 @@ public class SafeSqlChecker implements AutoCloseable {
         add.accept(symbols.mtSelect, this::checkSelect);
         add.accept(symbols.mtSelectOne, this::checkSelect);
         add.accept(symbols.mtInsertSelf, this::checkInsertSelf);
+        add.accept(symbols.mtUpsert, this::checkUpsert);
         add.accept(symbols.mtUpdateSelf, this::checkUpdateSelf);
         add.accept(symbols.mtDeleteSelf, this::checkDeleteSelf);
     }
@@ -358,7 +360,7 @@ public class SafeSqlChecker implements AutoCloseable {
         }
     }
 
-    // FIXME: объеденить с checkPositionalArguments???
+    // FIXME: объединить с checkPositionalArguments???
     private void checkFieldArguments(
         JCTree.JCMethodInvocation invoke, String query, QueryInfo info,
         List<FieldArgument<Symbol.RecordComponent>> fieldArguments
@@ -541,6 +543,14 @@ public class SafeSqlChecker implements AutoCloseable {
             checkFieldArguments(invoke, query.text, info, query.arguments);
             checkResultSetTuple(invoke, query.results, query.text, info);
         });
+    }
+
+    void checkUpsert(int parameterCount, JCTree.JCMethodInvocation invoke) {
+        var meta = extractMeta(invoke);
+        var query = QueryBuilder.forUpsert(meta);
+        validateQuery(invoke, query.text, info ->
+            checkFieldArguments(invoke, query.text, info, query.arguments)
+        );
     }
 
     void checkUpdateSelf(int parameterCount, JCTree.JCMethodInvocation invoke) {

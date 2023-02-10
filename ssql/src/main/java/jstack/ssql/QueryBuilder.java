@@ -213,6 +213,43 @@ public class QueryBuilder {
         return new TupleToTupleQuery<>(text, arguments, results);
     }
 
+    // @Id поля не могут быть сгенерированы с помощью @Sequence в случае upsert ???
+    public static <CI, FI> TupleToTupleQuery<FI> forUpsert(ClassMeta<CI, FI> meta) {
+        var nonJoinedFields = meta.fields().stream()
+            .filter(f -> f.atTable() == meta.table()).toList();
+        var idFields = nonJoinedFields.stream()
+            .filter(FieldRef::isId).toList();
+        var noIdFields = nonJoinedFields.stream()
+            .filter(f -> !f.isId()).toList();
+
+        var values = nonJoinedFields.stream()
+            .map(FieldRef::atColumn)
+            .map(QueryBuilder::camelToSnakeCase)
+            .collect(Collectors.joining(",\n\t", " (\n\t", "\n )"));
+
+        var params = new ArrayList<String>();
+        var arguments = new ArrayList<FieldArgument<FI>>();
+
+        for (var fieldRef : nonJoinedFields) {
+            params.add("?");
+            arguments.add(new FieldArgument<>(fieldRef.info(), arguments.size() + 1));
+        }
+
+        var text =
+            " insert into " + meta.table().name() + values + " values " +
+                params.stream().collect(Collectors.joining(", ", "(", ")")) +
+                "\n on conflict " +
+                idFields.stream()
+                    .map(f -> camelToSnakeCase(f.atColumn()))
+                    .collect(Collectors.joining(", ", "(", ")")) +
+                " do update set\n\t" +
+                noIdFields.stream()
+                    .map(f -> camelToSnakeCase(f.atColumn()) + " = EXCLUDED." + camelToSnakeCase(f.atColumn()))
+                    .collect(Collectors.joining(",\n\t"));
+
+        return new TupleToTupleQuery<>(text, arguments, List.of());
+    }
+
     static <FI> List<FieldArgument<FI>> fieldsToArguments(List<FieldRef<FI>> fields) {
         var arguments = new ArrayList<FieldArgument<FI>>();
         for (var i = 0; i < fields.size(); i++)
