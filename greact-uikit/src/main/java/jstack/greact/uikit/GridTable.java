@@ -143,24 +143,12 @@ import java.util.function.Consumer;
                                     id = "grid-table-toolbox-body";
                                     className = "toolbox";
 
-                                    if (conf.onRowDelete != null)
-                                        new div() {{ /* delete */
-                                            innerHTML = """
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash" style="margin-top: 8px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                                """;
-                                            onclick = ev -> {
-                                                ev.stopPropagation();
-                                                if (JSExpression.of("window.confirm('Действительно удалить?')")) {
-                                                    conf.onRowDelete.handle(row.data);
-                                                    effect(rows = Array.filter(rows, r -> r != row));
-                                                }
-                                            };
-                                        }};
+                                    for(var action : conf.rowActions)
+                                        new slot<>(action.view.get());
+
                                     if (conf.onRowChange != null)
                                         new div() {{ /* edit */
-                                            innerHTML = """
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit" style="margin-top: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                """;
+                                            new div("grid-i-edit");
                                             onclick = ev -> {
                                                 ev.stopPropagation();
                                                 row.expanded = false;
@@ -169,6 +157,17 @@ import java.util.function.Consumer;
                                                 effect(columnSizes);
                                                 effect(row);
                                                 clearSizes();
+                                            };
+                                        }};
+                                    if (conf.onRowDelete != null)
+                                        new div() {{ /* delete */
+                                            new div("grid-i-trash");
+                                            onclick = ev -> {
+                                                ev.stopPropagation();
+                                                if (JSExpression.of("window.confirm('Действительно удалить?')")) {
+                                                    conf.onRowDelete.handle(row.data);
+                                                    effect(rows = Array.filter(rows, r -> r != row));
+                                                }
                                             };
                                         }};
                                     if (conf.expandedRow != null)
