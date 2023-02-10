@@ -87,10 +87,11 @@ tr:hover > td > .toolbox {
 .grid-filter {
   display: flex;
   justify-content: space-between;
-  background-color: #eee;
+  background-color: #f8f9fa;
   padding: 5px;
   margin-bottom: 15px;
   align-items: center;
+  border-radius: 0.375rem;
 }
 
 .grid-filter-select {
