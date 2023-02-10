@@ -27,7 +27,7 @@ public class TranspilerPlugin implements Plugin {
 
     public static final String NAME = "jScripter";
     static final String[] DEFAULT_STD_CONVERSION_CLASS =
-        {"org", "jstack", "jscripter", "StdTypeConversion"};
+        {"jstack", "jscripter", "StdTypeConversion"};
 
     String jsCodePackage = null;
     String[] stdConversionClass = null;
