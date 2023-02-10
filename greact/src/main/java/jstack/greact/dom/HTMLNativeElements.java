@@ -95,6 +95,8 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class body extends HTMLElement implements NativeElementAsComponent<body> { }
     @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
+        public div() { }
+        public div(@DomProperty("className") String className) { }
     }
 
     @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}
