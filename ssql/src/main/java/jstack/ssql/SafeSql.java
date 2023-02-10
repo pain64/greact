@@ -4,6 +4,8 @@ import jstack.ssql.QueryBuilder.PositionalArgument;
 import jstack.ssql.schema.Ordinal;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
@@ -17,6 +19,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class SafeSql {
+    static final Logger logger = LoggerFactory.getLogger(SafeSql.class);
+
     interface RSReader {
         Object read(ResultSet rs, int idx) throws SQLException;
     }
@@ -113,7 +117,7 @@ public class SafeSql {
 
     public Void exec(Connection conn, @Language("sql") String stmt, Object... args) {
         var query = QueryBuilder.forExec(stmt, args.length);
-        System.out.println("### EXEC QUERY:\n" + query.text);
+        logger.debug("EXEC QUERY:\n {}", query.text);
 
         try {
             var procCall = conn.prepareCall(query.text);
@@ -161,7 +165,7 @@ public class SafeSql {
                     Arrays.stream(klass.getRecordComponents())
                         .map(mapper::mapField).toList(), stmt, args.length
                 );
-                System.out.println("### EXEC QUERY:\n" + query.text);
+                logger.debug("EXEC QUERY:\n {}", query.text);
 
                 var rs = prepareAndExec(conn, query.text, query.arguments, args);
 
@@ -180,7 +184,7 @@ public class SafeSql {
                 }
             } else {
                 var query = QueryBuilder.forQueryScalar(klass, stmt, args.length);
-                System.out.println("### EXEC QUERY:\n" + query.text);
+                logger.debug("EXEC QUERY:\n {}", query.text);
 
                 var rs = prepareAndExec(conn, query.text, query.arguments, args);
 
@@ -220,7 +224,7 @@ public class SafeSql {
     public <T> T[] select(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
         var meta = Meta.parseClass(klass, reflectionMapper());
         var query = QueryBuilder.forSelect(meta, expr, args.length);
-        System.out.println("### EXEC QUERY:\n" + query.text);
+        logger.debug("EXEC QUERY:\n {}", query.text);
 
         try {
             var pstmt = conn.prepareStatement(query.text);
@@ -295,7 +299,7 @@ public class SafeSql {
     public <T> T insertSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var query = QueryBuilder.forInsertSelf(meta);
-        System.out.println("### EXEC QUERY:\n" + query.text);
+        logger.debug("EXEC QUERY:\n {}", query.text);
 
         try {
             // FOR ORACLE
@@ -347,10 +351,36 @@ public class SafeSql {
         return withConnection(conn -> insertSelf(conn, entity));
     }
 
+    public <T> Void upsert(Connection conn, T entity) {
+        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
+        var query = QueryBuilder.forUpsert(meta);
+        logger.debug("EXEC QUERY:\n {}", query.text);
+
+        try {
+            var pstmt = conn.prepareStatement(query.text);
+
+            for (var i = 0; i < query.arguments.size(); i++) {
+                var field = query.arguments.get(i).field;
+                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
+            }
+
+            pstmt.execute();
+
+        } catch (SQLException | IllegalAccessException | InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return null;
+    }
+
+    public <T> Void upsert(T entity) {
+        return withConnection(conn -> upsert(conn, entity));
+    }
+
     public <T> Void updateSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var query = QueryBuilder.forUpdateSelf(meta);
-        System.out.println("### EXEC QUERY:\n" + query.text);
+        logger.debug("EXEC QUERY:\n {}", query.text);
 
         try {
             var pstmt = conn.prepareStatement(query.text);
@@ -376,8 +406,7 @@ public class SafeSql {
     public <T> Void deleteSelf(Connection conn, T entity) {
         var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
         var query = QueryBuilder.forDeleteSelf(meta);
-
-        System.out.println("### EXEC QUERY:\n" + query.text);
+        logger.debug("EXEC QUERY:\n {}", query.text);
 
         try {
             var pstmt = conn.prepareStatement(query.text);

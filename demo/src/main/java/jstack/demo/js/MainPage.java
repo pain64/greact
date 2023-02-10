@@ -29,6 +29,7 @@ public class MainPage implements Component0<div> {
             db.query(Teacher.class, "select * from teachers");
             db.query(Integer.class, "select min(age) from teachers where age > :1", 42);
             var t = db.insertSelf(new Teacher(1L, "John", "some", 40, Gender.MALE, Term.SPRING));
+            db.upsert(t);
             db.updateSelf(t);
             db.deleteSelf(t);
             return null;

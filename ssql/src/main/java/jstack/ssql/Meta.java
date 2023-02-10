@@ -77,8 +77,9 @@ public class Meta {
 
                 if (atAnn != null) {
                     if (atAnn.value().isEmpty()) throw new RuntimeException(
-                            className + ": @At: info name cannot be empty");
-                    atName = atAnn.value();
+                        className + ": @At: info name cannot be empty");
+                    atName = atAnn.value().endsWith(".")
+                        ? atAnn.value() + fieldName : atAnn.value();
                     fieldTableRef = null;
                 } else {
                     atName = mapper.fieldName(f);

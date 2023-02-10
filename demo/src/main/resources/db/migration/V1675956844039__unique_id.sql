@@ -1,0 +1,1 @@
+ALTER TABLE teachers ADD CONSTRAINT teacher_id_unique UNIQUE (id);
