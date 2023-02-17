@@ -20,14 +20,14 @@ public class Tabs implements Component0<div> {
     @Override public div mount() {
         return new div() {{
             new div() {{
-                className = "tabs";
+                className = "nav nav-tabs";
                 for (var tab : tabs)
                     new span(tab.caption) {{
-                        className = "tabs-content";
+                        className = "nav-link";
                         onclick = ev -> effect(selected = tab);
 
                         if (selected == tab)
-                            className += " tabs-content-selected";
+                            className += " active";
                     }};
             }};
             new div() {{

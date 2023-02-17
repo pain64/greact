@@ -1,6 +1,7 @@
 package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.uikit.controls.UKInput;
 import jstack.jscripter.transpiler.model.JSExpression;
 
 import java.util.function.Consumer;
@@ -138,11 +139,15 @@ class GridFilter<T> implements Component0<div> {
                 }
                 new div() {{
                     className = "grid-filter-enabled";
-                    new input() {{
-//                        value = filterValue; // one wat bindind
-                        placeholder = "фильтр...";
-                        className = "grid-filter-input";
-                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
+//                    new input() {{
+//                        placeholder = "фильтр...";
+//                        className = "grid-filter-input";
+//                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
+//                    }};
+                    new UKInput<>() {{
+                        placeholder_ = "фильтр...";
+                        className_ = "grid-filter-input";
+                        onkeyup_ = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
                     new div() {{
                         className = "grid-filter-hint";
