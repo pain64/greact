@@ -103,16 +103,12 @@ class GridFilter<T> implements Component0<div> {
                         new div() {{
                             if (finalFiltered1.length > pageSizes[0]) {
                                 new div() {{
-                                    innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-left" style="margin-top: 4px;"><polyline points="15 18 9 12 15 6"/></svg>
-                                        """;
+                                    new div("grid-i-chevron-left");
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
                                 }};
                                 new div() {{
-                                    innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right" style="margin-top: 4px;"><polyline points="9 18 15 12 9 6"/></svg>
-                                        """;
+                                    new div("grid-i-chevron-right");
                                     className = "page-turn";
                                     onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
                                 }};
@@ -163,11 +159,14 @@ class GridFilter<T> implements Component0<div> {
                     }};
                 }
                 var hint = pageData;
-                new slot<>(conf.pageView, new GridTable<>(pageData, conf, onRowSelect, () -> {
-                    effect(filterEnabled = !filterEnabled);
-                    effect(currentPage = 1);
-                    effect(filterValue = "");
-                }));
+                new slot<>(
+                    conf.pageView,
+                    new GridTable<>(pageData, conf, filterEnabled, onRowSelect, () -> {
+                        effect(filterEnabled = !filterEnabled);
+                        effect(currentPage = 1);
+                        effect(filterValue = "");
+                    })
+                );
             }};
         }};
     }

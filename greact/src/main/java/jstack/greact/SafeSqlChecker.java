@@ -274,6 +274,15 @@ public class SafeSqlChecker implements AutoCloseable {
             final ResultSetMetaData rsMetadata;
             final ParameterMetaData paramMetadata;
 
+//            try (var pstmt = conn.prepareStatement("explain " + query)) {
+//                pstmt.getMetaData();
+//                pstmt.getParameterMetaData();
+//            } catch (SQLException ex) {
+//                throw new SchemaCheckException(
+//                    invoke, query + "\n    ^^^ " + ex.getMessage()
+//                );
+//            }
+
             try (var pstmt = conn.prepareStatement(query)) {
 
                 rsMetadata = pstmt.getMetaData();

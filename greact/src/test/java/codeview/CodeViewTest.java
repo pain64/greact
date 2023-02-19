@@ -11,14 +11,15 @@ import static util.AnalyzeAssertionsCompiler.withAssert;
 
 public class CodeViewTest {
     static class PatchedLikeAssert extends AnalyzeAssertionsCompiler.CompilerAssertion<String> {
-        @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String cuExpected) {
+        @Override
+        public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String cuExpected) {
             new CodeViewPlugin(ctx).apply(cu);
             assertEquals(cuExpected, cu.toString());
         }
     }
 
     @Test void sampleTest() {
-        withAssert(PatchedLikeAssert.class, """            
+        withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.dom.CodeView;
                 import jstack.greact.dom.CodeView.CodeAndView;
                 import jstack.greact.dom.HTMLNativeElements.*;
@@ -61,8 +62,8 @@ public class CodeViewTest {
                             new slot<>(codeAndView.view);
                             new h3(codeAndView.code){
                                \s
-                                (java.lang.String arg0) {
-                                    super(arg0);
+                                (java.lang.String innerText) {
+                                    super(innerText);
                                 }
                                 {
                                     style.border = "1px green solid";

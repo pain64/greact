@@ -22,6 +22,7 @@ import java.util.function.Consumer;
     final Consumer<T> onRowSelect;
 
     boolean addNewRowMode = false;
+    final boolean filterEnabled;
     RowData<T>[] rows;
     RowData<T> selectedRow = null;
     HTMLElement theTable;
@@ -35,8 +36,11 @@ import java.util.function.Consumer;
         columnSizes = Array.map(conf.columns, v -> 0);
     }
 
-    GridTable(T[] data, GridConfig2<T> conf,
-              Consumer<T> onRowSelect, Runnable onFilterEnableDisable) {
+    GridTable(
+        T[] data, GridConfig2<T> conf, boolean filterEnabled,
+        Consumer<T> onRowSelect, Runnable onFilterEnableDisable
+    ) {
+        this.filterEnabled = filterEnabled;
         this.rows = Array.map(data, RowData::new);
         this.conf = conf;
         this.onRowSelect = onRowSelect;
@@ -71,10 +75,8 @@ import java.util.function.Consumer;
                             id = "grid-table-td-body";
                             className = "toolbox-header";
                             new div() {{
-                                className = "grid-table-td-content";
-                                innerHTML = """
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-filter" style="margin-top: 4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                                    """;
+                                new div("grid-i-filter");
+                                className = filterEnabled ? "enabled" : "";
                                 onclick = ev -> onFilterEnableDisable.run();
                             }};
 

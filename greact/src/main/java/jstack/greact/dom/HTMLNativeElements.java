@@ -168,6 +168,11 @@ public class HTMLNativeElements {
         public a(@DomProperty("innerText") String innerText) {}
     }
 
+    @JSNativeAPI public static class b extends HTMLElement implements NativeElementAsComponent<b> {
+        public b() {}
+        public b(@DomProperty("innerText") String innerText) {}
+    }
+
     @JSNativeAPI public static class table extends HTMLElement implements NativeElementAsComponent<table> {
         public table() {}
     }
