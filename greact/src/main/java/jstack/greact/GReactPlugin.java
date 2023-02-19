@@ -1,6 +1,5 @@
 package jstack.greact;
 
-import jstack.jscripter.transpiler.TranspilerPlugin;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
@@ -10,6 +9,7 @@ import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Log;
+import jstack.jscripter.transpiler.TranspilerPlugin;
 
 import javax.tools.StandardLocation;
 import java.io.IOException;

@@ -9,9 +9,29 @@
     height: 20px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-trash'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
 }
+
+.grid-i-filter {
+    width: 20px;
+    height: 20px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-filter'%3E%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'%3E%3C/polygon%3E%3C/svg%3E");
+}
+
+.grid-i-chevron-left {
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-left'%3E%3Cpolyline points='15 18 9 12 15 6'/%3E%3C/svg%3E");
+}
+
+.grid-i-chevron-right {
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-right'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+}
+
 .page-turn {
-  display: inline;
+  display: inline-block;
   cursor: pointer;
+  padding: 4px;
 }
 
 .page-turn:hover {
@@ -79,6 +99,14 @@ tr:hover > td > .toolbox {
   background-color: #ffe69c;
 }
 
+.toolbox-header > div {
+  padding: 4px;
+}
+
+.toolbox-header > .enabled {
+  background-color: #ffe69c;
+}
+
 .grid {
   background-color: #ffffff;
   display: flex;
@@ -91,7 +119,6 @@ tr:hover > td > .toolbox {
 }
 
 .grid-main {
-  margin-bottom: 15px;
 }
 
 .grid-filter {
@@ -100,7 +127,6 @@ tr:hover > td > .toolbox {
   justify-content: space-between;
   background-color: #f8f9fa;
   padding: 5px;
-  margin-bottom: 15px;
   align-items: center;
   border-radius: 0.375rem;
 }
@@ -183,17 +209,14 @@ tr:hover > td > .toolbox {
 }
 
 .grid-table-td {
-  display: flex;
-  justify-content: flex-start;
 }
 
 #grid-table-td-body {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .grid-table-td-content {
-  width: 16px;
 }
 
 .grid-table-tbody-tr {

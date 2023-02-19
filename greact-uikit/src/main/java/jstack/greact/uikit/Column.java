@@ -73,8 +73,9 @@ public class Column<T, U> {
         this.editor = (Control<U>) editor;
     }
 
-    public Column(MemberRef<T, U> ref) {
+    public Column(String name, MemberRef<T, U> ref) {
         applyDefaultSettings(ref.memberNames(), ref.className());
+        this.header = name;
     }
 
     public Column<T, U> editor(Control<U> editor) {
@@ -82,10 +83,10 @@ public class Column<T, U> {
         return this;
     }
 
-    public Column<T, U> name(String theHeader) {
-        this.header = theHeader;
-        return this;
-    }
+//    public Column<T, U> name(String theHeader) {
+//        this.header = theHeader;
+//        return this;
+//    }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
         this.view = (value, row) -> new td(mapper.map(value));

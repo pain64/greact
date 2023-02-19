@@ -10,11 +10,13 @@ import jstack.ssql.schema.Ordinal;
 import jstack.ssql.schema.Sequence;
 import jstack.ssql.schema.Table;
 
+import java.math.BigDecimal;
+
 import static jstack.demo.Main.Server.server;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
-    enum Gender {MALE, FEMALE, UNKNOWN}
+    enum Gender {MALE, FEMALE}
     @Ordinal enum Term {SPRING, AUTUMN}
 
     @Table("teachers") record Teacher(
@@ -25,13 +27,13 @@ public class MainPage implements Component0<div> {
 
     @Override @async public div mount() {
         server(db -> {
-            db.exec("update teachers set age = 18 where age = :1", 14);
+            //db.exec("update teachers set age = 18 where age = :1", 14);
             db.query(Teacher.class, "select * from teachers");
-            db.query(Integer.class, "select min(age) from teachers where age > :1", 42);
-            var t = db.insertSelf(new Teacher(1L, "John", "some", 40, Gender.MALE, Term.SPRING));
-            db.upsert(t);
-            db.updateSelf(t);
-            db.deleteSelf(t);
+           // db.query(Integer.class, "select min(age) from teachers where age > :1", 42);
+           // var t = db.insertSelf(new Teacher(1L, "John", "some", 40, Gender.MALE, Term.SPRING));
+           // db.upsert(t);
+           // db.updateSelf(t);
+           // db.deleteSelf(t);
             return null;
         });
 

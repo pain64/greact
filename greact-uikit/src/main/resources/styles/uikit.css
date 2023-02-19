@@ -1,9 +1,16 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 html {
   box-sizing: border-box;
 }
 
 *, *:before, *:after {
-  box-sizing: inherit;
+  box-sizing: border-box;
 }
 
 body {
@@ -18,6 +25,10 @@ h1, h2, h3, h4, h5 {
 
 h5 {
   margin-bottom: 10px;
+}
+
+p, span {
+  line-height: 1.3;
 }
 
 @media print {

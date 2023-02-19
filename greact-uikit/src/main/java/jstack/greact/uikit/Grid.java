@@ -94,6 +94,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
 
     public final T[] data;
     T selectedRowData;
+
     public Grid(@Reflexive T[] data) {
         this.data = data;
         initColumnsByDefault(data);

@@ -21,6 +21,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
@@ -31,6 +32,7 @@ tasks.withType<JavaCompile> {
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
     )
@@ -43,6 +45,7 @@ val test by tasks.getting(Test::class) {
         "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
 }

@@ -2,6 +2,7 @@ package jstack.greact;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jstack.jscripter.transpiler.model.DoNotTranspile;
 import jstack.jscripter.transpiler.model.RPCEndPoint;
 import jstack.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
@@ -50,6 +51,7 @@ public class RPCPlugin {
         Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
         Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
         Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPCEndPoint.class.getName());
+        Symbol.ClassSymbol doNotTranspile = lookupClass(DoNotTranspile.class.getName());
         Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
         Symbol.MethodSymbol mtListGet = lookupMember(clList, "get");
@@ -226,7 +228,10 @@ public class RPCPlugin {
                                     classDecl.sym);
 
                                 endpointSymbol.prependAttributes(
-                                    List.of(new Attribute.Compound(symbols.clRPCEndPoint.type, List.nil()))
+                                    List.of(
+                                        new Attribute.Compound(symbols.clRPCEndPoint.type, List.nil()),
+                                        new Attribute.Compound(symbols.doNotTranspile.type, List.nil())
+                                    )
                                 );
 
                                 endpointSymbol.params = List.<Symbol.VarSymbol>nil()
