@@ -27,6 +27,7 @@ public class CallNoArgs {
                     class Simple {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
+                        @jstack.jscripter.transpiler.model.DoNotTranspile
                         public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             return 42;
                         }
@@ -66,6 +67,7 @@ public class CallNoArgs {
                     class Simple {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
+                        @jstack.jscripter.transpiler.model.DoNotTranspile
                         public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             return x0.method();
                         }
