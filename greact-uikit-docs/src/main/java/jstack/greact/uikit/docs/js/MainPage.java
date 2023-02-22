@@ -459,6 +459,15 @@ public class MainPage implements Component0<div> {
                                     var data = new Data[]{
                                         new Data(1, "one"),
                                         new Data(2, "two"),
+                                        new Data(3, "three"),
+                                        new Data(1, "one"),
+                                        new Data(2, "two"),
+                                        new Data(3, "three"),
+                                        new Data(1, "one"),
+                                        new Data(2, "two"),
+                                        new Data(3, "three"),
+                                        new Data(1, "one"),
+                                        new Data(2, "two"),
                                         new Data(3, "three")
                                     };
                                     new Grid<>(data) {{
