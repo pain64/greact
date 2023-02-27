@@ -191,6 +191,12 @@ public class HTMLNativeElements {
         public tr(HTMLElement child) {}
         public tr(td... childs) {}
     }
+
+    @JSNativeAPI public static class th extends HTMLElement implements NativeElementAsComponent<th> {
+        public th() {}
+        public th(@DomProperty("innerText") String innerText) {}
+    }
+
     @JSNativeAPI public static class many<T extends HTMLElement> extends HTMLElement {
         public many(T... elements){}
     }
