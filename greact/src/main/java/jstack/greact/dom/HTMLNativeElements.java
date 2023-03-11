@@ -192,6 +192,11 @@ public class HTMLNativeElements {
         public tr(td... childs) {}
     }
 
+    @JSNativeAPI public static class th extends HTMLElement implements NativeElementAsComponent<th> {
+        public th() {}
+        public th(@DomProperty("innerText") String innerText) {}
+    }
+
     @JSNativeAPI public static final class slot<T extends HTMLElement> extends HTMLElement implements NativeElementAsComponent<T> {
         public slot(Component0<T> comp) {}
         public <U> slot(Component1<T, U> comp, U u) {}

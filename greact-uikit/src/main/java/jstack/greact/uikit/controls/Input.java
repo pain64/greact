@@ -57,6 +57,7 @@ public abstract class Input<T> extends Control<T> {
                     //className = "form-check-input";
                     // FIXME: вот это вот - костыль для CheckBox
                     if(self.type != "checkbox") className = "input-body-checkbox";
+                    else className = "form-check-input";
                     type = self.type;
                     value = isNullOrUndefined(self.value) ? null : valueToHtmlValue();
                     onclick = ev -> ev.stopPropagation();
