@@ -1,9 +1,8 @@
 package ui.analyze;
 
-import jstack.greact.GReactExceptions.NewClassDeniedHere;
-import jstack.greact.ViewEntryFinder;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import jstack.greact.ViewEntryFinder;
 import org.junit.jupiter.api.Test;
 import util.AnalyzeAssertionsCompiler.CompilerAssertion;
 
@@ -11,7 +10,6 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static util.AnalyzeAssertionsCompiler.withAssert;
 
 public class FindViewEntriesTest {
@@ -24,13 +22,6 @@ public class FindViewEntriesTest {
                 .collect(Collectors.toList());
 
             assertLinesMatch(Arrays.asList(expected), hasViews);
-        }
-    }
-
-    static class NewViewDeniedAssert extends CompilerAssertion<String> {
-        @Override public void doAssert(Context ctx, JCTree.JCCompilationUnit cu, String nop) {
-            assertThrows(NewClassDeniedHere.class, () ->
-                new ViewEntryFinder(ctx).find(cu));
         }
     }
 
@@ -171,26 +162,6 @@ public class FindViewEntriesTest {
                 """
                     new h1()"""
             });
-    }
-
-    @Test void denied_at_arbitrary_method() {
-        withAssert(NewViewDeniedAssert.class, """
-            import jstack.greact.dom.HTMLNativeElements.*;
-            class A {
-                h1 someMethod() {
-                    return new h1();
-                }
-            }""", null);
-    }
-
-    @Test void denied_at_method_named_mount_but_not_component() {
-        withAssert(NewViewDeniedAssert.class, """
-            import jstack.greact.dom.HTMLNativeElements.*;
-            class A {
-                h1 mount() {
-                    return new h1();
-                }
-            }""", null);
     }
 
     @Test void nested_components_creation_should_work() {

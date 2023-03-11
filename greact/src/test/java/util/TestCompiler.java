@@ -21,7 +21,7 @@ public class TestCompiler {
         var arguments = asList("--enable-preview", "--source", "17",
             "-classpath", System.getProperty("java.class.path"),
             "-Xplugin:" + GReactPlugin.NAME +
-                " --js-src-package=js");
+                " --js-src-package=js --greact-debug-patched-ast");
 
         var task = (BasicJavacTask) compiler.getTask(output, fileManager,
             diagnostic -> System.out.println(diagnostic.toString()),

@@ -48,14 +48,15 @@ public class TranspilerPlugin implements Plugin {
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
             }})
-            .addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-check-schema-username", true, "username for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-check-schema-password", true, "password for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-check-driver-classname", true, "driver name for validation TypesafeSql calls"))
-            .addOption(new Option(null, "tsql-check-enabled", true, "flag for validation TypesafeSql calls") {{
+            .addOption(new Option(null, "greact-debug-patched-ast", false, "write debug .java.patch files"))
+            .addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url"))
+            .addOption(new Option(null, "tsql-check-schema-username", true, "username"))
+            .addOption(new Option(null, "tsql-check-schema-password", true, "password"))
+            .addOption(new Option(null, "tsql-check-driver-classname", true, "driver class name"))
+            .addOption(new Option(null, "tsql-check-enabled", true, "is SafeSQL checks enabled") {{
                 setType(Boolean.TYPE);
             }})
-            .addOption(new Option(null, "tsql-check-schema-dialect", true, "dialect"))
+            .addOption(new Option(null, "tsql-check-dialect-classname", true, "dialect class name"))
             .addOption(new Option(null, "std-conv-class", true, "java standard library type conversion"));
 
         try {
@@ -161,8 +162,7 @@ public class TranspilerPlugin implements Plugin {
                     }
 
                     var endTime = System.currentTimeMillis();
-                    System.out.println("JS compilation for " + cu.getSourceFile().toString()
-                        + "took " + (endTime - startTime) + "ms");
+                    System.out.println("js compilation : " + (endTime - startTime) + "ms");
                 }
             }
 

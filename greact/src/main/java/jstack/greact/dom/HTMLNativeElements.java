@@ -191,10 +191,6 @@ public class HTMLNativeElements {
         public tr(HTMLElement child) {}
         public tr(td... childs) {}
     }
-    @JSNativeAPI public static class many<T extends HTMLElement> extends HTMLElement {
-        public many(T... elements){}
-    }
-
 
     @JSNativeAPI public static final class slot<T extends HTMLElement> extends HTMLElement implements NativeElementAsComponent<T> {
         public slot(Component0<T> comp) {}

@@ -10,7 +10,6 @@ import com.sun.tools.javac.util.*;
 
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Util {
     final Symtab symtab;
@@ -29,6 +28,7 @@ public class Util {
         this.javacLog = Log.instance(context);
         this.diagnosticsFactory = JCDiagnostic.Factory.instance(context);
         this.javacMessages = JavacMessages.instance(context);
+
         var bundle = ResourceBundle.getBundle(
             "com.over64.greact.MessagesBundle_en", new Locale("en", "US")
         );
@@ -116,21 +116,16 @@ public class Util {
             });
     }
 
-    public void writeCompilationError(JCTree.JCCompilationUnit cu, JCTree tree, String error) {
-        var pos = new JCDiagnostic.SimpleDiagnosticPosition(tree.pos);
+    public <E extends GReactCompileException> E compilationError(
+        JCTree.JCCompilationUnit cu, E e
+    ) {
+        var pos = new JCDiagnostic.SimpleDiagnosticPosition(e.tree.pos);
         javacLog.useSource(cu.getSourceFile());
         javacLog.error(
             JCDiagnostic.DiagnosticFlag.API,
-            pos, diagnosticsFactory.errorKey("ssql", error)
+            pos, diagnosticsFactory.errorKey("ssql", e.message)
         );
-    }
 
-    // FIXME: use writeCompilationError instead
-    public String treeSourcePosition(JCTree.JCCompilationUnit cu, JCTree tree) {
-        var src = new DiagnosticSource(cu.getSourceFile(), javacLog);
-        return "%s:%d:%d".formatted(
-            src.getFile().getName(),
-            src.getLineNumber(tree.pos),
-            src.getColumnNumber(tree.pos, true));
+        return e;
     }
 }

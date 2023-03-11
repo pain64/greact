@@ -9,7 +9,6 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
-import jstack.greact.GReactExceptions.NewClassDeniedHere;
 import jstack.greact.dom.HTMLNativeElements.Component0;
 import jstack.greact.dom.HTMLNativeElements.Component1;
 
@@ -126,24 +125,6 @@ public class ViewEntryFinder {
                             if (ret.expr instanceof JCTree.JCNewClass newClass)
                                 currentClassEntry.viewHolders.add(new LambdaViewHolder(parent, lmb, newClass));
             }
-        });
-
-        var allViewEntries = found.stream()
-            .flatMap(ce -> ce.viewHolders.stream())
-            .map(ViewHolder::view)
-            .toList();
-
-        cu.accept(new TreeScanner() {
-            @Override public void visitNewClass(JCTree.JCNewClass newClass) {
-                if (!(util.classifyView(newClass.type) instanceof Util.IsNotComponent))
-                    if (!allViewEntries.contains(newClass))
-                        throw new NewClassDeniedHere(cu.getSourceFile().getName() + ":" +
-                            cu.getLineMap().getLineNumber(newClass.getStartPosition()) + ":" +
-                            cu.getLineMap().getColumnNumber(newClass.getStartPosition()));
-            }
-            /*
-             * FIXME: нужны более точные проверки
-             */
         });
 
         return found;

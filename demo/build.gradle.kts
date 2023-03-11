@@ -39,33 +39,14 @@ tasks.withType<JavaCompile> {
                             "--tsql-check-driver-classname=org.postgresql.Driver " +
                             "--tsql-check-schema-url=jdbc:postgresql://localhost:5432/$devDbName " +
                             "--tsql-check-schema-username=$devDbUser " +
-                            "--tsql-check-schema-password=$devDbPassword "
+                            "--tsql-check-schema-password=$devDbPassword " +
+                            "--tsql-check-dialect-classname=jstack.demo.Dialect"
                 } else ""
-    )
-    options.fork()
-    options.forkOptions.jvmArgs = listOf(
-        // "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
-        "--enable-preview",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
     )
 }
 
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
-    jvmArgs = listOf(
-        "--enable-preview",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
-    )
 }
 
 dependencies {
@@ -79,7 +60,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.0")
     implementation("commons-io:commons-io:2.10.0")
-
     implementation("org.postgresql:postgresql:42.3.6")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
