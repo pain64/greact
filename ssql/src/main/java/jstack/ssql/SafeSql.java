@@ -1,7 +1,7 @@
 package jstack.ssql;
 
 import jstack.ssql.QueryBuilder.PositionalArgument;
-import jstack.ssql.schema.Ordinal;
+import jstack.ssql.dialect.Bindings;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -10,61 +10,67 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.lang.reflect.Array;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class SafeSql {
-    static final Logger logger = LoggerFactory.getLogger(SafeSql.class);
+public class SafeSql implements ConnectionHandle {
+    private static final Logger logger = LoggerFactory.getLogger(SafeSql.class);
 
-    interface RSReader {
-        Object read(ResultSet rs, int idx) throws SQLException;
+    private static final RW deafultRW = new RW() {
+        @Override public Object read(ResultSet rs, int i, Class<?> cl) throws SQLException {
+            if (cl == byte.class || cl == Byte.class) return rs.getByte(i);
+            if (cl == short.class || cl == Short.class) return rs.getShort(i);
+            if (cl == int.class || cl == Integer.class) return rs.getInt(i);
+            if (cl == long.class || cl == Long.class) return rs.getLong(i);
+            if (cl == boolean.class || cl == Boolean.class) return rs.getBoolean(i);
+            if (cl == String.class) return rs.getString(i);
+            return rs.getObject(i);
+        }
+
+        @Override public void write(PreparedStatement stmt, int i, Object v) throws SQLException {
+            stmt.setObject(i, v);
+        }
+    };
+
+    private final DataSource ds;
+    private final Connection connection;
+    private final Map<Class<?>, RW> userRW;
+
+    public SafeSql(DataSource ds) {
+        this(Class.class, ds); // no dialect
     }
 
-    interface RSWriter {
-        void write(PreparedStatement stmt, int idx, Object value) throws SQLException;
+    public SafeSql(Class<?> dialect, DataSource ds) {
+        this.ds = ds;
+        this.connection = null;
+        this.userRW = new HashMap<>();
+
+        for (var bind : dialect.getAnnotation(Bindings.class).value()) {
+            try {
+                userRW.put(bind.klass(), bind.using().newInstance());
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
-    static RSReader readerForType(Class<?> type) {
-        if (type.isEnum())
-            if (type.getAnnotation(Ordinal.class) != null)
-                return (rs, i) -> type.getEnumConstants()[rs.getInt(i)];
-            else
-                return (rs, i) -> {
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    var result = Enum.valueOf((Class<? extends Enum>) type, rs.getString(i));
-                    return result;
-                };
-
-        if (type == byte.class || type == Byte.class) return ResultSet::getByte;
-        if (type == short.class || type == Short.class) return ResultSet::getShort;
-        if (type == int.class || type == Integer.class) return ResultSet::getInt;
-        if (type == long.class || type == Long.class) return ResultSet::getLong;
-        if (type == boolean.class || type == Boolean.class) return ResultSet::getBoolean;
-        if (type == String.class) return ResultSet::getString;
-        return ResultSet::getObject;
+    protected SafeSql(
+        DataSource ds, Connection connection, Map<Class<?>, RW> userRW
+    ) {
+        this.ds = ds;
+        this.connection = connection;
+        this.userRW = userRW;
     }
 
-    static RSWriter writerForType(Class<?> type) {
-        if (type.isEnum()) {
-            if (type.getAnnotation(Ordinal.class) != null)
-                return (stmt, idx, value) ->
-                    stmt.setObject(idx, ((Enum<?>) value).ordinal());
-            else
-                return (stmt, idx, value) ->
-                    stmt.setObject(idx, ((Enum<?>) value).name());
-        } else
-            return PreparedStatement::setObject;
-    }
+    record FieldInfo(Method accessor, Class<?> type, RW rw) { }
 
-    record FieldInfo(Method accessor, RSReader reader, RSWriter writer) { }
-
-    public static <T> Meta.Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
-        return new Meta.Mapper<>() {
+    private <T> Mapper<Class<T>, RecordComponent, Constructor<T>, FieldInfo> reflectionMapper() {
+        return new Mapper<>() {
             @Override public String className(Class<T> klass) { return klass.getName(); }
             @Override public String fieldName(RecordComponent field) { return field.getName(); }
 
@@ -73,12 +79,14 @@ public class SafeSql {
             }
 
             @Override public <A extends Annotation> @Nullable A classAnnotation(
-                Class<T> klass, Class<A> annotationClass) {
+                Class<T> klass, Class<A> annotationClass
+            ) {
                 return klass.getAnnotation(annotationClass);
             }
 
             @Override public <A extends Annotation> @Nullable A fieldAnnotation(
-                RecordComponent field, Class<A> annotationClass) {
+                RecordComponent field, Class<A> annotationClass
+            ) {
                 return field.getAnnotation(annotationClass);
             }
 
@@ -93,21 +101,26 @@ public class SafeSql {
                 var accessor = field.getAccessor();
                 accessor.setAccessible(true);
                 return new FieldInfo(
-                    accessor, readerForType(field.getType()),
-                    writerForType(field.getType())
+                    accessor, field.getType(), userRW.getOrDefault(field.getType(), deafultRW)
                 );
             }
         };
     }
 
-    private final DataSource ds;
-    public SafeSql(DataSource ds) {
-        this.ds = ds;
+    /* FIXME: may handler throw Exception ??? */
+    public <T> T withConnection(Function<ConnectionHandle, T> handler) {
+        try (var conn = ds.getConnection()) {
+            return handler.apply(new SafeSql(ds, conn, userRW));
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
+    @Override public <T> T withTransaction(Function<TransactionHandle, T> handler) {
+        throw new RuntimeException("Not implemented yet");
+    }
 
-    /* FIXME: may handler throw Exception ??? */
-    public <T> T withConnection(Function<Connection, T> handler) {
+    private <T> T inConnection(Function<Connection, T> handler) {
         try (var conn = ds.getConnection()) {
             return handler.apply(conn);
         } catch (SQLException ex) {
@@ -115,29 +128,30 @@ public class SafeSql {
         }
     }
 
-    public Void exec(Connection conn, @Language("sql") String stmt, Object... args) {
-        var query = QueryBuilder.forExec(stmt, args.length);
-        logger.debug("EXEC QUERY:\n {}", query.text);
+    @Override public <T> T exec(@Language("sql") String stmt, Class<T> toClass, Object... args) {
+        Function<Connection, T> doExec = conn -> {
+            var query = QueryBuilder.forExec(stmt, args.length);
+            logger.debug("EXEC QUERY:\n {}", query.text);
 
-        try {
-            var procCall = conn.prepareCall(query.text);
+            try {
+                var procCall = conn.prepareCall(query.text);
 
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var javaArg = args[query.arguments.get(i).javaArgumentIndex];
-                var writer = writerForType(javaArg.getClass());
-                writer.write(procCall, i + 1, javaArg);
+                for (var i = 0; i < query.arguments.size(); i++) {
+                    var javaArg = args[query.arguments.get(i).javaArgumentIndex];
+                    var rw = userRW.getOrDefault(javaArg.getClass(), deafultRW);
+                    rw.write(procCall, i + 1, javaArg);
+                }
+
+                procCall.executeUpdate();
+                return null;
+
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
             }
+        };
 
-            procCall.executeUpdate();
-            return null;
-
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public Void exec(@Language("sql") String stmt, Object... args) {
-        return withConnection(conn -> exec(conn, stmt, args));
+        return connection != null
+            ? doExec.apply(connection) : inConnection(doExec);
     }
 
     private ResultSet prepareAndExec(
@@ -147,285 +161,81 @@ public class SafeSql {
 
         for (var i = 0; i < arguments.size(); i++) {
             var javaArg = javaArgs[arguments.get(i).javaArgumentIndex];
-            var writer = writerForType(javaArg.getClass());
-            writer.write(pstmt, i + 1, javaArg);
+            var rw = userRW.getOrDefault(javaArg.getClass(), deafultRW);
+            rw.write(pstmt, i + 1, javaArg);
         }
 
         pstmt.execute();
         return pstmt.getResultSet();
     }
 
-    public <T> T[] query(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
-        var data = new ArrayList<T>();
-
-        try {
-            if (klass.isRecord()) {
-                var mapper = reflectionMapper();
-                var query = QueryBuilder.forQueryTuple(
-                    Arrays.stream(klass.getRecordComponents())
-                        .map(mapper::mapField).toList(), stmt, args.length
-                );
-                logger.debug("EXEC QUERY:\n {}", query.text);
-
-                var rs = prepareAndExec(conn, query.text, query.arguments, args);
-
-                @SuppressWarnings("unchecked")
-                var cons = (Constructor<T>) klass.getDeclaredConstructors()[0];
-                cons.setAccessible(true);
-                var consArgs = new Object[cons.getParameters().length];
-
-                while (rs.next()) {
-                    for (var i = 0; i < query.results.size(); i++) {
-                        var field = query.results.get(i).field;
-                        consArgs[i] = field.reader.read(rs, i + 1);
-                    }
-
-                    data.add(cons.newInstance(consArgs));
-                }
-            } else {
-                var query = QueryBuilder.forQueryScalar(klass, stmt, args.length);
-                logger.debug("EXEC QUERY:\n {}", query.text);
-
-                var rs = prepareAndExec(conn, query.text, query.arguments, args);
-
-                while (rs.next())
-                    data.add((T) rs.getObject(1));
-            }
-        } catch (SQLException | IllegalAccessException | InvocationTargetException |
-                 InstantiationException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-    }
-
-    public <T> T[] query(Class<T> klass, @Language("sql") String stmt, Object... args) {
-        return withConnection(conn -> query(conn, klass, stmt, args));
-    }
-
-    public <T> T queryOne(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
-        return null;
-    }
-
-    public <T> T queryOne(Class<T> klass, @Language("sql") String stmt, Object... args) {
-        return withConnection(conn -> queryOneOrNull(conn, klass, stmt, args));
-    }
-
-    // TODO: rename to queryOneOrNull, fix impl
-    public <T> T queryOneOrNull(Connection conn, Class<T> klass, @Language("sql") String stmt, Object... args) {
-        var result = query(conn, klass, stmt, args);
-        return result.length == 0 ? null : result[0];
-    }
-
-    public <T> T queryOneOrNull(Class<T> klass, @Language("sql") String stmt, Object... args) {
-        return withConnection(conn -> queryOneOrNull(conn, klass, stmt, args));
-    }
-
-    public <T> T[] select(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
-        var meta = Meta.parseClass(klass, reflectionMapper());
-        var query = QueryBuilder.forSelect(meta, expr, args.length);
-        logger.debug("EXEC QUERY:\n {}", query.text);
-
-        try {
-            var pstmt = conn.prepareStatement(query.text);
-
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var javaArg = args[query.arguments.get(i).javaArgumentIndex];
-                var writer = writerForType(javaArg.getClass());
-                writer.write(pstmt, i + 1, javaArg);
-            }
-
-            pstmt.execute();
-            var rs = pstmt.getResultSet();
+    @Override public <T> T[] query(@Language("sql") String stmt, Class<T> toClass, Object... args) {
+        Function<Connection, T[]> doQuery = conn -> {
             var data = new ArrayList<T>();
-            var constructor = meta.info();
-            var consArgs = new Object[constructor.getParameters().length];
 
-            while (rs.next()) {
-                var fetchArgId = 1;
-                for (var i = 0; i < consArgs.length; i++) {
-                    var field = meta.fields().get(i);
-                    consArgs[i] = field.info().reader.read(rs, fetchArgId++);
+            try {
+                if (toClass.isRecord()) {
+                    var mapper = reflectionMapper();
+                    var query = QueryBuilder.forQueryTuple(
+                        Arrays.stream(toClass.getRecordComponents())
+                            .map(mapper::mapField).toList(), stmt, args.length
+                    );
+                    logger.debug("EXEC QUERY:\n {}", query.text);
+
+                    var rs = prepareAndExec(conn, query.text, query.arguments, args);
+
+                    @SuppressWarnings("unchecked")
+                    var cons = (Constructor<T>) toClass.getDeclaredConstructors()[0];
+                    cons.setAccessible(true);
+                    var consArgs = new Object[cons.getParameters().length];
+
+                    while (rs.next()) {
+                        for (var i = 0; i < query.results.size(); i++) {
+                            var field = query.results.get(i).field;
+                            consArgs[i] = field.rw.read(rs, i + 1, field.type);
+                        }
+
+                        data.add(cons.newInstance(consArgs));
+                    }
+                } else {
+                    var query = QueryBuilder.forQueryScalar(toClass, stmt, args.length);
+                    logger.debug("EXEC QUERY:\n {}", query.text);
+
+                    var rs = prepareAndExec(conn, query.text, query.arguments, args);
+
+                    while (rs.next())
+                        data.add((T) rs.getObject(1));
                 }
-
-                data.add(constructor.newInstance(consArgs));
+            } catch (SQLException | IllegalAccessException | InvocationTargetException |
+                     InstantiationException ex) {
+                throw new RuntimeException(ex);
             }
 
-            return data.toArray(n -> (T[]) Array.newInstance(klass, n));
-        } catch (SQLException | IllegalAccessException | InvocationTargetException |
-                 InstantiationException ex) {
-            throw new RuntimeException(ex);
-        }
+            return data.toArray(n -> (T[]) Array.newInstance(toClass, n));
+        };
+
+        return connection != null
+            ? doQuery.apply(connection) : inConnection(doQuery);
     }
 
-    public <T> T[] select(Class<T> klass, @Language("sql") String expr, Object... args) {
-        return withConnection(conn -> select(conn, klass, expr, args));
+    @Override
+    public <T> T queryOne(@Language("sql") String stmt, Class<T> toClass, Object... args) {
+        var result = query(stmt, toClass, args);
+        if (result.length != 1) throw new RuntimeException(
+            "expected exactly 1 row but has " + result.length
+        );
+
+        return result[0];
     }
 
-    public <T> T[] select(Connection conn, Class<T> klass) {
-        return select(conn, klass, "");
-    }
-
-    public <T> T[] select(Class<T> klass) {
-        return select(klass, "");
-    }
-
-    @Nullable public <T> T selectOneOrNull(
-        Connection conn, Class<T> klass, @Language("sql") String expr, Object... args
+    @Override @Nullable public <T> T queryOneOrNull(
+        @Language("sql") String stmt, Class<T> toClass, Object... args
     ) {
-        var rows = select(conn, klass, expr, args);
+        var result = query(stmt, toClass, args);
+        if (result.length > 1) throw new RuntimeException(
+            "expected 0 or 1 row but has " + result.length
+        );
 
-        if (rows.length == 0) return null;
-        else if (rows.length == 1) return rows[0];
-        else throw new RuntimeException("expected 0 or 1 row but has " + rows.length);
-    }
-
-    @Nullable public <T> T selectOneOrNull(
-        Class<T> klass, @Language("sql") String expr, Object... args
-    ) {
-        return withConnection(conn -> selectOneOrNull(conn, klass, expr, args));
-    }
-
-    public <T> T selectOne(Connection conn, Class<T> klass, @Language("sql") String expr, Object... args) {
-        var row = selectOneOrNull(conn, klass, expr, args);
-        if (row == null) throw new RuntimeException("unexpected empty result");
-        return row;
-    }
-
-    public <T> T selectOne(Class<T> klass, @Language("sql") String expr, Object... args) {
-        return withConnection(conn -> selectOne(conn, klass, expr, args));
-    }
-
-    public <T> T insertSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
-        var query = QueryBuilder.forInsertSelf(meta);
-        logger.debug("EXEC QUERY:\n {}", query.text);
-
-        try {
-            // FOR ORACLE
-//            var cstmt = conn.prepareCall(query.text);
-//
-//            for (var i = 0; i < query.arguments.size(); i++)
-//                cstmt.setObject(i + 1, query.arguments.get(i).field.accessor.invoke(entity));
-//
-//            // FIXME: correct support for out parameters types
-//            for (var i = 0; i < query.results.size(); i++)
-//                cstmt.registerOutParameter(i + query.arguments.size() + 1, Types.BIGINT);
-//
-//            cstmt.execute();
-
-            var cstmt = conn.prepareStatement(query.text);
-
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var field = query.arguments.get(i).field;
-                field.writer.write(cstmt, i + 1, field.accessor.invoke(entity));
-            }
-
-            cstmt.execute();
-            var rs = cstmt.getResultSet();
-            rs.next();
-
-            var constructor = meta.info();
-            var consArgs = new Object[constructor.getParameters().length];
-
-            for (var i = 0; i < consArgs.length; i++) {
-                var fieldRef = meta.fields().get(i);
-                var result = query.results.stream()
-                    .filter(r -> r.field == fieldRef.info())
-                    .findFirst().orElse(null);
-
-                if (result != null)
-                    consArgs[i] = result.field.reader.read(rs, result.sqlColumnNumber);
-                else
-                    consArgs[i] = fieldRef.info().accessor.invoke(entity);
-            }
-            return (T) constructor.newInstance(consArgs);
-
-        } catch (SQLException | IllegalAccessException | InstantiationException |
-                 InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public <T> T insertSelf(T entity) {
-        return withConnection(conn -> insertSelf(conn, entity));
-    }
-
-    public <T> Void upsert(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
-        var query = QueryBuilder.forUpsert(meta);
-        logger.debug("EXEC QUERY:\n {}", query.text);
-
-        try {
-            var pstmt = conn.prepareStatement(query.text);
-
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var field = query.arguments.get(i).field;
-                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
-            }
-
-            pstmt.execute();
-
-        } catch (SQLException | IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        return null;
-    }
-
-    public <T> Void upsert(T entity) {
-        return withConnection(conn -> upsert(conn, entity));
-    }
-
-    public <T> Void updateSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
-        var query = QueryBuilder.forUpdateSelf(meta);
-        logger.debug("EXEC QUERY:\n {}", query.text);
-
-        try {
-            var pstmt = conn.prepareStatement(query.text);
-
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var field = query.arguments.get(i).field;
-                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
-            }
-
-            pstmt.execute();
-
-        } catch (SQLException | IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        return null;
-    }
-
-    public <T> Void updateSelf(T entity) {
-        return withConnection(conn -> updateSelf(conn, entity));
-    }
-
-    public <T> Void deleteSelf(Connection conn, T entity) {
-        var meta = Meta.parseClass(entity.getClass(), reflectionMapper());
-        var query = QueryBuilder.forDeleteSelf(meta);
-        logger.debug("EXEC QUERY:\n {}", query.text);
-
-        try {
-            var pstmt = conn.prepareStatement(query.text);
-
-            for (var i = 0; i < query.arguments.size(); i++) {
-                var field = query.arguments.get(i).field;
-                field.writer.write(pstmt, i + 1, field.accessor.invoke(entity));
-            }
-
-            pstmt.execute();
-
-        } catch (SQLException | IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        return null;
-    }
-
-    public <T> Void deleteSelf(T entity) {
-        return withConnection(conn -> deleteSelf(conn, entity));
+        return result.length == 0 ? null : result[0];
     }
 }

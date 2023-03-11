@@ -25,18 +25,10 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
     options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED")
+    options.compilerArgs.add("--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED")
     options.compilerArgs.add("--enable-preview")
     options.compilerArgs.add("-Xplugin:jScripter --js-src-package=jstack.greact.dom")
-    options.fork()
-    options.forkOptions.jvmArgs = listOf("--enable-preview",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
-    )
 }
 
 val test by tasks.getting(Test::class) {
@@ -49,7 +41,12 @@ val test by tasks.getting(Test::class) {
         "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
         "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+        "--add-opens", "jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+        "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED",
+        "--add-opens", "java.base/java.net=ALL-UNNAMED",
+    )
 }
 
 dependencies {

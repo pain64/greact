@@ -32,7 +32,7 @@ public class Main {
             setConnectionTimeout(1000);
         }};
 
-        var db = new SafeSql(ds);
+        var db = new SafeSql(Dialect.class, ds);
         var server = new Server();
 
         var resources = Loader.bundle("", MainPage.class);

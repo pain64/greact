@@ -135,11 +135,11 @@ class GridFilter<T> implements Component0<div> {
                 new div() {{
                     className = "grid-filter-enabled";
                     new input() {{
-//                        value = filterValue; // one wat bindind
                         placeholder = "фильтр...";
-                        className = "grid-filter-input";
+                        className = "form-control";
                         onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
                     }};
+
                     new div() {{
                         className = "grid-filter-hint";
                         innerHTML = """

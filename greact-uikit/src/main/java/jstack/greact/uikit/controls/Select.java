@@ -70,7 +70,6 @@ public class Select<T> extends Control<T> {
 
                 new select() {{
                     id = "select-body";
-                    className = "form-control";
                     for (var variant : variants)
                         new option(variant.caption) {{
                             selected = self.value == variant.element;

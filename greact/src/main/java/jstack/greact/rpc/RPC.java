@@ -42,7 +42,7 @@ public class RPC<T> {
     public RPC(String appBasePackage) {
         this.appBasePackage = appBasePackage;
         this.cache = new ConcurrentHashMap<>();
-        var files = System.getProperty("java.class.path").split(":");
+        var files = System.getProperty("java.class.path")                                                                                .split(":");
         this.isRelease = getClass().getResourceAsStream("/bundle/.release") != null;
         urls = Arrays.stream(files).map(p -> {
             try {
@@ -65,11 +65,14 @@ public class RPC<T> {
 
         if (isRelease && cache.containsKey(fullName)) {
             var method = cache.get(fullName);
-            method.setAccessible(true);
             var result = method.invoke(null, di, mapper, req.args);
             return mapper.writeValueAsString(result);
         }
-        var classLoader = !isRelease ? new RPCClassLoader(RPC.class.getClassLoader(), urls, appBasePackage) : new URLClassLoader(urls);
+        // FIXME: classloader leak
+        var classLoader = !isRelease
+            ? new RPCClassLoader(getClass().getClassLoader(), urls, appBasePackage)
+            : getClass().getClassLoader();
+
         var klass = classLoader.loadClass(className);
         //var klass = Class.forName(className);
 

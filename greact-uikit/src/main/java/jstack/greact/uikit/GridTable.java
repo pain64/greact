@@ -145,7 +145,7 @@ import java.util.function.Consumer;
                                     id = "grid-table-toolbox-body";
                                     className = "toolbox";
 
-                                    for(var action : conf.rowActions)
+                                    for (var action : conf.rowActions)
                                         new slot<>(action.view.get());
 
                                     if (conf.onRowChange != null)
@@ -173,20 +173,22 @@ import java.util.function.Consumer;
                                             };
                                         }};
                                     if (conf.expandedRow != null)
-                                        new div() {{ /* expand */
-                                            innerHTML = row.expanded
-                                                ? """
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up" style="margin-top: 8px;"><polyline points="18 15 12 9 6 15"/></svg>
-                                                """
-                                                : """
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down" style="margin-top: 8px;"><polyline points="6 9 12 15 18 9"/></svg>
-                                                """;
+                                        new div() {{
+                                            new div() {{ /* expand */
+                                                style.width = "20px";
+                                                style.height = "20px";
+                                                style.padding = "4px";
 
-                                            onclick = ev -> {
-                                                ev.stopPropagation();
-                                                row.expanded = !row.expanded;
-                                                effect(row);
-                                            };
+                                                style.backgroundImage = row.expanded
+                                                    ? "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLXVwIj48cG9seWxpbmUgcG9pbnRzPSIxOCAxNSAxMiA5IDYgMTUiPjwvcG9seWxpbmU+PC9zdmc+\")"
+                                                    : "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLWRvd24iPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==\")";
+
+                                                onclick = ev -> {
+                                                    ev.stopPropagation();
+                                                    row.expanded = !row.expanded;
+                                                    effect(row);
+                                                };
+                                            }};
                                         }};
                                 }};
                             }};

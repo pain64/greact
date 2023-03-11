@@ -46,8 +46,6 @@ public class RPCPlugin {
         Symbol.ClassSymbol clString = symtab.enterClass(symtab.java_base, names.fromString("java.lang.String"));
         Symbol.ClassSymbol clInt = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Integer"));
         Symbol.ClassSymbol clLong = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Long"));
-        Symbol.ClassSymbol clClass = symtab.enterClass(symtab.java_base, names.fromString("java.lang.Class"));
-        Symbol.ClassSymbol clRPC = lookupClass(RPC.class.getName());
         Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
         Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
         Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPCEndPoint.class.getName());
@@ -55,7 +53,6 @@ public class RPCPlugin {
         Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
         Symbol.MethodSymbol mtListGet = lookupMember(clList, "get");
-
 
         Symbol.ClassSymbol clGlobals = lookupClass("jstack.greact.dom.Globals");
         Symbol.MethodSymbol mtDoRemoteCall = lookupMember(clGlobals, "doRemoteCall");
@@ -198,7 +195,6 @@ public class RPCPlugin {
             }
 
             @Override public void visitClassDef(JCTree.JCClassDecl tree) {
-                System.out.println("NEW CLASS DEF: " + tree.sym + " is static: " + tree.sym.isStatic());
                 if (!tree.sym.isStatic()) classDecl = tree;
                 withNewClassDecl(tree, () -> super.visitClassDef(tree));
             }

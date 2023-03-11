@@ -17,37 +17,10 @@ java {
 }
 
 tasks.withType<JavaCompile> {
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
-    options.compilerArgs.add("--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
-    options.compilerArgs.add("--enable-preview")
-    options.fork()
-    options.forkOptions.jvmArgs = listOf("--enable-preview",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
-    )
 }
 
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
-    jvmArgs = listOf("--enable-preview",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
 }
 
 dependencies {

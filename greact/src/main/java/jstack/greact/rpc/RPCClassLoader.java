@@ -14,7 +14,7 @@ public class RPCClassLoader extends URLClassLoader {
     }
 
     @Override public Class<?> loadClass(String name) throws ClassNotFoundException {
-        if(name.startsWith(appPackage)) {
+        if(name.startsWith(appPackage) ||  name.startsWith("ssqlgen.")) {
             System.out.println("<GReact RPC> hot load for class: " + name);
             return super.loadClass(name);
         } else

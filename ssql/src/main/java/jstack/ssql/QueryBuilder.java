@@ -1,13 +1,10 @@
 package jstack.ssql;
 
-import jstack.ssql.Meta.ClassMeta;
-import jstack.ssql.Meta.FieldRef;
 import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class QueryBuilder {
 
@@ -75,9 +72,9 @@ public class QueryBuilder {
     }
 
     record ArgOffset(int argIdx, int offset) { }
-    record ExprAndArguments(String newExpr, List<PositionalArgument> arguments) { }
+    public record ExprAndArguments(String newExpr, List<PositionalArgument> arguments) { }
 
-    static ExprAndArguments mapQueryArgs(String expr, int argumentCount) {
+    public static ExprAndArguments mapQueryArgs(String expr, int argumentCount) {
         var offsets = new ArrayList<ArgOffset>();
 
         for (var i = argumentCount - 1; i >= 0; i--) {
@@ -110,9 +107,14 @@ public class QueryBuilder {
         CI toClass, String expr, int argumentCount
     ) {
         var mapped = mapQueryArgs(expr, argumentCount);
-        return new PositionalToScalarQuery<>(
-            mapped.newExpr, mapped.arguments, toClass
-        );
+        try {
+            return new PositionalToScalarQuery<>(
+                mapped.newExpr, mapped.arguments, toClass
+            );
+        } catch (NoClassDefFoundError ex) {
+            System.out.println("NO_CLASS_DEF_FOUND INTERCEPTED");
+            throw ex;
+        }
     }
 
     public static <FI> PositionalToTupleQuery<FI> forQueryTuple(
@@ -127,168 +129,5 @@ public class QueryBuilder {
         return new PositionalToTupleQuery<>(
             mapped.newExpr, mapped.arguments, results
         );
-    }
-
-    public static <CI, FI> PositionalToTupleQuery<FI> forSelect(
-        ClassMeta<CI, FI> meta, String expr, int argumentCount
-    ) {
-        var fromTable = meta.table();
-        var names = new ArrayList<String>();
-        var results = new ArrayList<FieldResult<FI>>();
-
-        for (var i = 0; i < meta.fields().size(); i++) {
-            var f = meta.fields().get(i);
-            var name = (f.atTable() != null && f.atTable().alias() != null
-                ? f.atTable().alias() + "." : ""
-            ) + camelToSnakeCase(f.atColumn());
-            names.add(name);
-            results.add(new FieldResult<>(i + 1, f.info()));
-        }
-
-        var text = " select\n\t%s\n from\n\t%s\n\t%s".formatted(
-            String.join(",\n\t", names),
-            fromTable.name() + (fromTable.alias() != null ? " " + fromTable.alias() : ""),
-            meta.joins().stream()
-                .map(join -> {
-                    var kind = join.mode().toString().toLowerCase() + " join";
-                    var tableExpr = " " + join.table().name() +
-                        (join.table().alias() != null ? " " + join.table().alias() : "");
-
-                    return kind + tableExpr + " on " + join.onExpr();
-                }).collect(Collectors.joining("\n\t"))) + "\n" + expr;
-
-        var mapped = mapQueryArgs(text, argumentCount);
-
-        return new PositionalToTupleQuery<>(mapped.newExpr, mapped.arguments, results);
-    }
-
-    public static <CI, FI> TupleToTupleQuery<FI> forInsertSelf(ClassMeta<CI, FI> meta) {
-        var nonJoinedFields = meta.fields().stream()
-            .filter(f -> f.atTable() == meta.table()).toList();
-
-        var values = nonJoinedFields.stream()
-            .map(FieldRef::atColumn)
-            .map(QueryBuilder::camelToSnakeCase)
-            .collect(Collectors.joining(", ", "(", ")"));
-
-        var params = new ArrayList<String>();
-        var generated = new ArrayList<String>();
-        var arguments = new ArrayList<FieldArgument<FI>>();
-        var results = new ArrayList<FieldResult<FI>>();
-
-        for (var fieldRef : nonJoinedFields)
-            if (fieldRef.sequence() != null) {
-                // FOR ORACLE
-                // params.add(fieldRef.sequence() + ".nextval");
-
-                params.add("nextval('" + fieldRef.sequence() + "')");
-                results.add(new FieldResult<>(
-                    results.size() + 1, fieldRef.info()
-                ));
-                generated.add(camelToSnakeCase(fieldRef.atColumn()));
-            } else {
-                params.add("?");
-                arguments.add(new FieldArgument<>(fieldRef.info(), arguments.size() + 1));
-            }
-
-// FOR ORACLE
-//        var text = (generated.isEmpty() ? "" : "begin;\n") +
-//            "insert into " + meta.table().name() + values + " values " +
-//            params.stream().collect(Collectors.joining(", ", "(", ")")) +
-//            (generated.isEmpty()
-//                ? ""
-//                : " returning " + String.join(", ", generated) + " into " +
-//                generated.stream().map(it -> "?").collect(Collectors.joining(", "))
-//                + "\nend;"
-//            );
-
-        var text =
-            "insert into " + meta.table().name() + values + " values " +
-                params.stream().collect(Collectors.joining(", ", "(", ")")) +
-                (generated.isEmpty()
-                    ? ""
-                    : " returning " + String.join(", ", generated)
-                );
-
-        return new TupleToTupleQuery<>(text, arguments, results);
-    }
-
-    // @Id поля не могут быть сгенерированы с помощью @Sequence в случае upsert ???
-    public static <CI, FI> TupleToTupleQuery<FI> forUpsert(ClassMeta<CI, FI> meta) {
-        var nonJoinedFields = meta.fields().stream()
-            .filter(f -> f.atTable() == meta.table()).toList();
-        var idFields = nonJoinedFields.stream()
-            .filter(FieldRef::isId).toList();
-        var noIdFields = nonJoinedFields.stream()
-            .filter(f -> !f.isId()).toList();
-
-        var values = nonJoinedFields.stream()
-            .map(FieldRef::atColumn)
-            .map(QueryBuilder::camelToSnakeCase)
-            .collect(Collectors.joining(",\n\t", " (\n\t", "\n )"));
-
-        var params = new ArrayList<String>();
-        var arguments = new ArrayList<FieldArgument<FI>>();
-
-        for (var fieldRef : nonJoinedFields) {
-            params.add("?");
-            arguments.add(new FieldArgument<>(fieldRef.info(), arguments.size() + 1));
-        }
-
-        var text =
-            " insert into " + meta.table().name() + values + " values " +
-                params.stream().collect(Collectors.joining(", ", "(", ")")) +
-                "\n on conflict " +
-                idFields.stream()
-                    .map(f -> camelToSnakeCase(f.atColumn()))
-                    .collect(Collectors.joining(", ", "(", ")")) +
-                " do update set\n\t" +
-                noIdFields.stream()
-                    .map(f -> camelToSnakeCase(f.atColumn()) + " = EXCLUDED." + camelToSnakeCase(f.atColumn()))
-                    .collect(Collectors.joining(",\n\t"));
-
-        return new TupleToTupleQuery<>(text, arguments, List.of());
-    }
-
-    static <FI> List<FieldArgument<FI>> fieldsToArguments(List<FieldRef<FI>> fields) {
-        var arguments = new ArrayList<FieldArgument<FI>>();
-        for (var i = 0; i < fields.size(); i++)
-            arguments.add(new FieldArgument<>(fields.get(i).info(), i + 1));
-        return arguments;
-    }
-
-    public static <CI, FI> TupleToTupleQuery<FI> forUpdateSelf(ClassMeta<CI, FI> meta) {
-        var nonJoinedFields = meta.fields().stream()
-            .filter(f -> f.atTable() == meta.table()).toList();
-        var noIdFields = nonJoinedFields.stream()
-            .filter(f -> !f.isId()).toList();
-        var idFields = nonJoinedFields.stream()
-            .filter(f -> f.isId()).toList();
-        var parameterFields = new ArrayList<FieldRef<FI>>() {{
-            addAll(noIdFields);
-            addAll(idFields);
-        }};
-
-        var text = "update " + meta.table().name()
-            + " set " +
-            noIdFields.stream()
-                .map(f -> camelToSnakeCase(f.atColumn()) + " = ?")
-                .collect(Collectors.joining(", ")) +
-            " where " +
-            idFields.stream().map(f -> camelToSnakeCase(f.atColumn()) + " = ?")
-                .collect(Collectors.joining(" and "));
-
-        return new TupleToTupleQuery<>(text, fieldsToArguments(parameterFields), List.of());
-    }
-
-    public static <CI, FI> TupleToTupleQuery<FI> forDeleteSelf(ClassMeta<CI, FI> meta) {
-        var idFields = meta.fields().stream()
-            .filter(FieldRef::isId).toList();
-
-        var text = "delete from " + meta.table().name() + " where " +
-            idFields.stream().map(f -> camelToSnakeCase(f.atColumn()) + " = ?")
-                .collect(Collectors.joining(" and "));
-
-        return new TupleToTupleQuery<>(text, fieldsToArguments(idFields), List.of());
     }
 }

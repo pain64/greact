@@ -24,9 +24,10 @@ public class GridConfig2<T> {
             this.handler = handler;
         }
 
-        public RowAction(Consumer<div> iconContent, AsyncHandler<T> handler) {
+        public RowAction(String iconClassName, String title, AsyncHandler<T> handler) {
+            var theTitle = title;
             this.view = () -> new div() {{
-                new div() {{ iconContent.accept(this); }};
+                new div() {{ className = iconClassName; this.title = theTitle; }};
             }};
             this.handler = handler;
         }

@@ -37,9 +37,15 @@ public class EffectCallFinder {
 
     final Symbols symbols;
 
+    static class EffectMisuseException extends GReactCompileException {
+        public EffectMisuseException(JCTree tree, String message) {
+            super(tree, message);
+        }
+    }
+
     public record Effect(
-        JCTree.JCMethodInvocation invocation,
-        Set<Symbol.VarSymbol> effected) { }
+        JCTree.JCMethodInvocation invocation, Set<Symbol.VarSymbol> effected
+    ) { }
 
     public LinkedHashMap<JCTree.JCClassDecl, List<Effect>> find(JCTree.JCCompilationUnit cu) {
 
@@ -62,7 +68,6 @@ public class EffectCallFinder {
 
             @Override
             public void visitApply(JCTree.JCMethodInvocation tree) {
-                //util.writeCompilationError(cu, tree, "error, bitch!");
                 final Symbol methodSym;
                 if (tree.meth instanceof JCTree.JCIdent ident)
                     methodSym = ident.sym;
@@ -81,13 +86,15 @@ public class EffectCallFinder {
                             if (op.lhs instanceof JCTree.JCIdent id)
                                 return (Symbol.VarSymbol) id.sym;
 
-                        throw new RuntimeException("""
-                            %s
-                            error at: %s
-                            for ∀ x is variable expected any of:
-                              effect(x)
-                              effect(x = expression)
-                              effect(x op= expression)""".formatted(util.treeSourcePosition(cu, tree.meth), tree));
+                        throw util.compilationError(
+                            cu, new EffectMisuseException(
+                                tree.meth, """
+                                for ∀ x is variable expected any of:
+                                    effect(x)
+                                    effect(x = expression)
+                                    effect(x op= expression)"""
+                            )
+                        );
                     };
 
                     result.get(currentClass)

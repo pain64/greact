@@ -35,9 +35,15 @@ public class CodeViewPlugin {
     final TreeMaker maker;
     final Symbols symbols;
 
+    static class CodeViewMisuseException extends GReactCompileException {
+        public CodeViewMisuseException(JCTree tree, String message) {
+            super(tree, message);
+        }
+    }
+
     String whitespacePrefix(CharSequence code, int start) {
         int i = 0;
-        while(start - i - 1 >= 0 && code.charAt(start - i - 1) == ' ') i++;
+        while (start - i - 1 >= 0 && code.charAt(start - i - 1) == ' ') i++;
         return " ".repeat(i);
     }
 
@@ -57,22 +63,28 @@ public class CodeViewPlugin {
                                 var prefix = whitespacePrefix(cuCode, exprForCode.getStartPosition());
 
                                 code = cuCode.subSequence(
-                                    exprForCode.getStartPosition(),
-                                    exprForCode.getEndPosition(cu.endPositions))
+                                        exprForCode.getStartPosition(),
+                                        exprForCode.getEndPosition(cu.endPositions))
                                     .toString()
                                     .replaceAll("\n" + prefix, "\n");
 
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
-                        } else throw new RuntimeException(
-                            util.treeSourcePosition(cu, newClass) + "\n" +
-                            "expected new class as CodeView component lambda body but has: " +
-                                lambda.body);
-                    else throw new RuntimeException(
-                        util.treeSourcePosition(cu, newClass) + "\n" +
-                        "expected lambda component as first arg for CodeView but has: " +
-                            viewCompExpression);
+                        } else throw util.compilationError(
+                            cu, new CodeViewMisuseException(
+                                newClass,
+                                "expected new class as CodeView component lambda body but has: " +
+                                    lambda.body
+                            )
+                        );
+                    else throw util.compilationError(
+                        cu, new CodeViewMisuseException(
+                            newClass,
+                            "expected lambda component as first arg for CodeView but has: " +
+                                viewCompExpression
+                        )
+                    );
 
                     newClass.constructor = symbols.constructor2;
                     newClass.constructorType = symbols.constructor2.type;
