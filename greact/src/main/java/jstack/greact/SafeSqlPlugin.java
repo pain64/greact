@@ -31,6 +31,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -373,10 +374,36 @@ public class SafeSqlPlugin {
 
     static final Pattern SNAKE_TO_CAMEL_CASE_PATTERN = Pattern.compile("_(\\p{L})");
 
-    String snakeToCamelCase(String snake) {
-        return SNAKE_TO_CAMEL_CASE_PATTERN
-            .matcher(snake).replaceAll(m -> m.group(1).toUpperCase());
+//    String snakeToCamelCase(String snake) {
+//        return SNAKE_TO_CAMEL_CASE_PATTERN
+//            .matcher(snake).replaceAll(m -> m.group(1).toUpperCase());
+//    }
+
+    String sqlNameToJava(String sqlName) {
+        var javaName = new StringBuilder();
+
+        Consumer<Character> writeEscaped = ch ->
+            javaName.append("$").append((int) ch);
+
+        var firstCh = sqlName.charAt(0);
+        if (Character.isJavaIdentifierStart(firstCh)) javaName.append(firstCh);
+        else writeEscaped.accept(firstCh);
+
+        for (var i = 1; i < sqlName.length(); i++) {
+            var ch = sqlName.charAt(i);
+
+            if (ch == '_' && i + 1 < sqlName.length()) {
+                ch = Character.toUpperCase(sqlName.charAt(i + 1));
+                i++;
+            }
+
+            if (Character.isJavaIdentifierPart(ch)) javaName.append(ch);
+            else writeEscaped.accept(ch);
+        }
+
+        return javaName.toString();
     }
+
 
     GeneratedDto generate(
         Connection connection, String query, int argumentCount, String className
@@ -388,7 +415,8 @@ public class SafeSqlPlugin {
         try (var pstmt = connection.prepareStatement(queryText)) {
             var rsMetadata = pstmt.getMetaData();
             for (var i = 1; i <= rsMetadata.getColumnCount(); i++) {
-                var fieldName = snakeToCamelCase(rsMetadata.getColumnName(i));
+                var fieldName = sqlNameToJava(rsMetadata.getColumnName(i));
+
                 var fieldType = sqlToJava.getOrDefault(
                     rsMetadata.getColumnTypeName(i),
                     rsMetadata.getColumnClassName(i)

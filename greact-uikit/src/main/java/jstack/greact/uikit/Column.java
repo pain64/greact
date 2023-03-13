@@ -43,6 +43,22 @@ public class Column<T, U> {
     void applyDefaultSettings(String[] memberNames, String className) {
         var columnName = memberNames[memberNames.length - 1];
         columnName = JSExpression.of("columnName.replace('_', ' ')");
+        var regex1 = "(\\\\p{Ll}\\\\p{Lu})";
+        var regex2 = "(\\\\$\\\\d+)";
+        var regexMode = "gu";
+
+        columnName = JSExpression.of(
+            "columnName.replaceAll(new RegExp(regex1, regexMode), function(match, bg) {" +
+                "return bg[0] + ' ' + bg[1].toLowerCase();" +
+                "})"
+        );
+
+        columnName = JSExpression.of(
+            "columnName.replaceAll(new RegExp(regex2, regexMode), function(match, bg) {" +
+                "return String.fromCharCode(parseInt(bg.slice(1)));" +
+                "})"
+        );
+
         columnName = JSExpression.of("columnName.charAt(0).toUpperCase() + columnName.slice(1)");
         this.header = columnName;
         this.memberNames = memberNames;
@@ -58,10 +74,13 @@ public class Column<T, U> {
         };
 
         this.view = switch (className) {
-            case "java.util.Date" -> (d, row) -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
+            case "java.util.Date", "java.sql.Date" ->
+                (d, row) -> new td(d == null ? "" : Dates.toLocaleDateString((Date) d));
             case "boolean", "java.lang.Boolean" -> (d, row) -> new td() {{
                 // FIXME: fix css - CheckBox и нативные чекбоксы должны выглядеть одинаково?
                 new input() {{
+                    className = "form-check-input";
+                    style.verticalAlign = "middle";
                     type = "checkbox";
                     checked = (boolean) d;
                     readOnly = true;
@@ -83,10 +102,10 @@ public class Column<T, U> {
         return this;
     }
 
-//    public Column<T, U> name(String theHeader) {
-//        this.header = theHeader;
-//        return this;
-//    }
+    public Column<T, U> name(String theHeader) {
+        this.header = theHeader;
+        return this;
+    }
 
     public Column<T, U> view(Mapper<U, String> mapper) {
         this.view = (value, row) -> new td(mapper.map(value));
