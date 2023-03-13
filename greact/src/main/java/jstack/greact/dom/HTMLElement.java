@@ -57,6 +57,7 @@ import jstack.jscripter.transpiler.model.async;
         public String gap;
         public String pageBreakAfter;
         public String backgroundRepeat;
+        public String verticalAlign;
     }
 
     // HTML Global Attributes

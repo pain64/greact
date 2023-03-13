@@ -169,7 +169,7 @@ public class SafeSql implements ConnectionHandle {
         return pstmt.getResultSet();
     }
 
-    @Override public <T> T[] query(@Language("sql") String stmt, Class<T> toClass, Object... args) {
+    @Override public <T> T[] query(String stmt, Class<T> toClass, Object... args) {
         Function<Connection, T[]> doQuery = conn -> {
             var data = new ArrayList<T>();
 
