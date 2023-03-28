@@ -26,4 +26,22 @@ public class Dates {
     public static int getYear(java.util.Date date) {
         return JSExpression.of("new Date(date).getFullYear()");
     }
+    public static int getMonth(java.util.Date date) {
+        return JSExpression.of("new Date(date).getMonth()");
+    }
+    public static int getDate(java.util.Date date) {
+        return JSExpression.of("new Date(date).getDate()");
+    }
+    public static int getHours(java.util.Date date) {
+        return JSExpression.of("new Date(date).getHours()");
+    }
+    public static int getMinutes(java.util.Date date) {
+        return JSExpression.of("new Date(date).getMinutes()");
+    }
+    public static int getSeconds(java.util.Date date) {
+        return JSExpression.of("new Date(date).getSeconds()");
+    }
+    public static int getMilliseconds(java.util.Date date) {
+        return JSExpression.of("new Date(date).getMilliseconds()");
+    }
 }
