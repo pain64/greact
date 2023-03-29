@@ -23,6 +23,10 @@ public class Dates {
     public static String toLocaleDateString(Date date) {
         return JSExpression.of("new Date(date).toLocaleDateString()");
     }
+
+    public static String toLocaleTimeString(Date date) {
+        return JSExpression.of("new Date(date).toLocaleTimeString()");
+    }
     public static int getYear(java.util.Date date) {
         return JSExpression.of("new Date(date).getFullYear()");
     }
