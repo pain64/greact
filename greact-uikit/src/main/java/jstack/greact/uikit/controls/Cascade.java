@@ -22,18 +22,16 @@ public class Cascade<T, U1> extends Control<T> {
         this.in1 = in1;
         this.cascade1 = cascade1;
 
-        new Promise<Control<T>>((resolve, reject) -> {
-            resolve.run(cascade1.apply(in1.value));
-        }).then((res) -> {
-            this.in1.onReadyChanged = () -> {
-                in2 = res;
-                in2.onReadyChanged = () -> {
-                    this.value = in2.value;
-                    this.ready = in2.ready;
-                    this.onReadyChanged.run();
-                };
+        new Promise<Control<T>>((resolve, reject) ->
+            resolve.run(cascade1.apply(in1.value))
+        ).then((res) -> this.in1.onReadyChanged = () -> {
+            in2 = res;
+            in2.onReadyChanged = () -> {
+                this.value = in2.value;
+                this.ready = in2.ready;
                 this.onReadyChanged.run();
             };
+            this.onReadyChanged.run();
         });
     }
 
