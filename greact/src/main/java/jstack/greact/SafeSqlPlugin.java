@@ -3,6 +3,7 @@ package jstack.greact;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -22,7 +23,11 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.MirroredTypeException;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -36,6 +41,10 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class SafeSqlPlugin {
+    public @interface Depends {
+        Class<?> value();
+    }
+
     interface Checker {
         void check(Connection connection, JCTree.JCMethodInvocation invoke);
     }
@@ -112,6 +121,13 @@ public class SafeSqlPlugin {
     public void apply(JCTree.JCCompilationUnit cu) {
         var tasks = new ArrayList<CheckTask<Void>>();
         cu.accept(new TreeScanner() {
+            @Override public void visitClassDef(JCTree.JCClassDecl tree) {
+                if (tree.sym.isRecord())
+                    for (var rc : tree.sym.getRecordComponents())
+                        rc.type = rc.accessor.getReturnType();
+
+                super.visitClassDef(tree);
+            }
             @Override public void visitApply(JCTree.JCMethodInvocation tree) {
                 super.visitApply(tree);
 
@@ -308,8 +324,8 @@ public class SafeSqlPlugin {
                 info.rsMetadata.getColumnTypeName(fResult.sqlColumnNumber),
                 info.rsMetadata.getColumnClassName(fResult.sqlColumnNumber)
             );
-            var to = fResult.field.accessorMeth.getReturnType()
-                .type.tsym.getQualifiedName().toString();
+            var to = fResult.field.accessor.getReturnType()
+                .tsym.getQualifiedName().toString();
 
             if (!isTypeAssignable(from, to))
                 throw new SchemaCheckException(
@@ -439,6 +455,22 @@ public class SafeSqlPlugin {
 
         for (var element : annotatedElements) {
             var xxx = (Symbol.ClassSymbol) element;
+
+            var fileExists = true;
+            try {
+                env.getFiler().getResource(
+                    StandardLocation.CLASS_PATH,
+                    xxx.packge().getQualifiedName().toString(),
+                    xxx.getSimpleName().toString() + "AutoDto.class"
+                );
+            } catch (FileNotFoundException e) {
+                fileExists = false;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            if (fileExists) continue;
+
             var queryMethodNames = Set.of(
                 names.fromString("query"),
                 names.fromString("queryOne"),
@@ -494,17 +526,18 @@ public class SafeSqlPlugin {
             }
 
             try {
-                JavaFileObject builderFile = env.getFiler()
-                    .createSourceFile("ssqlgen." + xxx.getQualifiedName(), xxx);
+                var builderFile = env.getFiler()
+                    .createSourceFile(xxx.getQualifiedName() + "AutoDto", xxx);
 
                 try (var out = new PrintWriter(builderFile.openWriter())) {
-                    out.write("package ssqlgen." +
+                    out.write("package " +
                         xxx.getQualifiedName().toString()
                             .replace("." + xxx.getSimpleName().toString(), "") +
                         ";\n"
                     );
-
-                    out.write("\npublic class %s { \n".formatted(xxx.getSimpleName()));
+                    out.write("import jstack.greact.SafeSqlPlugin.Depends;\n\n");
+                    out.write("@Depends(%s.class)\n".formatted(xxx.getQualifiedName()));
+                    out.write("class %sAutoDto { \n".formatted(xxx.getSimpleName()));
                     for (var gen : generated) {
                         out.write("    public record " + gen.className + "(\n");
                         for (var field : gen.fields) out.write(field);

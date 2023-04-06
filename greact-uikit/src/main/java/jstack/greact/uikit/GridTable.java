@@ -82,10 +82,7 @@ import java.util.function.Consumer;
 
                             if (conf.onRowAdd != null)
                                 new div() {{
-                                    className = "grid-table-td-content";
-                                    innerHTML = """
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus" style="margin-top: 4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        """;
+                                    new div("grid-i-plus");
                                     onclick = ev -> {
                                         keepSizes();
                                         effect(addNewRowMode = true);
@@ -140,57 +137,57 @@ import java.util.function.Consumer;
                                 }
 
                             new td() {{ /* toolbox */
-                                className = "grid-table-toolbox";
-                                new div() {{
-                                    id = "grid-table-toolbox-body";
-                                    className = "toolbox";
+                                className = "toolbox";
+                                new slot<>(conf.rowActions.supply(null, row.data));
+//                                new div() {{
+//                                    id = "grid-table-toolbox-body";
+//                                    className = "toolbox";
+//
+//                                    new slot<>(conf.rowActions.supply(null, row.data));
 
-                                    for (var action : conf.rowActions)
-                                        new slot<>(action.view.get());
-
-                                    if (conf.onRowChange != null)
-                                        new div() {{ /* edit */
-                                            new div("grid-i-edit");
-                                            onclick = ev -> {
-                                                ev.stopPropagation();
-                                                row.expanded = false;
-                                                row.editing = true;
-                                                keepSizes();
-                                                effect(columnSizes);
-                                                effect(row);
-                                                clearSizes();
-                                            };
-                                        }};
-                                    if (conf.onRowDelete != null)
-                                        new div() {{ /* delete */
-                                            new div("grid-i-trash");
-                                            onclick = ev -> {
-                                                ev.stopPropagation();
-                                                if (JSExpression.of("window.confirm('Действительно удалить?')")) {
-                                                    conf.onRowDelete.handle(row.data);
-                                                    effect(rows = Array.filter(rows, r -> r != row));
-                                                }
-                                            };
-                                        }};
-                                    if (conf.expandedRow != null)
-                                        new div() {{
-                                            new div() {{ /* expand */
-                                                style.width = "20px";
-                                                style.height = "20px";
-                                                style.padding = "4px";
-
-                                                style.backgroundImage = row.expanded
-                                                    ? "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLXVwIj48cG9seWxpbmUgcG9pbnRzPSIxOCAxNSAxMiA5IDYgMTUiPjwvcG9seWxpbmU+PC9zdmc+\")"
-                                                    : "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLWRvd24iPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==\")";
-
-                                                onclick = ev -> {
-                                                    ev.stopPropagation();
-                                                    row.expanded = !row.expanded;
-                                                    effect(row);
-                                                };
-                                            }};
-                                        }};
-                                }};
+//                                    if (conf.onRowChange != null)
+//                                        new div() {{ /* edit */
+//                                            new div("grid-i-edit");
+//                                            onclick = ev -> {
+//                                                ev.stopPropagation();
+//                                                row.expanded = false;
+//                                                row.editing = true;
+//                                                keepSizes();
+//                                                effect(columnSizes);
+//                                                effect(row);
+//                                                clearSizes();
+//                                            };
+//                                        }};
+//                                    if (conf.onRowDelete != null)
+//                                        new div() {{ /* delete */
+//                                            new div("grid-i-trash");
+//                                            onclick = ev -> {
+//                                                ev.stopPropagation();
+//                                                if (JSExpression.of("window.confirm('Действительно удалить?')")) {
+//                                                    conf.onRowDelete.handle(row.data);
+//                                                    effect(rows = Array.filter(rows, r -> r != row));
+//                                                }
+//                                            };
+//                                        }};
+//                                    if (conf.expandedRow != null)
+//                                        new div() {{
+//                                            new div() {{ /* expand */
+//                                                style.width = "20px";
+//                                                style.height = "20px";
+//                                                style.padding = "4px";
+//
+//                                                style.backgroundImage = row.expanded
+//                                                    ? "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLXVwIj48cG9seWxpbmUgcG9pbnRzPSIxOCAxNSAxMiA5IDYgMTUiPjwvcG9seWxpbmU+PC9zdmc+\")"
+//                                                    : "url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9ImZlYXRoZXIgZmVhdGhlci1jaGV2cm9uLWRvd24iPjxwb2x5bGluZSBwb2ludHM9IjYgOSAxMiAxNSAxOCA5Ij48L3BvbHlsaW5lPjwvc3ZnPg==\")";
+//
+//                                                onclick = ev -> {
+//                                                    ev.stopPropagation();
+//                                                    row.expanded = !row.expanded;
+//                                                    effect(row);
+//                                                };
+//                                            }};
+//                                        }};
+//                                }};
                             }};
                         }};
 
@@ -202,14 +199,8 @@ import java.util.function.Consumer;
 //                            if (selectedRow == row) style.backgroundColor = "#acea9f";
                             new td() {{
                                 colSpan = conf.columns.length + 1;
-                                className = "grid-table-expansion-td";
-
-                                new div() {{
-                                    className = "grid-table-expansion-td-body";
-                                    new div() {{
-                                        className = "grid-table-expansion-td-content";
-                                        new slot<>(conf.expandedRow, row.data);
-                                    }};
+                                new div("grid-table-expansion-div") {{
+                                    new slot<>(conf.expandedRow, row.data);
                                 }};
                             }};
                         }};

@@ -24,6 +24,9 @@ public class _01ExprTest {
                     Character x6 = 'A';
                     String x7 = "hello";
                     Object x8 = null;
+                    String x9 = \"\"\"
+                      'escaped single quote'
+                    \"\"\";
                   }
                 }""",
             """
@@ -40,11 +43,11 @@ public class _01ExprTest {
                     const x6 = 'A';
                     const x7 = 'hello';
                     const x8 = null;
+                    const x9 = '  \\'escaped single quote\\'\\n';
                   }
                 }
                 """);
     }
-
 
     @Test
     void assignment() throws IOException {
