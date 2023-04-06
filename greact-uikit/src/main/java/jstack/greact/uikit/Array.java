@@ -39,7 +39,7 @@ public class Array<T> {
         return JSExpression.of("from.map(mapper)");
     }
 
-    public static <A> A[] filter(A[] from, Cascade.Func1<A, Boolean> predicate) {
+    public static <A> A[] filter(A[] from, Function<A, Boolean> predicate) {
         return JSExpression.of("from.filter(predicate)");
     }
 
