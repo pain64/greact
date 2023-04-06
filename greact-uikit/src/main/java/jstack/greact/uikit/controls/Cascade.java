@@ -13,17 +13,17 @@ public class Cascade<T, U1> extends Control<T> {
 
     Control<U1> in1;
     Control<T> in2;
-    AsyncFunc<U1, Control<T>> cascade1;
+    AsyncFunc<U1, Control<T>> func;
 
     @Override
     public Control<T> child() { return in2; }
 
-    public Cascade(Control<U1> in1, AsyncFunc<U1, Control<T>> cascade1) {
+    public Cascade(Control<U1> in1, AsyncFunc<U1, Control<T>> func) {
         this.in1 = in1;
-        this.cascade1 = cascade1;
+        this.func = func;
 
         new Promise<Control<T>>((resolve, reject) ->
-            resolve.run(cascade1.apply(in1.value))
+            resolve.run(func.apply(in1.value))
         ).then((res) -> this.in1.onReadyChanged = () -> {
             in2 = res;
             in2.onReadyChanged = () -> {
@@ -36,6 +36,7 @@ public class Cascade<T, U1> extends Control<T> {
     }
 
     @Override public div mount() {
+        // FIXME: mount не вызывает func и как следствие не получает новые данные с сервера
         return new div() {{
             new slot<>(in1);
         }};
