@@ -507,6 +507,7 @@
   display: flex !important;
   flex-basis: auto;
 }
+
 .navbar-expand .navbar-toggler {
   display: none;
 }
@@ -553,4 +554,12 @@
 .nav-link:hover > * {
   cursor: pointer;
   color: var(--bs-nav-link-hover-color);
+}
+
+.navbar-collapse > a {
+  color: var(--bs-navbar-color);
+  text-decoration: none;
+}
+.navbar-collapse > a:hover {
+  color: var(--bs-navbar-hover-color);
 }

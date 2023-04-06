@@ -1,5 +1,6 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.HTMLElement;
 import jstack.greact.dom.HTMLNativeElements.Component0;
 import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.dom.HTMLNativeElements.slot;

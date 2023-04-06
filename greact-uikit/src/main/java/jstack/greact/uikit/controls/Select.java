@@ -64,12 +64,13 @@ public class Select<T> extends Control<T> {
             new label() {{
                 className = "select";
 
-                new span(label) {{
-                    className = "select-span";
-                }};
+                if (label != null)
+                    new span(label) {{
+                        className = "select-span";
+                    }};
 
                 new select() {{
-                    id = "select-body";
+                    className = "select-body";
                     for (var variant : variants)
                         new option(variant.caption) {{
                             selected = self.value == variant.element;
