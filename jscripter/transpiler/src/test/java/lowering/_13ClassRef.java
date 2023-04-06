@@ -112,4 +112,146 @@ public class _13ClassRef {
                 }
                 """);
     }
+
+    @Test void classRefOnConstructor() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import jstack.jscripter.transpiler.model.ClassRef;
+                import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
+                                    
+                class Test {
+                  record A(long x1, int x2){}
+                  static class B {
+                    B(@Reflexive A a) {}
+                  }
+                  
+                  void baz() { new B(new A(1, 1)); }
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
+                    constructor(x1, x2) {
+                      this.x1 = x1;
+                      this.x2 = x2;
+                    }
+                  }
+                  static B = class {
+                    constructor(a) {
+                    }
+                  }
+                  _baz() {
+                    new js_Test.B((() => {
+                      const __obj = new js_Test.A(1, 1);
+                      __obj.__class__ = ({
+                        _name: () => 'js.Test.A',
+                        _params: () => [
+                        ],
+                        _fields: () => [
+                          {
+                            _name: () => 'x1',
+                            ___class__: () => ({
+                              _name: () => 'long',
+                              _params: () => [
+                              ],
+                              _fields: () => [
+                              ]
+                            })
+                          },
+                          {
+                            _name: () => 'x2',
+                            ___class__: () => ({
+                              _name: () => 'int',
+                              _params: () => [
+                              ],
+                              _fields: () => [
+                              ]
+                            })
+                          }
+                        ]
+                      });
+                      return __obj;
+                    })());
+                  }
+                }
+                """);
+    }
+    @Test void classRefOnConstructorAnon() throws IOException {
+        assertCompiled(
+            """
+                package js;
+                import jstack.jscripter.transpiler.model.ClassRef;
+                import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
+                                    
+                class Test {
+                  record A(long x1, int x2){}
+                  static class B {
+                    B(@Reflexive A a) {}
+                  }
+                  
+                  void baz() { new B(new A(1, 1)) {{ }}; }
+                }
+                """,
+            """
+                class js_Test {
+                  constructor() {
+                  }
+                  static A = class {
+                    constructor(x1, x2) {
+                      this.x1 = x1;
+                      this.x2 = x2;
+                    }
+                  }
+                  static B = class {
+                    constructor(a) {
+                    }
+                  }
+                  _baz() {
+                    (this0 => {
+                      return new class extends js_Test_B {
+                        constructor(a) {
+                          const __init__ = () => {
+                          };
+                          super((() => {
+                            const __obj = a;
+                            __obj.__class__ = ({
+                              _name: () => 'js.Test.A',
+                              _params: () => [
+                              ],
+                              _fields: () => [
+                                {
+                                  _name: () => 'x1',
+                                  ___class__: () => ({
+                                    _name: () => 'long',
+                                    _params: () => [
+                                    ],
+                                    _fields: () => [
+                                    ]
+                                  })
+                                },
+                                {
+                                  _name: () => 'x2',
+                                  ___class__: () => ({
+                                    _name: () => 'int',
+                                    _params: () => [
+                                    ],
+                                    _fields: () => [
+                                    ]
+                                  })
+                                }
+                              ]
+                            });
+                            return __obj;
+                          })());
+                          __init__();
+                        }
+                      }(new js_Test.A(1, 1))
+                    })(this);
+                  }
+                }
+                """);
+    }
 }

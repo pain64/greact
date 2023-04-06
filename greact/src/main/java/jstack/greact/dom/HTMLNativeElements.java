@@ -72,7 +72,7 @@ public class HTMLNativeElements {
 
     @JSNativeAPI public static class i extends HTMLElement implements NativeElementAsComponent<i>{
         public String dataFeather;
-        public i() {};
+        public i() {}
     }
 
     @JSNativeAPI public static class canvas extends HTMLElement implements NativeElementAsComponent<canvas> {
@@ -97,6 +97,15 @@ public class HTMLNativeElements {
     @JSNativeAPI public static class div extends HTMLElement implements NativeElementAsComponent<div> {
         public div() { }
         public div(@DomProperty("className") String className) { }
+        public div(
+            @DomProperty("className") String className,
+            @DomProperty("title") String title
+        ) { }
+        public div(
+            @DomProperty("className") String className,
+            @DomProperty("title") String title,
+            @DomProperty("onclick") MouseEventHandler onclick
+        ) { }
     }
 
     @JSNativeAPI public static class nav extends HTMLElement implements NativeElementAsComponent<nav> {}

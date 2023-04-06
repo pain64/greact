@@ -13,7 +13,7 @@
 .grid-i-filter {
     width: 20px;
     height: 20px;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-filter'%3E%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'%3E%3C/polygon%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-funnel' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2zm1 .5v1.308l4.372 4.858A.5.5 0 0 1 7 8.5v5.306l2-.666V8.5a.5.5 0 0 1 .128-.334L13.5 3.308V2h-11z'/%3E%3C/svg%3E");
 }
 
 .grid-i-chevron-left {
@@ -28,6 +28,18 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-chevron-right'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
 }
 
+.grid-i-plus {
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-plus'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+}
+
+.grid-i-question {
+    width: 20px;
+    height: 20px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='feather feather-help-circle'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+}
+
 .page-turn {
   display: inline-block;
   cursor: pointer;
@@ -38,49 +50,45 @@
   background-color: #ffe69c;
 }
 
-.table {
+table {
   border-collapse: collapse;
   border-spacing: 0;
-  width: 100%;
 }
 
-.table > tbody > tr {
+td {
+  border: 2px solid #fbfbfb;
+}
+
+table > tbody > tr {
     line-height: 30px;
 }
 
-.table > tbody > tr > td {
+table > tbody > tr > td {
     text-align: center;
     padding: 2px;
     border-radius: 2px;
 }
 
-.table > thead {
+table > thead {
   border-bottom: 2px solid #eee;
   border-collapse: separate;
 }
 
-.table > thead > tr > td {
+table > thead > tr > td, th {
     padding: 2px;
     font-weight: bold;
     font-size: 15px;
     text-align: center;
+    /* color: #5f5330; */
+    color: #c1a03f;
 }
 
-.table > tbody > tr {
-    border-bottom: 2px solid #fbfbfb;
+table > tbody > tr {
+    /* border-bottom: 2px solid #fbfbfb; */
 }
 
-.table > tbody > tr:hover:not(.expansion-row) {
-  background-color: #d1e7dd;
-}
-
-.toolbox {
-  visibility: hidden;
-  justify-content: flex-start;
-}
-
-tr:hover > td > .toolbox {
-  visibility: visible;
+table > tbody > tr:hover:not(.expansion-row) {
+  background-color: #cff4fc;
 }
 
 .expansion-row > td {
@@ -88,10 +96,31 @@ tr:hover > td > .toolbox {
 }
 
 .toolbox > div {
-  padding: 4px;
+  visibility: hidden;
 }
 
-.toolbox > *:hover {
+.toolbox > div {
+  display: flex;
+  justify-content: flex-start;
+  gap: 3px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+tr:hover > .toolbox > div {
+  visibility: visible;
+}
+
+.toolbox > div > .disabled {
+  background-color: #cbc3c3;
+}
+
+.toolbox > div > * {
+  background-color: white;
+  border-radius: 3px;
+}
+
+.toolbox > div > *:hover {
   background-color: #ffe69c;
 }
 
@@ -131,30 +160,10 @@ tr:hover > td > .toolbox {
   border-radius: 0.375rem;
 }
 
-.grid-filter-select {
-  margin-right: 10px;
-  padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-  -moz-padding-start: calc(0.75rem - 3px);
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: #212529;
-  background-color: #fff;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 16px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 0.375rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
 .grid-filter-span {
   font-size: 16px;
   font-weight: bold;
+  padding: 6px;
 }
 
 .grid-filter-pages {
@@ -167,10 +176,18 @@ tr:hover > td > .toolbox {
   margin-bottom: 5px;
   display: flex;
   align-items: center;
+  border-radius: 0.375rem;
 }
 
 .grid-filter-hint {
+  color: #000;
+  padding: 4px;
   margin-left: 5px;
+  margin-right: 3px;
+}
+
+.grid-filter-hint:hover {
+  background-color: #ffe69c;
 }
 
 .grid-filter-input {
@@ -184,11 +201,6 @@ tr:hover > td > .toolbox {
 .grid-row-add-toolbox {
   display: flex;
   justify-content: flex-end;
-}
-
-#grid-row-add-toolbox-body {
-  width: 54px;
-  display: flex;
 }
 
 .grid-row-edit {
@@ -205,6 +217,7 @@ tr:hover > td > .toolbox {
 }
 
 #grid-table {
+  width: 100%;
   margin: 0 0 0 0;
 }
 
@@ -214,6 +227,7 @@ tr:hover > td > .toolbox {
 #grid-table-td-body {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
 }
 
 .grid-table-td-content {
@@ -224,7 +238,7 @@ tr:hover > td > .toolbox {
 }
 
 #grid-table-tbody-tr-background {
-  background-color: #acea9f;
+  background-color: #cff4fc;
 }
 
 .grid-table-toolbox {
@@ -238,9 +252,11 @@ tr:hover > td > .toolbox {
   background-color: #ffffff;
 }
 
-.grid-table-expansion-td {
-  padding: 15px;
-  border-bottom: 1px solid white;
+.grid-table-expansion-div {
+  border-left: 4px dashed #cff4fc;
+  margin: 4px;
+  border-bottom: 4px dashed #eee;
+  padding: 12px 16px 16px 16px;
 }
 
 .grid-table-expansion-td-body {

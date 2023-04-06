@@ -1,12 +1,13 @@
 package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.uikit.controls.Select;
 import jstack.jscripter.transpiler.model.JSExpression;
 
 import java.util.function.Consumer;
 
 class GridFilter<T> implements Component0<div> {
-    int[] pageSizes = new int[]{10, 20, 50, 100}; // FIXME: move to config ???
+    Integer[] pageSizes = new Integer[]{10, 20, 50, 100}; // FIXME: move to config ???
     int currentPage = 1;
     int currentSize = pageSizes[0];
     boolean filterEnabled = false;
@@ -75,21 +76,18 @@ class GridFilter<T> implements Component0<div> {
                         className = "grid-filter";
 
                         new div() {{
+                            style.display = "flex";
+                            style.alignItems = "center";
+                            style.gap = "16px";
+
                             if (finalFiltered.length > pageSizes[0]) {
-                                new select() {{
-                                    onchange = ev -> {
+                                new Select<>(pageSizes) {{
+                                    value = currentSize;
+                                    onchange = value -> {
                                         // FIXME: move to one effect
-                                        effect(currentSize = Integer.parseInt(
-                                            ((select) ev.target).value));
+                                        currentSize = value;
                                         effect(currentPage = 1);
                                     };
-
-                                    for (var size : pageSizes)
-                                        new option("" + size) {{
-                                            value = "" + size;
-                                            selected = size == currentSize;
-                                        }};
-                                    className = "grid-filter-select";
                                 }};
 
                                 new span("записей на странице " + currentPage + " из " + nPages);
@@ -101,6 +99,9 @@ class GridFilter<T> implements Component0<div> {
                         }};
 
                         new div() {{
+                            style.display = "flex";
+                            style.alignItems = "center";
+
                             if (finalFiltered1.length > pageSizes[0]) {
                                 new div() {{
                                     new div("grid-i-chevron-left");
@@ -142,9 +143,7 @@ class GridFilter<T> implements Component0<div> {
 
                     new div() {{
                         className = "grid-filter-hint";
-                        innerHTML = """
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle" style="margin-top: 4px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            """;
+                        new div("grid-i-question");
                         onclick = ev -> effect(showHint = !showHint);
                     }};
                 }};

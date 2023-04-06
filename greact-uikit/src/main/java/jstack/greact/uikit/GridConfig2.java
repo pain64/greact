@@ -2,6 +2,7 @@ package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLElement;
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.jscripter.transpiler.model.ErasedInterface;
 import jstack.jscripter.transpiler.model.async;
 
 import java.util.function.Consumer;
@@ -13,6 +14,14 @@ public class GridConfig2<T> {
     }
     @FunctionalInterface public interface AsyncSupplier<T> {
         @async T supply(T value);
+    }
+
+    @ErasedInterface public interface RowHandler<T> {
+        void updateRow(T row);
+    }
+
+    @FunctionalInterface public interface RowActionsSupplier<T> {
+        Component0<div> supply(RowHandler<T> handler, T row);
     }
 
     public static class RowAction<T> {
@@ -43,7 +52,7 @@ public class GridConfig2<T> {
     public Component1<div, T> selectedRow;
     public Component1<div, T> expandedRow;
     public RowAdder<T> customRowAdder; // FIXME: rowAdder ???
-    public RowAction<T>[] rowActions = (RowAction<T>[]) new Object[0];
+    public RowActionsSupplier<T> rowActions = (handler, row) -> new div();
     public AsyncSupplier<T> onRowAdd;
     public AsyncHandler<T> onRowChange;
     public AsyncHandler<T> onRowDelete;

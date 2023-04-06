@@ -2,6 +2,8 @@ package jstack.greact.uikit.controls;
 
 import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.uikit.SearchBox;
+import jstack.greact.uikit.SearchBox.AsyncFunc1;
 
 public class Cascade<T> extends Control<T> {
     //FIXME: duplicate with SearchBox

@@ -120,7 +120,11 @@ abstract class ExpressionGen extends VisitorWithContext {
         switch (lit.getKind()) {
             case CHAR_LITERAL, STRING_LITERAL -> {
                 out.write("'");
-                out.write(value.toString().replace("\n", "\\n"));
+                out.write(
+                    value.toString()
+                        .replace("\n", "\\n")
+                        .replace("'", "\\'")
+                );
                 out.write("'");
             }
             case NULL_LITERAL -> out.write("null");
@@ -367,6 +371,44 @@ abstract class ExpressionGen extends VisitorWithContext {
         out.write(")()");
     }
 
+    private void writeCallArguments(
+        Overloads.Info info, Symbol.MethodSymbol targetMethod, List<JCTree.JCExpression> args
+    ) {
+        if (info.isOverloaded()) {
+            out.write("" + info.n());
+            out.write(", ");
+        }
+
+        for (var i = 0; i < args.size(); i++) {
+            var param = targetMethod.isVarArgs() && i >= targetMethod.params.length()
+                ? targetMethod.params.last()
+                : targetMethod.params.get(i);
+            var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
+            var arg = (JCTree.JCExpression) args.get(i);
+
+            if (isReflexive) {
+                out.write("(() =>");
+                out.writeCBOpen(true);
+                out.write("const __obj = ");
+            }
+
+            arg.accept(this);
+
+            if (isReflexive) {
+                out.writeLn(";");
+                if (arg.type.tsym instanceof Symbol.ClassSymbol) {
+                    out.write("__obj.__class__ = (");
+                    reflectWriteClassMembers(arg.type);
+                    out.writeLn(");");
+                    out.writeLn("return __obj;");
+                }
+                out.writeCBEnd(false);
+                out.write(")()");
+            }
+            if (i != args.size() - 1) out.write(", ");
+        }
+    }
+
     @Override public void visitApply(JCTree.JCMethodInvocation call) {
         var methodSym = (Symbol.MethodSymbol) TreeInfo.symbol(call.meth);
         var methodOwnerSym = (Symbol.ClassSymbol) methodSym.owner;
@@ -497,39 +539,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else
                 throw new RuntimeException("unknown kind: " + call.meth.getKind());
 
-            if (info.isOverloaded()) {
-                out.write("" + info.n());
-                out.write(", ");
-            }
-
-            for (var i = 0; i < call.args.size(); i++) {
-                var param = targetMethod.isVarArgs() && i >= targetMethod.params.length()
-                    ? targetMethod.params.last()
-                    : targetMethod.params.get(i);
-                var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
-                var arg = (JCTree.JCExpression) call.getArguments().get(i);
-
-                if (isReflexive) {
-                    out.write("(() =>");
-                    out.writeCBOpen(true);
-                    out.write("const __obj = ");
-                }
-
-                arg.accept(this);
-
-                if (isReflexive) {
-                    out.writeLn(";");
-                    if (arg.type.tsym instanceof Symbol.ClassSymbol) {
-                        out.write("__obj.__class__ = (");
-                        reflectWriteClassMembers(arg.type);
-                        out.writeLn(");");
-                        out.writeLn("return __obj;");
-                    }
-                    out.writeCBEnd(false);
-                    out.write(")()");
-                }
-                if (i != call.getArguments().size() - 1) out.write(", ");
-            }
+            writeCallArguments(info, targetMethod, call.args);
 
             if (!isRecordAccessor) out.write(")");
             if (isAsync) out.write(")");
@@ -681,12 +691,8 @@ abstract class ExpressionGen extends VisitorWithContext {
         else newClass.clazz.accept(this);
 
         out.write("(");
-        if (info.isOverloaded()) {
-            out.write("" + info.n());
-            out.write(", ");
-        }
-
-        out.mkString(newClass.args, arg -> arg.accept(this), "", ", ", ")");
+        writeCallArguments(info, (Symbol.MethodSymbol) newClass.constructor, newClass.args);
+        out.write(")");
 
         if (newClass.def != null) {
             out.writeNL();
