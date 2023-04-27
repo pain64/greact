@@ -1,12 +1,6 @@
 package jstack.jscripter.transpiler.generate2;
 
-import jstack.jscripter.transpiler.generate.util.CompileException;
-import jstack.jscripter.transpiler.generate.util.Overloads;
-import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
-import jstack.jscripter.transpiler.model.ClassRef;
-import jstack.jscripter.transpiler.model.ErasedInterface;
-import jstack.jscripter.transpiler.model.JSNativeAPI;
-import jstack.jscripter.transpiler.model.async;
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -15,6 +9,13 @@ import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Pair;
+import jstack.jscripter.transpiler.generate.util.CompileException;
+import jstack.jscripter.transpiler.generate.util.Overloads;
+import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
+import jstack.jscripter.transpiler.model.ClassRef;
+import jstack.jscripter.transpiler.model.ErasedInterface;
+import jstack.jscripter.transpiler.model.JSNativeAPI;
+import jstack.jscripter.transpiler.model.async;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -23,10 +24,12 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
+    private final HashSet<Name> logCompNames = new HashSet<>();
     CompileException memberRefUsedIncorrect() {
         return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
             MemberRef<T> usage:
@@ -244,7 +247,18 @@ abstract class ExpressionGen extends VisitorWithContext {
             default -> throw new RuntimeException("Unknown kind " + unary.getKind());
         };
 
-        if (opAndIsPrefix.snd) out.write(opAndIsPrefix.fst);
+        if (unary.getKind() == Tree.Kind.LOGICAL_COMPLEMENT &&
+            unary.arg instanceof JCTree.JCMethodInvocation method &&
+            method.meth instanceof JCTree.JCFieldAccess field &&
+            "equals".equals(field.name.toString()) &&
+            unary.arg instanceof JCTree.JCMethodInvocation methodInvocation &&
+            methodInvocation.meth instanceof JCTree.JCFieldAccess fieldAccess &&
+            fieldAccess.selected instanceof JCTree.JCIdent ident
+        ) {
+            logCompNames.add(ident.name);
+        } else {
+            if (opAndIsPrefix.snd) out.write(opAndIsPrefix.fst);
+        }
         unary.arg.accept(this);
         if (!opAndIsPrefix.snd) out.write(opAndIsPrefix.fst);
     }
@@ -498,9 +512,12 @@ abstract class ExpressionGen extends VisitorWithContext {
                         EQUALS_METHOD_NAME, m -> m.getMetadata() != null
                     ) == null;
 
-                    if (equalsNameAndString(methodSym.getQualifiedName(), "equals") && isNotOverEquals)
-                        out.write(prop.toString().replace(".equals", " == ")); // TODO
-                    else {
+                    if (equalsNameAndString(methodSym.getQualifiedName(), "equals") && isNotOverEquals) {
+                        var op = logCompNames.contains(((JCTree.JCIdent) prop.selected).name)
+                            ? " !== "
+                            : " == ";
+                        out.write(prop.toString().replace(".equals", op));
+                    } else {
                         if (methodOwnerSym.type.tsym.getAnnotation(FunctionalInterface.class) != null) {
                             prop.selected.accept(this);
                         } else {
@@ -648,18 +665,14 @@ abstract class ExpressionGen extends VisitorWithContext {
         var pattern = instanceOf.getPattern();
         if (pattern == null) checkGen.accept(() -> instanceOf.expr.accept(this));
         else {
-            // FIXME:
-            //  1. before method body gen
-            //    - find all insanceof
-            //    - write all pattern vars at function begin
             var name = ((JCTree.JCBindingPattern) pattern).var.name;
             out.write("(");
             out.write(name);
             out.write(" = ");
             instanceOf.expr.accept(this);
-            out.write(", ");
-            checkGen.accept(() -> out.write(name));
             out.write(")");
+            checkGen.accept(() -> { });
+            //out.write(")");
         }
     }
 

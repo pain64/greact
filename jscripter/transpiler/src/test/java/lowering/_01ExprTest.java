@@ -524,54 +524,6 @@ public class _01ExprTest {
     }
 
     @Test
-    void instanceOfExpr() throws IOException {
-        assertCompiledMany(
-            new CompileCase("js.A",
-                """
-                    package js;
-                    class A {}""",
-                """
-                    class js_A {
-                      constructor() {
-                      }
-                    }
-                    """),
-            new CompileCase("js.Test", """
-                package js;
-                public class Test {
-                  static class B {}
-
-                  void baz(Object x) {
-                    boolean y1 = x instanceof String;
-                    boolean y2 = x instanceof Integer;
-                    boolean y3 = x instanceof Long;
-                    boolean y4 = x instanceof String s;
-                    boolean y5 = x instanceof A;
-                    boolean y6 = x instanceof B;
-                  }
-                }""",
-                """
-                    class js_Test {
-                      constructor() {
-                      }
-                      static B = class {
-                        constructor() {
-                        }
-                      }
-                      _baz(x) {
-                        const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
-                        const y2 = typeof x == 'number';
-                        const y3 = typeof x == 'number';
-                        const y4 = (s = x, (($x) => {return typeof $x === 'string' || $x instanceof String})(s));
-                        const y5 = x instanceof js_A;
-                        const y6 = x instanceof js_Test.B;
-                      }
-                    }
-                    """));
-        // FIXME(generated for instanceof pattern) => const s;
-    }
-
-    @Test
     void newClassExpr() throws IOException {
         // очень плохой тест:
         assertCompiled(
@@ -650,7 +602,7 @@ public class _01ExprTest {
                 """
                     package js;
                     import jstack.jscripter.transpiler.model.JSNativeAPI;
-                    
+                                        
                     @JSNativeAPI
                     class A {}""",
                 """
@@ -668,6 +620,116 @@ public class _01ExprTest {
                       }
                       _baz(x) {
                         const y1 = x instanceof A;
+                      }
+                    }
+                    """));
+    }
+
+    @Test
+    void instanceOfExpr() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                    class A {}""",
+                """
+                    class js_A {
+                      constructor() {
+                      }
+                    }
+                    """),
+            new CompileCase("js.Test", """
+                package js;
+                public class Test {
+                  static class B {}
+
+                  void baz(Object x) {
+                    boolean y1 = x instanceof String;
+                    boolean y2 = x instanceof Integer;
+                    boolean y3 = x instanceof Long;
+                    boolean y4 = x instanceof String s;
+                    boolean y5 = x instanceof A;
+                    boolean y6 = x instanceof B;
+                  }
+                }""",
+                """
+                    class js_Test {
+                      constructor() {
+                      }
+                      static B = class {
+                        constructor() {
+                        }
+                      }
+                      _baz(x) {
+                        let s;
+                        const y1 = (($x) => {return typeof $x === 'string' || $x instanceof String})(x);
+                        const y2 = typeof x == 'number';
+                        const y3 = typeof x == 'number';
+                        const y4 = (s = x)(($x) => {return typeof $x === 'string' || $x instanceof String})();
+                        const y5 = x instanceof js_A;
+                        const y6 = x instanceof js_Test.B;
+                      }
+                    }
+                    """));
+        // FIXME(generated for instanceof pattern) => const s;
+    }
+
+    @Test
+    void instanceOfWithVariable() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                                        
+                    class A {
+                        static class B {}
+                        public void xxx(Object some) {
+                            if (some instanceof A a) {
+                            }
+                            if(some instanceof A a) {
+                            }
+                            if(some instanceof B b) {
+                            }
+                        }
+                    }""",
+                """
+                    class js_A {
+                      constructor() {
+                      }
+                      static B = class {
+                        constructor() {
+                        }
+                      }
+                      _xxx(some) {
+                        let a, b;
+                        if((a = some) instanceof js_A) {
+                        }if((a = some) instanceof js_A) {
+                        }if((b = some) instanceof js_A.B) {
+                        }}
+                    }
+                    """));
+    }
+
+    @Test
+    void equals() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                                        
+                    class A {
+                        public void xxx(Object a, Object b) {
+                            var flag = a.equals(b);
+                            flag = !a.equals(b);
+                        }
+                    }""",
+                """
+                    class js_A {
+                      constructor() {
+                      }
+                      _xxx(a, b) {
+                        let flag = a == (b);
+                        flag = a !== (b);
                       }
                     }
                     """));
