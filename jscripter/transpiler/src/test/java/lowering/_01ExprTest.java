@@ -703,9 +703,12 @@ public class _01ExprTest {
                       _xxx(some) {
                         let a, b;
                         if((a = some) instanceof js_A) {
-                        }if((a = some) instanceof js_A) {
-                        }if((b = some) instanceof js_A.B) {
-                        }}
+                        }
+                        if((a = some) instanceof js_A) {
+                        }
+                        if((b = some) instanceof js_A.B) {
+                        }
+                      }
                     }
                     """));
     }
