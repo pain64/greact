@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
-    private final HashSet<Name> logCompNames = new HashSet<>();
+    private final HashSet<Name> inverseEqualsCalls = new HashSet<>();
     CompileException memberRefUsedIncorrect() {
         return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
             MemberRef<T> usage:
@@ -251,11 +251,9 @@ abstract class ExpressionGen extends VisitorWithContext {
             unary.arg instanceof JCTree.JCMethodInvocation method &&
             method.meth instanceof JCTree.JCFieldAccess field &&
             "equals".equals(field.name.toString()) &&
-            unary.arg instanceof JCTree.JCMethodInvocation methodInvocation &&
-            methodInvocation.meth instanceof JCTree.JCFieldAccess fieldAccess &&
-            fieldAccess.selected instanceof JCTree.JCIdent ident
+            field.selected instanceof JCTree.JCIdent ident
         ) {
-            logCompNames.add(ident.name);
+            inverseEqualsCalls.add(ident.name);
         } else {
             if (opAndIsPrefix.snd) out.write(opAndIsPrefix.fst);
         }
@@ -513,7 +511,7 @@ abstract class ExpressionGen extends VisitorWithContext {
                     ) == null;
 
                     if (equalsNameAndString(methodSym.getQualifiedName(), "equals") && isNotOverEquals) {
-                        var op = logCompNames.contains(((JCTree.JCIdent) prop.selected).name)
+                        var op = inverseEqualsCalls.contains(((JCTree.JCIdent) prop.selected).name)
                             ? " !== "
                             : " == ";
                         out.write(prop.toString().replace(".equals", op));

@@ -602,7 +602,7 @@ public class _01ExprTest {
                 """
                     package js;
                     import jstack.jscripter.transpiler.model.JSNativeAPI;
-                                        
+                    
                     @JSNativeAPI
                     class A {}""",
                 """
