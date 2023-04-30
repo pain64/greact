@@ -1,5 +1,11 @@
 package jstack.jscripter.transpiler.generate2;
 
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeScanner;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Pair;
 import jstack.jscripter.transpiler.generate.util.CompileException;
 import jstack.jscripter.transpiler.generate.util.CompileException.ERROR;
 import jstack.jscripter.transpiler.generate.util.Overloads;
@@ -8,17 +14,11 @@ import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
 import jstack.jscripter.transpiler.generate2.lookahead.HasSelfConstructorCall;
 import jstack.jscripter.transpiler.model.Static;
 import jstack.jscripter.transpiler.model.async;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Pair;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 abstract class ClassBodyGen extends StatementGen {
     @Override public void visitVarDef(JCTree.JCVariableDecl varDef) {
@@ -125,6 +125,7 @@ abstract class ClassBodyGen extends StatementGen {
 
             var visitor = new HasAsyncCalls(super.stdShim, super.types);
             method.snd.body.accept(visitor);
+
             if (!visitor.hasAsyncCalls && isAsync) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);
@@ -163,6 +164,21 @@ abstract class ClassBodyGen extends StatementGen {
             out.write("($over, ...__args)");
 
         out.writeCBOpen(true);
+
+        var varsForInstanceOf = new LinkedHashSet<Name>();
+        methods.stream().map(n -> n.snd).forEach(snd -> snd.accept(new TreeScanner() {
+            @Override
+            public void visitTypeTest(JCTree.JCInstanceOf tree) {
+                var pattern = tree.getPattern();
+                if (pattern != null)
+                    varsForInstanceOf.add(((JCTree.JCBindingPattern) pattern).var.name);
+            }
+        }));
+
+        if (!varsForInstanceOf.isEmpty()) {
+            out.mkString(varsForInstanceOf, varName -> out.write(varName), "let ", ", ", ";");
+            out.writeNL();
+        }
 
         final boolean hasConstructorSelfCall;
         if (isConstructor) {
@@ -220,6 +236,7 @@ abstract class ClassBodyGen extends StatementGen {
                 });
             }
         } else hasInit = false;
+
 
         if (table.isOverloaded()) {
             var isFirst = true;

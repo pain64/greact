@@ -79,7 +79,7 @@ abstract class StatementGen extends ExpressionGen {
     @Override public void visitIf(JCTree.JCIf ifStmt) {
         out.write("if");
         ifStmt.cond.accept(this);
-        writeStmtBody(ifStmt.thenpart, false);
+        writeStmtBody(ifStmt.thenpart, ifStmt.elsepart == null);
 
         var elseStmt = ifStmt.elsepart;
         if (elseStmt != null) {
