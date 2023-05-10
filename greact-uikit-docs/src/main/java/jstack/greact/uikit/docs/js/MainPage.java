@@ -176,8 +176,6 @@ public class MainPage implements Component0<div> {
                                 className = "ex-text";
                             }};
 
-                            new Dropdown("aa", new a("bb"), new a("cc"));
-
                             new CodeView<>(() ->
                                 new h1("h1 text") {{
                                     style.color = "#703191";
