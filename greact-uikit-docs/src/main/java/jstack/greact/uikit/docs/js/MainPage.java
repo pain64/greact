@@ -1,6 +1,7 @@
 package jstack.greact.uikit.docs.js;
 
 import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.uikit.Dropdown;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.greact.dom.CodeView;
@@ -174,6 +175,8 @@ public class MainPage implements Component0<div> {
                             new h3("EXAMPLE") {{
                                 className = "ex-text";
                             }};
+
+                            new Dropdown("aa", new a("bb"), new a("cc"));
 
                             new CodeView<>(() ->
                                 new h1("h1 text") {{
