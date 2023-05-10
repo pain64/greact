@@ -6,7 +6,6 @@ import jstack.greact.dom.HTMLNativeElements.Component0;
 import jstack.greact.dom.HTMLNativeElements.a;
 import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.dom.HTMLNativeElements.slot;
-import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("dropdown.css")
@@ -39,7 +38,6 @@ public class Dropdown implements Component0<div> {
 
             new div() {{
                 hideDiv[0] = this;
-                var hide = this;
 
                 Globals.document.addEventListener("click", (event) -> {
                     if (!dropdown.contains(event.target) && !event.target.matches(".dropdown-menu")) {
