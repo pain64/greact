@@ -12,9 +12,9 @@ public class CallNoArgs {
                 """
                     package js;
                     import static util.TestServer.server;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     class Simple {
-                      @async void simple() {
+                      @Async void simple() {
                         int x = server(none -> 42);
                       }
                     }""",
@@ -22,7 +22,7 @@ public class CallNoArgs {
                     package js;
 
                     import static util.TestServer.server;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
 
                     class Simple {
                        \s
@@ -36,7 +36,7 @@ public class CallNoArgs {
                             super();
                         }
                        \s
-                        @async
+                        @Async
                         void simple() {
                             int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
                         }
@@ -51,9 +51,9 @@ public class CallNoArgs {
                     package js;
                     import static util.TestServer.server;
                     import static util.TestServer.DI;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     class Simple {
-                      @async void simple() {
+                      @Async void simple() {
                         int x = server(DI::method);
                       }
                     }""",
@@ -62,7 +62,7 @@ public class CallNoArgs {
 
                     import static util.TestServer.server;
                     import static util.TestServer.DI;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
 
                     class Simple {
                        \s
@@ -76,7 +76,7 @@ public class CallNoArgs {
                             super();
                         }
                        \s
-                        @async
+                        @Async
                         void simple() {
                             int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
                         }

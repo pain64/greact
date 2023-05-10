@@ -1,7 +1,7 @@
 package jstack.greact.dom;
 
 import jstack.jscripter.transpiler.model.JSNativeAPI;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 @JSNativeAPI public class HTMLElement extends Node {
     public String pattern;
@@ -79,7 +79,8 @@ import jstack.jscripter.transpiler.model.async;
     public MouseEventHandler onmouseout;
     public MouseEventHandler onmouseover;
 
-
+    public native boolean contains(HTMLElement element);
+    public native boolean matches(String pattern);
 
     // HTML Event Attributes
     public static class Event {
@@ -88,11 +89,11 @@ import jstack.jscripter.transpiler.model.async;
     }
 
     @FunctionalInterface public interface ChangeHandler {
-        @async void handle(Event ev);
+        @Async void handle(Event ev);
     }
 
     @FunctionalInterface public interface MouseEventHandler {
-        @async void handle(Event ev);
+        @Async void handle(Event ev);
     }
 
     public static class KeyEvent extends Event { }

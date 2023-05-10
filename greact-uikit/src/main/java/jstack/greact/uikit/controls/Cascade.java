@@ -3,14 +3,13 @@ package jstack.greact.uikit.controls;
 import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.greact.uikit.Promise;
-import jstack.jscripter.transpiler.model.async;
-import jstack.greact.uikit.SearchBox;
-import jstack.greact.uikit.SearchBox.AsyncFunc1;
+import jstack.jscripter.transpiler.model.Async;
 
 public class Cascade<T, U1> extends Control<T> {
     //FIXME: duplicate with SearchBox
     @FunctionalInterface public interface AsyncFunc<U1, T> {
-        @async T apply(U1 u1);
+        @Async
+        T apply(U1 u1);
     }
 
     Control<U1> in1;

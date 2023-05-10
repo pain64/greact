@@ -12,11 +12,11 @@ public class CallWithArgs {
             new CompileAssert.CompileCase("js.Simple",
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
-                      @async void simple() {
+                      @Async void simple() {
                         var y = 1;
 
                        // java.util.function.Consumer<Integer> c = e -> {
@@ -30,7 +30,7 @@ public class CallWithArgs {
                 """
                     package js;
 
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     import static util.TestServer.server;
 
                     class Simple {
@@ -49,7 +49,7 @@ public class CallWithArgs {
                         }
                         int x = 40;
                        \s
-                        @async
+                        @Async
                         void simple() {
                             int y = 1;
                             jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", x, y);
@@ -64,11 +64,11 @@ public class CallWithArgs {
             new CompileAssert.CompileCase("js.Simple",
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     import static util.TestServer.server;
                     class Simple {
                       int x = 40;
-                      @async void simple() {
+                      @Async void simple() {
                         var y = 1;
 
                           server(none -> {
@@ -80,7 +80,7 @@ public class CallWithArgs {
                 """
                     package js;
 
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     import static util.TestServer.server;
 
                     class Simple {
@@ -98,7 +98,7 @@ public class CallWithArgs {
                         }
                         int x = 40;
                        \s
-                        @async
+                        @Async
                         void simple() {
                             int y = 1;
                             jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", y);

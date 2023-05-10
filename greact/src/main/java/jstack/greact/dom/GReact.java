@@ -1,7 +1,7 @@
 package jstack.greact.dom;
 
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.dom.HTMLNativeElements.Component;
 
 import java.util.function.Consumer;
@@ -21,7 +21,7 @@ public class GReact {
         return null;
     }
 
-    @async public static <T extends HTMLElement> T mmountAwaitView(Component<T> comp, Object... args) {
+    @Async public static <T extends HTMLElement> T mmountAwaitView(Component<T> comp, Object... args) {
         return JSExpression.ofAsync("""
             comp instanceof HTMLElement ? comp :
                 comp instanceof Function ? await this._mmountAwaitView(await comp(...args), []) :
@@ -60,6 +60,6 @@ public class GReact {
         return el;
     }
 
-    @FunctionalInterface public interface AsyncRunnable { @async void run(); }
-    @FunctionalInterface public interface AsyncCallable<T> { @async T call(); }
+    @FunctionalInterface public interface AsyncRunnable { @Async void run(); }
+    @FunctionalInterface public interface AsyncCallable<T> { @Async T call(); }
 }

@@ -15,11 +15,11 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.Async;
                 public abstract class Test {
-                  @async abstract void bar();
+                  @Async abstract void bar();
                   void foo() {}
-                  @async void foo(int x) { bar(); }
+                  @Async void foo(int x) { bar(); }
                 }""",
             """
                 class js_Test {
@@ -41,11 +41,11 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     public abstract class Test {
-                      @async abstract void bar();
-                      @async void foo() {}
-                      @async void foo(int x) { bar(); }
+                      @Async abstract void bar();
+                      @Async void foo() {}
+                      @Async void foo(int x) { bar(); }
                     }""",
                 """
                     """);
@@ -60,9 +60,9 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     public class Test {
-                      @async Test() {}
+                      @Async Test() {}
                     }""",
                 """
                     """);
@@ -76,10 +76,10 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.Async;
                 public abstract class Test {
-                  @async abstract void foo();
-                  @async void bar() { foo(); }
+                  @Async abstract void foo();
+                  @Async void bar() { foo(); }
                 }""",
             """
                 class js_Test {
@@ -97,9 +97,9 @@ public class _08AsyncAwait {
             assertCompiled(
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     public abstract class Test {
-                      @async abstract void foo();
+                      @Async abstract void foo();
                       void bar() { foo(); }
                     }""",
                 """
@@ -114,14 +114,14 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.Async;
                 import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
                   @ErasedInterface
                   interface Foo {
-                    @async void foo();
+                    @Async void foo();
                   }
-                  @async void callee(Foo f) { f.foo(); }
+                  @Async void callee(Foo f) { f.foo(); }
                 }""",
             """
                 class js_Test {
@@ -140,9 +140,9 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     public abstract class A {
-                      @async abstract void foo();
+                      @Async abstract void foo();
                     }""",
                 """
                     class js_A {
@@ -173,10 +173,10 @@ public class _08AsyncAwait {
             new CompileAssert.CompileCase("js.A",
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     
                     public interface A {
-                      @async void foo();
+                      @Async void foo();
                     }""",
                 """
                     const _js_A = (superclass) => class js_A extends superclass {
@@ -216,9 +216,9 @@ public class _08AsyncAwait {
                 new CompileAssert.CompileCase("js.B",
                     """
                         package js;
-                        import jstack.jscripter.transpiler.model.async;
+                        import jstack.jscripter.transpiler.model.Async;
                         class B implements A {
-                          @async @Override public void foo() {
+                          @Async @Override public void foo() {
                           }
                         }""",
                     """
@@ -233,14 +233,14 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.Async;
                 import jstack.jscripter.transpiler.model.ErasedInterface;
                 public abstract class Test {
                   @ErasedInterface
                   interface Foo {
-                    @async void foo();
+                    @Async void foo();
                   }
-                  @async abstract void doo();
+                  @Async abstract void doo();
                   void bar() {
                     Foo instance = () -> { doo(); };
                   }
@@ -258,17 +258,17 @@ public class _08AsyncAwait {
                 """);
     }
 
-    @Test void asyncClassInitFail() throws IOException {
+    @Test void AsyncClassInitFail() throws IOException {
         try {
             assertCompiled(
                 """
                     package js;
-                    import jstack.jscripter.transpiler.model.async;
+                    import jstack.jscripter.transpiler.model.Async;
                     import jstack.jscripter.transpiler.model.ErasedInterface;
                     public class Test {
                       @ErasedInterface
                       interface Foo {
-                        @async void foo();
+                        @Async void foo();
                       }
                       Foo instance = () -> {};
                       {
@@ -297,12 +297,12 @@ public class _08AsyncAwait {
         assertCompiled(
             """
                 package js;
-                import jstack.jscripter.transpiler.model.async;
+                import jstack.jscripter.transpiler.model.Async;
                 import jstack.jscripter.transpiler.model.ErasedInterface;
                 public class Test {
                   @ErasedInterface
                   interface Foo {
-                    @async void foo();
+                    @Async void foo();
                   }
                   void doo() {};
                   void bar() {

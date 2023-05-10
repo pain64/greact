@@ -1,7 +1,7 @@
 package jstack.jscripter.transpiler.generate.util;
 
 import jstack.jscripter.transpiler.model.Static;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -99,7 +99,7 @@ public class Overloads {
         Function<Stream<Section>, Boolean> isAsyncPartial = part ->
             part.anyMatch(section ->
                 section.entries.stream()
-                    .anyMatch(entry -> entry.method.getAnnotation(async.class) != null));
+                    .anyMatch(entry -> entry.method.getAnnotation(Async.class) != null));
 
         return new Pair<>(
             isAsyncPartial.apply(sections.stream().skip(1)), // in super

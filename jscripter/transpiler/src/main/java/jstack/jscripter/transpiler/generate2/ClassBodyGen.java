@@ -13,7 +13,7 @@ import jstack.jscripter.transpiler.generate.util.Overloads.OverloadTable;
 import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
 import jstack.jscripter.transpiler.generate2.lookahead.HasSelfConstructorCall;
 import jstack.jscripter.transpiler.model.Static;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -82,7 +82,7 @@ abstract class ClassBodyGen extends StatementGen {
 
         withStaticMethodCall(method.sym.isStatic(),
             () -> {
-                withAsyncContext(method.sym.getAnnotation(async.class) != null, () -> {
+                withAsyncContext(method.sym.getAnnotation(Async.class) != null, () -> {
                     if (!statements.isEmpty()) // super constructor invocation
                         statements.get(0).accept(this);
 
@@ -113,7 +113,7 @@ abstract class ClassBodyGen extends StatementGen {
 
         var anyMethodHasAsyncCalls = false;
         for (var method : methods) {
-            var isAsync = method.snd.sym.getAnnotation(async.class) != null;
+            var isAsync = method.snd.sym.getAnnotation(Async.class) != null;
             if (isAsync && isConstructor) {
                 var line = super.cu.getLineMap().getLineNumber(method.snd.pos);
                 var col = super.cu.getLineMap().getColumnNumber(method.snd.pos);

@@ -6,7 +6,7 @@ import jstack.greact.dom.HTMLNativeElements.div;
 import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.uikit.controls.Control;
 
 @Require.CSS("search_box.css")
@@ -20,23 +20,23 @@ public class SearchBox implements Component0<div> {
     Component0<div> loaded;
 
     @FunctionalInterface public interface AsyncSupplier<T> {
-        @async T load();
+        @Async T load();
     }
 
     @FunctionalInterface public interface AsyncFunc1<A1, R> {
-        @async R load(A1 a1);
+        @Async R load(A1 a1);
     }
 
     @FunctionalInterface public interface AsyncFunc2<A1, A2, R> {
-        @async R load(A1 a1, A2 a2);
+        @Async R load(A1 a1, A2 a2);
     }
 
     @FunctionalInterface public interface AsyncFunc3<A1, A2, A3, R> {
-        @async R load(A1 a1, A2 a2, A3 a3);
+        @Async R load(A1 a1, A2 a2, A3 a3);
     }
 
     @FunctionalInterface public interface AsyncFunc4<A1, A2, A3, A4, R> {
-        @async R load(A1 a1, A2 a2, A3 a3, A4 a4);
+        @Async R load(A1 a1, A2 a2, A3 a3, A4 a4);
     }
 
     <V> void push(V[] array, V value) {
@@ -70,7 +70,7 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this._performChangedEffects()");
     }
 
-    @async void performChangedEffects() {
+    @Async void performChangedEffects() {
         if (canSearch)
             loaded = loader.load();
 
@@ -101,7 +101,7 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    @Override @async public div mount() {
+    @Override @Async public div mount() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();

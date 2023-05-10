@@ -3,17 +3,16 @@ package jstack.greact.uikit;
 import jstack.greact.dom.HTMLElement;
 import jstack.greact.dom.HTMLNativeElements.*;
 import jstack.jscripter.transpiler.model.ErasedInterface;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class GridConfig2<T> {
     @FunctionalInterface public interface AsyncHandler<T> {
-        @async void handle(T value);
+        @Async void handle(T value);
     }
     @FunctionalInterface public interface AsyncSupplier<T> {
-        @async T supply(T value);
+        @Async T supply(T value);
     }
 
     @ErasedInterface public interface RowHandler<T> {

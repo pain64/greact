@@ -1,7 +1,11 @@
 package jstack.greact.uikit;
 
+import jstack.greact.dom.Globals;
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.dom.HTMLNativeElements.a;
+import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.dom.HTMLNativeElements.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 
@@ -37,12 +41,12 @@ public class Dropdown implements Component0<div> {
                 hideDiv[0] = this;
                 var hide = this;
 
-                JSExpression.of("""
-                 document.addEventListener('click', (event) => {
-                   if (!(dropdown.contains(event.target)) && !event.target.matches('.dropdown-menu'))
-                     hide.style.display = 'none';
-                 });
-                """);
+                Globals.document.addEventListener("click", (event) -> {
+                    if (!dropdown.contains(event.target) && !event.target.matches(".dropdown-menu")) {
+                        hideDiv[0].style.display = "none";
+                    }
+                });
+
                 className = "dropdown-menu";
 
                 for (var item : items) {
