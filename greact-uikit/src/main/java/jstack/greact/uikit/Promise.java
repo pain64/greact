@@ -1,14 +1,14 @@
 package jstack.greact.uikit;
 
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 public class Promise<T> {
     @FunctionalInterface public interface AsyncFunction<A1> {
-        @async void run(A1 a1);
+        @Async void run(A1 a1);
     }
     @FunctionalInterface public interface AsyncBiFunction<A1, A2> {
-        @async void load(A1 a1, A2 a2);
+        @Async void load(A1 a1, A2 a2);
     }
 
     private final AsyncBiFunction<AsyncFunction<T>, AsyncFunction<T>> func;

@@ -1,13 +1,14 @@
 package ui.analyze;
 
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.dom.*;
 import jstack.greact.dom.HTMLNativeElements.*;
 
 public class FindEffectCallsTest {
     /* annotate class or interface method */
-    @async String fetchData() {
+    @Async
+    String fetchData() {
         return JSExpression.of("""
             await (
                 await fetch('https://some.com')
@@ -18,7 +19,8 @@ public class FindEffectCallsTest {
      * compiler force us to annotate because of call
      * async method
      */
-    @async String concat() {
+    @Async
+    String concat() {
        return fetchData() + fetchData();
     }
 

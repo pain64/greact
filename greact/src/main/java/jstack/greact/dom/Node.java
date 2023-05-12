@@ -4,6 +4,7 @@ import jstack.jscripter.transpiler.model.JSNativeAPI;
 
 @JSNativeAPI public class Node {
     public Node parentNode;
+    public boolean isConnected;
     public Node nextSibling;
     public Node previousSibling;
     public int childElementCount;

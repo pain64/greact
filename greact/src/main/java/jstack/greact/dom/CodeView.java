@@ -1,6 +1,6 @@
 package jstack.greact.dom;
 
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.dom.HTMLNativeElements.Component0;
 import jstack.greact.dom.HTMLNativeElements.Component1;
 import jstack.greact.dom.HTMLNativeElements.div;
@@ -33,7 +33,7 @@ public class CodeView<T extends HTMLElement> implements Component0<div> {
         this.renderer = renderer;
         this.code = code;
     }
-    @Override @async public Component0<div> mount() {
+    @Override @Async public Component0<div> mount() {
         return GReact.mmountAwaitView(renderer, new CodeAndView<>(code, view));
     }
 }

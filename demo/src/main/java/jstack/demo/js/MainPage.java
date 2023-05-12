@@ -6,7 +6,7 @@ import jstack.greact.dom.HTMLNativeElements.h2;
 import jstack.greact.uikit.Grid;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 import static jstack.demo.Dialect.*;
 import static jstack.demo.Main.Server.server;
@@ -17,7 +17,8 @@ public class MainPage implements Component0<div> {
         long id, String name, String email, int age, Gender gender, Term term
     ) { }
 
-    @Override @async public div mount() {
+    @Override @Async
+    public div mount() {
         return new div() {{
             new h2("Grid usage example");
 

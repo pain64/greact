@@ -1,7 +1,7 @@
 package jstack.greact.dom;
 
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 import java.util.function.Consumer;
 
@@ -26,7 +26,7 @@ public class Globals {
     public static java.lang.Runnable rpcAfterSuccess = () -> {};
     public static Consumer<String> rpcAfterError = err -> {};
 
-    @async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
+    @Async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         // FIXME: migrate to java version for try/catch/finally
         JSExpression.ofAsync("""
             try {

@@ -3,7 +3,7 @@ package jstack.greact.dom;
 import jstack.jscripter.transpiler.model.DoNotTranspile;
 import jstack.jscripter.transpiler.model.ErasedInterface;
 import jstack.jscripter.transpiler.model.JSNativeAPI;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 public class HTMLNativeElements {
     @ErasedInterface
@@ -14,21 +14,21 @@ public class HTMLNativeElements {
 
     @ErasedInterface
     public interface Component0<T extends HTMLElement> extends Component<T> {
-        @async Component0<T> mount();
+        @Async Component0<T> mount();
     }
     @ErasedInterface
     public interface Component1<T extends HTMLElement, U> extends Component<T> {
-        @async Component0<T> mount(U u);
+        @Async Component0<T> mount(U u);
     }
 
     // FIXME: for remove
     @ErasedInterface
     public interface Component2<T extends HTMLElement, U, V>  extends Component<T> {
-        @async Component0<T> mount(U u, V v);
+        @Async Component0<T> mount(U u, V v);
     }
     @ErasedInterface
     public interface Component3<T extends HTMLElement, A1, A2, A3>  extends Component<T> {
-        @async Component0<T> mount(A1 a1, A2 a2, A3 a3);
+        @Async Component0<T> mount(A1 a1, A2 a2, A3 a3);
     }
 
     @ErasedInterface

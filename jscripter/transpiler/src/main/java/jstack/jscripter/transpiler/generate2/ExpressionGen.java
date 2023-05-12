@@ -15,7 +15,7 @@ import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
 import jstack.jscripter.transpiler.model.ClassRef;
 import jstack.jscripter.transpiler.model.ErasedInterface;
 import jstack.jscripter.transpiler.model.JSNativeAPI;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -356,7 +356,7 @@ abstract class ExpressionGen extends VisitorWithContext {
 //                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
 //                .findFirst().get(); // FIXME
 
-            var isAsync = invokeMethod.getAnnotation(async.class) != null;
+            var isAsync = invokeMethod.getAnnotation(Async.class) != null;
             var visitor = new HasAsyncCalls(super.stdShim, super.types);
             lmb.body.accept(visitor);
             if (isAsync && visitor.hasAsyncCalls) out.write("async ");

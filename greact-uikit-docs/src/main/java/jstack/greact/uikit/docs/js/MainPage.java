@@ -1,15 +1,15 @@
 package jstack.greact.uikit.docs.js;
 
-import jstack.greact.dom.HTMLNativeElements.*;
-import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.Require;
 import jstack.greact.dom.CodeView;
 import jstack.greact.dom.CodeView.CodeAndView;
 import jstack.greact.dom.HTMLElement;
+import jstack.greact.dom.HTMLNativeElements.*;
 import jstack.greact.uikit.Grid;
 import jstack.greact.uikit.Tab;
 import jstack.greact.uikit.Tabs;
 import jstack.greact.uikit.controls.CheckBox;
+import jstack.jscripter.transpiler.model.JSExpression;
+import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {

@@ -1,11 +1,11 @@
 package jstack.greact.uikit;
 
 import jstack.jscripter.transpiler.model.MemberRef;
-import jstack.jscripter.transpiler.model.async;
+import jstack.jscripter.transpiler.model.Async;
 
 public class Generated<T, U> {
     @FunctionalInterface public interface AsyncSupplier<T> {
-        @async T supply();
+        @Async T supply();
     }
 
     final String[] memberNames;
