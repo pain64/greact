@@ -2,7 +2,7 @@ package jstack.greact.dom;
 
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
-import jstack.greact.dom.HTMLNativeElements.Component;
+import jstack.greact.html.Component;
 
 import java.util.function.Consumer;
 

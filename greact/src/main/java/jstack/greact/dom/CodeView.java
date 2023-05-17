@@ -1,9 +1,9 @@
 package jstack.greact.dom;
 
 import jstack.jscripter.transpiler.model.Async;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.Component1;
-import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.html.Component0;
+import jstack.greact.html.Component1;
+import jstack.greact.html.div;
 
 
 public class CodeView<T extends HTMLElement> implements Component0<div> {

@@ -1,8 +1,8 @@
 package jstack.demo.js;
 
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.h2;
+import jstack.greact.html.Component0;
+import jstack.greact.html.div;
+import jstack.greact.html.h2;
 import jstack.greact.uikit.Grid;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;

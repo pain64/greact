@@ -1,6 +1,8 @@
 package jstack.greact;
 
 import jstack.greact.EffectCallFinder.Effect;
+import jstack.greact.html.DomProperty;
+import jstack.greact.html.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
@@ -12,7 +14,6 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import jstack.greact.dom.GReact;
-import jstack.greact.dom.HTMLNativeElements;
 import jstack.greact.dom.Node;
 
 import java.util.*;
@@ -34,7 +35,7 @@ public class NewClassPatcher2 {
         Symbol.ClassSymbol clString = util.lookupClass(String.class);
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
-        Symbol.ClassSymbol clSlot = util.lookupClass(HTMLNativeElements.slot.class);
+        Symbol.ClassSymbol clSlot = util.lookupClass(slot.class);
         Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
         Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
@@ -104,7 +105,7 @@ public class NewClassPatcher2 {
             .mapToObj(i -> {
                 var arg = me.translate(newClass.args.get(i));
                 var memberName = cons.params.get(i)
-                    .getAnnotation(HTMLNativeElements.DomProperty.class)
+                    .getAnnotation(DomProperty.class)
                     .value();
 
                 var argSymbol = util.lookupMemberOpt((Symbol.ClassSymbol) htmlElType.tsym, memberName)

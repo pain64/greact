@@ -1,6 +1,6 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.html.*;
 import jstack.greact.uikit.GridConfig2;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.JSExpression;

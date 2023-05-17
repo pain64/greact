@@ -1,6 +1,6 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements.input;
+import jstack.greact.html.input;
 import jstack.jscripter.transpiler.model.JSExpression;
 
 public class StrInput extends Input<String> {

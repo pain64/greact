@@ -2,6 +2,7 @@ package jstack.greact;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.tools.javac.util.*;
 import jstack.jscripter.transpiler.model.DoNotTranspile;
 import jstack.jscripter.transpiler.model.RPCEndPoint;
 import jstack.greact.rpc.RPC;
@@ -11,10 +12,6 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +56,8 @@ public class RPCPlugin {
     }
 
     final Symbols symbols;
+    final JCDiagnostic.Factory diagnosticsFactory;
+    final Log javacLog;
 
     public RPCPlugin(Context context) {
         this.context = context;
@@ -68,6 +67,8 @@ public class RPCPlugin {
         this.types = Types.instance(context);
         this.maker = TreeMaker.instance(context);
         this.symbols = new Symbols();
+        this.javacLog = Log.instance(context);
+        this.diagnosticsFactory = JCDiagnostic.Factory.instance(context);
     }
 
     JCTree.JCExpression buildStatic(Symbol sym) {
@@ -207,7 +208,16 @@ public class RPCPlugin {
                         if (invoke.meth instanceof JCTree.JCIdent id) {
                             var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
                             if (epAnnotation != null) {
-                                var nextEndpointName = "$endpoint" + idx.inc();
+
+                                var diagnostic = diagnosticsFactory.create(
+                                    new DiagnosticSource(cu.getSourceFile(), javacLog),
+                                    new JCDiagnostic.SimpleDiagnosticPosition(id.pos),
+                                    JCDiagnostic.DiagnosticInfo.of(
+                                        JCDiagnostic.DiagnosticType.NOTE, "", ""
+                                    )
+                                );
+
+                                var nextEndpointName = "$endpoint" + idx.inc() + "_line" + diagnostic.getLineNumber() + "_col" + diagnostic.getColumnNumber();
                                 var fullQualified = classDecl.sym.flatname + "." + nextEndpointName;
                                 var diType =
                                     ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);

@@ -1,9 +1,9 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLNativeElements.Component1;
-import jstack.greact.dom.HTMLNativeElements.Component2;
-import jstack.greact.dom.HTMLNativeElements.input;
-import jstack.greact.dom.HTMLNativeElements.td;
+import jstack.greact.html.Component1;
+import jstack.greact.html.Component2;
+import jstack.greact.html.input;
+import jstack.greact.html.td;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.MemberRef;
 import jstack.greact.uikit.controls.*;

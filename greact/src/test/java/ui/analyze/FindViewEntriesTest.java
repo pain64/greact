@@ -35,7 +35,7 @@ public class FindViewEntriesTest {
 
     @Test void at_return_in_mount_method() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div();
@@ -46,7 +46,7 @@ public class FindViewEntriesTest {
 
     @Test void at_component_lambda() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A {
                     Component0<div> slot = () -> new div();
                 }""",
@@ -55,7 +55,7 @@ public class FindViewEntriesTest {
 
     @Test void at_component_lambda_in_return() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A {
                     Component0<div> slot = () ->  {
                         return new div();
@@ -66,7 +66,7 @@ public class FindViewEntriesTest {
 
     @Test void at_component_lambda_in_nested() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A {
                     Component0<div> slot = () ->  {
                         Component0<h1> nestedSlot = () -> new h1();
@@ -78,7 +78,7 @@ public class FindViewEntriesTest {
 
     @Test void at_component_in_inner_class() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A implements Component0<div> {
                     static class B implements Component0<h1> {
                         @Override public h1 mount() {
@@ -94,7 +94,7 @@ public class FindViewEntriesTest {
 
     @Test void at_component_returns_component() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A implements Component0<h1> {
                     static class B implements Component0<h1> {
                         @Override public h1 mount() {
@@ -110,7 +110,7 @@ public class FindViewEntriesTest {
 
     @Test void via_superclass_implements_component() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A {
                     abstract static class B implements Component0<h1> {}
                     
@@ -129,7 +129,7 @@ public class FindViewEntriesTest {
          * FIXME: deny this ???
          */
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A implements Component0<h1> {
                     static class B implements Component0<h1> {
                         @Override public h1 mount() {
@@ -166,7 +166,7 @@ public class FindViewEntriesTest {
 
     @Test void nested_components_creation_should_work() {
         withAssert(HasViewsAssert.class, """
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                 class A implements Component0<div> {
                     @Override public div mount() {
                         return new div() {{

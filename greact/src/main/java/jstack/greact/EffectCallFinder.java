@@ -1,6 +1,6 @@
 package jstack.greact;
 
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.html.Component;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
@@ -31,7 +31,7 @@ public class EffectCallFinder {
     }
 
     class Symbols {
-        Symbol.ClassSymbol clComponent = util.lookupClass(HTMLNativeElements.Component.class);
+        Symbol.ClassSymbol clComponent = util.lookupClass(Component.class);
         Symbol.MethodSymbol effectMethod = util.lookupMember(clComponent, "effect");
     }
 

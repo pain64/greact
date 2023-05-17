@@ -1,6 +1,6 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.html.*;
 import jstack.greact.uikit.controls.Select;
 import jstack.jscripter.transpiler.model.JSExpression;
 

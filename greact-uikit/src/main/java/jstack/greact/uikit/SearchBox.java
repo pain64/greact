@@ -1,9 +1,9 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLNativeElements.Component;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.Component;
+import jstack.greact.html.Component0;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.Async;

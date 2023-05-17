@@ -1,6 +1,6 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.html.*;
 import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("table.css")

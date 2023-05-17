@@ -1,5 +1,6 @@
 package jstack.greact.dom;
 
+import jstack.greact.html.Component0;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
 
@@ -10,7 +11,7 @@ public class Globals {
     public static Document document = JSExpression.of("document");
     public static HTMLElement gReactElement;
 
-    public static <T extends HTMLElement> void gReactMount(T dest, HTMLNativeElements.Component0<T> element,
+    public static <T extends HTMLElement> void gReactMount(T dest, Component0<T> element,
                                                            Object... args) {
         gReactElement = dest;
         JSExpression.of("element instanceof Function ? element(...args) : element.mount(...args)");

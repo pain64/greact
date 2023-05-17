@@ -1,9 +1,8 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.Component0;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
 
 public class Tab { // FIXME: make inner class of Tabs?
     final String caption;

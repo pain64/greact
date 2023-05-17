@@ -1,9 +1,9 @@
 package jstack.greact.uikit;
 
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
-import jstack.greact.dom.HTMLNativeElements.span;
+import jstack.greact.html.Component0;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
+import jstack.greact.html.span;
 import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("tabs.css")

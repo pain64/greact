@@ -28,7 +28,7 @@ public class CallNoArgs {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
                         @jstack.jscripter.transpiler.model.DoNotTranspile
-                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                        public static java.lang.Object $endpoint0_line6_col13(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             return 42;
                         }
                        \s
@@ -38,7 +38,7 @@ public class CallNoArgs {
                        \s
                         @Async
                         void simple() {
-                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
+                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0_line6_col13");
                         }
                     }"""));
 
@@ -68,7 +68,7 @@ public class CallNoArgs {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
                         @jstack.jscripter.transpiler.model.DoNotTranspile
-                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                        public static java.lang.Object $endpoint0_line7_col13(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             return x0.method();
                         }
                        \s
@@ -78,7 +78,7 @@ public class CallNoArgs {
                        \s
                         @Async
                         void simple() {
-                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0");
+                            int x = jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0_line7_col13");
                         }
                     }"""));
 

@@ -9,8 +9,8 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.Component1;
+import jstack.greact.html.Component0;
+import jstack.greact.html.Component1;
 
 import java.util.ArrayList;
 import java.util.List;
