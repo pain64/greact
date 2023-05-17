@@ -24,6 +24,9 @@ public class TypeGen extends ClassBodyGen {
         for (var def : cu.defs) def.accept(this);
     }
 
+    @Override
+    public void visitSkip(JCTree.JCSkip that) { }
+
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
         if (classDef.extending != null && classDef.sym.getAnnotation(JSNativeAPI.class) == null
             && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
