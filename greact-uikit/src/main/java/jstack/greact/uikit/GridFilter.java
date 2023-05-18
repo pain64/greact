@@ -83,7 +83,11 @@ class GridFilter<T> implements Component0<div> {
                             if (finalFiltered.length > pageSizes[0]) {
                                 new Select<>(pageSizes) {{
                                     value = currentSize;
-                                    onchange = value -> effect(currentSize = value, currentPage = 1);
+                                    onchange = value -> {
+                                        // FIXME: move to one effect
+                                        currentSize = value;
+                                        effect(currentPage = 1);
+                                    };
                                 }};
 
                                 new span("записей на странице " + currentPage + " из " + nPages);
@@ -116,10 +120,7 @@ class GridFilter<T> implements Component0<div> {
             }};
             if (filterEnabled) {
                 if (showHint) {
-                    new h4("Помощь в использовании фильтра") {{
-                        style.color = "#0c3383"; style.paddingLeft = "10px";
-                        style.marginBottom = "10px";
-                    }};
+                    new h4("Помощь в использовании фильтра") {{ style.color = "#0c3383"; style.paddingLeft = "10px"; style.marginBottom = "10px"; }};
                     new div() {{
                         style.textAlign = "left";
                         style.padding = "20px";

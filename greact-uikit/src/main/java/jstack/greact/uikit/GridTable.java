@@ -104,7 +104,7 @@ import java.util.function.Consumer;
                             // add row to filtered data
                             // add row to grid data
                             JSExpression.of("this.rows.splice(0, 0, newRow)");
-                            effect((Object) rows);
+                            effect(rows);
                             effect(addNewRowMode = false);
                         },
                         () -> effect(addNewRowMode = false));

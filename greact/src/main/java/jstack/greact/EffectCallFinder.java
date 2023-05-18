@@ -94,13 +94,8 @@ public class EffectCallFinder {
                         );
                     };
 
-                    var setVarSymbol = new HashSet<Symbol.VarSymbol>();
-                    for (JCTree.JCExpression arg : tree.args) {
-                        setVarSymbol.add(fetchVarSymbol.apply(arg));
-                    }
-
                     result.get(currentClass)
-                        .add(new Effect(tree, setVarSymbol));
+                        .add(new Effect(tree, Set.of(fetchVarSymbol.apply(tree.args.get(0)))));
                 }
                 // assert that is class field ???
 
