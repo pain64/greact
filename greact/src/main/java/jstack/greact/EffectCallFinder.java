@@ -9,10 +9,7 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 public class EffectCallFinder {
@@ -97,8 +94,13 @@ public class EffectCallFinder {
                         );
                     };
 
+                    var setVarSymbol = new HashSet<Symbol.VarSymbol>();
+                    for (JCTree.JCExpression arg : tree.args) {
+                        setVarSymbol.add(fetchVarSymbol.apply(arg));
+                    }
+
                     result.get(currentClass)
-                        .add(new Effect(tree, Set.of(fetchVarSymbol.apply(tree.args.get(0)))));
+                        .add(new Effect(tree, setVarSymbol));
                 }
                 // assert that is class field ???
 
