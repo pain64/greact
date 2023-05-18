@@ -77,11 +77,6 @@ public class RPCPlugin {
             : maker.Select(buildStatic(sym.owner), sym);
     }
 
-    static class IdxHolder {
-        private int idx = 0;
-        int inc() { return idx++; }
-    }
-
     JCTree.JCExpression readJson(Symbol.MethodSymbol method, Symbol.VarSymbol argGson, Symbol.VarSymbol argData,
                                  int idx, Type argType) {
         var paramReadExpr = maker.App(
@@ -184,7 +179,6 @@ public class RPCPlugin {
     }
 
     void apply(JCTree.JCCompilationUnit cu) {
-        var idx = new IdxHolder();
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
@@ -217,7 +211,7 @@ public class RPCPlugin {
                                     )
                                 );
 
-                                var nextEndpointName = "$endpoint" + idx.inc() + "_line" + diagnostic.getLineNumber() + "_col" + diagnostic.getColumnNumber();
+                                var nextEndpointName = "$endpoint" + "_line" + diagnostic.getLineNumber() + "_col" + diagnostic.getColumnNumber();
                                 var fullQualified = classDecl.sym.flatname + "." + nextEndpointName;
                                 var diType =
                                     ((Symbol.MethodSymbol) id.sym).params.get(0).type.allparams().get(0);
