@@ -37,7 +37,7 @@ public class CallWithArgs {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
                         @jstack.jscripter.transpiler.model.DoNotTranspile
-                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                        public static java.lang.Object $endpoint_line10_col7(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             final int $closure1 = x1.treeToValue(x2.get(1), java.lang.Integer.class);
                             final int $closure0 = x1.treeToValue(x2.get(0), java.lang.Integer.class);
                             int z = $closure0 + $closure1;
@@ -52,7 +52,7 @@ public class CallWithArgs {
                         @Async
                         void simple() {
                             int y = 1;
-                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", x, y);
+                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint_line10_col7", x, y);
                         }
                     }"""));
 
@@ -87,7 +87,7 @@ public class CallWithArgs {
                        \s
                         @jstack.jscripter.transpiler.model.RPCEndPoint
                         @jstack.jscripter.transpiler.model.DoNotTranspile
-                        public static java.lang.Object $endpoint0(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
+                        public static java.lang.Object $endpoint_line9_col7(util.TestServer.DI x0, com.fasterxml.jackson.databind.ObjectMapper x1, java.util.List<com.fasterxml.jackson.databind.JsonNode> x2) {
                             final int $closure0 = x1.treeToValue(x2.get(0), java.lang.Integer.class);
                             int z = $closure0 + $closure0 + $closure0 + $closure0 + $closure0;
                             return z + 1;
@@ -101,7 +101,7 @@ public class CallWithArgs {
                         @Async
                         void simple() {
                             int y = 1;
-                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint0", y);
+                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint_line9_col7", y);
                         }
                     }"""));
 

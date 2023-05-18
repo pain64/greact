@@ -3,10 +3,10 @@ package jstack.greact.uikit;
 import jstack.greact.dom.Document;
 import jstack.greact.dom.Globals;
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.a;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.Component0;
+import jstack.greact.html.a;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
 import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("dropdown.css")

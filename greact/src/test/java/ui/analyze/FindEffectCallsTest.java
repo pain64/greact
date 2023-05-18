@@ -1,9 +1,8 @@
 package ui.analyze;
 
+import jstack.greact.html.*;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
-import jstack.greact.dom.*;
-import jstack.greact.dom.HTMLNativeElements.*;
 
 public class FindEffectCallsTest {
     /* annotate class or interface method */
@@ -24,7 +23,7 @@ public class FindEffectCallsTest {
        return fetchData() + fetchData();
     }
 
-    public static class MyPage implements Component0<HTMLNativeElements.div> {
+    public static class MyPage implements Component0<div> {
         @Override public div mount() {
             return new div() {{
                 new h1("hello, world");

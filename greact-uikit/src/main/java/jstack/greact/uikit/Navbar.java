@@ -1,7 +1,7 @@
 package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.html.*;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
 

@@ -1,7 +1,7 @@
 package jstack.greact.uikit.routing;
 
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.html.Component0;
+import jstack.greact.html.div;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.greact.dom.GReact;
 import jstack.greact.dom.Globals;

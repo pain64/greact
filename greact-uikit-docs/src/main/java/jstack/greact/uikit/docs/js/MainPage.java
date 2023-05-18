@@ -3,7 +3,7 @@ package jstack.greact.uikit.docs.js;
 import jstack.greact.dom.CodeView;
 import jstack.greact.dom.CodeView.CodeAndView;
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.*;
+import jstack.greact.html.*;
 import jstack.greact.uikit.Grid;
 import jstack.greact.uikit.Tab;
 import jstack.greact.uikit.Tabs;

@@ -1,12 +1,14 @@
 package jstack.greact;
 
-import jstack.greact.dom.HTMLNativeElements;
+import jstack.greact.html.Component0;
+import jstack.greact.html.HTMLElementAsComponent;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.*;
+import jstack.greact.html.slot;
 
 import java.util.*;
 import java.util.List;
@@ -36,9 +38,9 @@ public class Util {
     }
 
     class Symbols {
-        Symbol.ClassSymbol clComponent0 = lookupClass(HTMLNativeElements.Component0.class);
-        Symbol.ClassSymbol clNativeElementAsComponent = lookupClass(HTMLNativeElements.NativeElementAsComponent.class);
-        Symbol.ClassSymbol clSlot = lookupClass(HTMLNativeElements.slot.class);
+        Symbol.ClassSymbol clComponent0 = lookupClass(Component0.class);
+        Symbol.ClassSymbol clNativeElementAsComponent = lookupClass(HTMLElementAsComponent.class);
+        Symbol.ClassSymbol clSlot = lookupClass(slot.class);
     }
 
     public Symbol.ClassSymbol lookupClass(Class<?> klass) {

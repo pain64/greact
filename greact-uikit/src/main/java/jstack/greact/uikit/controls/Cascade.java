@@ -1,7 +1,7 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
 import jstack.greact.uikit.Promise;
 import jstack.jscripter.transpiler.model.Async;
 

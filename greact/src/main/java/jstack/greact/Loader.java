@@ -1,6 +1,6 @@
 package jstack.greact;
 
-import jstack.greact.dom.HTMLNativeElements.Component0;
+import jstack.greact.html.Component0;
 
 import java.io.IOException;
 import java.util.Arrays;

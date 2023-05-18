@@ -1,10 +1,11 @@
 package jstack.greact.uikit;
 
 import jstack.greact.dom.HTMLElement;
-import jstack.greact.dom.HTMLNativeElements.*;
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.ul;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.Component0;
+import jstack.greact.html.li;
+import jstack.greact.html.ul;
+import jstack.greact.html.slot;
+import jstack.greact.html.a;
 import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("navbar.css")

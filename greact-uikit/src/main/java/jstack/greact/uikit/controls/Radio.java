@@ -1,9 +1,9 @@
 package jstack.greact.uikit.controls;
 
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.input;
-import jstack.greact.dom.HTMLNativeElements.label;
-import jstack.greact.dom.HTMLNativeElements.span;
+import jstack.greact.html.div;
+import jstack.greact.html.input;
+import jstack.greact.html.label;
+import jstack.greact.html.span;
 import jstack.jscripter.transpiler.model.JSExpression;
 
 public class Radio<T> extends Control<T> {

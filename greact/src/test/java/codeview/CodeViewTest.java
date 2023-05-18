@@ -22,7 +22,7 @@ public class CodeViewTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.dom.CodeView;
                 import jstack.greact.dom.CodeView.CodeAndView;
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                                   
                 public class A implements Component0<div> {
                     Component1<div, CodeAndView> renderer = codeAndView ->
@@ -45,7 +45,7 @@ public class CodeViewTest {
                                 
                 import jstack.greact.dom.CodeView;
                 import jstack.greact.dom.CodeView.CodeAndView;
-                import jstack.greact.dom.HTMLNativeElements.*;
+                import jstack.greact.html.*;
                                 
                 public class A implements Component0<div> {
                    \s

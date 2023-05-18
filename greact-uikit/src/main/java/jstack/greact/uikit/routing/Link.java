@@ -1,8 +1,8 @@
 package jstack.greact.uikit.routing;
 
-import jstack.greact.dom.HTMLNativeElements.Component1;
-import jstack.greact.dom.HTMLNativeElements.div;
-import jstack.greact.dom.HTMLNativeElements.slot;
+import jstack.greact.html.Component1;
+import jstack.greact.html.div;
+import jstack.greact.html.slot;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.greact.uikit.Array;
 

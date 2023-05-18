@@ -1,8 +1,8 @@
 package jstack.greact.uikit.routing;
 
-import jstack.greact.dom.HTMLNativeElements.Component0;
-import jstack.greact.dom.HTMLNativeElements.a;
-import jstack.greact.dom.HTMLNativeElements.div;
+import jstack.greact.html.Component0;
+import jstack.greact.html.a;
+import jstack.greact.html.div;
 import jstack.greact.uikit.Array;
 
 public class Route implements Component0<a> {
