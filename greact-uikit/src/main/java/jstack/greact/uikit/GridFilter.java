@@ -54,9 +54,6 @@ class GridFilter<T> implements Component0<div> {
     public div mount() {
         return new div() {{
             new div() {{
-                var filterWords = Array.filter(
-                    stringSplit(filterValue, " "),
-                    s -> stringLength(s) != 0);
                 T[] filtered;
                 JSExpression.of("try{console.log()");
                 filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;

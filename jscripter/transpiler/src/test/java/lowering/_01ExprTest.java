@@ -737,4 +737,32 @@ public class _01ExprTest {
                     }
                     """));
     }
+
+    @Test
+    void stringEquals() throws IOException {
+        assertCompiledMany(
+            new CompileCase("js.A",
+                """
+                    package js;
+                                        
+                    class A {
+                        java.lang.String filterValue = "";
+                        public void f() {
+                            var flag = !filterValue.equals("");
+                        }
+                    }""",
+                """
+                    class js_A {
+                      constructor() {
+                        const __init__ = () => {
+                          this.filterValue = '';
+                        };
+                        __init__();
+                      }
+                      _f() {
+                        const flag = !std_java_lang_String._equals.call(this.filterValue, '');
+                      }
+                    }
+                    """));
+    }
 }
