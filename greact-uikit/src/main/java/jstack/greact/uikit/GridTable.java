@@ -85,8 +85,7 @@ import java.util.function.Consumer;
                                     new div("grid-i-plus");
                                     onclick = ev -> {
                                         keepSizes();
-                                        effect(addNewRowMode = true);
-                                        effect(columnSizes);
+                                        effect(columnSizes, addNewRowMode = true);
                                         clearSizes();
                                     };
                                 }};
@@ -104,8 +103,7 @@ import java.util.function.Consumer;
                             // add row to filtered data
                             // add row to grid data
                             JSExpression.of("this.rows.splice(0, 0, newRow)");
-                            effect(rows);
-                            effect(addNewRowMode = false);
+                            effect(rows, addNewRowMode = false);
                         },
                         () -> effect(addNewRowMode = false));
 

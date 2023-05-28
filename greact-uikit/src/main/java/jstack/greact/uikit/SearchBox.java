@@ -74,8 +74,7 @@ public class SearchBox implements Component0<div> {
         if (canSearch)
             loaded = loader.load();
 
-        effect(controlsWithChildren);
-        effect(canSearch);
+        effect(controlsWithChildren, canSearch);
     }
 
     void nativeInit(/* arguments... */) {

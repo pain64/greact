@@ -7,5 +7,5 @@ import jstack.jscripter.transpiler.model.ErasedInterface;
 @ErasedInterface
 public interface Component<T extends HTMLElement> {
     @DoNotTranspile
-    default void effect(Object expression) { }
+    default void effect(Object... expression) { }
 }

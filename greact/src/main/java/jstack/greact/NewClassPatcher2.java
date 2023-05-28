@@ -17,6 +17,7 @@ import jstack.greact.dom.GReact;
 import jstack.greact.dom.Node;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -150,16 +151,24 @@ public class NewClassPatcher2 {
         for (var i = 0; i < effects.size(); i++) {
             var effect = effects.get(i);
 
+            var types = allEffectedVars.stream().map(n -> symbols.clObject.type).toArray(Type[]::new);
+
             var methodSym = new Symbol.MethodSymbol(
                 Flags.PRIVATE,
                 names.fromString("_effect" + i),
                 new Type.MethodType(
-                    com.sun.tools.javac.util.List.of(symbols.clObject.type),
+                    com.sun.tools.javac.util.List.from(types),
                     new Type.JCVoidType(), com.sun.tools.javac.util.List.nil(), classDecl.sym),
                 classDecl.sym);
 
-            methodSym.params = com.sun.tools.javac.util.List.of(new Symbol.VarSymbol(
-                0, names.fromString("x0"), symbols.clObject.type, methodSym));
+            var ind = new AtomicInteger();
+            var varSymbols = allEffectedVars.stream()
+                .map(n -> new Symbol.VarSymbol(0,
+                    names.fromString("x" + ind.getAndIncrement()), symbols.clObject.type, methodSym))
+                .toArray(Symbol.VarSymbol[]::new);
+
+            methodSym.params = List.from(varSymbols);
+
             classDecl.sym.members_field.enterIfAbsent(methodSym);
             effect.invocation().meth = maker.Ident(methodSym);
 
