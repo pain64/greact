@@ -134,7 +134,7 @@ public class NewClassPatcher2 {
         var allEffectedVars = effects.stream()
             .flatMap(ef -> ef.effected().stream())
             .collect(Collectors.toCollection(LinkedHashSet::new));
-
+        System.out.println(allEffectedVars);
         var allViewEntries = new ArrayList<JCTree.JCNewClass>();
         classDecl.accept(new TreeScanner() {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
@@ -151,7 +151,7 @@ public class NewClassPatcher2 {
         for (var i = 0; i < effects.size(); i++) {
             var effect = effects.get(i);
 
-            var types = allEffectedVars.stream().map(n -> symbols.clObject.type).toArray(Type[]::new);
+            var types = effect.effected().stream().map(n -> symbols.clObject.type).toArray(Type[]::new);
 
             var methodSym = new Symbol.MethodSymbol(
                 Flags.PRIVATE,
@@ -162,7 +162,7 @@ public class NewClassPatcher2 {
                 classDecl.sym);
 
             var ind = new AtomicInteger();
-            var varSymbols = allEffectedVars.stream()
+            var varSymbols = effect.effected().stream()
                 .map(n -> new Symbol.VarSymbol(0,
                     names.fromString("x" + ind.getAndIncrement()), symbols.clObject.type, methodSym))
                 .toArray(Symbol.VarSymbol[]::new);

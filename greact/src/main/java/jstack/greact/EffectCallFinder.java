@@ -94,6 +94,7 @@ public class EffectCallFinder {
                         );
                     };
                     var listVar = tree.args.stream().map(fetchVarSymbol).toList();
+                    System.out.println(listVar);
                     result.get(currentClass).add(new Effect(tree, new LinkedHashSet<>(listVar)));
                 }
                 // assert that is class field ???

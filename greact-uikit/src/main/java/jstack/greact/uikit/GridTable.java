@@ -105,7 +105,9 @@ import java.util.function.Consumer;
                             JSExpression.of("this.rows.splice(0, 0, newRow)");
                             effect(rows, addNewRowMode = false);
                         },
-                        () -> effect(addNewRowMode = false));
+                        () -> {
+                        effect(addNewRowMode = false);
+                        });
 
                 for (var row : rows) {
                     if (row.editing)

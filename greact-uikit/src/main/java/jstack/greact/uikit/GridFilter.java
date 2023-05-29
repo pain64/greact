@@ -64,7 +64,10 @@ class GridFilter<T> implements Component0<div> {
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
                 effectUnaffectedMe(() ->
-                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)")));
+                {
+                    var x = 1;
+                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)"), x = 1);
+                });
 
                 if (filtered.length > pageSizes[0] || conf.title != null) {
                     T[] finalFiltered = filtered;
@@ -81,9 +84,7 @@ class GridFilter<T> implements Component0<div> {
                                 new Select<>(pageSizes) {{
                                     value = currentSize;
                                     onchange = value -> {
-                                        // FIXME: move to one effect
-                                        currentSize = value;
-                                        effect(currentPage = 1);
+                                        effect(currentSize = value, currentPage = 1);
                                     };
                                 }};
 
@@ -103,12 +104,16 @@ class GridFilter<T> implements Component0<div> {
                                 new div() {{
                                     new div("grid-i-chevron-left");
                                     className = "page-turn";
-                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, -1));
+                                    onclick = ev -> {
+                                        effect(currentPage = switchPage(currentPage, nPages, -1));
+                                    };
                                 }};
                                 new div() {{
                                     new div("grid-i-chevron-right");
                                     className = "page-turn";
-                                    onclick = ev -> effect(currentPage = switchPage(currentPage, nPages, 1));
+                                    onclick = ev -> {
+                                        effect(currentPage = switchPage(currentPage, nPages, 1));
+                                    };
                                 }};
                             }
                         }};
@@ -117,7 +122,10 @@ class GridFilter<T> implements Component0<div> {
             }};
             if (filterEnabled) {
                 if (showHint) {
-                    new h4("Помощь в использовании фильтра") {{ style.color = "#0c3383"; style.paddingLeft = "10px"; style.marginBottom = "10px"; }};
+                    new h4("Помощь в использовании фильтра") {{
+                        style.color = "#0c3383"; style.paddingLeft = "10px";
+                        style.marginBottom = "10px";
+                    }};
                     new div() {{
                         style.textAlign = "left";
                         style.padding = "20px";
@@ -135,7 +143,9 @@ class GridFilter<T> implements Component0<div> {
                     new input() {{
                         placeholder = "фильтр...";
                         className = "form-control";
-                        onkeyup = ev -> effect(filterValue = ((input) ev.target).value);
+                        onkeyup = ev -> {
+                            effect(filterValue = ((input) ev.target).value);
+                        };
                     }};
 
                     new div() {{
@@ -158,9 +168,7 @@ class GridFilter<T> implements Component0<div> {
                 new slot<>(
                     conf.pageView,
                     new GridTable<>(pageData, conf, filterEnabled, onRowSelect, () -> {
-                        effect(filterEnabled = !filterEnabled);
-                        effect(currentPage = 1);
-                        effect(filterValue = "");
+                        effect(filterEnabled = !filterEnabled, currentPage = 1, filterValue = "");
                     })
                 );
             }};
