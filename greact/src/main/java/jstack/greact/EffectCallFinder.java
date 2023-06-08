@@ -1,6 +1,5 @@
 package jstack.greact;
 
-import jstack.greact.html.Component;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
@@ -8,11 +7,9 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
+import jstack.greact.html.Component;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 public class EffectCallFinder {
@@ -96,9 +93,9 @@ public class EffectCallFinder {
                             )
                         );
                     };
-
-                    result.get(currentClass)
-                        .add(new Effect(tree, Set.of(fetchVarSymbol.apply(tree.args.get(0)))));
+                    var listVar = tree.args.stream().map(fetchVarSymbol).toList();
+                    System.out.println(listVar);
+                    result.get(currentClass).add(new Effect(tree, new LinkedHashSet<>(listVar)));
                 }
                 // assert that is class field ???
 

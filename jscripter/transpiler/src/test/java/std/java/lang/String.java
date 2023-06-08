@@ -8,4 +8,7 @@ public class String {
         return JSExpression.of(
             "this > anotherString ? 1 : this < anotherString ? -1 : 0");
     }
+    @Static public boolean equals(Object other) {
+        return JSExpression.of("this == other");
+    }
 }

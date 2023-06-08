@@ -532,6 +532,11 @@ abstract class ExpressionGen extends VisitorWithContext {
                     }
                     if (!isRecordAccessor) out.write("(");
                 } else {
+                    if (equalsNameAndString(methodSym.getQualifiedName(), "equals") &&
+                        prop.selected instanceof JCTree.JCIdent id &&
+                        inverseEqualsCalls.contains(id.name)) {
+                        out.write("!");
+                    }
                     var onType = shimmedType != null ? shimmedType : methodOwnerSym.type;
                     if (onType.tsym.isStatic() &&
                         onType.tsym.owner instanceof Symbol.ClassSymbol owner) {
