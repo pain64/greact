@@ -134,7 +134,7 @@ public class NewClassPatcher2 {
         var allEffectedVars = effects.stream()
             .flatMap(ef -> ef.effected().stream())
             .collect(Collectors.toCollection(LinkedHashSet::new));
-        System.out.println(allEffectedVars);
+
         var allViewEntries = new ArrayList<JCTree.JCNewClass>();
         classDecl.accept(new TreeScanner() {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
