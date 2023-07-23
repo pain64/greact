@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -170,10 +171,8 @@ public class SafeSql implements ConnectionHandle {
         return pstmt.getResultSet();
     }
 
-    @Override public <T> Iterator<T> queryAsIterator(String stmt, Class<T> toClass, Object... args) {
-        Function<Connection, Iterator<T>> doQuery = conn -> {
-            var data = new ArrayList<T>();
-
+    @Override public <T> Stream<T> queryAsStream(String stmt, Class<T> toClass, Object... args) {
+        Function<Connection, Stream<T>> doQuery = conn -> {
             try {
                 if (toClass.isRecord()) {
                     var mapper = reflectionMapper();
@@ -190,39 +189,72 @@ public class SafeSql implements ConnectionHandle {
                     cons.setAccessible(true);
                     var consArgs = new Object[cons.getParameters().length];
 
-                    while (rs.next()) {
-                        for (var i = 0; i < query.results.size(); i++) {
-                            var field = query.results.get(i).field;
-                            consArgs[i] = field.rw.read(rs, i + 1, field.type);
+                    return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
+                        Long.MAX_VALUE, Spliterator.ORDERED) {
+                        @Override
+                        public boolean tryAdvance(Consumer<? super T> action) {
+                            try {
+                                if (!rs.next()) return false;
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            try {
+                                for (var i = 0; i < query.results.size(); i++) {
+                                    var field = query.results.get(i).field;
+                                    consArgs[i] = field.rw.read(rs, i + 1, field.type);
+                                }
+                                action.accept(cons.newInstance(consArgs));
+                            } catch (SQLException | InvocationTargetException |
+                                     InstantiationException |
+                                     IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                            return true;
                         }
-
-                        data.add(cons.newInstance(consArgs));
-                    }
+                    }, false).onClose(() -> {
+                        try {
+                            rs.close();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                 } else {
                     var query = QueryBuilder.forQueryScalar(toClass, stmt, args.length);
                     logger.debug("EXEC QUERY:\n {}", query.text);
 
                     var rs = prepareAndExec(conn, query.text, query.arguments, args);
 
-                    while (rs.next())
-                        data.add((T) rs.getObject(1));
+                    return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
+                        Long.MAX_VALUE, Spliterator.ORDERED) {
+                        @Override
+                        public boolean tryAdvance(Consumer<? super T> action) {
+                            try {
+                                if (!rs.next()) return false;
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            try {
+                                action.accept((T) rs.getObject(1));
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            return true;
+                        }
+                    }, false).onClose(() -> {
+                        try {
+                            rs.close();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                 }
-            } catch (SQLException | IllegalAccessException | InvocationTargetException |
-                     InstantiationException ex) {
-                throw new RuntimeException(ex);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-
-            return data.iterator();
         };
 
         return connection != null
             ? doQuery.apply(connection) : inConnection(doQuery);
-    }
-
-    @Override public <T> Stream<T> queryAsStream(String stmt, Class<T> toClass, Object... args) {
-        return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(queryAsIterator(stmt, toClass, args), Spliterator.ORDERED),
-            false);
     }
 
     @Override public <T> List<T> queryAsList(String stmt, Class<T> toClass, Object... args) {
