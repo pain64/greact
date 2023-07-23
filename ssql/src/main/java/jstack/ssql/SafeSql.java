@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class SafeSql implements ConnectionHandle {
     private static final Logger logger = LoggerFactory.getLogger(SafeSql.class);
@@ -169,8 +170,8 @@ public class SafeSql implements ConnectionHandle {
         return pstmt.getResultSet();
     }
 
-    @Override public <T> T[] query(String stmt, Class<T> toClass, Object... args) {
-        Function<Connection, T[]> doQuery = conn -> {
+    @Override public <T> Iterator<T> queryAsIterator(String stmt, Class<T> toClass, Object... args) {
+        Function<Connection, Iterator<T>> doQuery = conn -> {
             var data = new ArrayList<T>();
 
             try {
@@ -211,11 +212,25 @@ public class SafeSql implements ConnectionHandle {
                 throw new RuntimeException(ex);
             }
 
-            return data.toArray(n -> (T[]) Array.newInstance(toClass, n));
+            return data.iterator();
         };
 
         return connection != null
             ? doQuery.apply(connection) : inConnection(doQuery);
+    }
+
+    @Override public <T> Stream<T> queryAsStream(String stmt, Class<T> toClass, Object... args) {
+        return StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(queryAsIterator(stmt, toClass, args), Spliterator.ORDERED),
+            false);
+    }
+
+    @Override public <T> List<T> queryAsList(String stmt, Class<T> toClass, Object... args) {
+        return queryAsStream(stmt, toClass, args).toList();
+    }
+
+    @Override public <T> T[] query(String stmt, Class<T> toClass, Object... args) {
+        return queryAsStream(stmt, toClass, args).toArray(n -> (T[]) Array.newInstance(toClass, n));
     }
 
     @Override
