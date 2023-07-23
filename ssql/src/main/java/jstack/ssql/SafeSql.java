@@ -195,21 +195,20 @@ public class SafeSql implements ConnectionHandle {
                         public boolean tryAdvance(Consumer<? super T> action) {
                             try {
                                 if (!rs.next()) return false;
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
+
                                 for (var i = 0; i < query.results.size(); i++) {
                                     var field = query.results.get(i).field;
                                     consArgs[i] = field.rw.read(rs, i + 1, field.type);
                                 }
+
                                 action.accept(cons.newInstance(consArgs));
+
+                                return true;
                             } catch (SQLException | InvocationTargetException |
                                      InstantiationException |
                                      IllegalAccessException e) {
                                 throw new RuntimeException(e);
                             }
-                            return true;
                         }
                     }, false).onClose(() -> {
                         try {
@@ -230,15 +229,12 @@ public class SafeSql implements ConnectionHandle {
                         public boolean tryAdvance(Consumer<? super T> action) {
                             try {
                                 if (!rs.next()) return false;
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
                                 action.accept((T) rs.getObject(1));
+
+                                return true;
                             } catch (SQLException e) {
                                 throw new RuntimeException(e);
                             }
-                            return true;
                         }
                     }, false).onClose(() -> {
                         try {
