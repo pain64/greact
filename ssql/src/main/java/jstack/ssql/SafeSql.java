@@ -213,6 +213,7 @@ public class SafeSql implements ConnectionHandle {
                     }, false).onClose(() -> {
                         try {
                             rs.close();
+                            conn.close();
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -239,6 +240,7 @@ public class SafeSql implements ConnectionHandle {
                     }, false).onClose(() -> {
                         try {
                             rs.close();
+                            conn.close();
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
                         }
@@ -249,16 +251,25 @@ public class SafeSql implements ConnectionHandle {
             }
         };
 
-        return connection != null
-            ? doQuery.apply(connection) : inConnection(doQuery);
+        try {
+            return connection == null
+                ? doQuery.apply(ds.getConnection())
+                : doQuery.apply(connection);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override public <T> List<T> queryAsList(String stmt, Class<T> toClass, Object... args) {
-        return queryAsStream(stmt, toClass, args).toList();
+        try (var stream = queryAsStream(stmt, toClass, args)) {
+            return stream.toList();
+        }
     }
 
     @Override public <T> T[] query(String stmt, Class<T> toClass, Object... args) {
-        return queryAsStream(stmt, toClass, args).toArray(n -> (T[]) Array.newInstance(toClass, n));
+        try (var stream = queryAsStream(stmt, toClass, args)) {
+            return stream.toArray(n -> (T[]) Array.newInstance(toClass, n));
+        }
     }
 
     @Override
