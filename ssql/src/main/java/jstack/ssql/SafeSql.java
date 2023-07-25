@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -172,80 +173,61 @@ public class SafeSql implements ConnectionHandle {
     }
 
     @Override public <T> Stream<T> queryAsStream(String stmt, Class<T> toClass, Object... args) {
-        Function<Connection, Stream<T>> doQuery = conn -> {
+        BiFunction<Connection, Boolean, Stream<T>> doQuery = (conn, isNewConnection) -> {
             try {
-                if (toClass.isRecord()) {
-                    var mapper = reflectionMapper();
-                    var query = QueryBuilder.forQueryTuple(
-                        Arrays.stream(toClass.getRecordComponents())
-                            .map(mapper::mapField).toList(), stmt, args.length
-                    );
-                    logger.debug("EXEC QUERY:\n {}", query.text);
+                var isRecord = toClass.isRecord();
+                var queryTuple = isRecord
+                    ? QueryBuilder.forQueryTuple(Arrays.stream(toClass.getRecordComponents())
+                        .map(reflectionMapper()::mapField).toList(), stmt, args.length)
+                    : null;
+                var queryScalar = !isRecord
+                    ? QueryBuilder.forQueryScalar(toClass, stmt, args.length)
+                    : null;
 
-                    var rs = prepareAndExec(conn, query.text, query.arguments, args);
+                logger.debug("EXEC QUERY:\n {}", isRecord ? queryTuple : queryScalar);
 
-                    @SuppressWarnings("unchecked")
-                    var cons = (Constructor<T>) toClass.getDeclaredConstructors()[0];
-                    cons.setAccessible(true);
-                    var consArgs = new Object[cons.getParameters().length];
+                var rs = isRecord ? prepareAndExec(conn, queryTuple.text, queryTuple.arguments, args)
+                    : prepareAndExec(conn, queryScalar.text, queryScalar.arguments, args);
 
-                    return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
-                        Long.MAX_VALUE, Spliterator.ORDERED) {
-                        @Override
-                        public boolean tryAdvance(Consumer<? super T> action) {
-                            try {
-                                if (!rs.next()) return false;
+                @SuppressWarnings("unchecked")
+                var cons = (Constructor<T>) toClass.getDeclaredConstructors()[0];
+                cons.setAccessible(true);
+                var consArgs = new Object[cons.getParameters().length];
 
-                                for (var i = 0; i < query.results.size(); i++) {
-                                    var field = query.results.get(i).field;
+                return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
+                    Long.MAX_VALUE, Spliterator.ORDERED) {
+                    @Override
+                    public boolean tryAdvance(Consumer<? super T> action) {
+                        try {
+                            if (!rs.next()) return false;
+
+                            if (isRecord) {
+                                for (var i = 0; i < queryTuple.results.size(); i++) {
+                                    var field = queryTuple.results.get(i).field;
                                     consArgs[i] = field.rw.read(rs, i + 1, field.type);
                                 }
 
                                 action.accept(cons.newInstance(consArgs));
-
-                                return true;
-                            } catch (SQLException | InvocationTargetException |
-                                     InstantiationException |
-                                     IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }, false).onClose(() -> {
-                        try {
-                            rs.close();
-                            conn.close();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } else {
-                    var query = QueryBuilder.forQueryScalar(toClass, stmt, args.length);
-                    logger.debug("EXEC QUERY:\n {}", query.text);
-
-                    var rs = prepareAndExec(conn, query.text, query.arguments, args);
-
-                    return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
-                        Long.MAX_VALUE, Spliterator.ORDERED) {
-                        @Override
-                        public boolean tryAdvance(Consumer<? super T> action) {
-                            try {
-                                if (!rs.next()) return false;
+                            } else
                                 action.accept((T) rs.getObject(1));
 
-                                return true;
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }, false).onClose(() -> {
-                        try {
-                            rs.close();
-                            conn.close();
-                        } catch (SQLException e) {
+                            return true;
+                        } catch (SQLException | InvocationTargetException |
+                                 InstantiationException |
+                                 IllegalAccessException e) {
                             throw new RuntimeException(e);
                         }
-                    });
-                }
+                    }
+                }, false).onClose(() -> {
+                    try {
+                        rs.close();
+                        if (isNewConnection)
+                            conn.close();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -253,8 +235,8 @@ public class SafeSql implements ConnectionHandle {
 
         try {
             return connection == null
-                ? doQuery.apply(ds.getConnection())
-                : doQuery.apply(connection);
+                ? doQuery.apply(ds.getConnection(), true)
+                : doQuery.apply(connection, false);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
