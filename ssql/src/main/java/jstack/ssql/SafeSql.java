@@ -178,7 +178,7 @@ public class SafeSql implements ConnectionHandle {
                 var isRecord = toClass.isRecord();
                 var queryTuple = isRecord
                     ? QueryBuilder.forQueryTuple(Arrays.stream(toClass.getRecordComponents())
-                        .map(reflectionMapper()::mapField).toList(), stmt, args.length)
+                    .map(reflectionMapper()::mapField).toList(), stmt, args.length)
                     : null;
                 var queryScalar = !isRecord
                     ? QueryBuilder.forQueryScalar(toClass, stmt, args.length)
@@ -190,9 +190,9 @@ public class SafeSql implements ConnectionHandle {
                     : prepareAndExec(conn, queryScalar.text, queryScalar.arguments, args);
 
                 @SuppressWarnings("unchecked")
-                var cons = (Constructor<T>) toClass.getDeclaredConstructors()[0];
-                cons.setAccessible(true);
-                var consArgs = new Object[cons.getParameters().length];
+                var cons = isRecord ? (Constructor<T>) toClass.getDeclaredConstructors()[0] : null;
+                if (isRecord) cons.setAccessible(true);
+                var consArgs = isRecord ? new Object[cons.getParameters().length] : null;
 
                 return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
                     Long.MAX_VALUE, Spliterator.ORDERED) {
