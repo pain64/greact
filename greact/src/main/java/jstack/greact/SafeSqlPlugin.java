@@ -3,7 +3,6 @@ package jstack.greact;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -23,10 +22,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.MirroredTypeException;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -67,6 +63,8 @@ public class SafeSqlPlugin {
         Symbol.ClassSymbol clClass = util.lookupClass(Class.class);
         List<Symbol.MethodSymbol> mtExec = util.lookupMemberAll(clSsql, "exec");
         List<Symbol.MethodSymbol> mtQuery = util.lookupMemberAll(clSsql, "query");
+        List<Symbol.MethodSymbol> mtQueryAsList = util.lookupMemberAll(clSsql, "queryAsList");
+        List<Symbol.MethodSymbol> mtQueryAsStream = util.lookupMemberAll(clSsql, "queryAsStream");
         List<Symbol.MethodSymbol> mtQueryOne = util.lookupMemberAll(clSsql, "queryOne");
         List<Symbol.MethodSymbol> mtQueryOneOrNull = util.lookupMemberAll(clSsql, "queryOneOrNull");
     }
@@ -114,6 +112,8 @@ public class SafeSqlPlugin {
 
         add.accept(symbols.mtExec, this::checkExec);
         add.accept(symbols.mtQuery, this::checkQuery);
+        add.accept(symbols.mtQueryAsList, this::checkQuery);
+        add.accept(symbols.mtQueryAsStream, this::checkQuery);
         add.accept(symbols.mtQueryOne, this::checkQuery);
         add.accept(symbols.mtQueryOneOrNull, this::checkQuery);
     }
