@@ -194,31 +194,34 @@ public class SafeSql implements ConnectionHandle {
                 if (isRecord) cons.setAccessible(true);
                 var consArgs = isRecord ? new Object[cons.getParameters().length] : null;
 
-                return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(
-                    Long.MAX_VALUE, Spliterator.ORDERED) {
-                    @Override
-                    public boolean tryAdvance(Consumer<? super T> action) {
-                        try {
-                            if (!rs.next()) return false;
+                return StreamSupport.stream(
+                    new Spliterators.AbstractSpliterator<T>(
+                        Long.MAX_VALUE, Spliterator.ORDERED
+                    ) {
+                        @Override
+                        public boolean tryAdvance(Consumer<? super T> action) {
+                            try {
+                                if (!rs.next()) return false;
 
-                            if (isRecord) {
-                                for (var i = 0; i < queryTuple.results.size(); i++) {
-                                    var field = queryTuple.results.get(i).field;
-                                    consArgs[i] = field.rw.read(rs, i + 1, field.type);
-                                }
+                                if (isRecord) {
+                                    for (var i = 0; i < queryTuple.results.size(); i++) {
+                                        var field = queryTuple.results.get(i).field;
+                                        consArgs[i] = field.rw.read(rs, i + 1, field.type);
+                                    }
 
-                                action.accept(cons.newInstance(consArgs));
-                            } else
-                                action.accept((T) rs.getObject(1));
+                                    action.accept(cons.newInstance(consArgs));
+                                } else
+                                    action.accept((T) rs.getObject(1));
 
-                            return true;
-                        } catch (SQLException | InvocationTargetException |
-                                 InstantiationException |
-                                 IllegalAccessException e) {
-                            throw new RuntimeException(e);
+                                return true;
+                            } catch (SQLException | InvocationTargetException |
+                                     InstantiationException |
+                                     IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
-                    }
-                }, false).onClose(() -> {
+                    }, false
+                ).onClose(() -> {
                     try {
                         rs.close();
                         if (isNewConnection)
@@ -227,7 +230,6 @@ public class SafeSql implements ConnectionHandle {
                         throw new RuntimeException(e);
                     }
                 });
-
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
