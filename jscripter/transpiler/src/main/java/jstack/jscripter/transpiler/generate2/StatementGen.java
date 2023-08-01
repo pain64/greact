@@ -1,6 +1,7 @@
 package jstack.jscripter.transpiler.generate2;
 
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 
 import java.util.List;
@@ -206,7 +207,8 @@ abstract class StatementGen extends ExpressionGen {
                 out.mkString(alternatives, alt -> {
                     out.write(firstCatchVar);
                     out.write(" instanceof ");
-                    out.replaceSymbolAndWrite(alt.type.tsym.getQualifiedName(), '.', '_');
+                    writeClassName(out, alt.type.tsym);
+//                    out.replaceSymbolAndWrite(alt.type.tsym.getQualifiedName(), '.', '_');
                 }, "", " || ", "");
 
                 out.write(")");
@@ -238,6 +240,17 @@ abstract class StatementGen extends ExpressionGen {
             out.write(" finally ");
             finallyBlock.accept(this);
             out.writeNL();
+        }
+    }
+    private void writeClassName(Output out, Symbol.TypeSymbol tsym) {
+        if (!tsym.isStatic())
+            out.replaceSymbolAndWrite(tsym.getQualifiedName(), '.', '_');
+        else {
+            if (tsym.owner instanceof Symbol.TypeSymbol owner)
+                writeClassName(out, owner);
+
+            out.write(".");
+            out.write(tsym.getSimpleName());
         }
     }
 }

@@ -33,6 +33,8 @@ public class TypeGen extends ClassBodyGen {
 //            throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
 //                "Prohibition of inheritance for @JSNativeAPI classes");
 
+        if (classDef.sym.getAnnotation(JSNativeAPI.class) != null) return;
+
         var isEnum = classDef.sym.isEnum();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
@@ -126,8 +128,6 @@ public class TypeGen extends ClassBodyGen {
             return;
         }
 
-        if (classDef.sym.getAnnotation(JSNativeAPI.class) != null) return;
-
         if (!classDef.type.tsym.isAnonymous() &&
             classDef.sym.owner instanceof Symbol.ClassSymbol) {
 
@@ -168,6 +168,7 @@ public class TypeGen extends ClassBodyGen {
             var stdShimType = stdShim.findShimmedType(extendClause);
 
             if (stdShimType != null) extendClause = stdShimType;
+            var isJsNativeApi = extendClause.tsym.getAnnotation(JSNativeAPI.class) != null;
 
             out.addDependency(extendClause.tsym.toString() + ".js");
             out.write(" extends ");
@@ -177,9 +178,15 @@ public class TypeGen extends ClassBodyGen {
                     out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
                     out.write("(");
                 });
-                out.replaceSymbolAndWrite(extendClause.tsym.getQualifiedName(), '.', '_');
-                implementClause.forEach(n -> out.write(")"));
-            } else out.replaceSymbolAndWrite(extendClause.tsym.getQualifiedName(), '.', '_');
+            }
+
+            out.replaceSymbolAndWrite(
+                isJsNativeApi
+                    ? extendClause.tsym.getSimpleName()
+                    : extendClause.tsym.getQualifiedName(),
+                '.', '_'
+            );
+            implementClause.forEach(n -> out.write(")"));
         } else if (!implementClause.isEmpty()) {
             out.write(" extends _");
             implementClause.forEach(n -> {

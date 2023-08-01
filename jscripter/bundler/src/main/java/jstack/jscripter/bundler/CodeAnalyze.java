@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -138,6 +139,17 @@ public class CodeAnalyze {
             pushDependencies2(module, dest, resource);
         return dest;
     }
+
+    static boolean isModADependsOnModB(
+        CodeAnalyze.ClassPathWithModule<String> mA,
+        CodeAnalyze.ClassPathWithModule<String> mB
+    ) {
+        return mA.mod.dependencies.values().stream().anyMatch(dependencies ->
+            dependencies.stream().anyMatch(dependency ->
+                mB.mod.resources.stream().anyMatch(r -> r.name.equals(dependency))
+            )
+        );
+    }
     static LibrariesCode fetchLibrariesCode(Project project) {
         var currentTime = System.currentTimeMillis();
 
@@ -148,6 +160,11 @@ public class CodeAnalyze {
         StreamSupport.stream(runtimeClassPath.spliterator(), false)
             .map(cp -> new ClassPathWithModule<>(cp, walkOverJar(cp)))
             .filter(cpWithMod -> cpWithMod.mod.resources.stream().anyMatch(r -> r.name.endsWith(".js")))
+            .sorted((m1, m2) -> {
+                if (isModADependsOnModB(m1, m2)) {
+                    return isModADependsOnModB(m2, m1) ? 0 : 1;
+                } else return -1;
+            })
             .forEach(cpWithMod -> {
                 var libResourcesOrdered = buildDependencies(cpWithMod.mod);
 
@@ -161,7 +178,9 @@ public class CodeAnalyze {
         System.out.println("lib js resolution took: " +
             (System.currentTimeMillis() - currentTime) + "ms");
 
-        return new LibrariesCode(js.toString(), css.toString());
+        return new
+            LibrariesCode(js.toString(), css.
+            toString());
     }
 
     static LinkedHashSet<RResource<Path>> fetchLocalCode(Project project) {
@@ -193,7 +212,8 @@ public class CodeAnalyze {
         return buildDependencies(localModule);
     }
 
-    record LibrariesCode(String js, String css) { }
+    record LibrariesCode(String js, String css) {
+    }
     static CharSequence replaceClassDeclarationWithWindow(String readString) {
         return readString.replaceAll("class (\\S*) \\{", "window.$1 = class {");
     }

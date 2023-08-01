@@ -1,10 +1,12 @@
 package lowering;
 
 import org.junit.jupiter.api.Test;
+import util.CompileAssert;
 
 import java.io.IOException;
 
 import static util.CompileAssert.assertCompiled;
+import static util.CompileAssert.assertCompiledMany;
 
 public class _02StmtTest {
     @Test
@@ -275,56 +277,101 @@ public class _02StmtTest {
                   }
                 }""",
             """
-                    class js_Test {
-                      constructor() {
+                class js_Test {
+                  constructor() {
+                  }
+                  static E1 = class extends std_java_lang_Exception {
+                    constructor($over, ...__args) {
+                      if($over === 11) {
+                        super(7, );
                       }
-                      static E1 = class extends std_java_lang_Exception {
-                        constructor($over, ...__args) {
-                          if($over === 11) {
-                            super(7, );
-                          }
-                        }
+                    }
+                  }
+                  static E2 = class extends std_java_lang_Exception {
+                    constructor($over, ...__args) {
+                      if($over === 11) {
+                        super(7, );
                       }
-                      static E2 = class extends std_java_lang_Exception {
-                        constructor($over, ...__args) {
-                          if($over === 11) {
-                            super(7, );
-                          }
-                        }
+                    }
+                  }
+                  static E3 = class extends std_java_lang_Exception {
+                    constructor($over, ...__args) {
+                      if($over === 11) {
+                        super(7, );
                       }
-                      static E3 = class extends std_java_lang_Exception {
-                        constructor($over, ...__args) {
-                          if($over === 11) {
-                            super(7, );
-                          }
-                        }
+                    }
+                  }
+                  static E4 = class extends std_java_lang_Exception {
+                    constructor($over, ...__args) {
+                      if($over === 11) {
+                        super(7, );
                       }
-                      static E4 = class extends std_java_lang_Exception {
-                        constructor($over, ...__args) {
-                          if($over === 11) {
-                            super(7, );
-                          }
-                        }
+                    }
+                  }
+                  _foo() {
+                  }
+                  _baz() {
+                    try {
+                      this._foo();
+                    } catch(e) {
+                      if(e instanceof js_Test.E1 || e instanceof js_Test.E2) {
+                        const x = e;
+                      } else if(e instanceof js_Test.E3) {
+                        const ee = e
+                        const y = ee;
+                      } else {
+                        throw e;
                       }
-                      _foo() {
-                      }
-                      _baz() {
-                        try {
-                          this._foo();
-                        } catch(e) {
-                          if(e instanceof js_Test_E1 || e instanceof js_Test_E2) {
-                            const x = e;
-                          } else if(e instanceof js_Test_E3) {
-                            const ee = e
-                            const y = ee;
-                          } else {
-                            throw e;
-                          }
-                        } finally {
-                          const z = 1;
+                    } finally {
+                      const z = 1;
+                    }
+                  }
+                }
+                """);
+    }
+
+    @Test
+    void throwNonInnerClassTest() throws IOException {
+        assertCompiledMany(
+            new CompileAssert.CompileCase("js.A", """
+                package js;
+                class A extends Exception {}
+                """,
+                """
+                    class js_A extends std_java_lang_Exception {
+                      constructor($over, ...__args) {
+                        if($over === 11) {
+                          super(7, );
                         }
                       }
                     }
-                    """);
+                    """),
+            new CompileAssert.CompileCase("js.Bar", """
+                package js;
+                import js.A;
+                class Bar {
+                  void bar() {
+                    try {
+                        throw new A();
+                    } catch (A a) {}
+                  }
+                }
+                """,
+                """
+                    class js_Bar {
+                      constructor() {
+                      }
+                      _bar() {
+                        try {
+                          throw new js_A(11, );
+                        } catch(a) {
+                          if(a instanceof js_A) {
+                          } else {
+                            throw a;
+                          }
+                        }}
+                    }
+                    """)
+        );
     }
 }

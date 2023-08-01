@@ -19,11 +19,27 @@ class GridFilter<T> implements Component0<div> {
     final GridConfig2<T> conf;
     final Consumer<T> onRowSelect;
 
-    static boolean isError = false;
-    static int errorPoz = -1;
-    static String errorMessage;
+    boolean isError;
+    int errorPoz;
+    String errorMessage;
 
-    static class ParseException extends RuntimeException { }
+    static class ParseException extends Exception {
+        final int errorPoz;
+        final String errorMessage;
+
+        ParseException() {
+            super();
+
+            this.errorMessage = "Ошибка парсера";
+            this.errorPoz = 0;
+        }
+        ParseException(String errorMessage, int poz) {
+            super(errorMessage);
+
+            this.errorMessage = errorMessage;
+            this.errorPoz = poz;
+        }
+    }
 
     GridFilter(T[] data, GridConfig2<T> conf, Consumer<T> onRowSelect) {
         this.data = data;
@@ -63,14 +79,17 @@ class GridFilter<T> implements Component0<div> {
                 T[] filtered;
                 try {
                     filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
+                    isError = false;
                 } catch (ParseException e) {
                     filtered = data;
+                    isError = true;
+                    errorPoz = e.errorPoz;
+                    errorMessage = e.errorMessage;
                 }
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
-                effectUnaffectedMe(() ->
-                {
+                effectUnaffectedMe(() -> {
                     var x = 1;
                     effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)"), x = 1);
                 });
@@ -220,12 +239,6 @@ class GridFilter<T> implements Component0<div> {
         return lex;
     }
 
-    public static void printError(String s, int i) { // TODO: static calls?
-        isError = true;
-        errorPoz = i;
-        errorMessage = s;
-    }
-
     public static class Lexeme {
         String lexeme;
         String value;
@@ -238,7 +251,7 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    public static Lexeme[] lex(String expr) {
+    public static Lexeme[] lex(String expr) throws ParseException {
         var res = new Lexeme[10]; // Array.push(res, acc);
         var acc = "";
 
@@ -260,8 +273,7 @@ class GridFilter<T> implements Component0<div> {
                 case "%":
                     if (prev.equals("\\\\")) acc += ch;
                     else if ((i == 0 || prev.equals(" ")) && (i == expr.length() - 1 || next.equals(" "))) {
-                        JSExpression.of("jstack_greact_uikit_GridFilter._printError('unexpected %', i)");
-                        JSExpression.of("throw new Error()");
+                        throw new ParseException("unexpected %", i);
                     } else acc += ".*";
                     break;
                 case "&":
@@ -287,8 +299,7 @@ class GridFilter<T> implements Component0<div> {
                     break;
                 default:  // any other char
                     if (prev.equals("\\\\")) {
-                        JSExpression.of("jstack_greact_uikit_GridFilter._printError('bad escape', i)");
-                        JSExpression.of("throw new Error()");
+                        throw new ParseException("bad escape", i);
                     }
                     acc += ch;
                     break;
@@ -341,10 +352,9 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    public static Tree parse(Lexeme[] tokens, int i) {
+    public static Tree parse(Lexeme[] tokens, int i) throws ParseException {
         if (i >= tokens.length) {
-            JSExpression.of("jstack_greact_uikit_GridFilter._printError('Ошибка выражения поиска', i - 1)");
-            JSExpression.of("throw new Error()");
+            throw new ParseException("Ошибка выражения поиска", i - 1);
         }
         var current = tokens[i];
 
@@ -356,8 +366,7 @@ class GridFilter<T> implements Component0<div> {
             var token = temp.token;
             temp = new Tree(0, new Token());
             if (!tokens[nextI].lexeme.equals("B_CLOSE")) {
-                JSExpression.of("jstack_greact_uikit_GridFilter._printError('Ожидали )', tokens[nextI].pos)");
-                JSExpression.of("throw new Error()");
+                throw new ParseException("Ожидали )", tokens[nextI].pos);
             }
             left = new Token("parens", token);
             i = nextI + 1;
