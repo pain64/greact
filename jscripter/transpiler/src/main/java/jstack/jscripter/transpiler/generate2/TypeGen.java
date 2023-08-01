@@ -28,10 +28,10 @@ public class TypeGen extends ClassBodyGen {
     public void visitSkip(JCTree.JCSkip that) { }
 
     @Override public void visitClassDef(JCTree.JCClassDecl classDef) {
-        if (classDef.extending != null && classDef.sym.getAnnotation(JSNativeAPI.class) == null
-            && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
-            throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
-                "Prohibition of inheritance for @JSNativeAPI classes");
+//        if (classDef.extending != null && classDef.sym.getAnnotation(JSNativeAPI.class) == null
+//            && classDef.extending.type.tsym.getAnnotation(JSNativeAPI.class) != null)
+//            throw new CompileException(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API,
+//                "Prohibition of inheritance for @JSNativeAPI classes");
 
         var isEnum = classDef.sym.isEnum();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
@@ -159,13 +159,17 @@ public class TypeGen extends ClassBodyGen {
 
             @Override public void visitClassDef(JCTree.JCClassDecl tree) { }
         }));
-        var extendClause = classDef.extending;
         var implementClause = classDef.implementing.stream()
             .filter(n -> !isAnnotatedErasedInterface((Symbol.ClassSymbol) TreeInfo.symbol(n)))
             .toList();
 
-        if (extendClause != null) {
-            out.addDependency(extendClause.type.tsym.toString() + ".js");
+        if (classDef.extending != null) {
+            var extendClause = classDef.extending.type;
+            var stdShimType = stdShim.findShimmedType(extendClause);
+
+            if (stdShimType != null) extendClause = stdShimType;
+
+            out.addDependency(extendClause.tsym.toString() + ".js");
             out.write(" extends ");
             if (!implementClause.isEmpty()) {
                 out.write("_");
@@ -173,9 +177,9 @@ public class TypeGen extends ClassBodyGen {
                     out.replaceSymbolAndWrite(n.type.tsym.getQualifiedName(), '.', '_');
                     out.write("(");
                 });
-                out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
+                out.replaceSymbolAndWrite(extendClause.tsym.getQualifiedName(), '.', '_');
                 implementClause.forEach(n -> out.write(")"));
-            } else out.replaceSymbolAndWrite(extendClause.type.tsym.getQualifiedName(), '.', '_');
+            } else out.replaceSymbolAndWrite(extendClause.tsym.getQualifiedName(), '.', '_');
         } else if (!implementClause.isEmpty()) {
             out.write(" extends _");
             implementClause.forEach(n -> {

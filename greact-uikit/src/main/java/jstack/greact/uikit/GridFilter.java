@@ -19,6 +19,12 @@ class GridFilter<T> implements Component0<div> {
     final GridConfig2<T> conf;
     final Consumer<T> onRowSelect;
 
+    static boolean isError = false;
+    static int errorPoz = -1;
+    static String errorMessage;
+
+    static class ParseException extends RuntimeException { }
+
     GridFilter(T[] data, GridConfig2<T> conf, Consumer<T> onRowSelect) {
         this.data = data;
         this.conf = conf;
@@ -55,11 +61,11 @@ class GridFilter<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 T[] filtered;
-                JSExpression.of("try{console.log()");
-                filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
-                JSExpression.of("}catch(e){console.log()");
-                filtered = data;
-                JSExpression.of("}");
+                try {
+                    filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
+                } catch (ParseException e) {
+                    filtered = data;
+                }
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
@@ -175,10 +181,6 @@ class GridFilter<T> implements Component0<div> {
         }};
     }
 
-    public static boolean isError = false;
-    public static int errorPoz = -1;
-    public static String errorMessage;
-
     private Lexeme[] addPriority(Lexeme[] lex) {
         var ind = 0;
         while (ind != -1) {
@@ -218,7 +220,7 @@ class GridFilter<T> implements Component0<div> {
         return lex;
     }
 
-    public static void printError(String s, int i) {
+    public static void printError(String s, int i) { // TODO: static calls?
         isError = true;
         errorPoz = i;
         errorMessage = s;
@@ -349,7 +351,7 @@ class GridFilter<T> implements Component0<div> {
         var left = new Token();
         if (tokens[i].lexeme.equals("B_OPEN")) {
             var temp = new Tree(0, new Token());
-            JSExpression.of("temp = jstack_greact_uikit_GridFilter._parse(tokens, i + 1)");
+            temp = parse(tokens, i + 1);
             var nextI = temp.poz;
             var token = temp.token;
             temp = new Tree(0, new Token());
@@ -372,7 +374,7 @@ class GridFilter<T> implements Component0<div> {
         if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR"))
             return new Tree(i, left);
         var temp = new Tree(0, new Token());
-        JSExpression.of("temp = jstack_greact_uikit_GridFilter._parse(tokens, i + 1)");
+        temp = parse(tokens, i + 1);
         var nextI = temp.poz;
         var right = temp.token;
         temp = new Tree(0, new Token());
@@ -403,17 +405,17 @@ class GridFilter<T> implements Component0<div> {
                     if (str == null) str = "";
                     str += ""; // FIXME: cast to string!!!
 
-                    if (JSExpression.<Boolean>of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
+                    if (JSExpression.of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
+                        if (JSExpression.of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
                             flag = true;
-                    } else if (JSExpression.<Boolean>of("expr.expr.startsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
+                    } else if (JSExpression.of("expr.expr.startsWith('.*')")) {
+                        if (JSExpression.of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
                             flag = true;
-                    } else if (JSExpression.<Boolean>of("expr.expr.endsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
+                    } else if (JSExpression.of("expr.expr.endsWith('.*')")) {
+                        if (JSExpression.of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
                             flag = true;
                     } else {
-                        if (JSExpression.<Boolean>of("str === expr.expr")) flag = true;
+                        if (JSExpression.of("str === expr.expr")) flag = true;
                     }
                 }
                 return flag;

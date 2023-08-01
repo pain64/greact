@@ -278,31 +278,31 @@ public class _02StmtTest {
                     class js_Test {
                       constructor() {
                       }
-                      static E1 = class extends java_lang_Exception {
+                      static E1 = class extends std_java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
-                            super(6, );
+                            super(7, );
                           }
                         }
                       }
-                      static E2 = class extends java_lang_Exception {
+                      static E2 = class extends std_java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
-                            super(6, );
+                            super(7, );
                           }
                         }
                       }
-                      static E3 = class extends java_lang_Exception {
+                      static E3 = class extends std_java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
-                            super(6, );
+                            super(7, );
                           }
                         }
                       }
-                      static E4 = class extends java_lang_Exception {
+                      static E4 = class extends std_java_lang_Exception {
                         constructor($over, ...__args) {
                           if($over === 11) {
-                            super(6, );
+                            super(7, );
                           }
                         }
                       }
