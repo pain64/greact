@@ -19,25 +19,13 @@ class GridFilter<T> implements Component0<div> {
     final GridConfig2<T> conf;
     final Consumer<T> onRowSelect;
 
-    boolean isError;
-    int errorPoz;
-    String errorMessage;
+    ParseException parseException = null;
 
     static class ParseException extends Exception {
-        final int errorPoz;
-        final String errorMessage;
-
-        ParseException() {
-            super();
-
-            this.errorMessage = "Ошибка парсера";
-            this.errorPoz = 0;
-        }
+        final int poz;
         ParseException(String errorMessage, int poz) {
             super(errorMessage);
-
-            this.errorMessage = errorMessage;
-            this.errorPoz = poz;
+            this.poz = poz;
         }
     }
 
@@ -79,12 +67,10 @@ class GridFilter<T> implements Component0<div> {
                 T[] filtered;
                 try {
                     filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
-                    isError = false;
+                    parseException = null;
                 } catch (ParseException e) {
                     filtered = data;
-                    isError = true;
-                    errorPoz = e.errorPoz;
-                    errorMessage = e.errorMessage;
+                    parseException = e;
                 }
 
                 var nPages = calcNPages(filtered, currentSize);
@@ -181,9 +167,9 @@ class GridFilter<T> implements Component0<div> {
                 }};
             }
             new div() {{
-                if (isError && filterEnabled && !filterValue.equals("")) {
+                if (parseException != null && filterEnabled && !filterValue.equals("")) {
                     new div() {{
-                        new h5(errorMessage) {{
+                        new h5(parseException.getMessage()) {{
                             this.className = "error";
                             this.style.color = "red";
                         }};
@@ -391,7 +377,6 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public T[] eval(T[] data, Token expr) {
-        isError = false;
         return Array.filter(data, v -> evalStatus(v, expr));
     }
 

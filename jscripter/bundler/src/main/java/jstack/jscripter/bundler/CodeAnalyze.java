@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -178,9 +177,7 @@ public class CodeAnalyze {
         System.out.println("lib js resolution took: " +
             (System.currentTimeMillis() - currentTime) + "ms");
 
-        return new
-            LibrariesCode(js.toString(), css.
-            toString());
+        return new LibrariesCode(js.toString(), css.toString());
     }
 
     static LinkedHashSet<RResource<Path>> fetchLocalCode(Project project) {
@@ -212,8 +209,7 @@ public class CodeAnalyze {
         return buildDependencies(localModule);
     }
 
-    record LibrariesCode(String js, String css) {
-    }
+    record LibrariesCode(String js, String css) { }
     static CharSequence replaceClassDeclarationWithWindow(String readString) {
         return readString.replaceAll("class (\\S*) \\{", "window.$1 = class {");
     }

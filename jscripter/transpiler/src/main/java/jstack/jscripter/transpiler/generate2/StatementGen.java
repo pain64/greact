@@ -208,7 +208,6 @@ abstract class StatementGen extends ExpressionGen {
                     out.write(firstCatchVar);
                     out.write(" instanceof ");
                     writeClassName(out, alt.type.tsym);
-//                    out.replaceSymbolAndWrite(alt.type.tsym.getQualifiedName(), '.', '_');
                 }, "", " || ", "");
 
                 out.write(")");
