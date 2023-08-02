@@ -19,6 +19,16 @@ class GridFilter<T> implements Component0<div> {
     final GridConfig2<T> conf;
     final Consumer<T> onRowSelect;
 
+    ParseException parseException = null;
+
+    static class ParseException extends Exception {
+        final int poz;
+        ParseException(String errorMessage, int poz) {
+            super(errorMessage);
+            this.poz = poz;
+        }
+    }
+
     GridFilter(T[] data, GridConfig2<T> conf, Consumer<T> onRowSelect) {
         this.data = data;
         this.conf = conf;
@@ -55,16 +65,17 @@ class GridFilter<T> implements Component0<div> {
         return new div() {{
             new div() {{
                 T[] filtered;
-                JSExpression.of("try{console.log()");
-                filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
-                JSExpression.of("}catch(e){console.log()");
-                filtered = data;
-                JSExpression.of("}");
+                try {
+                    filtered = !filterValue.equals("") ? eval(data, parse(addPriority(lex(filterValue)), 0).token) : data;
+                    parseException = null;
+                } catch (ParseException e) {
+                    filtered = data;
+                    parseException = e;
+                }
 
                 var nPages = calcNPages(filtered, currentSize);
                 var offset = (currentPage - 1) * currentSize;
-                effectUnaffectedMe(() ->
-                {
+                effectUnaffectedMe(() -> {
                     var x = 1;
                     effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)"), x = 1);
                 });
@@ -156,9 +167,9 @@ class GridFilter<T> implements Component0<div> {
                 }};
             }
             new div() {{
-                if (isError && filterEnabled && !filterValue.equals("")) {
+                if (parseException != null && filterEnabled && !filterValue.equals("")) {
                     new div() {{
-                        new h5(errorMessage) {{
+                        new h5(parseException.getMessage()) {{
                             this.className = "error";
                             this.style.color = "red";
                         }};
@@ -174,10 +185,6 @@ class GridFilter<T> implements Component0<div> {
             }};
         }};
     }
-
-    public static boolean isError = false;
-    public static int errorPoz = -1;
-    public static String errorMessage;
 
     private Lexeme[] addPriority(Lexeme[] lex) {
         var ind = 0;
@@ -218,12 +225,6 @@ class GridFilter<T> implements Component0<div> {
         return lex;
     }
 
-    public static void printError(String s, int i) {
-        isError = true;
-        errorPoz = i;
-        errorMessage = s;
-    }
-
     public static class Lexeme {
         String lexeme;
         String value;
@@ -236,7 +237,7 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    public static Lexeme[] lex(String expr) {
+    public static Lexeme[] lex(String expr) throws ParseException {
         var res = new Lexeme[10]; // Array.push(res, acc);
         var acc = "";
 
@@ -258,8 +259,7 @@ class GridFilter<T> implements Component0<div> {
                 case "%":
                     if (prev.equals("\\\\")) acc += ch;
                     else if ((i == 0 || prev.equals(" ")) && (i == expr.length() - 1 || next.equals(" "))) {
-                        JSExpression.of("jstack_greact_uikit_GridFilter._printError('unexpected %', i)");
-                        JSExpression.of("throw new Error()");
+                        throw new ParseException("unexpected %", i);
                     } else acc += ".*";
                     break;
                 case "&":
@@ -285,8 +285,7 @@ class GridFilter<T> implements Component0<div> {
                     break;
                 default:  // any other char
                     if (prev.equals("\\\\")) {
-                        JSExpression.of("jstack_greact_uikit_GridFilter._printError('bad escape', i)");
-                        JSExpression.of("throw new Error()");
+                        throw new ParseException("bad escape", i);
                     }
                     acc += ch;
                     break;
@@ -339,23 +338,21 @@ class GridFilter<T> implements Component0<div> {
         }
     }
 
-    public static Tree parse(Lexeme[] tokens, int i) {
+    public static Tree parse(Lexeme[] tokens, int i) throws ParseException {
         if (i >= tokens.length) {
-            JSExpression.of("jstack_greact_uikit_GridFilter._printError('Ошибка выражения поиска', i - 1)");
-            JSExpression.of("throw new Error()");
+            throw new ParseException("Ошибка выражения поиска", i - 1);
         }
         var current = tokens[i];
 
         var left = new Token();
         if (tokens[i].lexeme.equals("B_OPEN")) {
             var temp = new Tree(0, new Token());
-            JSExpression.of("temp = jstack_greact_uikit_GridFilter._parse(tokens, i + 1)");
+            temp = parse(tokens, i + 1);
             var nextI = temp.poz;
             var token = temp.token;
             temp = new Tree(0, new Token());
             if (!tokens[nextI].lexeme.equals("B_CLOSE")) {
-                JSExpression.of("jstack_greact_uikit_GridFilter._printError('Ожидали )', tokens[nextI].pos)");
-                JSExpression.of("throw new Error()");
+                throw new ParseException("Ожидали )", tokens[nextI].pos);
             }
             left = new Token("parens", token);
             i = nextI + 1;
@@ -372,7 +369,7 @@ class GridFilter<T> implements Component0<div> {
         if (!operator.lexeme.equals("OP_AND") && !operator.lexeme.equals("OP_OR"))
             return new Tree(i, left);
         var temp = new Tree(0, new Token());
-        JSExpression.of("temp = jstack_greact_uikit_GridFilter._parse(tokens, i + 1)");
+        temp = parse(tokens, i + 1);
         var nextI = temp.poz;
         var right = temp.token;
         temp = new Tree(0, new Token());
@@ -380,7 +377,6 @@ class GridFilter<T> implements Component0<div> {
     }
 
     public T[] eval(T[] data, Token expr) {
-        isError = false;
         return Array.filter(data, v -> evalStatus(v, expr));
     }
 
@@ -403,17 +399,17 @@ class GridFilter<T> implements Component0<div> {
                     if (str == null) str = "";
                     str += ""; // FIXME: cast to string!!!
 
-                    if (JSExpression.<Boolean>of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
+                    if (JSExpression.of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
+                        if (JSExpression.of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
                             flag = true;
-                    } else if (JSExpression.<Boolean>of("expr.expr.startsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
+                    } else if (JSExpression.of("expr.expr.startsWith('.*')")) {
+                        if (JSExpression.of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
                             flag = true;
-                    } else if (JSExpression.<Boolean>of("expr.expr.endsWith('.*')")) {
-                        if (JSExpression.<Boolean>of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
+                    } else if (JSExpression.of("expr.expr.endsWith('.*')")) {
+                        if (JSExpression.of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
                             flag = true;
                     } else {
-                        if (JSExpression.<Boolean>of("str === expr.expr")) flag = true;
+                        if (JSExpression.of("str === expr.expr")) flag = true;
                     }
                 }
                 return flag;

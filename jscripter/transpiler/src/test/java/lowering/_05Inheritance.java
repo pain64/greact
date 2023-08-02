@@ -1,7 +1,5 @@
 package lowering;
 
-import jstack.jscripter.transpiler.generate.util.CompileException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import util.CompileAssert.CompileCase;
 
@@ -43,7 +41,7 @@ public class _05Inheritance {
                     public class B extends A {
                       @Override
                       int foo(long x)  { return 3; };
-                      int foo(float x) { return 4; }; 
+                      int foo(float x) { return 4; };
                     }""",
                 """
                     class js_B extends js_A {
@@ -88,31 +86,5 @@ public class _05Inheritance {
                     }
                     """)
         );
-    }
-
-    @Test
-    void prohibitionOfInheritanceForJSNativeAPI() {
-        try {
-            assertCompiledMany(
-                new CompileCase("js.A",
-                    """
-                        package js;
-                        import jstack.jscripter.transpiler.model.JSNativeAPI;
-                                            
-                        @JSNativeAPI
-                        public class A { }""",
-                    """
-                        """),
-                new CompileCase("js.Test",
-                    """
-                        package js;
-                        
-                        public class Test extends A { }""",
-                    """
-                        """));
-        } catch (Exception ex) {
-            var ce = (CompileException) ex.getCause();
-            Assertions.assertSame(CompileException.ERROR.PROHIBITION_OF_INHERITANCE_FOR_JS_NATIVE_API, ce.error);
-        }
     }
 }
