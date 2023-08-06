@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jstack.jscripter.transpiler.model.RPCEndPoint;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.Reader;
@@ -42,7 +43,7 @@ public class RPC<T> {
     public RPC(String appBasePackage) {
         this.appBasePackage = appBasePackage;
         this.cache = new ConcurrentHashMap<>();
-        var files = System.getProperty("java.class.path")                                                                                .split(":");
+        var files = System.getProperty("java.class.path").split(":");
         this.isRelease = getClass().getResourceAsStream("/bundle/.release") != null;
         urls = Arrays.stream(files).map(p -> {
             try {
@@ -78,7 +79,8 @@ public class RPC<T> {
 
         for (var method : klass.getMethods())
             if (method.getName().equals(methodName)) {
-                if (method.getAnnotation(RPCEndPoint.class) == null) throw new RuntimeException("unreachable");
+                if (method.getAnnotation(RPCEndPoint.class) == null)
+                    throw new RuntimeException("unreachable");
                 method.setAccessible(true);
                 var result = method.invoke(null, di, mapper, req.args);
                 if (isRelease) cache.put(fullName, method);
@@ -89,8 +91,8 @@ public class RPC<T> {
         throw new RuntimeException("unreachable");
     }
 
-    public record  RPCError(String error) {}
-    public static String rpcErrorJson(String error) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(new RPCError(error));
+    public record RPCError(String msg, @Nullable String stacktrace) { }
+    public static String rpcErrorJson(String msg, @Nullable String stacktrace) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(new RPCError(msg, stacktrace));
     }
 }

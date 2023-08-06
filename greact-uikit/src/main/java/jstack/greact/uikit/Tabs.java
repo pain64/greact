@@ -32,7 +32,7 @@ public class Tabs implements Component0<div> {
             }};
             new div() {{
                 className = "tabs-body";
-                new slot<>(selected.view);
+                new slot<>(selected.getView());
             }};
         }};
     }

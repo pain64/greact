@@ -1,0 +1,59 @@
+.uk__error-box_view-div {
+    background-color: #fff3cd;
+    border: 1px solid #ffecb5;
+    margin: 10px;
+    width: calc(100% - 20px);
+    border-radius: 4px;
+}
+
+.uk__error-box_container {
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.uk__error-box_message-div {
+    text-align: center;
+    width: 400px;
+}
+
+.uk__error-box_buttons-div {
+    display: flex;
+    justify-content: right;
+    position: absolute;
+    margin-left: 440px;
+}
+
+.uk__error-box_copy-button {
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-copy'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.uk__error-box_stacktrace-button {
+    margin-left: 10px;
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-terminal'%3E%3Cpolyline points='4 17 10 11 4 5'%3E%3C/polyline%3E%3Cline x1='12' y1='19' x2='20' y2='19'%3E%3C/line%3E%3C/svg%3E");
+}
+
+.uk__error-box_copy-button:hover, .uk__error-box_stacktrace-button:hover {
+    border-radius: 5px;
+    background-color: #cfe2ff;
+}
+
+.uk__error-box_message-text {
+    font-size: 1.2rem;
+    font-weight: 450;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color: #664d03;
+}
+
+.uk__error-box_stacktrace-text {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 420;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color: #664d03;
+}

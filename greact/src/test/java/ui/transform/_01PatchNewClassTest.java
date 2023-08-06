@@ -1,13 +1,12 @@
 package ui.transform;
 
-import jstack.greact.EffectCallFinder;
-import jstack.greact.NewClassPatcher2;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import jstack.greact.EffectCallFinder;
+import jstack.greact.NewClassPatcher2;
 import org.junit.jupiter.api.Test;
 import util.AnalyzeAssertionsCompiler;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static util.AnalyzeAssertionsCompiler.withAssert;
 
