@@ -34,8 +34,8 @@ public class Globals {
     @Async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         // FIXME: migrate to java version for try/catch/finally
         JSExpression.ofAsync("""
+            this.rpcBeforeSend();
             try {
-              this.rpcBeforeSend();
               var resp = await fetch(url, {
                   method: 'POST',
                   headers: {
@@ -44,12 +44,12 @@ public class Globals {
                   body: JSON.stringify({ endpoint: endpoint, args: args})
               });
               var data = await resp.json()
-              if(resp.status == 500) { this.rpcBeforeSend(data.error); throw data.error; }
+              if (resp.status == 500) throw data.error;
               
               this.rpcAfterSuccess();
               return data;
             } catch(ex) {
-              this.rpcAfterError(data.msg, data.stacktrace);
+              this.rpcAfterError(data.msg, data.stackTrace);
               throw ex;
             } finally {
               this.rpcAfterSend();

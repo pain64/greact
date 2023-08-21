@@ -184,7 +184,7 @@ public class SafeSql implements ConnectionHandle {
                     ? QueryBuilder.forQueryScalar(toClass, stmt, args.length)
                     : null;
 
-                logger.debug("EXEC QUERY:\n {}", isRecord ? queryTuple : queryScalar);
+                logger.debug("EXEC QUERY:\n {}", isRecord ? queryTuple.text : queryScalar.text);
 
                 var rs = isRecord ? prepareAndExec(conn, queryTuple.text, queryTuple.arguments, args)
                     : prepareAndExec(conn, queryScalar.text, queryScalar.arguments, args);

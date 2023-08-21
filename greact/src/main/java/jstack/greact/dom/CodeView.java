@@ -33,7 +33,7 @@ public class CodeView<T extends HTMLElement> implements Component0<div> {
         this.renderer = renderer;
         this.code = code;
     }
-    @Override @Async public Component0<div> mount() {
+    @Override public Component0<div> mount() {
         return GReact.mmountAwaitView(renderer, new CodeAndView<>(code, view));
     }
 }

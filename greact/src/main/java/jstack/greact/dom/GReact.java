@@ -9,57 +9,77 @@ import java.util.function.Consumer;
 import static jstack.greact.dom.Globals.document;
 
 public class GReact {
-    public static HTMLElement element;
-    public static <T extends HTMLElement> T entry(java.lang.Runnable maker) {
-        maker.run();
-        return null;
+    /**
+     * Tries to render synchronous if can
+     *
+     * @return rendered component of T or Promise<T>
+     */
+    public static <T extends HTMLElement> T mmountAwaitView(
+        Component<T> comp, Object... args
+    ) {
+        JSExpression.of("""
+            if (comp instanceof HTMLElement)
+                return comp;
+            else {
+                const rendered = comp instanceof Function
+                    ? comp(...args) : comp._mount(...args);
+
+                return rendered instanceof Promise
+                    ? rendered.then(r =>
+                        this._mmountAwaitView(r, [])
+                    )
+                
+                    : this._mmountAwaitView(rendered, [])
+            }"""
+        );
+        /*
+            unreachable code, this code should be removed by
+            JS optimizer by DCE pass
+        */
+        return JSExpression.of("");
     }
 
-    public static <T extends HTMLElement> T mount(T dest, Component<T> newEl, Object... args) {
-        element = dest;
-        JSExpression.of("newEl instanceof Function ? newEl(...args) : newEl._mount(...args)");
-        return null;
+    public static <T extends HTMLElement> void mmount(
+        T dest, Component<T> newEl, Object... args
+    ) {
+        JSExpression.of("""
+            const rendered = this._mmountAwaitView(newEl, ...args);
+            if (rendered instanceof Promise) {
+                const placeholder = dest.appendChild(document.createElement('div'));
+                rendered.then(r => { dest.replaceChild(r, placeholder); });
+            } else
+                dest.appendChild(rendered);
+            """
+        );
     }
 
-    @Async public static <T extends HTMLElement> T mmountAwaitView(Component<T> comp, Object... args) {
-        return JSExpression.ofAsync("""
-            comp instanceof HTMLElement ? comp :
-                comp instanceof Function ? await this._mmountAwaitView(await comp(...args), []) :
-                    await this._mmountAwaitView(await comp._mount(...args), [])
-            """);
-
-    }
-
-    public static <T extends HTMLElement> void mmount(T dest, Component<T> newEl, Object... args) {
-        var placeholder = dest.appendChild(document.createElement("div"));
-        JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => dest.replaceChild(v, placeholder))");
-    }
-
-    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(U dest, Component<T> newEl, Consumer<T> before, Object... args) {
-        var placeholder = dest.appendChild(document.createElement("div"));
-        JSExpression.<HTMLElement>of("this._mmountAwaitView(newEl, ...args).then(v => { before(v); dest.replaceChild(v, placeholder); })");
-    }
-
-
-    public static <U extends HTMLElement> void make(HTMLElement parent, String name, Consumer<U> maker) {
-        U el = document.createElement(name);
-        maker.accept(el);
-        parent.appendChild(el);
-    }
-
-    public static <T extends HTMLElement> T mountMe(String htmlElName) {
-        T newEl = document.createElement(htmlElName);
-        element.appendChild(newEl);
-        return newEl;
+    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(
+        U dest, Component<T> newEl, Consumer<T> before, Object... args
+    ) {
+        JSExpression.of("""
+            const rendered = this._mmountAwaitView(newEl, ...args);
+            if (rendered instanceof Promise) {
+                const placeholder = dest.appendChild(document.createElement('div'));
+                rendered.then(r => { before(r); dest.replaceChild(r, placeholder); });
+            } else {
+                before(rendered);
+                dest.appendChild(rendered);
+            }
+            """
+        );
     }
 
     public static <T extends HTMLElement> T replace(T el, HTMLElement holder) {
-        if(holder != null)
+        if (holder != null)
             holder.parentNode.replaceChild(el, holder);
 
         return el;
     }
 
-    @FunctionalInterface public interface AsyncRunnable { @Async void run(); }
-    @FunctionalInterface public interface AsyncCallable<T> { @Async T call(); }
+    @FunctionalInterface public interface AsyncRunnable {
+        @Async void run();
+    }
+    @FunctionalInterface public interface AsyncCallable<T> {
+        @Async T call();
+    }
 }

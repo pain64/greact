@@ -53,7 +53,9 @@ public class _02EffectsTest {
                             jstack.greact.html.div _holder0 = null;
                             {
                                 (_render0 = ()->{
-                                    final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
+                                    final jstack.greact.html.div _el0 = \
+                jstack.jscripter.transpiler.model.JSExpression.of(\
+                "document.createElement(\\'div\\').appendChild(document.createElement(\\'div\\'))");
                                     _el0.innerText = "clicked " + n + " times";
                                     _el0.onclick = (ev)->_effect0(n += 1);
                                     _holder0 = jstack.greact.dom.GReact.replace(_el0, _holder0);
@@ -103,7 +105,9 @@ public class _02EffectsTest {
                             jstack.greact.html.div _holder0 = null;
                             {
                                 (_render0 = ()->{
-                                    final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
+                                    final jstack.greact.html.div _el0 = \
+                jstack.jscripter.transpiler.model.JSExpression.of(\
+                "document.createElement(\\'div\\').appendChild(document.createElement(\\'div\\'))");
                                     _el0.innerText = "clicked " + n + " times";
                                     _el0.onclick = (ev)->_effect0(n += 1, z += 1);
                                     _holder0 = jstack.greact.dom.GReact.replace(_el0, _holder0);

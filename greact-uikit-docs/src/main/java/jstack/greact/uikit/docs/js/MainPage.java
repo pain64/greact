@@ -4,6 +4,7 @@ import jstack.greact.dom.CodeView;
 import jstack.greact.dom.CodeView.CodeAndView;
 import jstack.greact.dom.HTMLElement;
 import jstack.greact.html.*;
+import jstack.greact.uikit.ErrorBox;
 import jstack.greact.uikit.Grid;
 import jstack.greact.uikit.Tab;
 import jstack.greact.uikit.Tabs;
@@ -54,7 +55,7 @@ public class MainPage implements Component0<div> {
                 """);
             new div() {{
                 className = "context";
-                new h1("Greact UIKit Docs");
+                new h1("Greact UIKit");
             }};
 
             new div() {{
@@ -88,6 +89,11 @@ public class MainPage implements Component0<div> {
                     new div() {{
                         className = "menu";
                         style.marginLeft = "35%";
+
+                        new a("ErrorBox") {{
+                            className = "menu-item";
+                            href = "#error-box";
+                        }};
 
                         new a("Text") {{
                             className = "menu-item";
@@ -159,6 +165,30 @@ public class MainPage implements Component0<div> {
 
                 new div() {{
                     className = "examples";
+
+                    new div() {{
+                        id = "error-box";
+                        className = "example";
+
+                        new h2("ErrorBox usage example") {{
+                            className = "heading";
+                        }};
+
+                        new div() {{
+                            className = "vision-code";
+
+                            new h3("EXAMPLE") {{
+                                className = "ex-text";
+                            }};
+
+                            new CodeView<>(() ->
+                                new ErrorBox("Exception in thread \"main\" java.lang.ArithmeticException", """
+                                    at com.example.task01.Test.division(Test.java:10)
+                                    at com.example.task01.Test.main(Test.java:6)"""
+                                ), renderer()
+                            );
+                        }};
+                    }};
 
                     new div() {{
                         id = "text";

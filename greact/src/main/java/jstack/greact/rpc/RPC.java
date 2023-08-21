@@ -13,7 +13,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,8 +90,11 @@ public class RPC<T> {
         throw new RuntimeException("unreachable");
     }
 
-    public record RPCError(String msg, @Nullable String stacktrace) { }
-    public static String rpcErrorJson(String msg, @Nullable String stacktrace) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(new RPCError(msg, stacktrace));
+    public record RPCError(String msg, @Nullable String stackTrace) { }
+
+    public static String rpcErrorJson(
+        String msg, @Nullable String stackTrace
+    ) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(new RPCError(msg, stackTrace));
     }
 }
