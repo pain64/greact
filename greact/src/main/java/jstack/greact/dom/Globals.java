@@ -3,8 +3,7 @@ package jstack.greact.dom;
 import jstack.greact.html.Component0;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
-
-import java.util.function.Consumer;
+import org.jetbrains.annotations.Nullable;
 
 public class Globals {
     public static Window window = JSExpression.of("window");
@@ -22,16 +21,21 @@ public class Globals {
         return null;
     }
 
+    @FunctionalInterface
+    public interface ErrorHandler {
+        void handle(String message, @Nullable String stackTrace);
+    }
+
     public static java.lang.Runnable rpcBeforeSend = () -> {};
     public static java.lang.Runnable rpcAfterSend = () -> {};
     public static java.lang.Runnable rpcAfterSuccess = () -> {};
-    public static Consumer<String> rpcAfterError = err -> {};
+    public static ErrorHandler rpcAfterError = (msg, stacktrace) -> {};
 
     @Async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         // FIXME: migrate to java version for try/catch/finally
         JSExpression.ofAsync("""
+            this.rpcBeforeSend();
             try {
-              this.rpcBeforeSend();
               var resp = await fetch(url, {
                   method: 'POST',
                   headers: {
@@ -40,12 +44,12 @@ public class Globals {
                   body: JSON.stringify({ endpoint: endpoint, args: args})
               });
               var data = await resp.json()
-              if(resp.status == 500) { this.rpcBeforeSend(data.error); throw data.error; }
+              if (resp.status == 500) throw data.error;
               
               this.rpcAfterSuccess();
               return data;
             } catch(ex) {
-              this.rpcAfterError(ex);
+              this.rpcAfterError(data.msg, data.stackTrace);
               throw ex;
             } finally {
               this.rpcAfterSend();

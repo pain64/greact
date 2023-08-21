@@ -9,13 +9,15 @@ import jstack.ssql.SafeSql;
 import spark.Spark;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Main {
     static final String RPC_BASE_URL = "/rpc";
 
     public static class Server extends RPC<SafeSql> {
-        Server() {super("jstack.demo.js");}
+        Server() { super("jstack.demo.js"); }
         @RPCEntryPoint(RPC_BASE_URL)
         public static <T> T server(Function<SafeSql, T> onServer) {
             throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
@@ -68,7 +70,9 @@ public class Main {
                 var msg = ex.getMessage();
                 if (msg == null) // FIXME: not so good
                     msg = ex.getCause().getMessage();
-                return RPC.rpcErrorJson(msg);
+                return RPC.rpcErrorJson(msg, Arrays.stream(ex.getStackTrace())
+                    .map(StackTraceElement::toString)
+                    .collect(Collectors.joining("\n")));
             }
         });
 

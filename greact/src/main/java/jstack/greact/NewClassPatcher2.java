@@ -336,9 +336,21 @@ public class NewClassPatcher2 {
                         htmlElementType,
                         nextElOwner);
 
+                    var componentCreateExpression =
+                        "document.createElement('" + nativeComponentName + "')";
+
+                    var updateIndex = allViewsForUpdate.indexOf(newClass);
+                    /*
+                     Add temporary parent, it will allow rerender
+                     before component was mounted
+                    */
+                    if (parent == null && updateIndex != -1)
+                        componentCreateExpression = "document.createElement('div').appendChild(" +
+                            componentCreateExpression + ")";
+
                     var nextEl = maker.VarDef(nextElSymbol,
                         makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                            maker.Literal("document.createElement('" + nativeComponentName + "')").setType(symbols.clString.type))));
+                            maker.Literal(componentCreateExpression).setType(symbols.clString.type))));
 
                     var lmbType = parent == null ? symbols.clAsyncCallable.type : symbols.clAsyncRunnable.type;
                     var lmbApplyMethod = parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun;
@@ -354,7 +366,6 @@ public class NewClassPatcher2 {
                     var classBody = mapNewClassBody(nextElSymbol, htmlElementType, newClass, this);
 
                     final Symbol.VarSymbol resultElSymbol;
-                    var updateIndex = allViewsForUpdate.indexOf(newClass);
 
                     if (updateIndex != -1) { // rerenderable
                         var elHolderSymbol = new Symbol.VarSymbol(Flags.HASINIT,
@@ -399,7 +410,6 @@ public class NewClassPatcher2 {
                         lmbBody.stats = lmbBody.stats.append(nextEl).appendList(classBody.stats);
                         resultElSymbol = nextElSymbol;
                     }
-
 
                     lmbBody.stats = lmbBody.stats.append(
                         parent != null ?
