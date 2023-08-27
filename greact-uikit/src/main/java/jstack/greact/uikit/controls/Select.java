@@ -4,7 +4,7 @@ import jstack.greact.html.*;
 import jstack.greact.uikit.GridConfig2;
 import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.MemberRef;
+import jstack.greact.model.MemberRef;
 
 @Require.CSS("select.css")
 public class Select<T> extends Control<T> {
@@ -50,7 +50,7 @@ public class Select<T> extends Control<T> {
     @Override public Control<?> child() { return null; }
 
     @Override
-    public div mount() {
+    public div render() {
         var self = this;
 //        if(self.value != null && self.variants.length > 0) {
 //            self.value = variants[0].element;

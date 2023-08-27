@@ -31,7 +31,7 @@ public abstract class Input<T> extends Control<T> {
 
     @Override public Control child() { return null; }
 
-    @Override public div mount() {
+    @Override public div render() {
         var self = this;
         return new div() {{
 //            style.alignItems = "center";

@@ -1,13 +1,8 @@
 package jstack.greact.uikit.docs.js;
 
-import jstack.greact.dom.CodeView;
-import jstack.greact.dom.CodeView.CodeAndView;
 import jstack.greact.dom.HTMLElement;
 import jstack.greact.html.*;
-import jstack.greact.uikit.ErrorBox;
-import jstack.greact.uikit.Grid;
-import jstack.greact.uikit.Tab;
-import jstack.greact.uikit.Tabs;
+import jstack.greact.uikit.*;
 import jstack.greact.uikit.controls.CheckBox;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Require;
@@ -15,7 +10,7 @@ import jstack.jscripter.transpiler.model.Require;
 @Require.CSS("main_page.css")
 public class MainPage implements Component0<div> {
     public record Data(int x, String y) { }
-    private <T extends HTMLElement> Component1<div, CodeAndView<T>> renderer() {
+    private <T extends HTMLElement> Component1<div, CodeView.CodeAndView<T>> renderer() {
         return codeAndView ->
             new div() {{
                 new div() {{
@@ -40,7 +35,7 @@ public class MainPage implements Component0<div> {
     }
 
     @Override
-    public div mount() {
+    public div render() {
         return new div() {{
             JSExpression.of("""
                 var list = document.querySelectorAll('link[rel=\"icon\"], link[rel=\"shortcut icon\"]');

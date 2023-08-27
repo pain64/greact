@@ -16,7 +16,7 @@ public class Navbar implements Component0<nav> {
     }
 
     @Override
-    public Component0<nav> mount() {
+    public Component0<nav> render() {
         return new nav() {{
             className = "navbar navbar-expand-lg bg-light";
             Collapse[] collapses = {};

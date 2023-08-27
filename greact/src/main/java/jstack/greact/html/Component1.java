@@ -7,5 +7,5 @@ import jstack.jscripter.transpiler.model.ErasedInterface;
 @ErasedInterface
 public interface Component1<T extends HTMLElement, U> extends Component<T> {
     @Async
-    Component0<T> mount(U u);
+    Component0<T> render(U u);
 }

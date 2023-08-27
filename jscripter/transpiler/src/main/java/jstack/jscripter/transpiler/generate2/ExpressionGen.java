@@ -12,110 +12,25 @@ import com.sun.tools.javac.util.Pair;
 import jstack.jscripter.transpiler.generate.util.CompileException;
 import jstack.jscripter.transpiler.generate.util.Overloads;
 import jstack.jscripter.transpiler.generate2.lookahead.HasAsyncCalls;
-import jstack.jscripter.transpiler.model.ClassRef;
+import jstack.jscripter.transpiler.model.Async;
 import jstack.jscripter.transpiler.model.ErasedInterface;
 import jstack.jscripter.transpiler.model.JSNativeAPI;
-import jstack.jscripter.transpiler.model.Async;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
     private final HashSet<Name> inverseEqualsCalls = new HashSet<>();
-    CompileException memberRefUsedIncorrect() {
-        return new CompileException(CompileException.ERROR.MEMBER_REF_USED_INCORRECT, """
-            MemberRef<T> usage:
-              for record fields:
-                record X(long field) {}
-                MemberRef<X, Long> ref = X::field;
-              for class fields:
-                class X { long field; }
-                MemberRef<X, Long> ref = x -> x.field;
-              for nested fields (class or record):
-                record X { long b; }
-                record Y { long a; }
-                MemberRef<Y, Long> ref = y -> y.a.b
-                """);
-    }
-
-    java.util.List<String> memberRefExtractFields(java.util.List<String> acc, JCTree tree) {
-        if (tree instanceof JCTree.JCIdent) {
-            return acc;
-        } else if (tree instanceof JCTree.JCFieldAccess access) {
-            acc.add(access.name.toString());
-            return memberRefExtractFields(acc, access.selected);
-        } else if (tree instanceof JCTree.JCMethodInvocation invoke) {
-            if (invoke.meth instanceof JCTree.JCFieldAccess access)
-                if (access.sym.owner instanceof Symbol.ClassSymbol classSymbol)
-                    if (classSymbol.getRecordComponents().stream().anyMatch(comp -> comp.accessor == access.sym)) {
-                        acc.add(access.name.toString());
-                        return memberRefExtractFields(acc, access.selected);
-                    } else throw memberRefUsedIncorrect();
-                else throw memberRefUsedIncorrect();
-            else throw memberRefUsedIncorrect();
-        }
-
-        throw memberRefUsedIncorrect();
-    }
-
-    boolean isMemberRefSymbol(Symbol.TypeSymbol tsym) {
-        return tsym.getQualifiedName().equals(super.names.fromString("jstack.jscripter.transpiler.model.MemberRef"));
-    }
 
     boolean isNotNativeSymbol(Symbol.TypeSymbol tsym) {
         return !tsym.getQualifiedName().equals(super.names.fromString("java.lang.Object")) &&
             !tsym.getQualifiedName().equals(super.names.fromString("java.lang.String")) && // smart check native?
             !tsym.getQualifiedName().equals(super.names.fromString("java.lang.Integer"));
-    }
-
-    void reflectWriteClassMembers(Type classType) {
-        if (classType.tsym instanceof Symbol.ClassSymbol classSym) {
-            out.writeCBOpen(false);
-            out.write("_name: () => '");
-            out.write("" + classSym.className());
-            out.writeLn("',");
-
-            out.writeLn("_params: () => [");
-            out.deepIn();
-            if (classType instanceof Type.ArrayType arrayType) {
-                reflectWriteClassMembers(arrayType.elemtype);
-                out.writeLn("");
-            }
-            out.deepOut();
-            out.writeLn("],");
-
-            out.writeLn("_fields: () => [");
-            out.deepIn();
-            for (var i = 0; i < classSym.getRecordComponents().length(); i++) {
-                var comp = classSym.getRecordComponents().get(i);
-
-                out.writeCBOpen(false);
-                if (comp.type.tsym instanceof Symbol.ClassSymbol) {
-                    out.write("_name: () => '");
-                    out.write(comp.name);
-                    out.writeLn("',");
-                    out.write("___class__: () => (");
-                    reflectWriteClassMembers(comp.type);
-                    out.writeLn(")");
-                }
-                out.writeCBEnd(false);
-                if (i != classSym.getRecordComponents().length() - 1)
-                    out.write(",");
-                out.writeNL();
-            }
-
-            out.deepOut();
-            out.writeLn("]");
-            out.writeCBEnd(false);
-        }
     }
 
     @Override public void visitLiteral(JCTree.JCLiteral lit) {
@@ -336,37 +251,22 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitLambda(JCTree.JCLambda lmb) {
-        if (isMemberRefSymbol(lmb.type.tsym)) {
-            var fields = memberRefExtractFields(new ArrayList<>(), lmb.body);
-            Collections.reverse(fields);
-
-            out.write("{_memberNames: () => ");
-            // FIXME: use mkString
-            out.write(fields.stream().map(f -> "'" + f + "'").collect(Collectors.joining(", ", "[", "]")));
-            out.write(", _value: (v) => v.");
-            // FIXME: use mkString
-            out.write(String.join(".", fields));
-            out.write(", _className: () => '");
-            out.write(((Symbol.ClassSymbol) lmb.type.allparams().get(1).tsym).className());
-            out.write("'}");
-        } else {
-            var invokeMethod = ((Symbol.ClassSymbol) lmb.type.tsym)
-                .members_field.getSymbols().iterator().next();
+        var invokeMethod = ((Symbol.ClassSymbol) lmb.type.tsym)
+            .members_field.getSymbols().iterator().next();
 //          var invokeMethod = lmb.type.tsym.getEnclosedElements().stream()
 //                .filter(el -> el instanceof Symbol.MethodSymbol && !((Symbol.MethodSymbol) el).isDefault())
 //                .findFirst().get(); // FIXME
 
-            var isAsync = invokeMethod.getAnnotation(Async.class) != null;
-            var visitor = new HasAsyncCalls(super.stdShim, super.types);
-            lmb.body.accept(visitor);
-            if (isAsync && visitor.hasAsyncCalls) out.write("async ");
+        var isAsync = invokeMethod.getAnnotation(Async.class) != null;
+        var visitor = new HasAsyncCalls(super.stdShim, super.types);
+        lmb.body.accept(visitor);
+        if (isAsync && visitor.hasAsyncCalls) out.write("async ");
 
-            out.mkString(lmb.params, arg ->
-                out.write(arg.getName()), "(", ", ", ") => ");
+        out.mkString(lmb.params, arg ->
+            out.write(arg.getName()), "(", ", ", ") => ");
 
-            super.lambdaAsyncInference.put(lmb, visitor.hasAsyncCalls);
-            withAsyncContext(isAsync, () -> lmb.body.accept(this));
-        }
+        super.lambdaAsyncInference.put(lmb, visitor.hasAsyncCalls);
+        withAsyncContext(isAsync, () -> lmb.body.accept(this));
     }
 
     @Override public void visitSwitchExpression(JCTree.JCSwitchExpression swe) {
@@ -384,7 +284,7 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     private void writeCallArguments(
-        Overloads.Info info, Symbol.MethodSymbol targetMethod, List<JCTree.JCExpression> args
+        Overloads.Info info, List<JCTree.JCExpression> args
     ) {
         if (info.isOverloaded()) {
             out.write("" + info.n());
@@ -392,31 +292,9 @@ abstract class ExpressionGen extends VisitorWithContext {
         }
 
         for (var i = 0; i < args.size(); i++) {
-            var param = targetMethod.isVarArgs() && i >= targetMethod.params.length()
-                ? targetMethod.params.last()
-                : targetMethod.params.get(i);
-            var isReflexive = param.getAnnotation(ClassRef.Reflexive.class) != null;
             var arg = (JCTree.JCExpression) args.get(i);
-
-            if (isReflexive) {
-                out.write("(() =>");
-                out.writeCBOpen(true);
-                out.write("const __obj = ");
-            }
-
             arg.accept(this);
 
-            if (isReflexive) {
-                out.writeLn(";");
-                if (arg.type.tsym instanceof Symbol.ClassSymbol) {
-                    out.write("__obj.__class__ = (");
-                    reflectWriteClassMembers(arg.type);
-                    out.writeLn(");");
-                    out.writeLn("return __obj;");
-                }
-                out.writeCBEnd(false);
-                out.write(")()");
-            }
             if (i != args.size() - 1) out.write(", ");
         }
     }
@@ -559,7 +437,7 @@ abstract class ExpressionGen extends VisitorWithContext {
             } else
                 throw new RuntimeException("unknown kind: " + call.meth.getKind());
 
-            writeCallArguments(info, targetMethod, call.args);
+            writeCallArguments(info, call.args);
 
             if (!isRecordAccessor) out.write(")");
             if (isAsync) out.write(")");
@@ -567,64 +445,50 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitReference(JCTree.JCMemberReference ref) {
-        if (isMemberRefSymbol(ref.type.tsym)) {
-            if (ref.expr.type.tsym instanceof Symbol.ClassSymbol) {
-                //    if (!clSymbol.isRecord()) throw memberRefUsedIncorrect();
-            } else throw memberRefUsedIncorrect();
+        var tSym = TreeInfo.symbol(ref.expr);
+        var mSym = TreeInfo.symbol(ref);
+        var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
+        boolean flagNew = true; // FIXME: сделать иммутабельным
 
-            out.write("{_memberNames: () => ['");
+        if (info.mode() == Overloads.Mode.STATIC) {
+            out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
+
+            out.write("._");
             out.write(ref.name);
-            out.write("'], _value: (v) => v.");
-            out.write(ref.name);
-            out.write(", _className: () => '");
-            out.write(((Symbol.ClassSymbol) ref.type.allparams().get(1).tsym).className());
-            out.write("'}");
+            out.write(".bind(");
+
+            out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
+        } else if (ref.toString().endsWith("new")) {
+            out.write("((x) => new ");
+            out.replaceSymbolAndWrite(tSym.owner.getQualifiedName(), '.', '_');
+            out.write(".");
+            out.write(tSym.type.tsym.getSimpleName());
+            out.write("(");
+            if (info.isOverloaded()) {
+                out.write(String.valueOf(info.n()));
+                out.write(", ");
+            }
+            out.write("x)");
+            flagNew = false;
         } else {
-            var tSym = TreeInfo.symbol(ref.expr);
-            var mSym = TreeInfo.symbol(ref);
-            var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
-            boolean flagNew = true; // FIXME: сделать иммутабельным
-
-            if (info.mode() == Overloads.Mode.STATIC) {
-                out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
-
+            if (ref.expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
+                out.write("((self) => self._");
+                out.write(ref.name);
+                out.write("()");
+            } else {
+                ref.expr.accept(this);
                 out.write("._");
                 out.write(ref.name);
                 out.write(".bind(");
-
-                out.replaceSymbolAndWrite(ref.expr.type.tsym.getQualifiedName(), '.', '_');
-            } else if (ref.toString().endsWith("new")) {
-                out.write("((x) => new ");
-                out.replaceSymbolAndWrite(tSym.owner.getQualifiedName(), '.', '_');
-                out.write(".");
-                out.write(tSym.type.tsym.getSimpleName());
-                out.write("(");
-                if (info.isOverloaded()) {
-                    out.write(String.valueOf(info.n()));
-                    out.write(", ");
-                }
-                out.write("x)");
-                flagNew = false;
-            } else {
-                if (ref.expr instanceof JCTree.JCIdent ident && ident.sym instanceof Symbol.ClassSymbol) {
-                    out.write("((self) => self._");
-                    out.write(ref.name);
-                    out.write("()");
-                } else {
-                    ref.expr.accept(this);
-                    out.write("._");
-                    out.write(ref.name);
-                    out.write(".bind(");
-                    ref.expr.accept(this);
-                }
+                ref.expr.accept(this);
             }
-
-            if (flagNew && info.isOverloaded()) {
-                out.write(", ");
-                out.write(String.valueOf(info.n()));
-                out.write(")");
-            } else out.write(")");
         }
+
+        if (flagNew && info.isOverloaded()) {
+            out.write(", ");
+            out.write(String.valueOf(info.n()));
+            out.write(")");
+        } else out.write(")");
     }
 
     @Override public void visitTypeTest(JCTree.JCInstanceOf instanceOf) {
@@ -707,7 +571,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         else newClass.clazz.accept(this);
 
         out.write("(");
-        writeCallArguments(info, (Symbol.MethodSymbol) newClass.constructor, newClass.args);
+        writeCallArguments(info, newClass.args);
         out.write(")");
 
         if (newClass.def != null) {

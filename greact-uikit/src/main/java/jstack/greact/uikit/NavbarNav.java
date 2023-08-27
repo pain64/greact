@@ -17,7 +17,7 @@ public class NavbarNav implements Component0<ul> {
     }
 
     @Override
-    public Component0<ul> mount() {
+    public Component0<ul> render() {
         return new ul() {{
             className = "navbar-nav mr-auto";
             for (var item : items) {

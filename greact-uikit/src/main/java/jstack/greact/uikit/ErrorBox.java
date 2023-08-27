@@ -20,7 +20,7 @@ public class ErrorBox implements Component0<div> {
         this.stackTrace = stackTrace;
     }
 
-    @Override public Component0<div> mount() {
+    @Override public Component0<div> render() {
         return new div("uk__error-box") {{
             new div(); // for alignment
             new div() {{

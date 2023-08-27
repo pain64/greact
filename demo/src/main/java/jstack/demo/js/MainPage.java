@@ -18,7 +18,7 @@ public class MainPage implements Component0<div> {
     ) { }
 
     @Override @Async
-    public div mount() {
+    public div render() {
         return new div() {{
             new h2("Grid usage example");
 

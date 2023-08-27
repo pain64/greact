@@ -15,7 +15,7 @@ public class Route implements Component0<a> {
         Array.push(router.views, new Router.View(href, view));
     }
 
-    @Override public a mount() {
+    @Override public a render() {
         return new a() {{
             innerText = caption;
             href = _href;

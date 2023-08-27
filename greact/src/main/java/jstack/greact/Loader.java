@@ -32,7 +32,7 @@ public class Loader {
                 const appRoot = document.body.appendChild(document.createElement('div'));
                 function mount() {
                     appRoot.innerHTML = '';
-                    jstack_greact_dom_GReact._mmount(appRoot, new %s(), []);
+                    jstack_greact_dom_GReact._mount(appRoot, new %s(), []);
                 }
                 mount();
             </script>""".formatted(entry.getName().replace(".", "_"));

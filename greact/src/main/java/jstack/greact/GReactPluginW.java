@@ -15,6 +15,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.net.URLClassLoader;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 public class GReactPluginW {
@@ -39,7 +40,7 @@ public class GReactPluginW {
         //System.out.println("CURRENT_CL2: " + this.getClass().getClassLoader());
         context = ((BasicJavacTask) task).getContext();
         cmd = TranspilerPlugin.getCmd(strings);
-
+        var processors = ServiceLoader.load(AstProcessor.class, GReactPluginW.class.getClassLoader());
 //        Cleaner.create().register(
 //            this, new Cleanup(
 //                this.getClass().getClassLoader(), checksRunner
@@ -61,7 +62,11 @@ public class GReactPluginW {
 
                     var t1 = System.currentTimeMillis();
 
-                    new CodeViewPlugin(context).apply(cu);
+                    for (var astProcessor : processors) {
+                        astProcessor.init(context);
+                        astProcessor.apply(cu);
+                    }
+
                     var t2 = System.currentTimeMillis();
 
                     new RPCPlugin(context).apply(cu);

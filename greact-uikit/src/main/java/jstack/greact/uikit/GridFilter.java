@@ -61,7 +61,7 @@ class GridFilter<T> implements Component0<div> {
     }
 
     @Override
-    public div mount() {
+    public div render() {
         return new div() {{
             new div() {{
                 T[] filtered;

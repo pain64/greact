@@ -23,7 +23,7 @@ public class Radio<T> extends Control<T> {
 
     @Override public Control<T> child() {return null;}
 
-    @Override public div mount() {
+    @Override public div render() {
         var self = this;
 
         return new div() {{

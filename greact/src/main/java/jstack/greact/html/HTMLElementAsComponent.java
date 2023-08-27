@@ -7,5 +7,5 @@ import jstack.jscripter.transpiler.model.ErasedInterface;
 @ErasedInterface
 public interface HTMLElementAsComponent<T extends HTMLElement> extends Component0<T> {
     @DoNotTranspile
-    @Override default Component0<T> mount() { return null; }
+    @Override default Component0<T> render() { return null; }
 }

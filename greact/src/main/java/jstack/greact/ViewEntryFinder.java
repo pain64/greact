@@ -29,7 +29,7 @@ public class ViewEntryFinder {
         this.types = Types.instance(context);
         this.util = new Util(context);
         this.symbols = new Symbols();
-        this.mountMethodName = names.fromString("mount");
+        this.mountMethodName = names.fromString("render");
         this.defaultConstructorMethodName = names.fromString("<init>");
     }
 

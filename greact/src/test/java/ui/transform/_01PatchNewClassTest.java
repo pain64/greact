@@ -25,7 +25,7 @@ public class _01PatchNewClassTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div();
                     }
                 }""",
@@ -40,7 +40,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             return _el0;
@@ -53,7 +53,7 @@ public class _01PatchNewClassTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         var b = new button("lol");
                         return new div();
                     }
@@ -69,7 +69,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         jstack.greact.html.button b = (()->{
                             final jstack.greact.html.button _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'button\\')");
                             _el0.innerText = "lol";
@@ -91,11 +91,11 @@ public class _01PatchNewClassTest {
                         final h1 some;
                         B(h1 some) {this.some = some;}
                         
-                        @Override public div mount() {
+                        @Override public div render() {
                             return new div();
                         }
                     }
-                    @Override public B mount() {
+                    @Override public B render() {
                         return new B(new h1());
                     }
                 }""",
@@ -118,7 +118,7 @@ public class _01PatchNewClassTest {
                         }
                        \s
                         @Override
-                        public div mount() {
+                        public div render() {
                             return (()->{
                                 final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                                 return _el0;
@@ -127,7 +127,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public B mount() {
+                    public B render() {
                         return new B((()->{
                             final jstack.greact.html.h1 _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                             return _el1;
@@ -140,7 +140,7 @@ public class _01PatchNewClassTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                             this.innerText = "hello";
                             innerText = "world";
@@ -158,7 +158,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             _el0.innerText = "hello";
@@ -173,7 +173,7 @@ public class _01PatchNewClassTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                             new h1() {{
                                 innerText = "hello";
@@ -195,7 +195,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             final jstack.greact.html.div _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             {
@@ -218,7 +218,7 @@ public class _01PatchNewClassTest {
         withAssert(PatchedLikeAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<h1> {
-                    @Override public h1 mount() {
+                    @Override public h1 render() {
                         return new h1("hello") {{
                             new h1("world");
                         }};
@@ -235,7 +235,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public h1 mount() {
+                    public h1 render() {
                         return (()->{
                             final jstack.greact.html.h1 _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                             _el0.innerText = "hello";
@@ -256,10 +256,10 @@ public class _01PatchNewClassTest {
                                 
             class Demo implements Component0<h1> {
               static class Child implements Component0<h1> {
-                @Override public h1 mount() { return new h1("hello"); }
+                @Override public h1 render() { return new h1("hello"); }
               }
               
-              @Override public Child mount() { return new Child(); }
+              @Override public Child render() { return new Child(); }
             }""",
             """
                                 
@@ -278,7 +278,7 @@ public class _01PatchNewClassTest {
                         }
                        \s
                         @Override
-                        public h1 mount() {
+                        public h1 render() {
                             return (()->{
                                 final jstack.greact.html.h1 _el0 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'h1\\')");
                                 _el0.innerText = "hello";
@@ -288,7 +288,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public Child mount() {
+                    public Child render() {
                         return new Child();
                     }
                 }""");
@@ -304,7 +304,7 @@ public class _01PatchNewClassTest {
                     
                     ListDecorator(String[] list) { this.list = list; }
                     
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                             style.border = "1px red solid";
                             for (var s : list) {
@@ -334,7 +334,7 @@ public class _01PatchNewClassTest {
                     }
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             final jstack.greact.html.div _el1 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                             _el1.style.border = "1px red solid";
@@ -342,7 +342,7 @@ public class _01PatchNewClassTest {
                                 {
                                     final jstack.greact.html.div _el2 = jstack.jscripter.transpiler.model.JSExpression.of("document.createElement(\\'div\\')");
                                     _el2.style.border = "1px green solid";
-                                    jstack.greact.dom.GReact.mmount(_el2, forDecorate, s);
+                                    jstack.greact.dom.GReact.mount(_el2, forDecorate, s);
                                     _el1.appendChild(_el2);
                                 }
                             }

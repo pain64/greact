@@ -3,11 +3,8 @@ package jstack.greact.uikit;
 import jstack.greact.html.Component0;
 import jstack.greact.html.div;
 import jstack.greact.html.slot;
-import jstack.jscripter.transpiler.model.Require;
-import jstack.jscripter.transpiler.model.ClassRef;
-import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
-import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.MemberRef;
+import jstack.greact.model.MemberRef;
+import jstack.jscripter.transpiler.model.*;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -15,11 +12,11 @@ import java.util.function.Consumer;
 @Require.CSS("grid.css")
 public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
-    static <A> boolean strictEqual(A lhs, A rhs) {return JSExpression.of("lhs === rhs");}
+    static <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of("lhs === rhs"); }
 
     public static class Adjuster<T> {
         final Column<T, ?>[] columns;
-        public Adjuster(Column<T, ?>[] columns) {this.columns = columns;}
+        public Adjuster(Column<T, ?>[] columns) { this.columns = columns; }
 
         public void each(Consumer<Column<T, ?>> action) {
             eachIndexed((__, col) -> action.accept(col));
@@ -61,7 +58,7 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
 
     public Adjuster<T> adjustRange(MemberRef<T, ?> from, MemberRef<T, ?> to) {
         Column<T, ?>[] dest = new Column[]{};
-        for(var i = colIndex(from); i <= colIndex(to); i++)
+        for (var i = colIndex(from); i <= colIndex(to); i++)
             Array.push(dest, columns[i]);
 
         return new Adjuster<>(dest);
@@ -95,29 +92,24 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     public final T[] data;
     T selectedRowData;
 
-    public Grid(@Reflexive T[] data) {
+    // Не компилируется с @DoNotTranspile
+    public Grid(T[] data) {
         this.data = data;
-        initColumnsByDefault(data);
     }
 
-    void initColumnsByDefault(T[] data) {
-        var gridDataClass = ClassRef.of(data).params()[0];
-        this.columns = Array.map(gridDataClass.fields(), fieldRef -> {
-            var col = new Column<T, Object>();
-            col.applyDefaultSettings(new String[]{fieldRef.name()}, fieldRef.__class__().name());
-            return col;
-        });
+    public Grid(T[] data, Column<T, ?>[] columns) {
+        this.data = data;
+        this.columns = columns;
     }
 
-
-    @Override public div mount() {
+    @Override public div render() {
         var conf = (GridConfig2<T>) this;
 
         return new div() {{
             className = "grid-main";
 
             new GridFilter<>(data, conf, rowData ->
-                    effect(selectedRowData = rowData));
+                effect(selectedRowData = rowData));
 
             new div() {{ /* redraw point */
                 if (selectedRow != null && selectedRowData != null) {
