@@ -1,7 +1,6 @@
 package jstack.greact.processors;
 
 import com.sun.source.tree.MemberReferenceTree;
-import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
@@ -46,6 +45,11 @@ public class GridProcessor implements AstProcessor {
                         .filter(member -> member.getSimpleName() == constructorName)
                         .skip(1)
                         .findFirst().orElseThrow(() -> new RuntimeException("unreachable"));
+        Symbol.MethodSymbol gridConstructor1 = (Symbol.MethodSymbol)
+                clGrid.getEnclosedElements().stream()
+                        .filter(member -> member.getSimpleName() == constructorName)
+                        .findFirst().orElseThrow(() -> new RuntimeException("unreachable"));
+
         Symbol.MethodSymbol gridConstructor2 = (Symbol.MethodSymbol)
                 clGrid.getEnclosedElements().stream()
                         .filter(member -> member.getSimpleName() == constructorName)
@@ -74,7 +78,7 @@ public class GridProcessor implements AstProcessor {
         cu.accept(new TreeScanner() {
             @Override
             public void visitNewClass(JCTree.JCNewClass newClass) {
-                if (newClass.clazz.type != null && newClass.clazz.type.tsym == symbols.clGrid && newClass.args.size() == 1) {
+                if (newClass.clazz.type.tsym == symbols.clGrid && newClass.args.size() == 1) {
                     if (newClass.args.head.type instanceof Type.ArrayType arrayType) {
                         var typeElem = arrayType.elemtype;
                         if (typeElem.tsym instanceof Symbol.ClassSymbol elemClass) {
@@ -94,50 +98,100 @@ public class GridProcessor implements AstProcessor {
                                 columnName = digitMatcher.replaceAll(x ->
                                         String.valueOf((char) Integer.parseInt(x.group().substring(1))));
 
-                                columnName = String.valueOf(columnName.charAt(0)).toUpperCase() + columnName.substring(1);
+                                columnName = String.valueOf(columnName.charAt(0)).toUpperCase()
+                                        + columnName.substring(1);
 
                                 var colType = new Type.ClassType(
-                                        symbols.clColumn.type,
-                                        List.of(typeElem,
-                                                recordComponent.type), symbols.clColumn.type.tsym);
-                                System.out.println(new Type.ClassType(symbols.clMemberRef.type, List.of(typeElem, recordComponent.type), symbols.clMemberRef).allparams());
+                                        Type.noType,
+                                        List.of(typeElem, recordComponent.type),
+                                        symbols.clColumn.type.tsym
+                                );
 
-                                var memberRefType = new Type.ClassType(newClass.type.getEnclosingType(), List.of(typeElem, recordComponent.type), symbols.clMemberRef);
+                                var memberRefType = new Type.ClassType(
+                                        Type.noType,
+                                        List.of(typeElem, recordComponent.type),
+                                        symbols.clMemberRef
+                                );
 
-                                var clazz = (JCTree.JCNewClass) maker.NewClass(maker.ClassLiteral(newClass.type.getEnclosingType()),
+                                var columnClass = (JCTree.JCNewClass) maker.NewClass(
+                                        maker.ClassLiteral(newClass.type), // newClass.type.getEnclosingType()
                                         List.nil(),
-                                        maker.TypeApply(maker.Ident(symbols.clColumn), List.nil()).setType(symbols.clColumn.type),
+                                        maker.TypeApply(
+                                                maker.Ident(symbols.clColumn),
+                                                List.nil()
+                                        ).setType(symbols.clColumn.type),
                                         List.of(
                                                 maker.Literal(columnName).setType(symbols.clString.type),
                                                 maker.Reference(
                                                         MemberReferenceTree.ReferenceMode.INVOKE,
                                                         recordComponent.name,
                                                         maker.Ident(typeElem.tsym),
-                                                        null).setType(memberRefType)
+                                                        null
+                                                ).setType(memberRefType)
                                         ),
                                         null).setType(colType);
-                                clazz.constructor = symbols.columnConstructor2;
-                                clazz.constructorType = symbols.columnConstructor2.type;
-                                args.add(clazz);
+
+                                columnClass.constructor = symbols.columnConstructor2;
+                                columnClass.constructorType = symbols.columnConstructor2.type;
+
+                                args.add(columnClass);
                             }
 
-                            var symb = new Symbol.VarSymbol(Flags.FINAL,
-                                    names.fromString("columns"),
-                                    new Type.ArrayType(new Type.ClassType(symbols.clColumn.type,
-                                            List.nil(),
-                                            symbols.clColumn), symtab.arrayClass),
-                                    newClass.type.getEnclosingType().tsym);
+                            var array = maker.NewArray(
+                                    maker.Ident(symbols.clColumn),
+                                    List.nil(),
+                                    List.from(args)
+                            );
 
-                            var construct = ((JCTree.JCMethodDecl) (newClass.def.defs.get(0)));
-                            construct.params = construct.params.append(maker.VarDef(symb, null));
-                            ((Symbol.MethodSymbol) newClass.constructor).params = ((Symbol.MethodSymbol) newClass.constructor).params.append(symb);
+                            if (!newClass.type.tsym.isAnonymous()) {
+                                newClass.constructor = symbols.gridConstructor2;
+                                newClass.constructor.type = symbols.gridConstructor2.type;
+                                newClass.varargsElement = symbols.clColumn.type;
+                                newClass.args = newClass.args.append(
+                                        array.setType(new Type.ArrayType(symbols.clColumn.erasure_field, symtab.arrayClass))
+                                );
 
+                                super.visitNewClass(newClass);
+                                return;
+                            }
 
-                            var array = maker.NewArray(maker.TypeApply(maker.Ident(symbols.clColumn), List.nil()).setType(symbols.clColumn.type), List.nil(), List.from(args));
-                            array.setType(new Type.ArrayType(symbols.clColumn.type, symtab.arrayClass));
+                            var constructor = ((JCTree.JCMethodDecl) (newClass.def.defs.get(0)));
+
+                            var newVar = new Symbol.VarSymbol(
+                                    0, names.fromString("arg1"),
+                                    new Type.ArrayType(
+                                            new Type.ClassType(Type.noType, List.nil(), symbols.clColumn),
+                                            symtab.arrayClass
+                                    ),
+                                    constructor.sym
+                            );
+
+                            constructor.params = constructor.params.append(maker.VarDef(newVar, null));
+                            constructor.sym.params = constructor.sym.params.append(newVar);
+
+                            var constructorType = (Type.MethodType) constructor.type;
+                            constructorType.argtypes = constructorType.argtypes.append(newVar.type);
+
                             newClass.varargsElement = symbols.clColumn.type;
-                            newClass.args = newClass.args.append(array);
-                            System.out.println(newClass);
+                            newClass.args = newClass.args.append(
+                                    array.setType(new Type.ArrayType(symbols.clColumn.type, symtab.arrayClass))
+                            );
+
+                            constructor.accept(new TreeTranslator() {
+                                @Override
+                                public void visitApply(JCTree.JCMethodInvocation tree) {
+                                    if (((JCTree.JCIdent) tree.meth).sym == symbols.gridConstructor1) {
+                                        var methType = (Type.MethodType) tree.meth.type;
+                                        methType.argtypes = methType.argtypes.append(newVar.type);
+
+                                        ((JCTree.JCIdent) tree.meth).sym = symbols.gridConstructor2;
+
+                                        tree.args = tree.args.append(maker.Ident(newVar));
+                                    }
+
+                                    this.result = tree;
+                                }
+                            });
                         }
                     }
                 }
@@ -150,8 +204,7 @@ public class GridProcessor implements AstProcessor {
             @Override
             public void visitReference(JCTree.JCMemberReference tree) {
                 if (tree.type.tsym == symbols.clMemberRef) {
-                    System.out.println(tree.type.allparams().get(1).tsym);
-                    var sb = "{_memberNames: () => ['" +
+                    var memberRef = "{_memberNames: () => ['" +
                             tree.name +
                             "'], _value: (v) => v." +
                             tree.name +
@@ -160,7 +213,7 @@ public class GridProcessor implements AstProcessor {
                             "'}";
 
                     this.result = makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                            maker.Literal(sb).setType(symbols.clString.type)));
+                            maker.Literal(memberRef).setType(symbols.clString.type)));
                 } else super.visitReference(tree);
             }
 
@@ -170,7 +223,7 @@ public class GridProcessor implements AstProcessor {
                     var fields = memberRefExtractFields(new ArrayList<>(), tree.body);
                     Collections.reverse(fields);
 
-                    var sb = "{_memberNames: () => " +
+                    var memberRef = "{_memberNames: () => " +
                             fields.stream().map(f -> "'" + f + "'").collect(Collectors.joining(", ", "[", "]")) +
                             ", _value: (v) => v." +
                             String.join(".", fields) +
@@ -179,7 +232,7 @@ public class GridProcessor implements AstProcessor {
                             "'}";
 
                     this.result = makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                            maker.Literal(sb).setType(symbols.clString.type)));
+                            maker.Literal(memberRef).setType(symbols.clString.type)));
                 } else super.visitLambda(tree);
             }
         });
