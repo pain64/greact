@@ -12,13 +12,13 @@ public class String {
     @Static public boolean isEmpty() {
         return JSExpression.of("this.length === 0");
     }
-    @Static public char charAt(int i) { return JSExpression.of("this.charAt(i)"); }
+    @Static public char charAt(int i) { return JSExpression.of("this.charAt(:1)", i); }
     @Static public java.lang.String[] split(java.lang.String regex) {
-        return JSExpression.of("this.split(new RegExp(regex))");
+        return JSExpression.of("this.split(new RegExp(:1))", regex);
     }
 
     @Static public boolean equals(Object other) {
-        return JSExpression.of("this == other");
+        return JSExpression.of("this == :1", other);
     }
 
     // FIXME: overloaded args renaming
@@ -42,7 +42,7 @@ public class String {
 //    public native java.lang.String[] split(java.lang.String regex);
 //    @Replace("{this}.localeCompare({anotherString}, undefined, { sensitivity: 'accent' })")
     @Static public boolean equalsIgnoreCase(java.lang.String another) {
-        return JSExpression.of("this.localeCompare(another, undefined, { sensitivity: 'accent' }) === 0");
+        return JSExpression.of("this.localeCompare(:1, undefined, { sensitivity: 'accent' }) === 0", another);
     }
 //    @Replace("{this} > s ? 1 : ({this} < s ? -1 : 0)")
 //    public native int compareTo(java.lang.String s);

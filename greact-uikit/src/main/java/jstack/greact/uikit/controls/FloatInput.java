@@ -9,6 +9,6 @@ public class FloatInput extends Input<Float> {
 
     @Override protected Float parseValueOpt(input src) {
         float newVal = JSExpression.of("parseFloat(src.value)");
-        return JSExpression.<Boolean>of("isNaN(newVal)") ? null : newVal;
+        return JSExpression.<Boolean>of("isNaN(:1)", newVal) ? null : newVal;
     }
 }

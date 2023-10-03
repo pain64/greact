@@ -8,6 +8,6 @@ public class IntInput extends Input<Integer> {
 
     @Override protected Integer parseValueOpt(input src) {
         int newVal = JSExpression.of("parseInt(src.value)");
-        return JSExpression.<Boolean>of("isNaN(newVal)") ? null : newVal;
+        return JSExpression.<Boolean>of("isNaN(:1)", newVal) ? null : newVal;
     }
 }

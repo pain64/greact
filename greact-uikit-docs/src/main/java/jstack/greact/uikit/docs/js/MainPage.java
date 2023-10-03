@@ -32,7 +32,7 @@ public class MainPage implements Component0<div> {
                         style.borderRadius = "5px";
                         style.backgroundColor = "#fff";
                         var nl = "\n";
-                        innerHTML = JSExpression.of("codeAndView.code.replaceAll(nl, '&#10').replaceAll(' ' , '&nbsp')");
+                        innerHTML = JSExpression.of("codeAndView.code.replaceAll(:1, '&#10').replaceAll(' ' , '&nbsp')", nl);
                         className = "language-java";
                     }};
                 }};
@@ -502,7 +502,7 @@ public class MainPage implements Component0<div> {
                                     };
                                     new Grid<>(data) {{
                                         adjust(Data::x);
-                                        onRowChange = row -> JSExpression.of("console.log(row)");
+                                        onRowChange = row -> JSExpression.of("console.log(:1)", row);
                                     }};
                                 }}, renderer());
                         }};

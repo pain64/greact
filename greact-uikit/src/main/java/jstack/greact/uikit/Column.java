@@ -18,7 +18,7 @@ public class Column<T, U> {
         }};
 
     static <T> boolean isNullOrUndefined(T value) {
-        return JSExpression.of("typeof value === 'undefined' || value === null");
+        return JSExpression.of("typeof :1 === 'undefined' || :1 === null", value);
     }
 
     public String header;
@@ -42,24 +42,24 @@ public class Column<T, U> {
     @SuppressWarnings("unchecked")
     void applyDefaultSettings(String[] memberNames, String className) {
         var columnName = memberNames[memberNames.length - 1];
-        columnName = JSExpression.of("columnName.replace('_', ' ')");
+        columnName = JSExpression.of(":1.replace('_', ' ')", columnName);
         var regex1 = "(\\\\p{Ll}\\\\p{Lu})";
         var regex2 = "(\\\\$\\\\d+)";
         var regexMode = "gu";
 
         columnName = JSExpression.of(
-            "columnName.replaceAll(new RegExp(regex1, regexMode), function(match, bg) {" +
+            ":1.replaceAll(new RegExp(:2, :3), function(match, bg) {" +
                 "return bg[0] + ' ' + bg[1].toLowerCase();" +
-                "})"
+                "})", columnName, regex1, regexMode
         );
 
         columnName = JSExpression.of(
-            "columnName.replaceAll(new RegExp(regex2, regexMode), function(match, bg) {" +
+            ":1.replaceAll(new RegExp(:2, :3), function(match, bg) {" +
                 "return String.fromCharCode(parseInt(bg.slice(1)));" +
-                "})"
+                "})", columnName, regex2, regexMode
         );
 
-        columnName = JSExpression.of("columnName.charAt(0).toUpperCase() + columnName.slice(1)");
+        columnName = JSExpression.of(":1.charAt(0).toUpperCase() + columnName.slice(1)", columnName);
         this.header = columnName;
         this.memberNames = memberNames;
 

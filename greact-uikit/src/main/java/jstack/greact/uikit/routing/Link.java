@@ -16,7 +16,7 @@ public class Link {
         Array.push(router.views, new Router.View(path + "/\\\\d+", () -> {
             String[] hashPaths = JSExpression.of("window.location.hash.split('/')");
             var param = Array.last(hashPaths);
-            var lParam = JSExpression.<Long>of("parseInt(param)");
+            var lParam = JSExpression.<Long>of("parseInt(:1)", param);
 
             return new div() {{
                 new slot<>(view, lParam);

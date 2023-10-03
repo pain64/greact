@@ -348,9 +348,17 @@ public class NewClassPatcher2 {
                         componentCreateExpression = "document.createElement('div').appendChild(" +
                             componentCreateExpression + ")";
 
-                    var nextEl = maker.VarDef(nextElSymbol,
-                        makeCall(symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
-                            maker.Literal(componentCreateExpression).setType(symbols.clString.type))));
+                    var jsExprCall = makeCall(
+                        symbols.clJSExpression,
+                        symbols.mtJSExpressionOf,
+                        List.of(maker.Literal(componentCreateExpression).setType(symbols.clString.type))
+                    );
+                    jsExprCall.varargsElement = symbols.clObject.type;
+
+                    var nextEl = maker.VarDef(
+                        nextElSymbol,
+                        jsExprCall
+                    );
 
                     var lmbType = parent == null ? symbols.clAsyncCallable.type : symbols.clAsyncRunnable.type;
                     var lmbApplyMethod = parent == null ? symbols.mtAsyncCallableCall : symbols.mtAsyncRunnableRun;

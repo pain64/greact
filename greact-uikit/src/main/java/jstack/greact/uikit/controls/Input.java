@@ -26,7 +26,7 @@ public abstract class Input<T> extends Control<T> {
     }
 
     static <T> boolean isNullOrUndefined(T value) {
-        return JSExpression.of("typeof value === 'undefined' || value === null");
+        return JSExpression.of("typeof :1 === 'undefined' || :1 === null", value);
     }
 
     @Override public Control child() { return null; }

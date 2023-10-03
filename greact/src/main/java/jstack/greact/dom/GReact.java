@@ -4,9 +4,7 @@ import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.html.Component;
 
-import java.util.function.Consumer;
-
-import static jstack.greact.dom.Globals.document;
+import java.util.function.Consumer;;
 
 public class GReact {
     /**
@@ -19,10 +17,10 @@ public class GReact {
     ) {
         JSExpression.of("""
             if (comp instanceof HTMLElement)
-                return comp;
+                return :1;
             else {
-                const rendered = comp instanceof Function
-                    ? comp(...args) : comp._mount(...args);
+                const rendered = :1 instanceof Function
+                    ? :1(...:2) : :1._mount(...:2);
 
                 return rendered instanceof Promise
                     ? rendered.then(r =>
@@ -30,7 +28,7 @@ public class GReact {
                     )
                 
                     : this._mmountAwaitView(rendered, [])
-            }"""
+            }""", comp, args
         );
         /*
             unreachable code, this code should be removed by
@@ -43,13 +41,13 @@ public class GReact {
         T dest, Component<T> newEl, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(newEl, ...args);
+            const rendered = this._mmountAwaitView(:1, ...:2);
             if (rendered instanceof Promise) {
                 const placeholder = dest.appendChild(document.createElement('div'));
                 rendered.then(r => { dest.replaceChild(r, placeholder); });
             } else
                 dest.appendChild(rendered);
-            """
+            """, newEl, args
         );
     }
 
@@ -57,15 +55,15 @@ public class GReact {
         U dest, Component<T> newEl, Consumer<T> before, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(newEl, ...args);
+            const rendered = this._mmountAwaitView(:2, ...:4);
             if (rendered instanceof Promise) {
-                const placeholder = dest.appendChild(document.createElement('div'));
-                rendered.then(r => { before(r); dest.replaceChild(r, placeholder); });
+                const placeholder = :1.appendChild(document.createElement('div'));
+                rendered.then(r => { :3(r); :1.replaceChild(r, placeholder); });
             } else {
-                before(rendered);
-                dest.appendChild(rendered);
+                :3(rendered);
+                :1.appendChild(rendered);
             }
-            """
+            """, dest, newEl, before, args
         );
     }
 
