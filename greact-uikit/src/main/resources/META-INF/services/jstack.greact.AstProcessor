@@ -1,2 +1,2 @@
-jstack.greact.processors.CodeViewProcessor
-jstack.greact.processors.GridProcessor
+jstack.greact.processors.CodeViewAstProcessor
+jstack.greact.processors.GridAstProcessor

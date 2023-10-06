@@ -14,7 +14,7 @@ import jstack.greact.uikit.CodeView;
 
 import java.io.IOException;
 
-public class CodeViewProcessor implements AstProcessor {
+public class CodeViewAstProcessor implements AstProcessor {
     private Util util;
     private Name constructorName;
 
@@ -76,14 +76,14 @@ public class CodeViewProcessor implements AstProcessor {
                                 throw new RuntimeException(ex);
                             }
                         } else throw util.compilationError(
-                            cu, new CodeViewProcessor.CodeViewMisuseException(
+                            cu, new CodeViewAstProcessor.CodeViewMisuseException(
                                 newClass,
                                 "expected new class as CodeView component lambda body but has: " +
                                     lambda.body
                             )
                         );
                     else throw util.compilationError(
-                        cu, new CodeViewProcessor.CodeViewMisuseException(
+                        cu, new CodeViewAstProcessor.CodeViewMisuseException(
                             newClass,
                             "expected lambda component as first arg for CodeView but has: " +
                                 viewCompExpression
