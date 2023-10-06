@@ -30,7 +30,7 @@ Make Java great (fullstack) again! Use Java compiler plugin technology for AST -
 ## Hello world
 ```java
 class HelloWorld implements Component<h1> {
-    @Override public h1 mount() {
+    @Override public h1 render() {
         return new h1("Hello, world");
     }
 }
@@ -53,7 +53,7 @@ import static iias.web.Main.Server.server;
 public class MainPage implements Component<div> {
     @Table("users") record User(long id, String name, int age, String sex) {}
    
-    @Override public Grid<User> mount() {
+    @Override public Grid<User> render() {
         var users = server(db -> {
             // this code will be executed on server-side
             return db.select(User.class, "order by id")

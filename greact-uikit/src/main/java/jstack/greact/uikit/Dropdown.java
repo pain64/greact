@@ -21,7 +21,7 @@ public class Dropdown implements Component0<div> {
     }
 
     @Override
-    public Component0<div> mount() {
+    public Component0<div> render() {
         return new div() {{
             className = "dropdown";
             final div[] hideDiv = {new div()};

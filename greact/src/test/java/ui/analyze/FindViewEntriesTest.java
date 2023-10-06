@@ -37,7 +37,7 @@ public class FindViewEntriesTest {
         withAssert(HasViewsAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div();
                     }
                 }""",
@@ -81,11 +81,11 @@ public class FindViewEntriesTest {
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
                     static class B implements Component0<h1> {
-                        @Override public h1 mount() {
+                        @Override public h1 render() {
                             return new h1();
                         }
                     }
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div();
                     }
                 }""",
@@ -97,11 +97,11 @@ public class FindViewEntriesTest {
                 import jstack.greact.html.*;
                 class A implements Component0<h1> {
                     static class B implements Component0<h1> {
-                        @Override public h1 mount() {
+                        @Override public h1 render() {
                             return new h1();
                         }
                     }
-                    @Override public B mount() {
+                    @Override public B render() {
                         return new B();
                     }
                 }""",
@@ -115,7 +115,7 @@ public class FindViewEntriesTest {
                     abstract static class B implements Component0<h1> {}
                     
                     class C extends B {
-                        @Override public h1 mount() {
+                        @Override public h1 render() {
                             return new h1();
                         }
                     }
@@ -132,13 +132,13 @@ public class FindViewEntriesTest {
                 import jstack.greact.html.*;
                 class A implements Component0<h1> {
                     static class B implements Component0<h1> {
-                        @Override public h1 mount() {
+                        @Override public h1 render() {
                             return new h1();
                         }
                     }
-                    @Override public B mount() {
+                    @Override public B render() {
                         return new B() {
-                            @Override public h1 mount() {
+                            @Override public h1 render() {
                                 return new h1("overridden");
                             }
                         };
@@ -155,7 +155,7 @@ public class FindViewEntriesTest {
                         }
                        \s
                         @Override
-                        public h1 mount() {
+                        public h1 render() {
                             return new h1("overridden");
                         }
                     }""",
@@ -168,7 +168,7 @@ public class FindViewEntriesTest {
         withAssert(HasViewsAssert.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                             new h1();
                         }};

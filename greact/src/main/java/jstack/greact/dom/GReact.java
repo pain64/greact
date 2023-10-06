@@ -14,7 +14,7 @@ public class GReact {
      *
      * @return rendered component of T or Promise<T>
      */
-    public static <T extends HTMLElement> T mmountAwaitView(
+    public static <T extends HTMLElement> T renderAwaitView(
         Component<T> comp, Object... args
     ) {
         JSExpression.of("""
@@ -22,14 +22,14 @@ public class GReact {
                 return comp;
             else {
                 const rendered = comp instanceof Function
-                    ? comp(...args) : comp._mount(...args);
+                    ? comp(...args) : comp._render(...args);
 
                 return rendered instanceof Promise
                     ? rendered.then(r =>
-                        this._mmountAwaitView(r, [])
+                        this._renderAwaitView(r, [])
                     )
                 
-                    : this._mmountAwaitView(rendered, [])
+                    : this._renderAwaitView(rendered, [])
             }"""
         );
         /*
@@ -39,11 +39,11 @@ public class GReact {
         return JSExpression.of("");
     }
 
-    public static <T extends HTMLElement> void mmount(
+    public static <T extends HTMLElement> void mount(
         T dest, Component<T> newEl, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(newEl, ...args);
+            const rendered = this._renderAwaitView(newEl, ...args);
             if (rendered instanceof Promise) {
                 const placeholder = dest.appendChild(document.createElement('div'));
                 rendered.then(r => { dest.replaceChild(r, placeholder); });
@@ -53,11 +53,11 @@ public class GReact {
         );
     }
 
-    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(
+    public static <U extends HTMLElement, T extends HTMLElement> void mountWith(
         U dest, Component<T> newEl, Consumer<T> before, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(newEl, ...args);
+            const rendered = this._renderAwaitView(newEl, ...args);
             if (rendered instanceof Promise) {
                 const placeholder = dest.appendChild(document.createElement('div'));
                 rendered.then(r => { before(r); dest.replaceChild(r, placeholder); });

@@ -19,7 +19,7 @@ public class GridRowAdd<T> implements Component0<tr> {
         this.onCancelRowAdd = onCancelRowAdd;
     }
 
-    @Override public tr mount() {
+    @Override public tr render() {
         return new tr() {{
             className = "grid-row-add";
 

@@ -95,7 +95,7 @@ public class ViewUpdateStrategyTest {
         withAssert(AssertNodeTree.class, """
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                            new div() {{
                              new h1();
@@ -116,7 +116,7 @@ public class ViewUpdateStrategyTest {
                 class A implements Component0<div> {
                     record AAA(int field){};
                     boolean cond = false;
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                            if(cond) new div();
                            new h2();
@@ -137,7 +137,7 @@ public class ViewUpdateStrategyTest {
                     boolean eC = false;
                     boolean eD = false;
 
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                            className = "cl" + eA;
                            new h3() {{
@@ -183,7 +183,7 @@ public class ViewUpdateStrategyTest {
                     boolean eC = false;
                     boolean eD = false;
 
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                            className = "cl" + eA;
                            new h3() {{
@@ -230,7 +230,7 @@ public class ViewUpdateStrategyTest {
                     String text = "hello";
                     Component1<div, String> slotValue = null;
 
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                            new slot<>(slotValue, text);
 

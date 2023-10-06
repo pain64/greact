@@ -17,7 +17,7 @@ public class Tabs implements Component0<div> {
             this.selected = this.tabs[0];
     }
 
-    @Override public div mount() {
+    @Override public div render() {
         return new div() {{
             new div() {{
                 className = "nav nav-tabs";

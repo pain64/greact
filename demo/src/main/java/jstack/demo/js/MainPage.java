@@ -17,8 +17,7 @@ public class MainPage implements Component0<div> {
         long id, String name, String email, int age, Gender gender, Term term
     ) { }
 
-    @Override @Async
-    public div mount() {
+    @Override @Async public div render() {
         return new div() {{
             new h2("Grid usage example");
 

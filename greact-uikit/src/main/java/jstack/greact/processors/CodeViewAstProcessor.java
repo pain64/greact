@@ -1,6 +1,8 @@
-package jstack.greact;
+package jstack.greact.processors;
 
-import jstack.greact.dom.CodeView;
+import jstack.greact.AstProcessor;
+import jstack.greact.GReactCompileException;
+import jstack.greact.Util;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -8,18 +10,13 @@ import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import jstack.greact.uikit.CodeView;
 
 import java.io.IOException;
 
-public class CodeViewPlugin {
-    private final Util util;
-    private final Name constructorName;
-    public CodeViewPlugin(Context context) {
-        this.util = new Util(context);
-        this.constructorName = Names.instance(context).fromString("<init>");
-        this.maker = TreeMaker.instance(context);
-        this.symbols = new Symbols();
-    }
+public class CodeViewAstProcessor implements AstProcessor {
+    private Util util;
+    private Name constructorName;
 
     class Symbols {
         Symbol.ClassSymbol clCodeView = util.lookupClass(CodeView.class);
@@ -32,8 +29,8 @@ public class CodeViewPlugin {
     }
 
 
-    final TreeMaker maker;
-    final Symbols symbols;
+    TreeMaker maker;
+    Symbols symbols;
 
     static class CodeViewMisuseException extends GReactCompileException {
         public CodeViewMisuseException(JCTree tree, String message) {
@@ -47,6 +44,15 @@ public class CodeViewPlugin {
         return " ".repeat(i);
     }
 
+    @Override
+    public void init(Context context) {
+        this.util = new Util(context);
+        this.constructorName = Names.instance(context).fromString("<init>");
+        this.maker = TreeMaker.instance(context);
+        this.symbols = new Symbols();
+    }
+
+    @Override
     public void apply(JCTree.JCCompilationUnit cu) {
         cu.accept(new TreeScanner() {
             @Override public void visitNewClass(JCTree.JCNewClass newClass) {
@@ -56,15 +62,13 @@ public class CodeViewPlugin {
 
                     if (viewCompExpression instanceof JCTree.JCLambda lambda)
                         if (lambda.body instanceof JCTree.JCNewClass compExpr) {
-                            var exprForCode = compExpr;
-
                             try {
                                 var cuCode = cu.getSourceFile().getCharContent(true);
-                                var prefix = whitespacePrefix(cuCode, exprForCode.getStartPosition());
+                                var prefix = whitespacePrefix(cuCode, compExpr.getStartPosition());
 
                                 code = cuCode.subSequence(
-                                        exprForCode.getStartPosition(),
-                                        exprForCode.getEndPosition(cu.endPositions))
+                                        compExpr.getStartPosition(),
+                                        compExpr.getEndPosition(cu.endPositions))
                                     .toString()
                                     .replaceAll("\n" + prefix, "\n");
 
@@ -72,14 +76,14 @@ public class CodeViewPlugin {
                                 throw new RuntimeException(ex);
                             }
                         } else throw util.compilationError(
-                            cu, new CodeViewMisuseException(
+                            cu, new CodeViewAstProcessor.CodeViewMisuseException(
                                 newClass,
                                 "expected new class as CodeView component lambda body but has: " +
                                     lambda.body
                             )
                         );
                     else throw util.compilationError(
-                        cu, new CodeViewMisuseException(
+                        cu, new CodeViewAstProcessor.CodeViewMisuseException(
                             newClass,
                             "expected lambda component as first arg for CodeView but has: " +
                                 viewCompExpression
@@ -97,3 +101,4 @@ public class CodeViewPlugin {
 
     }
 }
+

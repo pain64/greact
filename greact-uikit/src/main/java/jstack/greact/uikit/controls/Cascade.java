@@ -36,8 +36,8 @@ public class Cascade<T, U1> extends Control<T> {
         });
     }
 
-    @Override public div mount() {
-        // FIXME: mount не вызывает func и как следствие не получает новые данные с сервера
+    @Override public div render() {
+        // FIXME: render не вызывает func и как следствие не получает новые данные с сервера
         return new div() {{
             new slot<>(in1);
         }};
