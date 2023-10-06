@@ -19,7 +19,7 @@ public class CodeView<T extends HTMLElement> implements Component0<div> {
 
     Component0<T> view;
     String code;
-    Component1<div, CodeView.CodeAndView<T>> renderer;
+    Component1<div, CodeAndView<T>> renderer;
 
     public CodeView(Component0<T> view, Component1<div, CodeView.CodeAndView<T>> renderer) {
         throw new RuntimeException("will be delegated to constructor#2 at compile time");

@@ -60,8 +60,7 @@ class GridFilter<T> implements Component0<div> {
         ef.run();
     }
 
-    @Override
-    public div render() {
+    @Override public div render() {
         return new div() {{
             new div() {{
                 T[] filtered;

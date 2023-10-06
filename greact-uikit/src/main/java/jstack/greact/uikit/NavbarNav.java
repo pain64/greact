@@ -16,8 +16,7 @@ public class NavbarNav implements Component0<ul> {
         this.items = args;
     }
 
-    @Override
-    public Component0<ul> render() {
+    @Override public Component0<ul> render() {
         return new ul() {{
             className = "navbar-nav mr-auto";
             for (var item : items) {

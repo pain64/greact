@@ -49,8 +49,7 @@ public class Select<T> extends Control<T> {
 
     @Override public Control<?> child() { return null; }
 
-    @Override
-    public div render() {
+    @Override public div render() {
         var self = this;
 //        if(self.value != null && self.variants.length > 0) {
 //            self.value = variants[0].element;
