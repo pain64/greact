@@ -7,7 +7,7 @@ import jstack.jscripter.transpiler.model.Require;
 
 @Require.CSS("spinner.css")
 public class Spinner implements Component0<div> {
-    @Override public div mount() {
+    @Override public div render() {
         return new div() {{
             className = "spinner";
             new span("working") {{ className = "spinner-span"; }};

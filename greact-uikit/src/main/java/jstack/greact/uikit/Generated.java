@@ -1,6 +1,6 @@
 package jstack.greact.uikit;
 
-import jstack.jscripter.transpiler.model.MemberRef;
+import jstack.greact.model.MemberRef;
 import jstack.jscripter.transpiler.model.Async;
 
 public class Generated<T, U> {

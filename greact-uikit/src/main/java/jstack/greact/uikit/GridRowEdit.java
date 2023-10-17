@@ -15,7 +15,7 @@ class GridRowEdit<T> implements Component0<tr> {
         this.onFinishRowEdit = onFinishRowEdit;
     }
 
-    @Override public tr mount() {
+    @Override public tr render() {
         return new tr() {{
             className = "grid-row-edit";
 

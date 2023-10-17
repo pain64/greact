@@ -26,7 +26,7 @@ import jstack.greact.dom.HTMLElement;
 
     boolean opened = false;
 
-    @Override public div mount() {
+    @Override public div render() {
         var self = this; //FIXME: HTMLElement has title attribute?
         return new div() {{
             if (opened)

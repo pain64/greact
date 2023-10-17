@@ -23,7 +23,7 @@ public class Collapse implements Component0<div> {
     }
 
     @Override
-    public Component0<div> mount() {
+    public Component0<div> render() {
         this.view = new div() {{
             className = "collapse navbar-collapse";
             for (var item : items) new slot<>(item);

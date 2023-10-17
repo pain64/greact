@@ -3,11 +3,8 @@ package jstack.greact.uikit;
 import jstack.greact.html.Component0;
 import jstack.greact.html.div;
 import jstack.greact.html.slot;
-import jstack.jscripter.transpiler.model.Require;
-import jstack.jscripter.transpiler.model.ClassRef;
-import jstack.jscripter.transpiler.model.ClassRef.Reflexive;
-import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.MemberRef;
+import jstack.greact.model.MemberRef;
+import jstack.jscripter.transpiler.model.*;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -96,22 +93,17 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     public final T[] data;
     T selectedRowData;
 
-    public Grid(@Reflexive T[] data) {
+    // Не компилируется с @DoNotTranspile
+    public Grid(T[] data) {
         this.data = data;
-        initColumnsByDefault(data);
     }
 
-    void initColumnsByDefault(T[] data) {
-        var gridDataClass = ClassRef.of(data).params()[0];
-        this.columns = Array.map(gridDataClass.fields(), fieldRef -> {
-            var col = new Column<T, Object>();
-            col.applyDefaultSettings(new String[]{fieldRef.name()}, fieldRef.__class__().name());
-            return col;
-        });
+    public Grid(T[] data, Column<T, ?>[] columns) {
+        this.data = data;
+        this.columns = columns;
     }
 
-
-    @Override public div mount() {
+    @Override public div render() {
         var conf = (GridConfig2<T>) this;
 
         return new div() {{

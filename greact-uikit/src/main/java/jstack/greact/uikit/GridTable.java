@@ -47,7 +47,7 @@ import java.util.function.Consumer;
         this.onFilterEnableDisable = onFilterEnableDisable;
     }
 
-    @Override public table mount() {
+    @Override public table render() {
         clearSizes();
 
         if (rows.length != 0 && conf.selectedRow != null) {
@@ -129,7 +129,7 @@ import java.util.function.Consumer;
                             for (var col : conf.columns)
                                 if (!col.hidden) {
                                     var colValue = Grid.fetchValue(row.data, col.memberNames);
-                                    GReact.mmountWith(this, col.view, nativeEl -> {
+                                    GReact.mountWith(this, col.view, nativeEl -> {
                                         var bgColor = col.backgroundColor;
                                         if (bgColor != null)
                                             nativeEl.style.backgroundColor = ((BiFunction<Object, T, String>) bgColor).apply(colValue, row.data);

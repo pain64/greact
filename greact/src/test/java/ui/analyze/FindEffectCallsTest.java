@@ -24,7 +24,7 @@ public class FindEffectCallsTest {
     }
 
     public static class MyPage implements Component0<div> {
-        @Override public div mount() {
+        @Override public div render() {
             return new div() {{
                 new h1("hello, world");
             }};
@@ -39,7 +39,7 @@ public class FindEffectCallsTest {
             this.list = list;
         }
 
-        @Override public div mount() {
+        @Override public div render() {
             return new div() {{
                 style.border = "1px red solid";
                 for (var s : list)
@@ -54,7 +54,7 @@ public class FindEffectCallsTest {
 
     public static class Demo implements Component0<div> {
         @Override
-        public div mount() {
+        public div render() {
             var list = new String[]{"one", "two", "three"};
             return new div() {{
                 new ListDecorator(list) {{

@@ -13,7 +13,7 @@ import java.util.Date;
 public class DateInput extends Control<Date> {
     @Override public Control child() {return null;}
 
-    @Override public div mount() {
+    @Override public div render() {
         var self = this;
 
         return new div() {{

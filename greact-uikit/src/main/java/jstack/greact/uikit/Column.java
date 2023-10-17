@@ -5,7 +5,7 @@ import jstack.greact.html.Component2;
 import jstack.greact.html.input;
 import jstack.greact.html.td;
 import jstack.jscripter.transpiler.model.JSExpression;
-import jstack.jscripter.transpiler.model.MemberRef;
+import jstack.greact.model.MemberRef;
 import jstack.greact.uikit.controls.*;
 
 import java.sql.Date;
@@ -41,26 +41,6 @@ public class Column<T, U> {
 
     @SuppressWarnings("unchecked")
     void applyDefaultSettings(String[] memberNames, String className) {
-        var columnName = memberNames[memberNames.length - 1];
-        columnName = JSExpression.of(":1.replace('_', ' ')", columnName);
-        var regex1 = "(\\\\p{Ll}\\\\p{Lu})";
-        var regex2 = "(\\\\$\\\\d+)";
-        var regexMode = "gu";
-
-        columnName = JSExpression.of(
-            ":1.replaceAll(new RegExp(:2, :3), function(match, bg) {" +
-                "return bg[0] + ' ' + bg[1].toLowerCase();" +
-                "})", columnName, regex1, regexMode
-        );
-
-        columnName = JSExpression.of(
-            ":1.replaceAll(new RegExp(:2, :3), function(match, bg) {" +
-                "return String.fromCharCode(parseInt(bg.slice(1)));" +
-                "})", columnName, regex2, regexMode
-        );
-
-        columnName = JSExpression.of(":1.charAt(0).toUpperCase() + columnName.slice(1)", columnName);
-        this.header = columnName;
         this.memberNames = memberNames;
 
         var editor = switch (className) {

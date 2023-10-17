@@ -100,7 +100,7 @@ public class SearchBox implements Component0<div> {
         JSExpression.of("this._nativeInit(...arguments)");
     }
 
-    @Override @Async public div mount() {
+    @Override @Async public div render() {
         checkCanSearch();
         if (canSearch) {
             loaded = loader.load();

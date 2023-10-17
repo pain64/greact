@@ -37,7 +37,7 @@ public class NewClassPatcher2 {
         Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGReact = util.lookupClass(GReact.class);
         Symbol.ClassSymbol clSlot = util.lookupClass(slot.class);
-        Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mmount");
+        Symbol.MethodSymbol mtGReactMMount = util.lookupMember(clGReact, "mount");
         Symbol.MethodSymbol mtGReactReplace = util.lookupMember(clGReact, "replace");
         Symbol.ClassSymbol clRunnable = util.lookupClass(Runnable.class);
         Symbol.MethodSymbol mtRunnableRun = util.lookupMember(clRunnable, "run");

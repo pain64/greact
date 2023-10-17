@@ -29,7 +29,7 @@ public class _02EffectsTest {
                 import jstack.greact.html.*;
                 class A implements Component0<div> {
                     int n = 0;
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                           innerText = "clicked " + n + " times";
                           onclick = ev -> effect(n += 1);
@@ -48,7 +48,7 @@ public class _02EffectsTest {
                     int n = 0;
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             jstack.greact.html.div _holder0 = null;
                             {
@@ -80,7 +80,7 @@ public class _02EffectsTest {
                 class A implements Component0<div> {
                     int n = 0;
                     int z = 0;
-                    @Override public div mount() {
+                    @Override public div render() {
                         return new div() {{
                           innerText = "clicked " + n + " times";
                           onclick = ev -> effect(n += 1, z += 1);
@@ -100,7 +100,7 @@ public class _02EffectsTest {
                     int z = 0;
                    \s
                     @Override
-                    public div mount() {
+                    public div render() {
                         return (()->{
                             jstack.greact.html.div _holder0 = null;
                             {

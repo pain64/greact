@@ -134,9 +134,7 @@ public class Overloads {
     }
 
     public static Info methodInfo(Types types, TypeElement klass, ExecutableElement method) {
-
         var sections = buildSections(types, klass, method.getSimpleName());
-
         var found = sections.get(0).entries.stream()
             .filter(entry -> entry.method == method)
             .findFirst()

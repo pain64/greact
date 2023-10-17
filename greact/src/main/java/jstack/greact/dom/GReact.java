@@ -4,7 +4,7 @@ import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.jscripter.transpiler.model.Async;
 import jstack.greact.html.Component;
 
-import java.util.function.Consumer;;
+import java.util.function.Consumer;
 
 public class GReact {
     /**
@@ -12,23 +12,23 @@ public class GReact {
      *
      * @return rendered component of T or Promise<T>
      */
-    public static <T extends HTMLElement> T mmountAwaitView(
+    public static <T extends HTMLElement> T renderAwaitView(
         Component<T> comp, Object... args
     ) {
         JSExpression.of("""
             if (comp instanceof HTMLElement)
-                return :1;
+                return comp;
             else {
-                const rendered = :1 instanceof Function
-                    ? :1(...:2) : :1._mount(...:2);
+                const rendered = comp instanceof Function
+                    ? comp(...args) : comp._render(...args);
 
                 return rendered instanceof Promise
                     ? rendered.then(r =>
-                        this._mmountAwaitView(r, [])
+                        this._renderAwaitView(r, [])
                     )
                 
-                    : this._mmountAwaitView(rendered, [])
-            }""", comp, args
+                    : this._renderAwaitView(rendered, [])
+            }"""
         );
         /*
             unreachable code, this code should be removed by
@@ -37,33 +37,33 @@ public class GReact {
         return JSExpression.of("");
     }
 
-    public static <T extends HTMLElement> void mmount(
+    public static <T extends HTMLElement> void mount(
         T dest, Component<T> newEl, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(:1, ...:2);
+            const rendered = this._renderAwaitView(newEl, ...args);
             if (rendered instanceof Promise) {
                 const placeholder = dest.appendChild(document.createElement('div'));
                 rendered.then(r => { dest.replaceChild(r, placeholder); });
             } else
                 dest.appendChild(rendered);
-            """, newEl, args
+            """
         );
     }
 
-    public static <U extends HTMLElement, T extends HTMLElement> void mmountWith(
+    public static <U extends HTMLElement, T extends HTMLElement> void mountWith(
         U dest, Component<T> newEl, Consumer<T> before, Object... args
     ) {
         JSExpression.of("""
-            const rendered = this._mmountAwaitView(:2, ...:4);
+            const rendered = this._renderAwaitView(newEl, ...args);
             if (rendered instanceof Promise) {
-                const placeholder = :1.appendChild(document.createElement('div'));
-                rendered.then(r => { :3(r); :1.replaceChild(r, placeholder); });
+                const placeholder = dest.appendChild(document.createElement('div'));
+                rendered.then(r => { before(r); dest.replaceChild(r, placeholder); });
             } else {
-                :3(rendered);
-                :1.appendChild(rendered);
+                before(rendered);
+                dest.appendChild(rendered);
             }
-            """, dest, newEl, before, args
+            """
         );
     }
 
