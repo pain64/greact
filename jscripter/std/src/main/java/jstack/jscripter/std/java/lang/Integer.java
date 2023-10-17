@@ -4,10 +4,10 @@ import jstack.jscripter.transpiler.model.JSExpression;
 
 public class Integer {
     public static java.lang.Integer valueOf(java.lang.String str) throws NumberFormatException {
-        return JSExpression.of("parseInt(str)");
+        return JSExpression.of("parseInt(:1)", str);
     }
     public static int parseInt(java.lang.String str) throws NumberFormatException {
-        return JSExpression.of("parseInt(str)");
+        return JSExpression.of("parseInt(:1)", str);
     }
 //    public static final int MIN_VALUE = -2147483648;
 //    public static final int MAX_VALUE = 2147483647;

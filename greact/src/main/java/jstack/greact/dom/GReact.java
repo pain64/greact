@@ -6,8 +6,6 @@ import jstack.greact.html.Component;
 
 import java.util.function.Consumer;
 
-import static jstack.greact.dom.Globals.document;
-
 public class GReact {
     /**
      * Tries to render synchronous if can

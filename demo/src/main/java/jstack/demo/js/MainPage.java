@@ -28,7 +28,7 @@ public class MainPage implements Component0<div> {
                         case SPRING -> "Весна";
                         case AUTUMN -> "Осень";
                     });
-                    onRowChange = row -> JSExpression.of("console.log(row)");
+                    onRowChange = row -> JSExpression.of("console.log(:1)", row);
                 }};
             }};
         }};

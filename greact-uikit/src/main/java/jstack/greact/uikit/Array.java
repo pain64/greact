@@ -8,39 +8,39 @@ import java.util.function.Predicate;
 
 public class Array<T> {
     @SafeVarargs public static <T> T[] of(T... args) {
-        return JSExpression.of("Array.from(arguments)");
+        return JSExpression.of("Array.from(:1)", (Object) args);
     }
 
     public static <T> T find(T[] self, Predicate<T> predicate) {
-        var found = JSExpression.of("self.find(predicate)");
-        return JSExpression.of("typeof found === 'undefined' ? null : found");
+        var found = JSExpression.of(":1.find(:2)", self, predicate);
+        return JSExpression.of("typeof :1 === 'undefined' ? null : :1", found);
     }
 
     public static <T> boolean exists(T[] self, Predicate<T> predicate) {
-        return JSExpression.of("typeof self.find(predicate) !== 'undefined'");
+        return JSExpression.of("typeof :1.find(:2) !== 'undefined'", self, predicate);
     }
 
     public static <T> long indexOf(T[] self, T el) {
-        return JSExpression.of("self.indexOf(el)");
+        return JSExpression.of(":1.indexOf(:2)", self, el);
     }
 
     public static <T> T contains(T[] self, T el) {
-        return JSExpression.of("self.indexOf(el) !== -1");
+        return JSExpression.of(":1.indexOf(:2) !== -1", self, el);
     }
 
     public static <T> void push(T[] array, T value) {
-        JSExpression.of("array.push(value)");
+        JSExpression.of(":1.push(:2)", array, value);
     }
     public static <T> void unshift(T[] array, T value) {
-        JSExpression.of("array.unshift(value)");
+        JSExpression.of(":1.unshift(:2)", array, value);
     }
 
     public static <A, B> B[] map(A[] from, Function<A, B> mapper) {
-        return JSExpression.of("from.map(mapper)");
+        return JSExpression.of(":1.map(:2)", from, mapper);
     }
 
     public static <A> A[] filter(A[] from, Function<A, Boolean> predicate) {
-        return JSExpression.of("from.filter(predicate)");
+        return JSExpression.of(":1.filter(:2)", from, predicate);
     }
 
     public static <A, B> Pair<A, B>[] zip(A[] left, B[] right) {
@@ -51,8 +51,8 @@ public class Array<T> {
     }
 
     public static <T> T[] spliced(T[] array, long start, long deleteCount) {
-        var cloned = JSExpression.<T[]>of("Array.from(array)");
-        JSExpression.of("cloned.splice(start, deleteCount)");
+        var cloned = JSExpression.<T[]>of("Array.from(:1)", (Object) array);
+        JSExpression.of(":1.splice(:2, :3)", cloned, start, deleteCount);
         return cloned;
     }
 
@@ -61,10 +61,10 @@ public class Array<T> {
     }
 
     public static <T> T[] unique(T[] src) {
-        return JSExpression.of("Array.from(new Set(src))");
+        return JSExpression.of("Array.from(new Set(:1))", (Object) src);
     }
 
     public static <T> Array<T> from(Set<T> set) {
-        return JSExpression.of("Array.from(set)");
+        return JSExpression.of("Array.from(:1)", set);
     }
 }

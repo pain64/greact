@@ -20,9 +20,11 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 abstract class ExpressionGen extends VisitorWithContext {
     private final HashSet<Name> inverseEqualsCalls = new HashSet<>();
@@ -324,7 +326,12 @@ abstract class ExpressionGen extends VisitorWithContext {
             var unescaped = call.getArguments().get(0).toString()
                 .replace("\\n", "\n")
                 .replace("\\'", "'");
-            out.write(unescaped.substring(1, unescaped.length() - 1));
+
+            var withParams = call.args.size() > 1
+                ? getStringWithParams(unescaped, call.args.stream().skip(1).toList())
+                : unescaped;
+
+            out.write(withParams.substring(1, withParams.length() - 1));
         } else if (methodOwnerSym.fullname.equals(names.fromString("jstack.jscripter.transpiler.model.ClassRef")) &&
             methodSym.name.equals(names.fromString("of"))) {
             call.args.head.accept(this);
@@ -442,6 +449,84 @@ abstract class ExpressionGen extends VisitorWithContext {
             if (!isRecordAccessor) out.write(")");
             if (isAsync) out.write(")");
         }
+    }
+    private String getStringWithParams(String unescaped, java.util.List<JCTree.JCExpression> args) {
+        if (args.isEmpty()) return unescaped;
+
+        var self = this;
+        var stream = new ByteArrayOutputStream();
+        var cache = new HashMap<Integer, String>();
+
+        var expressionToString = new ExpressionGen() {{
+            this.out = new Output(stream, self.out.jsDeps);
+            this.names = self.names;
+            this.types = self.types;
+            this.trees = self.trees;
+            this.cu = self.cu;
+            this.EQUALS_METHOD_NAME = self.EQUALS_METHOD_NAME;
+        }};
+
+        var index = 0;
+        var result = new StringBuilder();
+        var pattern = Pattern.compile("(?<!\\\\):\\d+");
+        var matcher = pattern.matcher(unescaped);
+
+        while (matcher.find()) {
+            var ind = Integer.parseInt(matcher.group().substring(1)) - 1;
+            var cachedValue = cache.get(ind);
+
+            if (cachedValue == null) {
+                cachedValue = getStringFromJsExpressionArg(args.get(ind), expressionToString, stream);
+                cache.put(ind, cachedValue);
+            }
+
+            result.append(unescaped, index, matcher.start()).append(cachedValue);
+            index = matcher.end();
+        }
+
+        result.append(unescaped, index, unescaped.length());
+
+        return result.toString().replaceAll("\\\\\\\\:", ":");
+    }
+
+    private String getStringFromJsExpressionArg(
+        JCTree.JCExpression arg,
+        ExpressionGen expressionGen,
+        ByteArrayOutputStream stream
+    ) {
+        stream.reset();
+
+        if (arg instanceof JCTree.JCIdent ident) {
+            return ident.name.toString();
+        } else if (arg instanceof JCTree.JCFieldAccess access) {
+            expressionGen.visitSelect(access);
+            return expressionGen.out.jsOut.toString();
+        } else if (arg instanceof JCTree.JCTypeCast cast) {
+            if (cast.expr instanceof JCTree.JCMemberReference ref) {
+                var tSym = TreeInfo.symbol(ref.expr);
+                var mSym = TreeInfo.symbol(ref);
+                var info = Overloads.methodInfo(types, (TypeElement) tSym.type.asElement(), (ExecutableElement) mSym);
+
+                if (info.mode() == Overloads.Mode.STATIC) {
+                    expressionGen.out.replaceSymbolAndWrite(
+                        ref.expr.type.tsym.getQualifiedName(),
+                        '.',
+                        '_'
+                    );
+
+                    expressionGen.out.write("._");
+                    expressionGen.out.write(ref.name);
+                } else {
+                    ref.expr.accept(expressionGen);
+                    expressionGen.out.write("._");
+                    expressionGen.out.write(ref.name);
+                }
+
+                return expressionGen.out.jsOut.toString();
+            } else if (cast.expr instanceof JCTree.JCIdent ident) {
+                return ident.name.toString();
+            } else throw new RuntimeException("unknown cast expression: " + cast.expr);
+        } else throw new RuntimeException("unknown arg: " + arg);
     }
 
     @Override public void visitReference(JCTree.JCMemberReference ref) {

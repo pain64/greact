@@ -13,7 +13,7 @@ public class Globals {
     public static <T extends HTMLElement> void gReactMount(T dest, Component0<T> element,
                                                            Object... args) {
         gReactElement = dest;
-        JSExpression.of("element instanceof Function ? element(...args) : element.mount(...args)");
+        JSExpression.of(":1 instanceof Function ? :1(...:2) : :1.mount(...:2)", element, args);
     }
 
     public static <T extends HTMLElement> T gReactReturn(Fragment.Renderer renderer) {
@@ -26,22 +26,22 @@ public class Globals {
         void handle(String message, @Nullable String stackTrace);
     }
 
-    public static java.lang.Runnable rpcBeforeSend = () -> {};
-    public static java.lang.Runnable rpcAfterSend = () -> {};
-    public static java.lang.Runnable rpcAfterSuccess = () -> {};
-    public static ErrorHandler rpcAfterError = (msg, stacktrace) -> {};
+    public static java.lang.Runnable rpcBeforeSend = () -> { };
+    public static java.lang.Runnable rpcAfterSend = () -> { };
+    public static java.lang.Runnable rpcAfterSuccess = () -> { };
+    public static ErrorHandler rpcAfterError = (msg, stacktrace) -> { };
 
     @Async public static <T> T doRemoteCall(String url, String endpoint, Object... args) {
         // FIXME: migrate to java version for try/catch/finally
         JSExpression.ofAsync("""
             this.rpcBeforeSend();
             try {
-              var resp = await fetch(url, {
+              var resp = await fetch(:1, {
                   method: 'POST',
                   headers: {
                       'Content-Type': 'application/json'
                   },
-                  body: JSON.stringify({ endpoint: endpoint, args: args})
+                  body: JSON.stringify({ endpoint: :2, args: :3})
               });
               var data = await resp.json()
               if (resp.status == 500) throw data.error;
@@ -53,7 +53,7 @@ public class Globals {
               throw ex;
             } finally {
               this.rpcAfterSend();
-            }""");
+            }""", url, endpoint, args);
 
         return null;
     }

@@ -18,7 +18,7 @@ public class Column<T, U> {
         }};
 
     static <T> boolean isNullOrUndefined(T value) {
-        return JSExpression.of("typeof value === 'undefined' || value === null");
+        return JSExpression.of("typeof :1 === 'undefined' || :1 === null", value);
     }
 
     public String header;

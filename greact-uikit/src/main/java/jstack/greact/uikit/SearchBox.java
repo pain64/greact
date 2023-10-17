@@ -40,7 +40,7 @@ public class SearchBox implements Component0<div> {
     }
 
     <V> void push(V[] array, V value) {
-        JSExpression.of("array.push(value)");
+        JSExpression.of(":1.push(:2)", array, value);
     }
 
     void pushRec(Control[] dest, Control control) {
@@ -110,7 +110,7 @@ public class SearchBox implements Component0<div> {
         return new div() {{
             new div() {{
                 className = "search-box";
-                if(controlsClassName != null)
+                if (controlsClassName != null)
                     className += " " + controlsClassName;
 
                 for (var control : controlsWithChildren)

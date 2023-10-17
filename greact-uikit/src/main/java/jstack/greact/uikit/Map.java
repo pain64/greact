@@ -16,11 +16,11 @@ public class Map<K, V> {
     void baz() {
         bar(); // тут нужно this.constructor.bar()
     }
-    public static <K, V> Map<K, V> make() {return JSExpression.of("new Map()");}
+    public static <K, V> Map<K, V> make() { return JSExpression.of("new Map()"); }
     public native void set(K key, V value);
-    @Static public  V get(K key) {
-        V value = JSExpression.of("this.get(key)");
-        value = JSExpression.of("typeof value === 'undefined' ? null : value");
+    @Static public V get(K key) {
+        V value = JSExpression.of("this.get(:1)", key);
+        value = JSExpression.of("typeof :1 === 'undefined' ? null : :1", value);
         return value;
     }
     public native V[] values();
@@ -30,14 +30,14 @@ public class Map<K, V> {
 
 
     @Static public V computeIfAbsent(K key, Function<K, V> mapping) {
-         // FIXME: некорректный вызов @Static метода на this
-         //var value = this.get(key);
-         V value = JSExpression.of("this.get(key)");
-         if(JSExpression.of("typeof value !== 'undefined'")) return value;
+        // FIXME: некорректный вызов @Static метода на this
+        //var value = this.get(key);
+        V value = JSExpression.of("this.get(:1)", key);
+        if (JSExpression.of("typeof :1 !== 'undefined'", value)) return value;
 
-         var computed = mapping.apply(key);
-         this.set(key, computed);
-         return computed;
+        var computed = mapping.apply(key);
+        this.set(key, computed);
+        return computed;
     }
 
     @Static public int size() {

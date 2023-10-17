@@ -7,14 +7,14 @@ import jstack.greact.dom.GReact;
 import jstack.greact.dom.Globals;
 
 public class Router implements Component0<div> {
-    record View(String href, Component0<div> slot){}
+    record View(String href, Component0<div> slot) { }
     final View[] views = new View[]{};
 
     private View findView() {
         String hash = JSExpression.of("window.location.hash"); // FIXME: add api to Globals.window
         for (var view : views)
             // FIXME: fix method shim
-            if (JSExpression.of("hash.match(new RegExp(view.href)) != null")) return view;
+            if (JSExpression.of(":1.match(new RegExp(:2)) != null", hash, view.href)) return view;
         return null;
     }
 
@@ -29,7 +29,7 @@ public class Router implements Component0<div> {
         };
 
         onLocationChange.run();
-        JSExpression.of("window.addEventListener('hashchange', onLocationChange)");
+        JSExpression.of("window.addEventListener('hashchange', :1)", onLocationChange);
         return root;
     }
 }

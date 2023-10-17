@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 @Require.CSS("grid.css")
 public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     // FIXME: make strict equals by compiler default
-    static <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of("lhs === rhs"); }
+    static <A> boolean strictEqual(A lhs, A rhs) { return JSExpression.of(":1 === :2", lhs, rhs); }
 
     public static class Adjuster<T> {
         final Column<T, ?>[] columns;
@@ -68,24 +68,25 @@ public class Grid<T> extends GridConfig2<T> implements Component0<div> {
     static <T> Object fetchValue(T rowData, String[] memberNames) {
         Object acc = rowData;
         for (var i = 0; i < memberNames.length; i++)
-            acc = JSExpression.of("acc[memberNames[i]]");
+            acc = JSExpression.of(":2[:1[:3]]", memberNames, acc, i);
         return acc;
     }
 
     static <T> void setEditorValueFromRowValue(Column<T, ?> col, T rowData) {
         @SuppressWarnings("unchecked")
         var _col = (Column<T, Object>) col;
-        _col.editor.value = JSExpression.of("this._fetchValue(rowData, col.memberNames)");
+        var mn = col.memberNames;
+        _col.editor.value = JSExpression.of("this._fetchValue(:2, :1)", mn, rowData);
     }
 
     static <T> void setValue(T rowData, String[] memberNames, Object value) {
         Object acc = rowData;
         for (var i = 0; i < memberNames.length - 1; i++) {
-            acc = JSExpression.of("acc[memberNames[i]]");
-            acc = JSExpression.of("typeof acc === 'undefined' ? {} : acc");
+            acc = JSExpression.of(":1[:2[:3]]", acc, memberNames, i);
+            acc = JSExpression.of("typeof :1 === 'undefined' ? {} : :1", acc);
         }
 
-        JSExpression.of("acc[memberNames[memberNames.length - 1]] = value");
+        JSExpression.of(":2[:1[:1.length - 1]] = value", memberNames, acc);
     }
     // END move to column
 

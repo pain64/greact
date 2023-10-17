@@ -8,6 +8,6 @@ public class LongInput extends Input<Long> {
 
     @Override protected Long parseValueOpt(input src) {
         long newVal = JSExpression.of("parseInt(src.value)");
-        return JSExpression.<Boolean>of("isNaN(newVal)") ? null : newVal;
+        return JSExpression.<Boolean>of("isNaN(:1)", newVal) ? null : newVal;
     }
 }

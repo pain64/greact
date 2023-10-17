@@ -36,7 +36,8 @@ class GridFilter<T> implements Component0<div> {
     }
 
     static <T> int calcNPages(T[] filtered, int currentSize) {
-        var n = JSExpression.<Integer>of("Math.floor(filtered.length / currentSize)");
+        var length = filtered.length;
+        var n = JSExpression.<Integer>of("Math.floor(:1 / :2)", length, currentSize);
         if (filtered.length % currentSize != 0) return n + 1;
         else return n;
     }
@@ -49,11 +50,11 @@ class GridFilter<T> implements Component0<div> {
     }
 
     String[] stringSplit(String str, String delim) {
-        return JSExpression.of("str.split(delim)");
+        return JSExpression.of(":1.split(:2)", str, delim);
     }
 
     int stringLength(String str) {
-        return JSExpression.of("str.length");
+        return JSExpression.of(":1.length", str);
     }
 
     void effectUnaffectedMe(Runnable ef) {
@@ -76,7 +77,7 @@ class GridFilter<T> implements Component0<div> {
                 var offset = (currentPage - 1) * currentSize;
                 effectUnaffectedMe(() -> {
                     var x = 1;
-                    effect(pageData = JSExpression.<T[]>of("filtered.slice(offset, offset + this.currentSize)"), x = 1);
+                    effect(pageData = JSExpression.<T[]>of("filtered.slice(:1, :1 + this.currentSize)", offset), x = 1);
                 });
 
                 if (filtered.length > pageSizes[0] || conf.title != null) {
@@ -399,16 +400,16 @@ class GridFilter<T> implements Component0<div> {
                     str += ""; // FIXME: cast to string!!!
 
                     if (JSExpression.of("expr.expr.startsWith('.*') && expr.expr.endsWith('.*')")) {
-                        if (JSExpression.of("str.indexOf(expr.expr.replaceAll('.*', '')) != -1"))
+                        if (JSExpression.of(":1.indexOf(expr.expr.replaceAll('.*', '')) != -1", str))
                             flag = true;
                     } else if (JSExpression.of("expr.expr.startsWith('.*')")) {
-                        if (JSExpression.of("str.endsWith(expr.expr.replaceAll('.*', ''))"))
+                        if (JSExpression.of(":1.endsWith(expr.expr.replaceAll('.*', ''))", str))
                             flag = true;
                     } else if (JSExpression.of("expr.expr.endsWith('.*')")) {
-                        if (JSExpression.of("str.startsWith(expr.expr.replaceAll('.*', ''))"))
+                        if (JSExpression.of(":1.startsWith(expr.expr.replaceAll('.*', ''))", str))
                             flag = true;
                     } else {
-                        if (JSExpression.of("str === expr.expr")) flag = true;
+                        if (JSExpression.of(":1 === expr.expr", str)) flag = true;
                     }
                 }
                 return flag;

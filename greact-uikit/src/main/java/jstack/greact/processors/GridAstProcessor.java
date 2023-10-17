@@ -30,6 +30,7 @@ public class GridAstProcessor implements AstProcessor {
     private Name constructorName;
 
     class Symbols {
+        Symbol.ClassSymbol clObject = util.lookupClass(Object.class);
         Symbol.ClassSymbol clGrid = util.lookupClass(Grid.class);
         Symbol.ClassSymbol clMemberRef = util.lookupClass(MemberRef.class);
         Symbol.ClassSymbol clColumn = util.lookupClass(Column.class);
@@ -200,11 +201,14 @@ public class GridAstProcessor implements AstProcessor {
                     ((Symbol.ClassSymbol) tree.type.allparams().get(1).tsym).className() +
                     "'}";
 
-                this.result = makeCall(
+                var jsExprCall = makeCall(
                     symbols.clJSExpression, symbols.mtJSExpressionOf, List.of(
                         maker.Literal(memberRef).setType(symbols.clString.type)
                     )
                 );
+                jsExprCall.varargsElement = symbols.clObject.type;
+
+                this.result = jsExprCall;
             } else super.visitReference(tree);
         }
 
