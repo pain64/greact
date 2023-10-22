@@ -85,75 +85,20 @@ public class MainPage implements Component0<div> {
                         className = "menu";
                         style.marginLeft = "35%";
 
-                        new a("ErrorBox") {{
-                            className = "menu-item";
-                            href = "#error-box";
-                        }};
-
-                        new a("Text") {{
-                            className = "menu-item";
-                            href = "#text";
-                        }};
-
-                        new a("Images") {{
-                            className = "menu-item";
-                            href = "#image";
-                        }};
-
-                        new a("Buttons") {{
-                            className = "menu-item";
-                            href = "#button";
-                        }};
-
-                        new a("Links") {{
-                            className = "menu-item";
-                            href = "#link";
-                        }};
-
-                        new a("Tables") {{
-                            className = "menu-item";
-                            href = "#table";
-                        }};
-
-                        new a("List") {{
-                            className = "menu-item";
-                            href = "#list";
-                        }};
-
-                        new a("Select") {{
-                            className = "menu-item";
-                            href = "#select";
-                        }};
-
-                        new a("Textarea") {{
-                            className = "menu-item";
-                            href = "#textarea";
-                        }};
-
-                        new a("Input") {{
-                            className = "menu-item";
-                            href = "#input";
-                        }};
-
-                        new a("Checkbox") {{
-                            className = "menu-item";
-                            href = "#check-box";
-                        }};
-
-                        new a("Tabs") {{
-                            className = "menu-item";
-                            href = "#tabs";
-                        }};
-
-                        new a("Grid") {{
-                            className = "menu-item";
-                            href = "#grid";
-                        }};
-
-                        new a("Forms") {{
-                            className = "menu-item";
-                            href = "#form";
-                        }};
+                        new a("menu-item", "ErrorBox") {{ href = "#error-box"; }};
+                        new a("menu-item", "Text") {{ href = "#text"; }};
+                        new a("menu-item", "Images") {{ href = "#image"; }};
+                        new a("menu-item", "Buttons") {{ href = "#button"; }};
+                        new a("menu-item", "Links") {{ href = "#link"; }};
+                        new a("menu-item", "Tables") {{ href = "#table"; }};
+                        new a("menu-item", "List") {{ href = "#list"; }};
+                        new a("menu-item", "Select") {{ href = "#select"; }};
+                        new a("menu-item", "Textarea") {{ href = "#textarea"; }};
+                        new a("menu-item", "Input") {{ href = "#input"; }};
+                        new a("menu-item", "Checkbox") {{ href = "#check-box"; }};
+                        new a("menu-item", "Tabs") {{ href = "#tabs"; }};
+                        new a("menu-item", "Grid") {{ href = "#grid"; }};
+                        new a("menu-item", "Forms") {{ href = "#form"; }};
                     }};
 
                 }};
@@ -271,7 +216,7 @@ public class MainPage implements Component0<div> {
                             }};
 
                             new CodeView<>(() ->
-                                new a("Link") {{
+                                new a("", "Link") {{
                                     href = "#";
                                     style.color = "#609123";
                                 }}, renderer());

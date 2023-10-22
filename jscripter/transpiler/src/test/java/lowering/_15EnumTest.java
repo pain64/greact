@@ -77,6 +77,32 @@ public class _15EnumTest {
                         return t === 'FOO' || t === 'BAR';
                       }
                     }
+                    """),
+            new CompileCase("js.Baz", """
+                package js;
+                import static js.Test.FOO;
+                class Baz {
+                  record X(Test t) {}
+                  boolean baz() {
+                    var x = new X(Test.FOO);
+                    return x.t == FOO || x.t == Test.BAR;
+                  }
+                }
+                """,
+                """
+                    class js_Baz {
+                      constructor() {
+                      }
+                      static X = class {
+                        constructor(t) {
+                          this.t = t;
+                        }
+                      }
+                      _baz() {
+                        const x = new js_Baz.X('FOO');
+                        return x.t === 'FOO' || x.t === 'BAR';
+                      }
+                    }
                     """)
         );
     }

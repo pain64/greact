@@ -27,8 +27,7 @@ public class Dropdown implements Component0<div> {
             final div[] hideDiv = {new div()};
             var dropdown = this;
 
-            new a(innerTextForDropdown) {{
-                className = "dropdown-toggle";
+            new a("dropdown-toggle", innerTextForDropdown) {{
                 style.cursor = "pointer";
                 this.onclick = (ev) -> {
                     if (hideDiv[0].style.display.equals("block"))

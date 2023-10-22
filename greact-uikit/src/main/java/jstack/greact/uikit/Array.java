@@ -50,6 +50,10 @@ public class Array<T> {
         return result;
     }
 
+    public static <T> void splice(T[] array, long start, long deleteCount) {
+        JSExpression.of("array.splice(start, deleteCount)");
+    }
+
     public static <T> T[] spliced(T[] array, long start, long deleteCount) {
         var cloned = JSExpression.<T[]>of("Array.from(:1)", (Object) array);
         JSExpression.of(":1.splice(:2, :3)", cloned, start, deleteCount);

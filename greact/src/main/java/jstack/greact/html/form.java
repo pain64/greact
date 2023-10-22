@@ -9,4 +9,6 @@ public class form extends HTMLElement implements HTMLElementAsComponent<form> {
     public String name;
     public String method;
     public String acceptCharset;
+    public SubmitEventHandler onsubmit;
+    public native boolean checkValidity();
 }

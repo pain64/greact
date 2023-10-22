@@ -22,5 +22,8 @@ public class input extends HTMLElement implements HTMLElementAsComponent<input> 
     public String maxlength;
     public long valueAsNumber;
     public Boolean checked;
+    public String min;
+    public String max;
+    public String step;
     public native void setCustomValidity(String text);
 }

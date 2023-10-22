@@ -79,9 +79,13 @@ public class EffectCallFinder {
                         else if (expr instanceof JCTree.JCAssign assign) {
                             if (assign.lhs instanceof JCTree.JCIdent id)
                                 return (Symbol.VarSymbol) id.sym;
-                        } else if (expr instanceof JCTree.JCAssignOp op)
+                        } else if (expr instanceof JCTree.JCAssignOp op) {
                             if (op.lhs instanceof JCTree.JCIdent id)
                                 return (Symbol.VarSymbol) id.sym;
+                        } else if (expr instanceof JCTree.JCTypeCast cast) {
+                            if (cast.expr instanceof JCTree.JCIdent id)
+                                return (Symbol.VarSymbol) id.sym;
+                        }
 
                         throw util.compilationError(
                             cu, new EffectMisuseException(
@@ -89,7 +93,8 @@ public class EffectCallFinder {
                                 for ∀ x is variable expected any of:
                                     effect(x)
                                     effect(x = expression)
-                                    effect(x op= expression)"""
+                                    effect(x op= expression)
+                                    effect((Object) x)"""
                             )
                         );
                     };
