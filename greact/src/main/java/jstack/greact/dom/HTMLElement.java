@@ -79,12 +79,16 @@ import jstack.jscripter.transpiler.model.Async;
     public MouseEventHandler onmouseout;
     public MouseEventHandler onmouseover;
 
+    public native void setAttribute(String name, Object value);
+    public native String getAttribute(String name);
+
     public native boolean contains(HTMLElement element);
     public native boolean matches(String pattern);
 
     // HTML Event Attributes
     public static class Event {
         public native void stopPropagation();
+        public native void preventDefault();
         public HTMLElement target;
     }
 
@@ -96,7 +100,12 @@ import jstack.jscripter.transpiler.model.Async;
         @Async void handle(Event ev);
     }
 
+    @FunctionalInterface public interface SubmitEventHandler {
+        @Async void handle(SubmitEvent ev);
+    }
+
     public static class KeyEvent extends Event { }
+    public static class SubmitEvent extends Event {}
 
     public interface KeyHandler {
         void handle(KeyEvent event);

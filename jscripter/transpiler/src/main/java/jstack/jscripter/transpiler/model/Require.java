@@ -4,4 +4,8 @@ public interface Require {
     @interface CSS {
         String[] value();
     }
+
+    @interface JS {
+        String[] value();
+    }
 }

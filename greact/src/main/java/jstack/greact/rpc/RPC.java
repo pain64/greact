@@ -39,6 +39,10 @@ public class RPC<T> {
     private final boolean isRelease;
     private final ConcurrentHashMap<String, Method> cache;
 
+    public RPC() {
+        throw new RuntimeException("will be delegated to RPC(appBasePackage)");
+    }
+
     public RPC(String appBasePackage) {
         this.appBasePackage = appBasePackage;
         this.cache = new ConcurrentHashMap<>();

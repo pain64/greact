@@ -32,12 +32,18 @@ public class TypeGen extends ClassBodyGen {
 
         var isEnum = classDef.sym.isEnum();
         var cssRequire = classDef.sym.getAnnotation(Require.CSS.class);
+        var jsRequire = classDef.sym.getAnnotation(Require.JS.class);
+
         var isInterface = classDef.getKind() == Tree.Kind.INTERFACE;
         var isErasedInterface = isAnnotatedErasedInterface(classDef.sym);
         var isFunctionalInterface = classDef.sym.getAnnotation(FunctionalInterface.class) != null;
 
         if (cssRequire != null)
             for (var dep : cssRequire.value())
+                out.addDependency(dep);
+
+        if (jsRequire != null)
+            for (var dep : jsRequire.value())
                 out.addDependency(dep);
 
         if (isInterface) {

@@ -229,7 +229,10 @@ abstract class ExpressionGen extends VisitorWithContext {
     }
 
     @Override public void visitSelect(JCTree.JCFieldAccess select) {
-        if (select.type.tsym.isEnum()) {
+        if (
+            select.selected.type.tsym.isEnum() &&
+            select.type.tsym.isEnum()
+        ) {
             out.write("'");
             out.write(select.name);
             out.write("'");
@@ -461,7 +464,7 @@ abstract class ExpressionGen extends VisitorWithContext {
         } else if (ref.toString().endsWith("new")) {
             out.write("((x) => new ");
             out.replaceSymbolAndWrite(tSym.owner.getQualifiedName(), '.', '_');
-            out.write(".");
+            out.write(tSym.isStatic() ? "." : "_");
             out.write(tSym.type.tsym.getSimpleName());
             out.write("(");
             if (info.isOverloaded()) {

@@ -187,7 +187,6 @@ public class CodeAnalyze {
         var resourceDir = sourceSets.getByName("main").getOutput().getResourcesDir();
 
         assert resourceDir != null;
-        var stylesDir = resourceDir.toPath().resolve("styles");
 
         var localJs = sourceSets.getByName("main")
             .getOutput().getClassesDirs().getFiles().stream()
@@ -197,13 +196,22 @@ public class CodeAnalyze {
                     new ArrayList<>(m2.resources) {{ addAll(m2.resources); }},
                     new HashMap<>(m1.dependencies) {{ putAll(m2.dependencies); }}));
 
+        var externalJsDir = resourceDir.toPath().resolve("js");
+        var externalJs = externalJsDir.toFile().exists()
+            ? walkOverDirectory(externalJsDir.toFile()).resources
+            : new ArrayList<RResource<Path>>();
+
+        var stylesDir = resourceDir.toPath().resolve("styles");
         var localCss = stylesDir.toFile().exists()
             ? walkOverDirectory(stylesDir.toFile()).resources
             : new ArrayList<RResource<Path>>();
 
         // FIXME: make listConcat & mapConcat method
         var localModule = new ModuleCode<>(
-            new ArrayList<>(localJs.resources) {{ addAll(localCss); }},
+            new ArrayList<>(localJs.resources) {{
+                addAll(localCss);
+                addAll(externalJs);
+            }},
             localJs.dependencies);
 
         return buildDependencies(localModule);
@@ -211,6 +219,6 @@ public class CodeAnalyze {
 
     record LibrariesCode(String js, String css) { }
     static CharSequence replaceClassDeclarationWithWindow(String readString) {
-        return readString.replaceAll("class (\\S*) \\{", "window.$1 = class {");
+        return readString.replaceAll("class (\\S*)( extends (\\S*))? \\{", "window.$1 = class$2 {");
     }
 }
