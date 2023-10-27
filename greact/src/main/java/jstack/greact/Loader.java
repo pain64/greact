@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Loader {
-    public static Map<String, Supplier<String>> bundle(String headContent, Class<? extends Component0<?>> entry) throws IOException {
+    public static Bundle bundle(String headContent, Class<? extends Component0<?>> entry) throws IOException {
         var bundleFile = Objects.requireNonNull(Loader.class.getResourceAsStream("/bundle/.bundle"));
         var bundle = new String(bundleFile.readAllBytes());
         var filesWithCode = bundle.split("\n");
@@ -138,6 +138,6 @@ public class Loader {
             });
         }
 
-        return all;
+        return new Bundle(all);
     }
 }

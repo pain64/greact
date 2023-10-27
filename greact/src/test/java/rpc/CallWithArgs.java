@@ -52,7 +52,7 @@ public class CallWithArgs {
                         @Async
                         void simple() {
                             int y = 1;
-                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint_line10_col7", x, y);
+                            jstack.greact.dom.Globals.doRemoteCall("/util.TestServer", "js.Simple.$endpoint_line10_col7", x, y);
                         }
                     }"""));
 
@@ -101,7 +101,7 @@ public class CallWithArgs {
                         @Async
                         void simple() {
                             int y = 1;
-                            jstack.greact.dom.Globals.doRemoteCall("/rpc", "js.Simple.$endpoint_line9_col7", y);
+                            jstack.greact.dom.Globals.doRemoteCall("/util.TestServer", "js.Simple.$endpoint_line9_col7", y);
                         }
                     }"""));
 

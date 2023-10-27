@@ -2,7 +2,9 @@ package util;
 
 import org.junit.jupiter.api.Assertions;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +33,12 @@ public class CompileAssert {
             .map(t -> new StringSourceFile(t.fullQualified, t.javaSrc))
             .collect(Collectors.toList());
 
-
+        compilationUnits.add(
+            new StringSourceFile(
+                "util.TestServer",
+                Files.readString(new File("src/test/java/util/TestServer.java").toPath().toAbsolutePath())
+            )
+        );
         var res = TestCompiler.compile(compilationUnits);
 
         for (var t : tests) {
