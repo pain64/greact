@@ -2,6 +2,7 @@ package jstack.jscripter.std.java.lang;
 
 
 import jstack.jscripter.transpiler.model.JSExpression;
+import jstack.jscripter.transpiler.model.Require;
 import jstack.jscripter.transpiler.model.Static;
 
 public class String {
@@ -44,6 +45,11 @@ public class String {
     @Static public boolean equalsIgnoreCase(java.lang.String another) {
         return JSExpression.of("this.localeCompare(:1, undefined, { sensitivity: 'accent' }) === 0", another);
     }
+
+    @Static public boolean contains(CharSequence s) {
+        return JSExpression.of("this.includes(:1)", s);
+    }
+
 //    @Replace("{this} > s ? 1 : ({this} < s ? -1 : 0)")
 //    public native int compareTo(java.lang.String s);
 
@@ -98,7 +104,6 @@ public class String {
 //    @UseJsApi public native int lastIndexOf(int ch, int fromIndex);
 //    @UseJsApi public native CharSequence subSequence(int beginIndex, int endIndex);
 //    @UseJsApi public native java.lang.String replace(char oldChar, char newChar);
-//    @UseJsApi public native boolean contains(CharSequence s);
 //    @UseJsApi public native java.lang.String replace(CharSequence target, CharSequence replacement);
 //    @UseJsApi public native java.lang.String toLowerCase(Locale locale);
 //    @UseJsApi public native java.lang.String toUpperCase(Locale locale);

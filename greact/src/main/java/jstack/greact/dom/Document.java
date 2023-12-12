@@ -12,4 +12,5 @@ import jstack.jscripter.transpiler.model.JSNativeAPI;
     public native DocumentFragment createDocumentFragment();
     public native void addEventListener(String type, EventListener handler);
     public native void removeEventListener(String type, EventListener handler);
+    public HTMLElement activeElement;
 }

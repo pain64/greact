@@ -28,10 +28,16 @@ public class Dates {
         return JSExpression.of("new Date(:1).toLocaleTimeString()", date);
     }
     public static int getYear(java.util.Date date) {
+        return JSExpression.of("new Date(:1).getYear()", date);
+    }
+    public static int getFullYear(java.util.Date date) {
         return JSExpression.of("new Date(:1).getFullYear()", date);
     }
     public static int getMonth(java.util.Date date) {
         return JSExpression.of("new Date(:1).getMonth()", date);
+    }
+    public static int getDay(java.util.Date date) {
+        return JSExpression.of("new Date(:1).getDay()", date);
     }
     public static int getDate(java.util.Date date) {
         return JSExpression.of("new Date(:1).getDate()", date);

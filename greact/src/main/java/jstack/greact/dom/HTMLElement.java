@@ -70,14 +70,19 @@ import jstack.jscripter.transpiler.model.Async;
     public String title;
     public Style style = new Style();
 
+    public final DOMTokenList classList = new DOMTokenList();
+
     public Object dependsOn;
 
     public MouseEventHandler onclick;
     public MouseEventHandler ondblclick;
-    public MouseEventHandler onblur;
+    public FocusEventHandler onfocus;
+    public FocusEventHandler onblur;
     public ChangeHandler onchange;
     public MouseEventHandler onmouseout;
     public MouseEventHandler onmouseover;
+    public MouseEventHandler onmouseenter;
+    public MouseEventHandler onmouseleave;
 
     public native void setAttribute(String name, Object value);
     public native String getAttribute(String name);
@@ -104,8 +109,13 @@ import jstack.jscripter.transpiler.model.Async;
         @Async void handle(SubmitEvent ev);
     }
 
+    @FunctionalInterface public interface FocusEventHandler {
+        @Async void handle(FocusEvent ev);
+    }
+
     public static class KeyEvent extends Event { }
-    public static class SubmitEvent extends Event {}
+    public static class SubmitEvent extends Event { }
+    public static class FocusEvent extends Event { }
 
     public interface KeyHandler {
         void handle(KeyEvent event);

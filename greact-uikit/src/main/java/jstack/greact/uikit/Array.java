@@ -3,6 +3,7 @@ package jstack.greact.uikit;
 import jstack.jscripter.transpiler.model.JSExpression;
 import jstack.greact.uikit.controls.Cascade;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -41,6 +42,18 @@ public class Array<T> {
 
     public static <A> A[] filter(A[] from, Function<A, Boolean> predicate) {
         return JSExpression.of(":1.filter(:2)", from, predicate);
+    }
+
+    public static <A, V> V reduce(A[] from, V initial, BiFunction<V, A, V> operation) {
+        return JSExpression.of(":1.reduce(:2, :3)", from, operation, initial);
+    }
+
+    public static <A> String join(A[] from, String separator) {
+        return JSExpression.of(":1.join(:2)", from, separator);
+    }
+
+    public static <A> String join(A[] from, String separator, Function<A, String> elToString) {
+        return JSExpression.of(":1.map(:2).join(:3)", from, elToString, separator);
     }
 
     public static <A, B> Pair<A, B>[] zip(A[] left, B[] right) {
