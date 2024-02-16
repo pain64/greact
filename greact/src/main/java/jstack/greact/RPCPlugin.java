@@ -2,23 +2,26 @@ package jstack.greact;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.tools.javac.util.*;
-import jstack.jscripter.transpiler.model.DoNotTranspile;
-import jstack.jscripter.transpiler.model.RPCEndPoint;
-import jstack.greact.rpc.RPC;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.*;
+import jstack.greact.rpc.RPC;
+import jstack.jscripter.transpiler.model.DoNotTranspile;
+import jstack.jscripter.transpiler.model.RPCEndPoint;
+import org.apache.commons.cli.CommandLine;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 public class RPCPlugin {
     final Context context;
+    final CommandLine cmd;
     final JavacProcessingEnvironment env;
     final Symtab symtab;
     final Names names;
@@ -46,6 +49,13 @@ public class RPCPlugin {
         Symbol.ClassSymbol clJsonNode = lookupClass(JsonNode.class.getName());
         Symbol.ClassSymbol clObjectMapper = lookupClass(ObjectMapper.class.getName());
         Symbol.ClassSymbol clRPCEndPoint = lookupClass(RPCEndPoint.class.getName());
+        Symbol.ClassSymbol clRPC = lookupClass(RPC.class.getName());
+
+        Symbol.MethodSymbol rpcConstructor2 = (Symbol.MethodSymbol)
+            clRPC.getEnclosedElements().stream()
+                .filter(member -> member.getSimpleName() == Names.instance(context).fromString("<init>"))
+                .skip(1)
+                .findFirst().orElseThrow(() -> new RuntimeException("unreachable"));
         Symbol.ClassSymbol doNotTranspile = lookupClass(DoNotTranspile.class.getName());
         Symbol.MethodSymbol mtObjectMapperTreeToValue = lookupMember(clObjectMapper, "treeToValue");
         Symbol.ClassSymbol clList = lookupClass(java.util.List.class.getName());
@@ -59,8 +69,9 @@ public class RPCPlugin {
     final JCDiagnostic.Factory diagnosticsFactory;
     final Log javacLog;
 
-    public RPCPlugin(Context context) {
+    public RPCPlugin(Context context, CommandLine cmd) {
         this.context = context;
+        this.cmd = cmd;
         this.env = JavacProcessingEnvironment.instance(context);
         this.symtab = Symtab.instance(context);
         this.names = Names.instance(context);
@@ -69,6 +80,41 @@ public class RPCPlugin {
         this.symbols = new Symbols();
         this.javacLog = Log.instance(context);
         this.diagnosticsFactory = JCDiagnostic.Factory.instance(context);
+    }
+
+    class RPCConstructorCallDelegate extends TreeScanner {
+        @Override
+        public void visitMethodDef(JCTree.JCMethodDecl tree) {
+            if (tree.sym.isConstructor() && tree.sym.owner instanceof Symbol.ClassSymbol classSymbol)
+                if (classSymbol.getSuperclass().tsym == symbols.clRPC.type.tsym) {
+                    var expr = ((JCTree.JCExpressionStatement) tree.body.stats.head).expr;
+                    var superInvocation = (JCTree.JCMethodInvocation) expr;
+
+                    var jsPackage = maker.Literal(cmd.getOptionValue("js-src-package")).setType(symbols.clString.type);
+
+                    if (superInvocation.args.isEmpty()) {
+                        try {
+                            var method = CommandLine.class.getDeclaredMethod("addArg", String.class);
+                            method.setAccessible(true);
+                            method.invoke(cmd, !cmd.hasOption("rpc-url") ? "/" + tree.sym.owner : cmd.getOptionValue("rpc-url"));
+                        } catch (NoSuchMethodException |
+                                 IllegalAccessException |
+                                 InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        var rpcUrlLiteral = maker.Literal(cmd.getArgList().get(0)).setType(symbols.clString.type);
+
+                        var superMethodType = (Type.MethodType) superInvocation.meth.type;
+                        superMethodType.argtypes = superMethodType.argtypes.append(rpcUrlLiteral.type).append(jsPackage.type);
+
+                        ((JCTree.JCIdent) superInvocation.meth).sym = symbols.rpcConstructor2;
+                        superInvocation.args = superInvocation.args.append(rpcUrlLiteral).append(jsPackage);
+                    }
+                }
+
+            super.visitMethodDef(tree);
+        }
     }
 
     JCTree.JCExpression buildStatic(Symbol sym) {
@@ -179,6 +225,7 @@ public class RPCPlugin {
     }
 
     void apply(JCTree.JCCompilationUnit cu) {
+        cu.accept(new RPCConstructorCallDelegate());
         cu.accept(new TreeScanner() {
             JCTree.JCClassDecl classDecl;
 
@@ -200,9 +247,12 @@ public class RPCPlugin {
                     @Override public void visitApply(JCTree.JCMethodInvocation invoke) {
                         super.visitApply(invoke);
                         if (invoke.meth instanceof JCTree.JCIdent id) {
-                            var epAnnotation = id.sym.getAnnotation(RPC.RPCEntryPoint.class);
-                            if (epAnnotation != null) {
+                            var superclass = ((Symbol.ClassSymbol) id.sym.owner).getSuperclass();
 
+                            if (superclass != null &&
+                                superclass.tsym == symbols.clRPC.type.tsym &&
+                                id.name.toString().equals("server")
+                            ) {
                                 var diagnostic = diagnosticsFactory.create(
                                     new DiagnosticSource(cu.getSourceFile(), javacLog),
                                     new JCDiagnostic.SimpleDiagnosticPosition(id.pos),
@@ -272,7 +322,7 @@ public class RPCPlugin {
                                 invoke.varargsElement = symbols.clObject.type;
 
                                 invoke.args = List.of(
-                                    maker.Literal(epAnnotation.value()).setType(symbols.clString.type),
+                                    maker.Literal(cmd.getArgList().get(0)).setType(symbols.clString.type),
                                     maker.Literal(fullQualified).setType(symbols.clString.type));
                                 invoke.args = invoke.args.appendList(argsAndBlock.fst);
 

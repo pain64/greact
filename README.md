@@ -70,9 +70,11 @@ public class MainPage implements Component<div> {
 
 ```java
 public class Main {
-    static final String RPC_BASE_URL = "/rpc";
-
-    @RPCEntryPoint(RPC_BASE_URL) static class Server extends RPC<TypesafeSql> {}
+    static class Server extends RPC<TypesafeSql> {
+        public static <T> T server(Function<TypesafeSql, T> onServer) {
+            throw new RuntimeException("this will be replace with generated code by GReact RPC compiler");
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         var ds = new HikariDataSource() {{
@@ -86,15 +88,18 @@ public class Main {
         var db = new TypesafeSql(ds);
         var server = new Server();
         
-        var resources = Loader.bundle(MainPage.class, false /* not release */);
-        for(var resource: resources)
-            Spark.get(resource.path(), (req, res) -> resource.bytes());
-            
-        Spark.post(RPC_BASE_URL, (req, res) -> {
-            res.status(200);
-            res.type("application/json");
-            return server.handle(db, req.raw().getReader());
-        });
+        var bundle = Loader.bundle(MainPage.class, false /* not release */);
+        
+        Spark.get("/*", (req, res) ->
+                bundle.handleResource(
+                        req.pathInfo(), res::status,
+                        res::type, res.raw().getOutputStream()
+                )
+        );
+
+        Spark.post(server.rpcBaseUrl, (req, res) ->
+                server.handle(db, res::status, res::type, req.raw().getInputStream())
+        );
         
         Spark.init();
     }

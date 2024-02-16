@@ -48,6 +48,7 @@ public class TranspilerPlugin implements Plugin {
             .addOption(new Option(null, "js-src-package", true, "java to javascript source package") {{
                 setRequired(true);
             }})
+            .addOption(new Option(null, "rpc-url", true, "base url for RPC"))
             .addOption(new Option(null, "greact-debug-patched-ast", false, "write debug .java.patch files"))
             .addOption(new Option(null, "tsql-check-schema-url", true, "jdbc url"))
             .addOption(new Option(null, "tsql-check-schema-username", true, "username"))

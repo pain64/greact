@@ -7,24 +7,17 @@ import jstack.jscripter.transpiler.model.RPCEndPoint;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.Reader;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class RPC<T> {
-
-
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface RPCEntryPoint {
-        String value();
-    }
-
     public interface Endpoint<T> {
         Object handle(T di, ObjectMapper mapper, List<JsonNode> args);
     }
@@ -35,15 +28,17 @@ public class RPC<T> {
     }
 
     private final String appBasePackage;
+    public final String rpcUrl;
     private final URL[] urls;
     private final boolean isRelease;
     private final ConcurrentHashMap<String, Method> cache;
 
     public RPC() {
-        throw new RuntimeException("will be delegated to RPC(appBasePackage)");
+        throw new RuntimeException("will be delegated to RPC(rpcBaseUrl, appBasePackage)");
     }
 
-    public RPC(String appBasePackage) {
+    public RPC(String rpcUrl, String appBasePackage) {
+        this.rpcUrl = rpcUrl;
         this.appBasePackage = appBasePackage;
         this.cache = new ConcurrentHashMap<>();
         var files = System.getProperty("java.class.path").split(":");
@@ -59,39 +54,56 @@ public class RPC<T> {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public String handle(T di, Reader in) throws Exception {
-        var req = mapper.readValue(in, Request.class);
-        var methodNamePos = req.endpoint.lastIndexOf(".");
-        var className = req.endpoint.substring(0, methodNamePos);
-        var methodName = req.endpoint.substring(methodNamePos + 1);
-        var fullName = className + "." + methodName;
-        if (!className.startsWith(appBasePackage)) throw new RuntimeException("unreachable");
+    public String handle(T di, Consumer<Integer> setStatusCode,
+                         Consumer<String> setContentType,
+                         InputStream in) throws Exception {
+        try {
+            var req = mapper.readValue(in, Request.class);
+            var methodNamePos = req.endpoint.lastIndexOf(".");
+            var className = req.endpoint.substring(0, methodNamePos);
+            var methodName = req.endpoint.substring(methodNamePos + 1);
+            var fullName = className + "." + methodName;
 
-        if (isRelease && cache.containsKey(fullName)) {
-            var method = cache.get(fullName);
-            var result = method.invoke(null, di, mapper, req.args);
-            return mapper.writeValueAsString(result);
-        }
-        // FIXME: classloader leak
-        var classLoader = !isRelease
-            ? new RPCClassLoader(getClass().getClassLoader(), urls, appBasePackage)
-            : getClass().getClassLoader();
+            setStatusCode.accept(200);
+            setContentType.accept("application/json");
 
-        var klass = classLoader.loadClass(className);
-        //var klass = Class.forName(className);
+            if (!className.startsWith(appBasePackage)) throw new RuntimeException("unreachable");
 
-        for (var method : klass.getMethods())
-            if (method.getName().equals(methodName)) {
-                if (method.getAnnotation(RPCEndPoint.class) == null)
-                    throw new RuntimeException("unreachable");
-                method.setAccessible(true);
+            if (isRelease && cache.containsKey(fullName)) {
+                var method = cache.get(fullName);
                 var result = method.invoke(null, di, mapper, req.args);
-                if (isRelease) cache.put(fullName, method);
-
                 return mapper.writeValueAsString(result);
             }
+            // FIXME: classloader leak
+            var classLoader = !isRelease
+                ? new RPCClassLoader(getClass().getClassLoader(), urls, appBasePackage)
+                : getClass().getClassLoader();
 
-        throw new RuntimeException("unreachable");
+            var klass = classLoader.loadClass(className);
+            //var klass = Class.forName(className);
+
+            for (var method : klass.getMethods())
+                if (method.getName().equals(methodName)) {
+                    if (method.getAnnotation(RPCEndPoint.class) == null)
+                        throw new RuntimeException("unreachable");
+                    method.setAccessible(true);
+                    var result = method.invoke(null, di, mapper, req.args);
+                    if (isRelease) cache.put(fullName, method);
+
+                    return mapper.writeValueAsString(result);
+                }
+
+            throw new RuntimeException("unreachable");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            setStatusCode.accept(500);
+            var msg = ex.getMessage();
+            if (msg == null) // FIXME: not so good
+                msg = ex.getCause().getMessage();
+            return RPC.rpcErrorJson(msg, Arrays.stream(ex.getStackTrace())
+                .map(StackTraceElement::toString)
+                .collect(Collectors.joining("\n")));
+        }
     }
 
     public record RPCError(String msg, @Nullable String stackTrace) { }

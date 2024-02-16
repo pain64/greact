@@ -69,7 +69,7 @@ public class GReactPluginW {
 
                     var t2 = System.currentTimeMillis();
 
-                    new RPCPlugin(context).apply(cu);
+                    new RPCPlugin(context, cmd).apply(cu);
                     var t3 = System.currentTimeMillis();
 
                     new MarkupPlugin2(context).apply(cu);

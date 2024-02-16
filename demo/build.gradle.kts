@@ -34,6 +34,7 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("--enable-preview")
     options.compilerArgs.add(
         "-Xplugin:GReact --js-src-package=jstack.demo.js " +
+//                "--rpc-url=/some_rpc_url " +
                 if (compileTimeSqlCheckEnabled) {
                     "--tsql-check-enabled=true " +
                             "--tsql-check-driver-classname=org.postgresql.Driver " +
